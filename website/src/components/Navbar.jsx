@@ -5,9 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Search, ShoppingBag, ChevronDown, Phone, MapPin } from 'lucide-react';
 import { companyInfo, services, packages, products, solarTips, faqs } from '../data/siteData';
 import logoImg from '../assets/taqon-electrico-logo.jpg';
-import ThemeToggle from './ThemeToggle';
 import LanguageSwitcher from './LanguageSwitcher';
-import { useTheme } from '../contexts/ThemeContext';
 
 const navLinks = [
   { path: '/', label: 'Home' },
@@ -58,7 +56,6 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const { theme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const searchRef = useRef(null);
@@ -227,12 +224,6 @@ export default function Navbar() {
               >
                 <ShoppingBag size={18} />
               </Link>
-
-              <ThemeToggle className={
-                isScrolled
-                  ? 'hover:bg-gray-100 dark:hover:bg-white/10 text-taqon-charcoal dark:text-white'
-                  : 'hover:bg-white/10 text-white'
-              } />
 
               <LanguageSwitcher className={
                 isScrolled

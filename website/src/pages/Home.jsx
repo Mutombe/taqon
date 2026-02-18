@@ -25,9 +25,6 @@ const brandLogos = [
   { name: 'Dyness', logo: '/Dyness.png' },
   { name: 'Sigenergy', logo: '/sigenergy.jpg' },
   { name: 'Sunsynk', logo: '/sunsynk.png' },
-  { name: 'Kodak', logo: null },
-  { name: 'JA Solar', logo: null },
-  { name: 'Deye', logo: null },
 ];
 
 const heroImages = [
@@ -328,17 +325,17 @@ export default function Home() {
             </h2>
           </AnimatedSection>
 
-          <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {stats.map((stat, i) => (
-              <StaggerItem key={i}>
-                <div className="text-center p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-500">
-                  {stat.label === 'kWp PV Modules Installed' ? (
-                    <LiveCounter />
-                  ) : (
-                    <div className="text-4xl lg:text-5xl font-bold font-syne text-gradient">{stat.value}</div>
-                  )}
-                  <p className="mt-3 text-white/50 text-sm">{stat.label}</p>
-                </div>
+              <StaggerItem key={i} className={stat.label === 'kWp PV Modules Installed' ? 'sm:col-span-2 lg:col-span-1' : ''}>
+                {stat.label === 'kWp PV Modules Installed' ? (
+                  <LiveCounter />
+                ) : (
+                  <div className="text-center p-6 sm:p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-500 h-full flex flex-col items-center justify-center min-h-[140px]">
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-bold font-syne text-gradient whitespace-nowrap">{stat.value}</div>
+                    <p className="mt-3 text-white/50 text-sm">{stat.label}</p>
+                  </div>
+                )}
               </StaggerItem>
             ))}
           </StaggerContainer>
