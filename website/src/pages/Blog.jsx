@@ -74,7 +74,7 @@ export default function Blog() {
         <div className="absolute inset-0 dark-mesh" />
         <div className="absolute inset-0">
           <img
-            src="/projects/kadoma-24kva/1.jpg"
+            src="/kadoma-24kva-1.jpg"
             alt=""
             className="w-full h-full object-cover opacity-30"
             loading="eager"

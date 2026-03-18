@@ -153,7 +153,7 @@ export default function About() {
       {/* ─── Our Story ─── */}
       <section className="py-20 lg:py-28 bg-[var(--bg-primary)] relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/projects/chisipiti-10kva/1.jpg" alt="" className="w-full h-full object-cover opacity-[0.04] dark:opacity-[0.08]" loading="lazy" />
+          <img src="/chisipiti-10kva-1.jpg" alt="" className="w-full h-full object-cover opacity-[0.04] dark:opacity-[0.08]" loading="lazy" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
@@ -365,7 +365,7 @@ export default function About() {
       {/* ─── Mission & Vision ─── */}
       <section className="py-20 lg:py-28 bg-[var(--bg-primary)] relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/projects/kadoma-24kva/2.jpg" alt="" className="w-full h-full object-cover opacity-[0.04] dark:opacity-[0.08]" loading="lazy" />
+          <img src="/kadoma-24kva-2.jpg" alt="" className="w-full h-full object-cover opacity-[0.04] dark:opacity-[0.08]" loading="lazy" />
         </div>
         <div className="max-w-7xl mx-auto px-4">
           <AnimatedSection className="text-center mb-16 relative">
@@ -471,7 +471,7 @@ export default function About() {
       {/* ─── Values ─── */}
       <section className="py-20 lg:py-28 bg-[var(--bg-primary)] relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/projects/shawasha-hills-16kva/2.jpg" alt="" className="w-full h-full object-cover opacity-[0.04] dark:opacity-[0.08]" loading="lazy" />
+          <img src="/shawasha-hills-16kva-2.jpg" alt="" className="w-full h-full object-cover opacity-[0.04] dark:opacity-[0.08]" loading="lazy" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4">
           <AnimatedSection className="text-center mb-16">
@@ -604,7 +604,7 @@ export default function About() {
       {/* ─── Contact CTA ─── */}
       <section className="py-20 lg:py-28 relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/projects/bulawayo-16kva/2.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src="/bulawayo-16kva-2.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-taqon-dark/85" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4">

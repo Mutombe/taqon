@@ -20,7 +20,7 @@ export default function SolarSecrets() {
       <section className="relative min-h-[55vh] flex items-center bg-taqon-dark overflow-hidden">
         <div className="absolute inset-0 dark-mesh" />
         <div className="absolute inset-0">
-          <img src="/projects/kadoma-24kva/1.jpg" alt="" className="w-full h-full object-cover opacity-30" loading="eager" />
+          <img src="/kadoma-24kva-1.jpg" alt="" className="w-full h-full object-cover opacity-30" loading="eager" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-16">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>

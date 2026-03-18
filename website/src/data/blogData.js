@@ -4,7 +4,7 @@ export const blogPosts = [
     slug: 'how-to-use-taqon-electrico-website',
     title: 'How to Use Taqon Electrico Website: A Guide for New Users',
     category: 'Guide',
-    image: '/projects/chisipiti-10kva/2.jpg',
+    image: '/chisipiti-10kva-2.jpg',
     excerpt:
       'A comprehensive guide for new users on how to navigate the Taqon Electrico website \u2014 from browsing solar products and packages to requesting quotations and managing your account.',
     date: '2024-06-18',
@@ -48,7 +48,7 @@ export const blogPosts = [
       <blockquote><p>No guesswork. No surprises. Just pick the package that matches your lifestyle and budget, then reach out for a personalised quotation.</p></blockquote>
 
       <figure>
-        <img src="/projects/borrowdale-brook-5kva/1.jpg" alt="Taqon Electrico technicians installing solar panels on a residential roof in Borrowdale" />
+        <img src="/borrowdale-brook-5kva-1.jpg" alt="Taqon Electrico technicians installing solar panels on a residential roof in Borrowdale" />
         <figcaption>Our team completing a 5kVA residential installation in Borrowdale Brook, Harare</figcaption>
       </figure>
 
@@ -113,7 +113,7 @@ export const blogPosts = [
     slug: 'solar-system-installation-safety-precautions',
     title: 'Solar System Installation Safety Precautions',
     category: 'Tips',
-    image: '/projects/kadoma-24kva/3.jpg',
+    image: '/kadoma-24kva-3.jpg',
     excerpt:
       'Solar installations involve working with electricity and heights. Learn the essential safety precautions that every installer and homeowner should know before, during, and after installation.',
     date: '2024-05-18',
@@ -181,7 +181,7 @@ export const blogPosts = [
       </ul>
 
       <figure>
-        <img src="/projects/shawasha-hills-16kva/1.jpg" alt="Taqon Electrico technician in safety gear working on a Sunsynk inverter installation" />
+        <img src="/shawasha-hills-16kva-1.jpg" alt="Taqon Electrico technician in safety gear working on a Sunsynk inverter installation" />
         <figcaption>Proper PPE and careful attention during inverter wiring at a residential installation in Shawasha Hills</figcaption>
       </figure>
 
@@ -250,7 +250,7 @@ export const blogPosts = [
     slug: 'how-to-choose-the-right-solar-inverter',
     title: 'How to Choose the Right Solar Inverter for Your Solar System',
     category: 'Guide',
-    image: '/projects/kadoma-24kva/2.jpg',
+    image: '/kadoma-24kva-2.jpg',
     excerpt:
       'The inverter is the brain of your solar system. Learn about the different types, key specs to look for, and how to choose the right one for your home or business in Zimbabwe.',
     date: '2024-04-09',
@@ -277,7 +277,7 @@ export const blogPosts = [
       </ul>
 
       <figure>
-        <img src="/projects/nedbank-borrowdale-8kva/1.jpg" alt="Taqon Electrico technician configuring a Deye inverter at a commercial installation" />
+        <img src="/nedbank-borrowdale-8kva-1.jpg" alt="Taqon Electrico technician configuring a Deye inverter at a commercial installation" />
         <figcaption>A Taqon technician configuring a Deye inverter at our Nedbank Borrowdale installation</figcaption>
       </figure>
 
@@ -332,7 +332,7 @@ export const blogPosts = [
       <p>We stock all of these in our <a href="/shop">shop</a> and can advise on the best fit for your specific situation.</p>
 
       <figure>
-        <img src="/projects/bulawayo-16kva/2.jpg" alt="Sunsynk inverter with battery bank installed at a residential property" />
+        <img src="/bulawayo-16kva-2.jpg" alt="Sunsynk inverter with battery bank installed at a residential property" />
         <figcaption>A completed Sunsynk inverter and battery installation at a 16kVA residential project in Bulawayo</figcaption>
       </figure>
 
@@ -373,7 +373,7 @@ export const blogPosts = [
     slug: 'reasons-solar-batteries-draining-quickly',
     title: 'Reasons Behind Your Solar Batteries Draining Power Quickly',
     category: 'Maintenance',
-    image: '/projects/borrowdale-brook-5kva/1.jpg',
+    image: '/borrowdale-brook-5kva-1.jpg',
     excerpt:
       'Are your solar batteries running out faster than expected? Discover the most common reasons behind rapid battery drain and practical steps to extend your battery life.',
     date: '2024-03-04',
@@ -421,7 +421,7 @@ export const blogPosts = [
       <p>Silent killers. An aging fridge can consume 3-4 times more power than a modern energy-efficient model. That 15-year-old fridge in the garage? It might be costing you more in battery drain than a new one would cost to replace.</p>
 
       <figure>
-        <img src="/projects/bulawayo-16kva/4.jpg" alt="Taqon Electrico technician securing solar panel connections on a rooftop" />
+        <img src="/bulawayo-16kva-4.jpg" alt="Taqon Electrico technician securing solar panel connections on a rooftop" />
         <figcaption>Proper panel installation ensures maximum charging \u2014 one of the keys to keeping batteries full</figcaption>
       </figure>
 
@@ -462,7 +462,7 @@ export const blogPosts = [
       <blockquote><p>If you\u2019re still running lead-acid batteries and experiencing rapid drain, upgrading to lithium is often more cost-effective than replacing with more lead-acid. The upfront cost is higher, but the total cost of ownership over 10 years is dramatically lower.</p></blockquote>
 
       <figure>
-        <img src="/projects/chisipiti-10kva/2.jpg" alt="Taqon Electrico engineers with Pylontech battery bank and dual Sunsynk inverters" />
+        <img src="/chisipiti-10kva-2.jpg" alt="Taqon Electrico engineers with Pylontech battery bank and dual Sunsynk inverters" />
         <figcaption>A properly sized lithium battery bank with dual inverters \u2014 built for reliable, long-lasting backup power</figcaption>
       </figure>
 
@@ -523,7 +523,7 @@ export const blogPosts = [
     slug: 'all-you-need-to-know-about-solar-system-monitoring',
     title: 'All You Need to Know About Solar System Monitoring',
     category: 'Technology',
-    image: '/projects/nedbank-borrowdale-8kva/1.jpg',
+    image: '/nedbank-borrowdale-8kva-1.jpg',
     excerpt:
       'Solar system monitoring lets you track energy production, battery levels, and consumption in real time. Learn why monitoring matters and how to use it effectively.',
     date: '2024-01-05',
@@ -552,7 +552,7 @@ export const blogPosts = [
       <p>A drop in daily production could mean a dirty panel, a shading issue, or a wiring fault. Catching it in your app means fixing it in days, not months. That\u2019s the difference between a system that pays for itself in 3 years and one that disappoints.</p>
 
       <figure>
-        <img src="/projects/kadoma-24kva/2.jpg" alt="Two Taqon Electrico engineers at a Sunsynk inverter during system commissioning" />
+        <img src="/kadoma-24kva-2.jpg" alt="Two Taqon Electrico engineers at a Sunsynk inverter during system commissioning" />
         <figcaption>System commissioning includes setting up monitoring so homeowners can track performance from day one</figcaption>
       </figure>
 
@@ -591,7 +591,7 @@ export const blogPosts = [
       <p>Provides comprehensive monitoring for their all-in-one systems. Clean design, AI-powered optimisation suggestions, and smart home integration make it a standout for tech-savvy homeowners.</p>
 
       <figure>
-        <img src="/projects/nedbank-harare-12kva/3.jpg" alt="Taqon Electrico engineer wiring solar panels at sunset on a commercial rooftop" />
+        <img src="/nedbank-harare-12kva-3.jpg" alt="Taqon Electrico engineer wiring solar panels at sunset on a commercial rooftop" />
         <figcaption>Every installation we complete includes full monitoring setup \u2014 so you\u2019re in control from day one</figcaption>
       </figure>
 
@@ -644,7 +644,7 @@ export const blogPosts = [
       <blockquote><p>With alerts enabled, your system essentially monitors itself. You only need to act when something needs your attention.</p></blockquote>
 
       <figure>
-        <img src="/projects/kadoma-24kva/3.jpg" alt="Taqon Electrico engineers on a commercial rooftop with solar panels at sunset" />
+        <img src="/kadoma-24kva-3.jpg" alt="Taqon Electrico engineers on a commercial rooftop with solar panels at sunset" />
         <figcaption>From installation to ongoing monitoring \u2014 our team ensures your system performs at its best, year after year</figcaption>
       </figure>
 

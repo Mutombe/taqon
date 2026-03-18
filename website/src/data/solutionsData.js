@@ -7,7 +7,7 @@ export const solutionsData = [
     heroDescription:
       'A good Solar Panel Cleaning and Solar System Maintenance Service ensures that your system is running as effectively and safely as possible, helping your solar system deliver reliable clean energy for a longer period.',
     icon: 'Wrench',
-    image: '/projects/shawasha-hills-16kva/3.jpg',
+    image: '/shawasha-hills-16kva-3.jpg',
     fullDescription: [
       'A good Solar Panel Cleaning and Solar System Maintenance Service ensures that your system is running as effectively and safely as possible to help your solar system deliver reliable clean energy for a longer period. Most Solar Panel companies and inverter manufacturers recommend that solar panels be cleaned twice a year. An annual or bi-annual cleaning of the panels and an inspection from a technician could help keep your system at optimum performance for many years.',
       'Regular maintenance involves not just the panels themselves, but the entire system — from the inverter and battery bank to every wiring connection. Our experienced technicians use specialised equipment and proven methods to ensure every component is functioning at peak efficiency.',

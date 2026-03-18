@@ -445,7 +445,7 @@ export const videoTestimonials = [
     name: 'Taqon In Action',
     role: 'Taqon Electrico',
     quote: 'Watch our team in action — delivering quality solar installations across Zimbabwe.',
-    thumbnail: '/projects/kadoma-24kva/1.jpg',
+    thumbnail: '/kadoma-24kva-1.jpg',
     videoUrl: 'https://www.facebook.com/share/r/17dt3R1mMv/',
     platform: 'facebook',
   },

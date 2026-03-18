@@ -30,8 +30,8 @@ const brandLogos = [
 
 const heroImages = [
   '/34.jpeg',
-  '/projects/nedbank-harare-12kva/3.jpg',
-  '/projects/chisipiti-10kva/2.jpg',
+  '/nedbank-harare-12kva-3.jpg',
+  '/chisipiti-10kva-2.jpg',
   '/41.jpeg',
   '/53.jpeg',
 ];
@@ -321,7 +321,7 @@ export default function Home() {
       <section className="py-20 lg:py-28 relative overflow-hidden">
         {/* Blended background image */}
         <div className="absolute inset-0">
-          <img src="/projects/bulawayo-16kva/1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src="/bulawayo-16kva-1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-taqon-dark/70" />
         </div>
 
@@ -412,7 +412,7 @@ export default function Home() {
               <div className="relative">
                 <div className="absolute -inset-4 bg-taqon-orange/5 rounded-[2rem] -rotate-3" />
                 <img
-                  src="/projects/kadoma-24kva/3.jpg"
+                  src="/kadoma-24kva-3.jpg"
                   alt="Taqon Electrico solar installation team at work"
                   className="relative rounded-3xl w-full h-[500px] object-cover"
                   loading="lazy"
@@ -476,7 +476,7 @@ export default function Home() {
       <section className="py-20 lg:py-32 relative overflow-hidden">
         {/* Blended background image */}
         <div className="absolute inset-0">
-          <img src="/projects/thuli-kirkman-10kva/1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src="/thuli-kirkman-10kva-1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-taqon-dark/85" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4">
@@ -535,7 +535,7 @@ export default function Home() {
       {/* ===== GOOGLE REVIEWS ===== */}
       <section className="py-16 lg:py-24 relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/projects/thuli-willowvale-16kva/1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src="/thuli-willowvale-16kva-1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-taqon-dark/85" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4">
@@ -578,7 +578,7 @@ export default function Home() {
       {/* ===== CONTACT CTA ===== */}
       <section className="py-20 lg:py-28 relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/projects/borrowdale-brook-5kva/1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src="/borrowdale-brook-5kva-1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-taqon-dark/80" />
         </div>
         <div className="max-w-7xl mx-auto px-4">

@@ -29,7 +29,7 @@ export default function Projects() {
       <section className="relative min-h-[55vh] flex items-center bg-taqon-dark overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="/projects/kadoma-24kva/1.jpg"
+            src="/kadoma-24kva-1.jpg"
             alt=""
             className="w-full h-full object-cover opacity-30"
             loading="eager"
