@@ -40,8 +40,28 @@ def health_check(request):
     return JsonResponse(checks)
 
 
+def debug_api(request, path=''):
+    """Proxy any API call and return the traceback if it 500s."""
+    from django.test import RequestFactory
+    from django.urls import resolve
+    try:
+        resolved = resolve(f'/api/v1/{path}')
+        factory = RequestFactory()
+        fake_request = factory.get(f'/api/v1/{path}')
+        fake_request.META['HTTP_ACCEPT'] = 'application/json'
+        response = resolved.func(fake_request, **resolved.kwargs)
+        return JsonResponse({'status': response.status_code, 'ok': True})
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc(),
+        }, status=500)
+
+
 urlpatterns = [
     path('health/', health_check),
+    path('debug-api/<path:path>', debug_api),
     path('admin/', admin.site.urls),
 
     # API v1
