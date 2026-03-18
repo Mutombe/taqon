@@ -211,17 +211,19 @@ body {
 }
 
 /* Auth modal inputs — use CSS vars for reliable dark mode */
-.auth-input {
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
-  color: var(--text-primary);
-  border-radius: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  min-height: 2.75rem;
-  width: 100%;
-  transition: border-color 0.2s, box-shadow 0.2s;
+@layer base {
+  .auth-input {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    min-height: 2.75rem;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
 }
 .auth-input select {
   min-height: 2.75rem;

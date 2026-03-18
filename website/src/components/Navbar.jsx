@@ -407,16 +407,25 @@ export default function Navbar() {
   };
 
   // ── Nav link text color helper ─────────────────────────────────────────────
+  // Pages with dark hero backgrounds where white nav text works
+  const darkHeroPages = ['/', '/about', '/solutions', '/shop', '/packages', '/projects', '/contact',
+    '/solar-advisor', '/blog', '/careers', '/certifications', '/financing', '/energy-hub',
+    '/solar-secrets', '/calculator', '/configurator'];
+  const hasDarkHero = darkHeroPages.some(p => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p));
+
   const navTextClass = (path) => {
     if (isActive(path)) return 'text-taqon-orange';
     if (isScrolled) return 'text-taqon-charcoal dark:text-white/80 hover:text-taqon-orange';
-    return 'text-white/90 hover:text-white';
+    if (hasDarkHero) return 'text-white/90 hover:text-white';
+    return 'text-taqon-charcoal dark:text-white/80 hover:text-taqon-orange';
   };
 
   // ── Right action button style helper ───────────────────────────────────────
   const actionBtnClass = isScrolled
     ? 'hover:bg-gray-100 dark:hover:bg-white/10 text-taqon-charcoal dark:text-white'
-    : 'hover:bg-white/10 text-white';
+    : hasDarkHero
+      ? 'hover:bg-white/10 text-white'
+      : 'hover:bg-gray-100 dark:hover:bg-white/10 text-taqon-charcoal dark:text-white';
 
   // ── Panel animation ────────────────────────────────────────────────────────
   const panelMotion = {
