@@ -182,6 +182,9 @@ SIMPLE_JWT = {
     'TOKEN_OBTAIN_SERIALIZER': 'apps.accounts.serializers.CustomTokenObtainPairSerializer',
 }
 
+# Redis URL — used by cache, channels, and celery
+_redis_url = env('REDIS_URL', default='')
+
 # Channels — use Redis if available, otherwise in-memory
 if _redis_url:
     CHANNEL_LAYERS = {
@@ -212,7 +215,6 @@ CELERY_TIMEZONE = 'Africa/Harare'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Cache — use Redis if available, otherwise fall back to local memory
-_redis_url = env('REDIS_URL', default='')
 if _redis_url:
     CACHES = {
         'default': {
