@@ -452,7 +452,7 @@ export default function Navbar() {
         className={`fixed left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled
             ? 'top-0 bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-xl shadow-lg shadow-black/5'
-            : 'top-8 bg-taqon-dark/70 backdrop-blur-sm'
+            : 'top-8 bg-transparent'
         }`}
         initial={{ y: -100 }}
         animate={{ y: 0 }}

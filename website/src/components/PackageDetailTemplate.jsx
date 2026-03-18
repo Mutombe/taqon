@@ -76,18 +76,19 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
   return (
     <>
       {/* ── Hero Section ── */}
-      <section className="relative bg-taqon-cream dark:bg-taqon-dark pt-28 pb-16 lg:pt-36 lg:pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="relative bg-taqon-dark pt-28 pb-16 lg:pt-36 lg:pb-20">
+        <div className="absolute inset-0 dark-mesh" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm mb-8">
             <Link
               to="/packages"
-              className="text-taqon-muted dark:text-white/50 hover:text-taqon-orange transition-colors"
+              className="text-white/50 hover:text-taqon-orange transition-colors"
             >
               Packages
             </Link>
-            <span className="text-taqon-muted dark:text-white/30">/</span>
-            <span className="text-taqon-charcoal dark:text-white font-medium truncate">
+            <span className="text-white/30">/</span>
+            <span className="text-white font-medium truncate">
               {pkg.name}
             </span>
           </nav>
@@ -110,7 +111,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="mt-4 text-4xl lg:text-5xl font-bold font-syne text-taqon-charcoal dark:text-white"
+                className="mt-4 text-4xl lg:text-5xl font-bold font-syne text-white"
               >
                 {pkg.name}
               </motion.h1>
@@ -120,7 +121,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="mt-2 text-lg text-taqon-muted dark:text-white/50"
+                className="mt-2 text-lg text-white/50"
               >
                 {pkg.kvaRating} Solar Power System
               </motion.p>
@@ -130,7 +131,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="mt-4 text-taqon-charcoal/80 dark:text-white/70 leading-relaxed"
+                className="mt-4 text-white/70 leading-relaxed"
               >
                 {autoLink(pkg.description)}
               </motion.p>
@@ -149,7 +150,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3, ease: 'easeInOut' }}
-                      className="text-taqon-charcoal/70 dark:text-white/60 leading-relaxed overflow-hidden"
+                      className="text-white/60 leading-relaxed overflow-hidden"
                     >
                       {autoLink(pkg.fullDescription, { maxLinks: 5 })}
                     </motion.p>
@@ -171,7 +172,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 transition={{ delay: 0.3 }}
                 className="mt-8"
               >
-                <span className="text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
+                <span className="text-4xl font-bold font-syne text-white">
                   {pkg.price}
                 </span>
               </motion.div>
@@ -191,7 +192,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 </Link>
                 <a
                   href="tel:+263242304860"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 border border-taqon-charcoal/20 dark:border-white/20 text-taqon-charcoal dark:text-white rounded-xl hover:bg-taqon-charcoal/5 dark:hover:bg-white/5 transition-all font-medium"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium"
                 >
                   <Phone size={16} /> +263 242 304860
                 </a>
