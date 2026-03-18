@@ -407,11 +407,9 @@ export default function Navbar() {
   };
 
   // ── Nav link text color helper ─────────────────────────────────────────────
-  // Pages with dark hero backgrounds where white nav text works
-  const darkHeroPages = ['/', '/about', '/solutions', '/shop', '/packages', '/projects', '/contact',
-    '/solar-advisor', '/blog', '/careers', '/certifications', '/financing', '/energy-hub',
-    '/solar-secrets', '/calculator', '/configurator'];
-  const hasDarkHero = darkHeroPages.some(p => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p));
+  // Pages WITHOUT dark hero (account/auth pages with light bg) — everything else has dark hero
+  const lightOnlyPages = ['/account', '/notifications', '/support/create', '/faq'];
+  const hasDarkHero = !lightOnlyPages.some(p => location.pathname.startsWith(p));
 
   const navTextClass = (path) => {
     if (isActive(path)) return 'text-taqon-orange';
