@@ -407,40 +407,15 @@ export default function Navbar() {
   };
 
   // ── Nav link text color helper ─────────────────────────────────────────────
-  // Detect if the section behind the navbar is dark by checking the element at the nav position
-  const [hasDarkHero, setHasDarkHero] = useState(true);
-  useEffect(() => {
-    const check = () => {
-      // Sample the element behind the navbar center
-      const el = document.elementFromPoint(window.innerWidth / 2, 80);
-      if (!el) return;
-      const bg = getComputedStyle(el).backgroundColor;
-      const match = bg.match(/\d+/g);
-      if (match && match.length >= 3) {
-        const [r, g, b] = match.map(Number);
-        // Dark if luminance is low (< 128)
-        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-        setHasDarkHero(lum < 128);
-      }
-    };
-    // Check after a short delay for page render
-    const timer = setTimeout(check, 100);
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
-
   const navTextClass = (path) => {
     if (isActive(path)) return 'text-taqon-orange';
     if (isScrolled) return 'text-taqon-charcoal dark:text-white/80 hover:text-taqon-orange';
-    if (hasDarkHero) return 'text-white/90 hover:text-white';
-    return 'text-taqon-charcoal dark:text-white/80 hover:text-taqon-orange';
+    return 'text-white/90 hover:text-white';
   };
 
-  // ── Right action button style helper ───────────────────────────────────────
   const actionBtnClass = isScrolled
     ? 'hover:bg-gray-100 dark:hover:bg-white/10 text-taqon-charcoal dark:text-white'
-    : hasDarkHero
-      ? 'hover:bg-white/10 text-white'
-      : 'hover:bg-gray-100 dark:hover:bg-white/10 text-taqon-charcoal dark:text-white';
+    : 'hover:bg-white/10 text-white';
 
   // ── Panel animation ────────────────────────────────────────────────────────
   const panelMotion = {
@@ -477,7 +452,7 @@ export default function Navbar() {
         className={`fixed left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled
             ? 'top-0 bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-xl shadow-lg shadow-black/5'
-            : 'top-8 bg-transparent'
+            : 'top-8 bg-taqon-dark/70 backdrop-blur-sm'
         }`}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
