@@ -40,6 +40,8 @@ const Financing = lazy(() => import('./pages/Financing'));
 const Certifications = lazy(() => import('./pages/Certifications'));
 const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const EnergyHub = lazy(() => import('./pages/EnergyHub'));
 const AreaLanding = lazy(() => import('./pages/AreaLanding'));
 const SystemVisualizer = lazy(() => import('./pages/SystemVisualizer'));
@@ -228,6 +230,8 @@ function AppContent() {
             <Route path="/calculator" element={<SavingsCalculator />} />
             <Route path="/quote" element={<Navigate to="/solar-advisor" replace />} />
             <Route path="/families/:slug" element={<Navigate to="/packages" replace />} />
+            <Route path="/terms" element={<TermsConditions />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/dashboard" element={<CustomerDashboard />} />
             <Route path="/financing" element={<Financing />} />
             <Route path="/certifications" element={<Certifications />} />

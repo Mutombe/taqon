@@ -178,11 +178,11 @@ export default function Footer({ onOpenPrivacy, onOpenCookies }) {
             © {new Date().getFullYear()} Taqon Electrico. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-white/30 text-xs">
-            <button onClick={onOpenPrivacy} className="hover:text-white transition-colors">Privacy Policy</button>
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <span>•</span>
             <button onClick={onOpenCookies} className="hover:text-white transition-colors">Cookie Policy</button>
             <span>•</span>
-            <Link to="/contact" className="hover:text-white transition-colors">Terms & Conditions</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link>
           </div>
         </div>
       </div>
