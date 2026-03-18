@@ -94,14 +94,16 @@ export default function Home() {
           }} />
         </div>
 
-        {/* Slide indicators */}
-        <div className="absolute bottom-40 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {/* Slide indicators — vertical on mobile (top-right), horizontal on desktop (bottom-center) */}
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2 sm:flex-row sm:top-auto sm:right-auto sm:bottom-40 sm:left-1/2 sm:-translate-x-1/2 sm:translate-y-0">
           {heroImages.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrentSlide(i)}
-              className={`h-1 rounded-full transition-all duration-500 ${
-                currentSlide === i ? 'w-8 bg-taqon-orange' : 'w-3 bg-white/30 hover:bg-white/50'
+              className={`rounded-full transition-all duration-500 ${
+                currentSlide === i
+                  ? 'w-1.5 h-6 sm:w-8 sm:h-1 bg-taqon-orange'
+                  : 'w-1.5 h-3 sm:w-3 sm:h-1 bg-white/30 hover:bg-white/50'
               }`}
               aria-label={`Go to slide ${i + 1}`}
             />
@@ -178,7 +180,7 @@ export default function Home() {
               className="mt-8 flex flex-col sm:flex-row gap-4"
             >
               <Link
-                to="/contact"
+                to="/solar-advisor"
                 className="group inline-flex items-center justify-center gap-2 bg-taqon-orange text-white px-8 py-4 rounded-full text-base font-semibold hover:bg-taqon-orange/90 transition-all hover:shadow-xl hover:shadow-taqon-orange/25 active:scale-95"
               >
                 Get a Free Quote
