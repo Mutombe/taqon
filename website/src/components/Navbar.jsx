@@ -407,9 +407,26 @@ export default function Navbar() {
   };
 
   // ── Nav link text color helper ─────────────────────────────────────────────
-  // Pages WITHOUT dark hero (account/auth pages with light bg) — everything else has dark hero
-  const lightOnlyPages = ['/account', '/notifications', '/support/create', '/faq'];
-  const hasDarkHero = !lightOnlyPages.some(p => location.pathname.startsWith(p));
+  // Detect if the section behind the navbar is dark by checking the element at the nav position
+  const [hasDarkHero, setHasDarkHero] = useState(true);
+  useEffect(() => {
+    const check = () => {
+      // Sample the element behind the navbar center
+      const el = document.elementFromPoint(window.innerWidth / 2, 80);
+      if (!el) return;
+      const bg = getComputedStyle(el).backgroundColor;
+      const match = bg.match(/\d+/g);
+      if (match && match.length >= 3) {
+        const [r, g, b] = match.map(Number);
+        // Dark if luminance is low (< 128)
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        setHasDarkHero(lum < 128);
+      }
+    };
+    // Check after a short delay for page render
+    const timer = setTimeout(check, 100);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   const navTextClass = (path) => {
     if (isActive(path)) return 'text-taqon-orange';
