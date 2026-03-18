@@ -84,9 +84,9 @@ export default function Footer({ onOpenPrivacy, onOpenCookies }) {
 
       {/* Main Footer */}
       <div className="relative max-w-7xl mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-8">
           {/* Brand Column */}
-          <div className="lg:col-span-2">
+          <div className="col-span-2">
             <img src={logoImg} alt="Taqon Electrico" className="h-12 w-auto mb-6" />
             <p className="text-white/50 text-sm leading-relaxed max-w-sm mb-6">
               Zimbabwe's trusted solar and electrical engineering company. Delivering reliable power solutions 
