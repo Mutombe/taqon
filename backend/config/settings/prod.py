@@ -79,12 +79,18 @@ if SENTRY_DSN:
         send_default_pii=True,
     )
 
-# Logging - file-based in production
-LOGGING['handlers']['file'] = {  # noqa: F405
-    'class': 'logging.handlers.RotatingFileHandler',
-    'filename': BASE_DIR / 'logs' / 'django.log',  # noqa: F405
-    'maxBytes': 1024 * 1024 * 10,  # 10MB
-    'backupCount': 5,
-    'formatter': 'verbose',
-}
-LOGGING['root']['handlers'] = ['console', 'file']  # noqa: F405
+# Logging - console only on Render (no persistent filesystem)
+# File logging only if the logs directory exists
+import os as _os
+_log_dir = BASE_DIR / 'logs'  # noqa: F405
+if _os.path.isdir(_log_dir):
+    LOGGING['handlers']['file'] = {  # noqa: F405
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': _log_dir / 'django.log',
+        'maxBytes': 1024 * 1024 * 10,
+        'backupCount': 5,
+        'formatter': 'verbose',
+    }
+    LOGGING['root']['handlers'] = ['console', 'file']  # noqa: F405
+else:
+    LOGGING['root']['handlers'] = ['console']  # noqa: F405
