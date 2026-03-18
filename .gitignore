@@ -27,17 +27,6 @@ backend/.env
 .DS_Store
 Thumbs.db
 
-# Project photos (not part of codebase)
-*.xlsx
-*.pdf
-10KVA*/
-16KVA*/
-Borrowdale*/
-Bulawayo*/
-Kadoma*/
-NEDBANK*/
-Shawasha*/
-chisipiti*/
 
 # Claude agent memory
 website/.claude/
@@ -45,3 +34,4 @@ website/.claude/
 
 # Misc
 *.log
+render-env.txt

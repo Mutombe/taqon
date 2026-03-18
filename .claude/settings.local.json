@@ -101,7 +101,16 @@
       "Bash(cd \"C:\\\\Users\\\\PC\\\\documents\\\\taqon\\\\website\" && npx -y acorn-jsx --ecma2020 src/pages/SolarAdvisor.jsx 2>&1 | head -5 || node -e \"try { require\\('fs'\\).readFileSync\\('src/pages/SolarAdvisor.jsx','utf8'\\); console.log\\('File readable, checking JSX...'\\); } catch\\(e\\) { console.error\\(e\\); }\")",
       "Bash(cd \"C:\\\\Users\\\\PC\\\\documents\\\\taqon\\\\website\" && node -e \"\nconst fs = require\\('fs'\\);\nconst code = fs.readFileSync\\('src/pages/SolarAdvisor.jsx', 'utf8'\\);\n// Check for balanced braces\nlet braces = 0, parens = 0, brackets = 0;\nfor \\(const ch of code\\) {\n  if \\(ch === '{'\\) braces++;\n  if \\(ch === '}'\\) braces--;\n  if \\(ch === '\\('\\) parens++;\n  if \\(ch === '\\)'\\) parens--;\n  if \\(ch === '['\\) brackets++;\n  if \\(ch === ']'\\) brackets--;\n}\nconsole.log\\('Braces:', braces, 'Parens:', parens, 'Brackets:', brackets\\);\nif \\(braces === 0 && parens === 0 && brackets === 0\\) {\n  console.log\\('All balanced - file structure looks good'\\);\n} else {\n  console.log\\('IMBALANCE DETECTED'\\);\n}\n\")",
       "Bash(cat \"C:\\\\Users\\\\PC\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-PC-documents-taqon\\\\7216474f-32c8-4247-b43c-888e8aac83b1\\\\tasks\\\\bw85n6p85.output\" 2>/dev/null; echo \"EXIT: $?\")",
-      "Bash(grep -r \"generate.*quotation.*pdf\\\\|quotation.*pdf\" /c/Users/PC/documents/taqon/backend --include=*.py)"
+      "Bash(grep -r \"generate.*quotation.*pdf\\\\|quotation.*pdf\" /c/Users/PC/documents/taqon/backend --include=*.py)",
+      "Bash(cd:*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Bash(test -f \"$f\")",
+      "Bash(done)",
+      "Bash(grep -rn \"bg-taqon-dark\" website/src/pages/*.jsx)",
+      "Bash(while read:*)",
+      "Bash(do test:*)",
+      "Bash(echo \"MISSING: $f\")"
     ]
   }
 }
