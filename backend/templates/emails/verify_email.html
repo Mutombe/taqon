@@ -1,0 +1,12 @@
+{% extends "emails/base_email.html" %}
+{% block title %}Verify Your Email - Taqon Electrico{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ user.first_name }}!</h2>
+<p>Thank you for creating an account with Taqon Electrico. To get started, please verify your email address by clicking the button below:</p>
+<p style="text-align: center;">
+  <a href="{{ verification_url }}" class="btn">Verify My Email</a>
+</p>
+<p>This link will expire in 24 hours. If you didn't create an account with us, you can safely ignore this email.</p>
+<p style="font-size: 13px; color: #999;">If the button doesn't work, copy and paste this link into your browser:<br>{{ verification_url }}</p>
+{% endblock %}

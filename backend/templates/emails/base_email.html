@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Taqon Electrico{% endblock %}</title>
+<style>
+  body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; color: #333; }
+  .wrapper { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+  .header { background-color: #F26522; padding: 24px 32px; text-align: center; }
+  .header h1 { color: #ffffff; font-size: 24px; margin: 0; letter-spacing: 1px; }
+  .header p { color: rgba(255,255,255,0.85); font-size: 13px; margin: 4px 0 0; }
+  .body { padding: 32px; }
+  .body h2 { color: #1A1A1A; font-size: 20px; margin-top: 0; }
+  .body p { color: #555; font-size: 15px; line-height: 1.6; }
+  .btn { display: inline-block; background-color: #F26522; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 16px 0; }
+  .btn:hover { background-color: #d4551c; }
+  .footer { background-color: #1A1A1A; padding: 24px 32px; text-align: center; }
+  .footer p { color: #999; font-size: 12px; margin: 4px 0; }
+  .footer a { color: #F26522; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <h1>TAQON ELECTRICO</h1>
+    <p>Customer is King!</p>
+  </div>
+  <div class="body">
+    {% block content %}{% endblock %}
+  </div>
+  <div class="footer">
+    <p>TAQON ELECTRICO (PVT) LTD</p>
+    <p>203 Sherwood Drive, Strathaven, Harare</p>
+    <p><a href="tel:+2638644290072">+263 8644 290072</a> &bull; <a href="mailto:info@taqon.co.zw">info@taqon.co.zw</a></p>
+    <p style="margin-top: 12px; color: #666;">&copy; {% now "Y" %} Taqon Electrico. All rights reserved.</p>
+  </div>
+</div>
+</body>
+</html>

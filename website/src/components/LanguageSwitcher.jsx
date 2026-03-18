@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe } from 'lucide-react';
+import { Globe } from '@phosphor-icons/react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const languages = [

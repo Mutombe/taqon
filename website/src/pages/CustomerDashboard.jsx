@@ -4,17 +4,17 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Sun,
-  Zap,
-  DollarSign,
+  Lightning,
+  CurrencyDollar,
   Leaf,
-  Activity,
-  AlertTriangle,
-  CheckCircle2,
+  Pulse,
+  Warning,
+  CheckCircle,
   Info,
   ArrowRight,
-  Battery,
+  BatteryFull,
   Gauge,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { generateDailyProductionCurve } from '../utils/solarCalculator';
@@ -34,7 +34,7 @@ const ALERTS = [
   {
     id: 1,
     type: 'success',
-    icon: CheckCircle2,
+    icon: CheckCircle,
     title: 'System performing optimally',
     time: '2 hours ago',
     color: 'text-green-600 dark:text-green-400',
@@ -52,7 +52,7 @@ const ALERTS = [
   {
     id: 3,
     type: 'warning',
-    icon: AlertTriangle,
+    icon: Warning,
     title: 'Panel cleaning recommended — due in 14 days',
     time: '3 days ago',
     color: 'text-amber-600 dark:text-amber-400',
@@ -61,8 +61,8 @@ const ALERTS = [
   {
     id: 4,
     type: 'success',
-    icon: CheckCircle2,
-    title: 'Battery fully charged',
+    icon: CheckCircle,
+    title: 'BatteryFull fully charged',
     time: '5 hours ago',
     color: 'text-green-600 dark:text-green-400',
     bg: 'bg-green-50 dark:bg-green-900/20',
@@ -180,14 +180,14 @@ export default function CustomerDashboard() {
       changePositive: true,
     },
     {
-      icon: DollarSign,
+      icon: CurrencyDollar,
       label: 'Savings This Month',
       value: '$42.80',
       change: '+8% vs last month',
       changePositive: true,
     },
     {
-      icon: Activity,
+      icon: Pulse,
       label: 'System Health',
       value: '98.5%',
       change: 'All systems normal',
@@ -424,11 +424,11 @@ export default function CustomerDashboard() {
                 />
                 <div className="mt-6 flex items-center gap-4 text-xs text-taqon-muted dark:text-white/50">
                   <div className="flex items-center gap-1.5">
-                    <Battery size={14} className="text-green-500" />
-                    <span>Battery: 94%</span>
+                    <BatteryFull size={14} className="text-green-500" />
+                    <span>BatteryFull: 94%</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Zap size={14} className="text-taqon-orange" />
+                    <Lightning size={14} className="text-taqon-orange" />
                     <span>Grid: Off</span>
                   </div>
                 </div>
@@ -462,13 +462,13 @@ export default function CustomerDashboard() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-taqon-dark">
+      <section className="py-16 bg-taqon-cream dark:bg-taqon-dark">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <AnimatedSection>
-            <h2 className="text-3xl lg:text-4xl font-bold font-syne text-white">
+            <h2 className="text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
               Want Your Own Dashboard?
             </h2>
-            <p className="mt-3 text-white/50 max-w-lg mx-auto">
+            <p className="mt-3 text-gray-500 dark:text-white/50 max-w-lg mx-auto">
               Every Taqon Electrico installation includes access to your personalised solar monitoring portal.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
@@ -480,7 +480,7 @@ export default function CustomerDashboard() {
               </Link>
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 border border-white/20 text-white px-8 py-4 rounded-full font-semibold hover:bg-white/10 transition-all"
+                className="inline-flex items-center gap-2 border border-gray-300 dark:border-white/20 text-taqon-charcoal dark:text-white px-8 py-4 rounded-full font-semibold hover:bg-gray-100 dark:hover:bg-white/10 transition-all"
               >
                 Contact Us
               </Link>

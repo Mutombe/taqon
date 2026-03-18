@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Minus } from 'lucide-react';
+import { X, Check, Minus } from '@phosphor-icons/react';
 
 export default function ProductComparison({ products = [], isOpen, onClose }) {
   if (!products || products.length < 2) return null;
@@ -93,7 +93,7 @@ export default function ProductComparison({ products = [], isOpen, onClose }) {
                         <div className="flex flex-col items-center gap-3">
                           <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10">
                             <img
-                              src={product.image}
+                              src={product.primary_image?.image_url || product.primary_image?.image || ''}
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />
@@ -101,7 +101,7 @@ export default function ProductComparison({ products = [], isOpen, onClose }) {
                           <span className="text-sm font-bold text-taqon-charcoal dark:text-white font-syne line-clamp-2 max-w-[180px]">
                             {product.name}
                           </span>
-                          {product.onSale && (
+                          {product.is_on_sale && (
                             <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
                               SALE
                             </span>

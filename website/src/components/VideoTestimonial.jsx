@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, X } from 'lucide-react';
+import { Play, X } from '@phosphor-icons/react';
 
 function extractYouTubeId(url) {
   const match = url.match(
@@ -10,22 +10,46 @@ function extractYouTubeId(url) {
   return match ? match[1] : null;
 }
 
-export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quote }) {
+function YouTubeLogo() {
+  return (
+    <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+      <rect width="28" height="20" rx="4" fill="#FF0000" />
+      <path d="M18.5 10L11.5 14V6L18.5 10Z" fill="white" />
+    </svg>
+  );
+}
+
+function FacebookLogo() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect width="20" height="20" rx="4" fill="#1877F2" />
+      <path d="M13.9 10.6H11.7V17.5H9V10.6H7.3V8.2H9V6.7C9 5 10 3.5 12.3 3.5C13.2 3.5 13.9 3.6 13.9 3.6L13.8 5.8C13.8 5.8 13.1 5.8 12.4 5.8C11.6 5.8 11.7 6.2 11.7 6.7V8.2H13.9L13.9 10.6Z" fill="white" />
+    </svg>
+  );
+}
+
+export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quote, platform = 'youtube' }) {
   const [isOpen, setIsOpen] = useState(false);
 
+  const isFacebook = platform === 'facebook';
+  const videoId = !isFacebook ? extractYouTubeId(videoUrl) : null;
+
   const openModal = useCallback(() => {
+    if (isFacebook) {
+      window.open(videoUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
     setIsOpen(true);
     document.body.style.overflow = 'hidden';
-  }, []);
+  }, [isFacebook, videoUrl]);
 
   const closeModal = useCallback(() => {
     setIsOpen(false);
     document.body.style.overflow = '';
   }, []);
 
-  const videoId = extractYouTubeId(videoUrl);
-
-  const srcdocContent = `
+  const srcdocContent = videoId
+    ? `
     <style>
       * { padding:0; margin:0; overflow:hidden; }
       html, body { height:100%; background:#000; }
@@ -36,10 +60,11 @@ export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quot
       }
     </style>
     <a href="https://www.youtube.com/embed/${videoId}?autoplay=1">
-      <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="${name} testimonial">
+      <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="${name} video">
       <span>&#x25B6;</span>
     </a>
-  `.replace(/\n\s+/g, '');
+  `.replace(/\n\s+/g, '')
+    : '';
 
   return (
     <>
@@ -53,11 +78,16 @@ export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quot
         <div className="relative rounded-2xl overflow-hidden aspect-video bg-taqon-charcoal">
           <img
             src={thumbnail}
-            alt={`${name} video testimonial`}
+            alt={`${name} video`}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-taqon-dark/80 via-taqon-dark/20 to-transparent" />
+
+          {/* Platform Logo — top-right corner */}
+          <div className="absolute top-3 right-3 z-10 opacity-90 group-hover:opacity-100 transition-opacity drop-shadow-lg">
+            {isFacebook ? <FacebookLogo /> : <YouTubeLogo />}
+          </div>
 
           {/* Play Button */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -87,9 +117,9 @@ export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quot
         )}
       </motion.div>
 
-      {/* Video Modal */}
+      {/* Video Modal (YouTube only) */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && videoId && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -125,7 +155,7 @@ export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quot
               <iframe
                 src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
                 srcDoc={srcdocContent}
-                title={`${name} testimonial video`}
+                title={`${name} video`}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

@@ -1,273 +1,661 @@
 export const blogPosts = [
   {
     id: 1,
-    slug: 'understanding-solar-panel-efficiency',
-    title: 'Understanding Solar Panel Efficiency: What Every Zimbabwean Homeowner Should Know',
-    excerpt: 'Learn how temperature, tilt angle, and maintenance affect your solar panel output and discover practical tips to maximise energy production in Zimbabwe\'s climate.',
-    content: `
-      <h2>What Is Solar Panel Efficiency?</h2>
-      <p>Solar panel efficiency refers to how much of the sunlight hitting a panel is converted into usable electricity. Modern mono-crystalline panels, like the Jinko 415W and JA Solar 555W panels we install at Taqon Electrico, typically achieve efficiencies between 20% and 22%. While that might sound modest, advances in half-cell and bi-facial technology have pushed output per square metre to record levels, making rooftop solar more viable than ever for Zimbabwean homes and businesses.</p>
-      <p>In Zimbabwe, we benefit from an average of 8 to 9 peak sun hours per day during summer months, which places us among the top solar resource regions in the world. This means even panels with average global efficiency ratings produce exceptional yields when installed correctly on a Harare rooftop or a Bulawayo commercial property.</p>
-
-      <h2>How Temperature Affects Output</h2>
-      <p>Many homeowners are surprised to learn that excessive heat actually reduces solar panel output. Panels are rated at a Standard Test Condition of 25 degrees Celsius, but Zimbabwean rooftops can reach 50 degrees or more during October. For every degree above 25, a typical panel loses about 0.3% to 0.5% of its rated power. This is why proper mounting with adequate airflow beneath the panels is critical. Our installation teams at Taqon Electrico always ensure a minimum 100mm gap between the panel and the roof surface to allow natural ventilation.</p>
-      <p>Choosing panels with a low temperature coefficient, such as the JA Solar bi-facial modules, helps mitigate heat-related losses. These panels maintain stronger performance even during the hottest months, delivering more kilowatt-hours over the course of a year compared to budget alternatives.</p>
-
-      <h2>The Importance of Tilt Angle and Orientation</h2>
-      <p>In Zimbabwe, which sits in the southern hemisphere, solar panels should ideally face north to capture maximum sunlight throughout the day. The optimal tilt angle for Harare (latitude approximately 17.8 degrees south) is between 15 and 20 degrees. During winter, a steeper tilt of around 30 degrees can help capture lower-angle sunlight. Most residential roofs in Zimbabwe have pitches between 15 and 25 degrees, which already falls within an acceptable range for solar production without additional tilt frames.</p>
-      <p>East-west orientations are also viable, especially for homes that consume more power in the morning and late afternoon. While east-west arrays produce roughly 10% to 15% less total energy than an ideal north-facing setup, they provide a more even generation curve throughout the day, which can be beneficial for households without battery storage.</p>
-
-      <h2>Keeping Your Panels Clean</h2>
-      <p>Dust, bird droppings, and pollen can reduce panel output by 5% to 25% depending on severity. In dusty areas like Chitungwiza or during the dry season across most of Zimbabwe, regular cleaning is essential. We recommend hosing down your panels with clean water every four to six weeks and scheduling a professional cleaning with Taqon Electrico at least twice a year. Avoid using abrasive materials or high-pressure washers, as these can damage the anti-reflective coating on the glass surface.</p>
-
-      <h2>Maximising Your Investment</h2>
-      <p>To get the most from your solar installation, combine efficient panels with a correctly sized inverter and quality lithium batteries like the Pylontech US3000 or Dyness 48V range. An oversized inverter wastes money, while an undersized one clips your production. At Taqon Electrico, our engineers use detailed load analysis and shading assessment tools to design systems that deliver the best possible return on investment for every client. With proper design and maintenance, a well-installed solar system in Zimbabwe can pay for itself within three to five years.</p>
-    `,
-    category: 'Education',
-    tags: ['solar panels', 'efficiency', 'maintenance', 'Zimbabwe'],
-    image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80',
-    date: '2026-01-15',
+    slug: 'how-to-use-taqon-electrico-website',
+    title: 'How to Use Taqon Electrico Website: A Guide for New Users',
+    category: 'Guide',
+    image: '/projects/chisipiti-10kva/2.jpg',
+    excerpt:
+      'A comprehensive guide for new users on how to navigate the Taqon Electrico website \u2014 from browsing solar products and packages to requesting quotations and managing your account.',
+    date: '2024-06-18',
     readTime: '6 min read',
-    author: { name: 'Tafadzwa Nyambuya', role: 'Senior Solar Engineer' },
-    relatedPosts: [2, 3, 4],
+    tags: ['website guide', 'taqon electrico', 'user guide', 'solar shopping', 'how to'],
+    author: { name: 'Taqon Electrico', role: 'Editorial Team' },
+    content: `
+      <p>So you\u2019ve heard about Taqon Electrico and you\u2019re ready to explore what we offer \u2014 but where do you start? Whether you\u2019re a homeowner researching your first solar system, a business owner looking to cut electricity costs, or just curious about what\u2019s possible with solar energy in Zimbabwe, this guide will walk you through every corner of our website.</p>
+
+      <p>Think of this as your personal tour. By the end, you\u2019ll know exactly how to find the right solar solution, compare options, and get in touch with our team.</p>
+
+      <hr />
+
+      <h2>Getting Started</h2>
+
+      <p>The moment you land on our homepage, you\u2019ll notice a clean, intuitive navigation bar at the top. It\u2019s your gateway to everything we do. Here\u2019s what each section offers:</p>
+
+      <h3>Solutions</h3>
+
+      <p>This is the best place to begin if you\u2019re new to solar. It breaks down our core services \u2014 from <a href="/solutions/solar-installations">residential and commercial solar installations</a> to <a href="/solutions/borehole-pump-installations">borehole pump systems</a>, <a href="/solutions/electrical-maintenance">electrical maintenance</a>, and even <a href="/solutions/lighting-solutions">lighting design</a>. Each solution page explains what\u2019s involved, who it\u2019s for, and what you can expect.</p>
+
+      <h3>Shop, Packages & Projects</h3>
+
+      <p><strong>Shop</strong> is where you\u2019ll find individual components if you know what you need. <strong>Packages</strong> is perfect if you want a complete, pre-designed system. And <strong>Projects</strong> shows you our real installations across Zimbabwe \u2014 proof that we deliver on our promises.</p>
+
+      <hr />
+
+      <h2>Exploring Our Solar Packages</h2>
+
+      <p>Not sure what size system you need? That\u2019s exactly what our <a href="/packages">Packages page</a> is for. We\u2019ve designed a range of complete solar systems for different budgets and energy needs \u2014 from a basic <a href="/packages/economy">Economy 1kVA</a> setup for lights and phone charging, all the way up to our powerful <a href="/packages/deluxe">Deluxe 5kVA</a> system that can run an entire household.</p>
+
+      <p>Each package page tells you exactly what\u2019s included:</p>
+
+      <ul>
+        <li>The inverter model and its power rating</li>
+        <li>Battery capacity \u2014 how many hours of backup you\u2019ll get</li>
+        <li>Number and wattage of <a href="/shop?category=panels">solar panels</a></li>
+        <li>A realistic list of what the system can power in your home</li>
+      </ul>
+
+      <blockquote><p>No guesswork. No surprises. Just pick the package that matches your lifestyle and budget, then reach out for a personalised quotation.</p></blockquote>
+
+      <figure>
+        <img src="/projects/borrowdale-brook-5kva/1.jpg" alt="Taqon Electrico technicians installing solar panels on a residential roof in Borrowdale" />
+        <figcaption>Our team completing a 5kVA residential installation in Borrowdale Brook, Harare</figcaption>
+      </figure>
+
+      <h2>Shopping for Individual Components</h2>
+
+      <p>Already have a system and need a replacement battery? Want to add more panels to your existing setup? Our <a href="/shop">Shop</a> lets you browse and purchase individual components from trusted brands like Deye, Pylontech, Sigenergy, and Jinko Solar.</p>
+
+      <p>Every product page includes detailed technical specifications, clear pricing in USD, and high-quality images so you know exactly what you\u2019re getting. You can add items to your cart and check out online \u2014 or simply use the shop as a research tool before contacting us for a quote.</p>
+
+      <hr />
+
+      <h2>Viewing Our Project Portfolio</h2>
+
+      <p>There\u2019s nothing quite like seeing real work to build confidence. Our <a href="/projects">Projects page</a> showcases completed installations across Zimbabwe \u2014 from residential homes in Harare suburbs to commercial service stations in Bulawayo and Kadoma.</p>
+
+      <p>Each project includes a photo gallery, full system specifications, and details about what the client needed and how we delivered. It\u2019s a great way to find inspiration for your own project and see the quality of workmanship our team delivers.</p>
+
+      <h2>Requesting a Quotation</h2>
+
+      <p>Ready to take the next step? Getting a quote is easy. You have several options:</p>
+
+      <ul>
+        <li><strong><a href="/contact">Contact page</a></strong> \u2014 Fill in your details and requirements</li>
+        <li><strong><a href="/quote">Quote wizard</a></strong> \u2014 A guided, step-by-step tool that helps us understand your needs</li>
+        <li><strong>WhatsApp</strong> \u2014 Message us directly at +263 78 622 8457</li>
+        <li><strong>Phone</strong> \u2014 Call us for an immediate conversation</li>
+      </ul>
+
+      <p>Our team typically responds within 24 hours with a detailed, personalised quotation. No obligation, no pressure \u2014 just honest advice from experienced solar engineers.</p>
+
+      <figure>
+        <img src="/contact-taqon-electrico-zimbabwe.jpg" alt="Customer browsing solar products at Taqon Electrico" />
+        <figcaption>Browsing solar solutions has never been easier \u2014 explore our full range online</figcaption>
+      </figure>
+
+      <hr />
+
+      <h2>Managing Your Account</h2>
+
+      <p>Creating a free account unlocks a suite of features that make your solar journey smoother:</p>
+
+      <ul>
+        <li>Track orders and deliveries in real time</li>
+        <li>View and manage your quotations</li>
+        <li>Save products to your wishlist for later</li>
+        <li>Access invoices and payment history</li>
+        <li>Store multiple delivery addresses</li>
+      </ul>
+
+      <p>You can sign up with your email in under a minute, or use Google Sign-In for instant access. It\u2019s that simple.</p>
+
+      <h2>Need Help? We\u2019re Here</h2>
+
+      <p>Solar can feel overwhelming when you\u2019re just getting started \u2014 and that\u2019s perfectly okay. Our FAQ page answers the most common questions, and our support team is always ready to help with technical queries, system design advice, or after-sales service.</p>
+
+      <p>Look for the chat widget in the bottom-right corner of any page for quick assistance, or browse our <a href="/solar-secrets">Solar Secrets</a> blog for in-depth guides on everything from <a href="/blog/how-to-choose-the-right-solar-inverter">choosing the right inverter</a> to <a href="/blog/reasons-solar-batteries-draining-quickly">troubleshooting battery issues</a>.</p>
+    `,
+    relatedPosts: [3, 4],
   },
   {
     id: 2,
-    slug: 'lithium-vs-lead-acid-battery-comparison',
-    title: 'Lithium vs Lead Acid Batteries: Which Is Best for Your Solar System in Zimbabwe?',
-    excerpt: 'A comprehensive comparison of LiFePO4 lithium and lead-acid batteries for solar storage, covering cost, lifespan, performance, and total value in the Zimbabwean market.',
-    content: `
-      <h2>The Battery Decision: Why It Matters</h2>
-      <p>Batteries are arguably the most critical component of an off-grid or hybrid solar system. In Zimbabwe, where load shedding remains a reality and grid reliability varies by area, having dependable energy storage can mean the difference between a productive evening and hours in darkness. The two main contenders in the market today are lithium iron phosphate (LiFePO4) batteries and traditional lead-acid (flooded or sealed) batteries. Each has strengths that suit different situations and budgets.</p>
-      <p>At Taqon Electrico, we stock and install premium lithium batteries from Pylontech, Dyness, and Deye, as well as quality lead-acid options. Understanding the differences will help you make an informed decision that aligns with your energy needs and financial goals.</p>
-
-      <h2>Upfront Cost vs Total Cost of Ownership</h2>
-      <p>Lead-acid batteries win on initial purchase price. A quality 200Ah 48V lead-acid bank might cost $600 to $900, while a comparable lithium setup like the Pylontech US3000 (3.5kWh) runs around $1,250. However, cost per cycle tells a completely different story. Lead-acid batteries typically last 800 to 1,200 cycles at 50% depth of discharge, while LiFePO4 batteries deliver 6,000 or more cycles at 80% depth of discharge. Over a ten-year period, you would need to replace lead-acid batteries three to four times, making the total cost of ownership two to three times higher than a single lithium investment.</p>
-      <p>For most Zimbabwean homeowners planning to stay in their property long-term, lithium batteries offer dramatically better value despite the higher upfront cost. If your budget is genuinely constrained and you need solar storage immediately, lead-acid can serve as a bridge solution, but planning for a lithium upgrade is advisable.</p>
-
-      <h2>Performance in Zimbabwe's Climate</h2>
-      <p>Zimbabwe's warm climate actually favours lithium batteries. LiFePO4 cells maintain consistent performance between 0 and 45 degrees Celsius with minimal degradation. Lead-acid batteries, on the other hand, suffer accelerated degradation in heat. For every 8 degrees above 25 Celsius, lead-acid battery lifespan is roughly halved. In a Harare garage that regularly exceeds 35 degrees, this means your lead-acid bank may last only two to three years instead of the advertised four.</p>
-      <p>Lithium batteries also charge and discharge more efficiently. Round-trip efficiency for LiFePO4 sits around 95% to 98%, compared to 80% to 85% for lead-acid. This means more of your solar-generated energy is actually stored and available for use, reducing the number of panels needed to charge your battery bank fully.</p>
-
-      <h2>Weight, Space, and Safety</h2>
-      <p>A lithium battery stores roughly three times more energy per kilogram than lead-acid. The Pylontech UP5000, for example, delivers 4.8kWh in a compact, wall-mountable unit weighing just 36kg. An equivalent lead-acid bank would weigh over 150kg and require significantly more floor space. For homes with limited utility room area, lithium is often the only practical option for meaningful storage capacity.</p>
-      <p>Safety is another consideration. Quality LiFePO4 batteries include built-in Battery Management Systems (BMS) that protect against overcharge, over-discharge, short circuit, and thermal runaway. Lead-acid batteries, particularly flooded types, can emit hydrogen gas during charging and require well-ventilated spaces. Sealed AGM and gel variants eliminate gassing but still lack the intelligent protection of lithium BMS technology.</p>
-
-      <h2>Our Recommendation</h2>
-      <p>For new installations in Zimbabwe, we strongly recommend LiFePO4 lithium batteries. The Pylontech US3000 and Dyness 48V 100Ah are our most popular choices for residential systems, offering excellent build quality, stackable designs for easy expansion, and ten-year design life. For commercial installations requiring larger capacity, we design custom lithium battery banks tailored to your load profile. Contact Taqon Electrico for a free consultation and we will help you choose the perfect battery solution for your needs.</p>
-    `,
-    category: 'Technology',
-    tags: ['batteries', 'lithium', 'lead-acid', 'LiFePO4', 'comparison'],
-    image: 'https://images.unsplash.com/photo-1620714223084-8fcacc6dfd8d?w=800&q=80',
-    date: '2026-01-28',
+    slug: 'solar-system-installation-safety-precautions',
+    title: 'Solar System Installation Safety Precautions',
+    category: 'Tips',
+    image: '/projects/kadoma-24kva/3.jpg',
+    excerpt:
+      'Solar installations involve working with electricity and heights. Learn the essential safety precautions that every installer and homeowner should know before, during, and after installation.',
+    date: '2024-05-18',
     readTime: '8 min read',
-    author: { name: 'Kudzai Mashonga', role: 'Technical Director' },
-    relatedPosts: [1, 3, 6],
+    tags: ['solar installation', 'safety', 'electrical safety', 'solar panels', 'best practices'],
+    author: { name: 'Taqon Electrico', role: 'Engineering Team' },
+    content: `
+      <p>Picture this: it\u2019s a bright Saturday morning, you\u2019ve just bought a solar kit online, and you\u2019re ready to climb onto the roof and install it yourself. What could go wrong?</p>
+
+      <p>Quite a lot, actually. <a href="/solutions/solar-installations">Solar installations</a> involve live electrical components, heavy equipment, and working at height \u2014 a combination that demands serious respect for safety. Whether you\u2019re a DIY enthusiast or a homeowner supervising an installation, understanding these precautions could prevent a life-threatening accident.</p>
+
+      <blockquote><p>Safety is not optional \u2014 it\u2019s the foundation of every professional solar installation. The precautions below are the same protocols our engineers follow on every single job.</p></blockquote>
+
+      <hr />
+
+      <h2>Electrical Safety Basics</h2>
+
+      <p>Here\u2019s something many people don\u2019t realise: <a href="/shop?category=panels">solar panels</a> start generating electricity the moment sunlight hits them. There is no \u201Coff switch.\u201D Even during installation, an uncovered panel can produce dangerous voltages.</p>
+
+      <p>This is why professional installers follow strict protocols:</p>
+
+      <ul>
+        <li><strong>Cover panels with opaque material</strong> during wiring to prevent power generation</li>
+        <li><strong>Never work on live circuits</strong> \u2014 always isolate and verify with a multimeter</li>
+        <li><strong>Use insulated tools</strong> rated for the voltage levels involved</li>
+        <li><strong>Wear electrical-rated gloves</strong> when making any connections</li>
+        <li><strong>Install proper earthing</strong> to protect against faults and lightning</li>
+      </ul>
+
+      <p>These aren\u2019t suggestions \u2014 they\u2019re non-negotiable safety requirements that our team at Taqon Electrico follows on every single job.</p>
+
+      <figure>
+        <img src="/solar-panel-installtion-harare-5.jpg" alt="Taqon Electrico workers carefully lifting a solar panel onto a residential roof" />
+        <figcaption>Panel lifting requires coordination and proper safety equipment \u2014 never attempt this alone</figcaption>
+      </figure>
+
+      <h2>Working at Heights</h2>
+
+      <p>Falls from rooftops are the number one cause of serious injury during solar installations worldwide. It takes just a split second of lost balance to change your life forever.</p>
+
+      <p>Professional safety measures include:</p>
+
+      <ul>
+        <li><strong>Fall protection gear</strong> \u2014 harnesses, lanyards, and secure anchor points</li>
+        <li><strong>Roof inspection</strong> before stepping on \u2014 check for weak spots, loose tiles, or wet surfaces</li>
+        <li><strong>Proper ladders</strong> that extend at least 1 metre above the roof edge</li>
+        <li><strong>Never working alone</strong> \u2014 always have someone on the ground who can call for help</li>
+        <li><strong>Weather awareness</strong> \u2014 never work on a roof during rain, wind, or when surfaces are slippery</li>
+      </ul>
+
+      <p>Our installation teams always work in pairs at minimum, with full safety equipment. It\u2019s slower, but it\u2019s the only way we operate.</p>
+
+      <hr />
+
+      <h2>Personal Protective Equipment</h2>
+
+      <p>The right PPE isn\u2019t optional \u2014 it\u2019s the difference between a minor incident and a trip to the hospital. Every member of our installation team wears:</p>
+
+      <ul>
+        <li><strong>Safety helmet</strong> \u2014 protection from falling objects and head impacts</li>
+        <li><strong>Steel-toe boots</strong> with non-slip soles for roof grip</li>
+        <li><strong>Safety glasses</strong> \u2014 debris, wire fragments, and UV exposure are real hazards</li>
+        <li><strong>Cut-resistant gloves</strong> for panel handling (those edges are sharper than you think)</li>
+        <li><strong>Sun protection</strong> \u2014 sunscreen, hats, and plenty of water during long outdoor jobs</li>
+      </ul>
+
+      <figure>
+        <img src="/projects/shawasha-hills-16kva/1.jpg" alt="Taqon Electrico technician in safety gear working on a Sunsynk inverter installation" />
+        <figcaption>Proper PPE and careful attention during inverter wiring at a residential installation in Shawasha Hills</figcaption>
+      </figure>
+
+      <h2>Battery Safety</h2>
+
+      <p>Batteries are the most chemically dangerous component in any solar system. Whether you\u2019re working with lithium-ion or lead-acid technology, mishandling can lead to fires, explosions, or toxic exposure.</p>
+
+      <h3>Key Precautions</h3>
+
+      <ul>
+        <li><strong>Ventilation is critical</strong> \u2014 especially for lead-acid batteries that emit hydrogen gas during charging</li>
+        <li><strong>Double-check polarity</strong> every time \u2014 reversed connections can cause short circuits or worse</li>
+        <li><strong>Keep the area temperature-controlled</strong> \u2014 extreme heat or cold damages batteries and shortens lifespan</li>
+        <li><strong>Have a Class C fire extinguisher</strong> nearby during installation and in the battery room permanently</li>
+        <li><strong>Remove jewellery</strong> \u2014 rings, watches, and metal tools can bridge terminals and create sparks</li>
+      </ul>
+
+      <blockquote><p>This is one area where cutting corners can have catastrophic consequences. If you\u2019re unsure about any aspect of <a href="/shop?category=batteries">battery</a> installation, call a professional.</p></blockquote>
+
+      <hr />
+
+      <h2>Site Assessment Before Installation</h2>
+
+      <p>A proper installation starts long before anyone picks up a drill. A thorough site assessment covers:</p>
+
+      <ul>
+        <li>Structural integrity of the roof and mounting surfaces</li>
+        <li>Location of existing electrical wiring and plumbing</li>
+        <li>Cable routing to minimise trip hazards and weather exposure</li>
+        <li>Adequate space for <a href="/shop?category=inverters">inverter</a> and battery ventilation</li>
+        <li>Overhead power lines that could pose a risk during panel lifting</li>
+      </ul>
+
+      <p>At Taqon Electrico, every installation begins with a detailed site survey. We identify potential hazards before our team sets foot on site.</p>
+
+      <h2>After the Installation</h2>
+
+      <p>Safety doesn\u2019t end when the last panel is bolted down. Proper post-installation practices include:</p>
+
+      <ul>
+        <li><strong>Labelling every component</strong> \u2014 isolators, breakers, and junction boxes with voltage and current ratings</li>
+        <li><strong>Providing full documentation</strong> \u2014 wiring diagrams and operating instructions for the homeowner</li>
+        <li><strong>Teaching the emergency shutdown procedure</strong> \u2014 every household member should know how to safely kill power</li>
+        <li><strong>Scheduling regular <a href="/solutions/solar-system-maintenance">maintenance checks</a></strong> \u2014 connections loosen, panels get dirty, and batteries age</li>
+      </ul>
+
+      <figure>
+        <img src="/12.jpg" alt="Taqon Electrico engineer performing post-installation checks on an electrical panel" />
+        <figcaption>Post-installation safety checks ensure every connection meets Zimbabwean electrical standards</figcaption>
+      </figure>
+
+      <hr />
+
+      <h2>Why Professional Installation Matters</h2>
+
+      <p>We get it \u2014 DIY is tempting, especially when you\u2019re watching the budget. But solar installation is not a weekend project. It involves high-voltage DC wiring, structural mounting, and electrical integration that must comply with Zimbabwean safety standards.</p>
+
+      <p>Certified installers like Taqon Electrico bring the training, the equipment, and the experience to ensure your system is safe, efficient, and built to last. Every installation we complete comes with proper documentation, warranty support, and peace of mind.</p>
+
+      <p>Your safety and your family\u2019s safety are worth more than the cost difference. <a href="/contact">Get in touch</a> and let the professionals handle it.</p>
+    `,
+    relatedPosts: [3, 5],
   },
   {
     id: 3,
-    slug: 'how-to-size-your-solar-system',
-    title: 'How to Size Your Solar System: A Step-by-Step Guide for Zimbabwean Homes',
-    excerpt: 'A practical walkthrough for calculating the right solar system size based on your household energy consumption, budget, and goals.',
-    content: `
-      <h2>Why Correct Sizing Matters</h2>
-      <p>An undersized solar system leads to frustration as it fails to meet your energy demands, while an oversized system wastes money on capacity you may never use. In Zimbabwe, where solar investment represents a significant financial commitment, getting the sizing right from the start is essential. This guide walks you through the same process our engineers at Taqon Electrico use during free site assessments, so you can arrive at consultations well-informed and confident.</p>
-      <p>The key variables in system sizing are your daily energy consumption in kilowatt-hours, the number of peak sun hours available at your location, and your desired level of backup autonomy (how many hours or days you want to run without sunshine).</p>
-
-      <h2>Step 1: Calculate Your Daily Energy Consumption</h2>
-      <p>Start by listing every electrical appliance in your home along with its wattage and daily usage hours. For example, a fridge running 24 hours at 150W consumes 3.6kWh per day. LED lights totalling 200W used for 6 hours consume 1.2kWh. A television at 100W for 5 hours adds 0.5kWh. Add up all appliances and you have your total daily consumption. Most Zimbabwean households consume between 8kWh and 20kWh per day, while small businesses typically range from 15kWh to 50kWh.</p>
-      <p>Do not forget to account for appliances with high startup surges, such as fridges, air conditioners, and borehole pumps. While these do not significantly affect your daily kWh total, they determine the minimum inverter size required. A fridge rated at 150W running watts may need 600W or more to start. Our Kodak 5.6KVA inverter handles these surges comfortably for most residential loads.</p>
-
-      <h2>Step 2: Determine Your Solar Array Size</h2>
-      <p>Divide your daily consumption by your location's peak sun hours to find the minimum solar array size. Harare averages 5.5 to 6.5 peak sun hours daily across the year. If your household uses 12kWh per day and you receive 6 peak sun hours, you need a minimum of 2kW of panels (12 divided by 6). However, we recommend adding a 25% buffer to account for cloudy days, panel degradation, and system losses, bringing the recommended array to 2.5kW or roughly five 550W JA Solar panels.</p>
-      <p>For areas with slightly lower irradiance like Mutare (which gets marginally less sun due to cloud cover from the Eastern Highlands), adding an extra panel or two ensures consistent production year-round. Our team can pull precise irradiance data for your specific location during the design phase.</p>
-
-      <h2>Step 3: Size Your Battery Bank</h2>
-      <p>Battery capacity depends on how much nighttime or backup power you need. If your evening and nighttime consumption is 6kWh and you want one night of autonomy, you need at least 6kWh of usable battery storage. For lithium batteries with 80% usable depth of discharge, this means a total installed capacity of 7.5kWh, which is two Pylontech US3000 units stacked together. For lead-acid at 50% depth of discharge, you would need 12kWh of installed capacity, which is substantially larger and heavier.</p>
-      <p>If you experience frequent extended outages or want weekend autonomy, multiply your autonomy requirement accordingly. Many of our clients in areas with unreliable grid supply opt for two to three days of battery backup, which requires careful system design to balance cost and practicality.</p>
-
-      <h2>Step 4: Choose Your Inverter</h2>
-      <p>Your inverter must handle both your peak running load and startup surges simultaneously. Add up the wattage of all appliances that might run at the same time and select an inverter rated at least 20% above that figure. For a typical three-bedroom Zimbabwean home, a 5kVA inverter is usually sufficient. Larger homes with air conditioning, geysers, or multiple high-draw appliances may need 8kVA or 10kVA units. The Kodak 5.6KVA and 6.2KVA OG PLUS inverters are reliable workhorses with dual MPPT charge controllers built in, simplifying the installation.</p>
-
-      <h2>When to Call the Professionals</h2>
-      <p>While this guide gives you a solid foundation, every home is unique. Roof orientation, shading from trees or buildings, existing wiring condition, and future expansion plans all affect the optimal system design. Taqon Electrico offers free site assessments across Harare and surrounding areas. Our engineers will measure your actual consumption, assess your roof, and present a detailed proposal with equipment specifications, pricing, and projected savings. Visit our calculator page or contact us to get started.</p>
-    `,
+    slug: 'how-to-choose-the-right-solar-inverter',
+    title: 'How to Choose the Right Solar Inverter for Your Solar System',
     category: 'Guide',
-    tags: ['system sizing', 'solar design', 'guide', 'kWh', 'inverter'],
-    image: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&q=80',
-    date: '2026-02-05',
-    readTime: '9 min read',
-    author: { name: 'Tafadzwa Nyambuya', role: 'Senior Solar Engineer' },
-    relatedPosts: [1, 2, 6],
+    image: '/projects/kadoma-24kva/2.jpg',
+    excerpt:
+      'The inverter is the brain of your solar system. Learn about the different types, key specs to look for, and how to choose the right one for your home or business in Zimbabwe.',
+    date: '2024-04-09',
+    readTime: '10 min read',
+    tags: ['solar inverter', 'inverter guide', 'hybrid inverter', 'off-grid', 'solar equipment'],
+    author: { name: 'Taqon Electrico', role: 'Engineering Team' },
+    content: `
+      <p>If <a href="/shop?category=panels">solar panels</a> are the muscles of your system, the inverter is the brain. It\u2019s the single most important decision you\u2019ll make when designing a <a href="/solutions/solar-installations">solar installation</a> \u2014 and getting it wrong means either wasting money on capacity you don\u2019t need, or constantly tripping your system because it can\u2019t handle your loads.</p>
+
+      <p>This guide will help you understand what inverters do, how they differ, and exactly how to choose the right one for your situation.</p>
+
+      <hr />
+
+      <h2>What Does a Solar Inverter Do?</h2>
+
+      <p>At its most basic, an inverter converts direct current (DC) from your solar panels and batteries into alternating current (AC) \u2014 the type of electricity your appliances use. But modern <a href="/shop?category=inverters">inverters</a> are far more sophisticated than simple converters. They\u2019re essentially energy management computers that:</p>
+
+      <ul>
+        <li><strong>Optimise panel output</strong> using Maximum Power Point Tracking (MPPT) \u2014 constantly finding the sweet spot where your panels produce the most power</li>
+        <li><strong>Manage battery charging</strong> \u2014 protecting your <a href="/shop?category=batteries">batteries</a> from overcharge and deep discharge</li>
+        <li><strong>Handle grid interaction</strong> \u2014 seamlessly switching between solar, battery, and grid power</li>
+        <li><strong>Monitor everything</strong> \u2014 giving you real-time data on production, consumption, and system health</li>
+        <li><strong>Protect your home</strong> \u2014 with built-in over-voltage, short circuit, and anti-islanding safety features</li>
+      </ul>
+
+      <figure>
+        <img src="/projects/nedbank-borrowdale-8kva/1.jpg" alt="Taqon Electrico technician configuring a Deye inverter at a commercial installation" />
+        <figcaption>A Taqon technician configuring a Deye inverter at our Nedbank Borrowdale installation</figcaption>
+      </figure>
+
+      <h2>Three Types of Inverters \u2014 Which One Is Right for You?</h2>
+
+      <h3>Off-Grid Inverters</h3>
+
+      <p>Designed for complete independence from the utility grid. They work exclusively with battery banks and are ideal for rural properties, farms, and areas with zero grid access. If ZESA doesn\u2019t reach your property, this is your option.</p>
+
+      <h3>Grid-Tied Inverters</h3>
+
+      <p>These connect your solar system to the utility grid. They\u2019re the simplest and cheapest option, but here\u2019s the catch \u2014 when the grid goes down, so does your solar. No backup whatsoever. For Zimbabwe, where load shedding is a fact of life, this is rarely the best choice.</p>
+
+      <h3>Hybrid Inverters</h3>
+
+      <p>The sweet spot for most Zimbabwean homes and businesses. They can work with or without the grid, charge batteries from solar or grid power, provide seamless backup during outages, and prioritise solar usage to slash your electricity bill.</p>
+
+      <blockquote><p>In Zimbabwe, hybrid inverters are by far the most popular choice. They give you the flexibility to use solar during the day, store excess in batteries for the night, and fall back on the grid only when you need to.</p></blockquote>
+
+      <hr />
+
+      <h2>The Specs That Actually Matter</h2>
+
+      <h3>Power Rating (kVA/kW)</h3>
+
+      <p>This tells you how much your inverter can handle at once. Don\u2019t just add up your appliances\u2019 running watts \u2014 you also need to account for startup surges. Your fridge might run at 150W, but it needs 600W+ to kick on. Air conditioners and <a href="/solutions/borehole-pump-installations">borehole pumps</a> are even worse, drawing 3-5x their running wattage at startup.</p>
+
+      <h3>MPPT Channels</h3>
+
+      <p>These determine how flexibly you can arrange your panels. Got a roof with two faces? Partial shading on one section? Multiple MPPT channels let each panel string operate independently, so problems on one string don\u2019t drag down the others.</p>
+
+      <h3>Battery Voltage</h3>
+
+      <p>Most residential systems in Zimbabwe run at 48V. Make sure your inverter matches your battery bank voltage. Mismatches aren\u2019t just inefficient \u2014 they can damage your equipment.</p>
+
+      <h3>Efficiency</h3>
+
+      <p>This matters more than most people think. A 95% efficient inverter wastes 5% of your solar energy as heat. Over 25 years, that\u2019s a significant amount of lost power. Look for efficiency ratings above 95%.</p>
+
+      <hr />
+
+      <h2>Inverter Brands We Trust</h2>
+
+      <p>After years of installing and maintaining solar systems across Zimbabwe, these are the brands we stand behind:</p>
+
+      <ul>
+        <li><strong>Deye</strong> \u2014 Reliable hybrid inverters from 5kW to 16kW with excellent monitoring apps. The workhorse of Zimbabwean residential solar.</li>
+        <li><strong>Sunsynk</strong> \u2014 Premium build quality with advanced features. Popular for medium to large homes that demand the best.</li>
+        <li><strong>Sigenergy</strong> \u2014 All-in-one systems that combine inverter, battery, and energy management in a single, beautifully designed unit.</li>
+      </ul>
+
+      <p>We stock all of these in our <a href="/shop">shop</a> and can advise on the best fit for your specific situation.</p>
+
+      <figure>
+        <img src="/projects/bulawayo-16kva/2.jpg" alt="Sunsynk inverter with battery bank installed at a residential property" />
+        <figcaption>A completed Sunsynk inverter and battery installation at a 16kVA residential project in Bulawayo</figcaption>
+      </figure>
+
+      <h2>Sizing Your Inverter \u2014 A Practical Approach</h2>
+
+      <p>Here\u2019s the process our engineers follow on every site assessment:</p>
+
+      <ol>
+        <li><strong>List your essential loads</strong> \u2014 What absolutely must run during an outage? Lights, fridge, TV, Wi-Fi, phone chargers, security system?</li>
+        <li><strong>Add up the running watts</strong> \u2014 Total the wattage of everything that might run simultaneously</li>
+        <li><strong>Factor in startup surges</strong> \u2014 Add 2-3x extra for anything with a motor (fridges, pumps, AC units)</li>
+        <li><strong>Add a 20% safety margin</strong> \u2014 Running an inverter at 100% constantly is asking for trouble</li>
+      </ol>
+
+      <p>For a typical 3-bedroom home in Harare with lights, fridge, TV, microwave, and a few plug points, you\u2019re looking at a <strong>5kVA to 8kVA</strong> inverter. Larger homes with air conditioning, a borehole pump, and electric cooking will need <strong>10kVA to 16kVA</strong>.</p>
+
+      <p>Check out our <a href="/packages">solar packages</a> to see pre-designed systems at various sizes, or use our <a href="/calculator">solar calculator</a> to estimate your needs.</p>
+
+      <hr />
+
+      <h2>Installation Matters as Much as the Product</h2>
+
+      <p>Even the best inverter will underperform if installed badly. Key considerations:</p>
+
+      <ul>
+        <li><strong>Ventilation</strong> \u2014 Inverters generate heat. Mount them in a cool, well-ventilated space away from direct sunlight</li>
+        <li><strong>Cable distances</strong> \u2014 Keep the inverter close to your battery bank to minimise energy losses</li>
+        <li><strong>Protection</strong> \u2014 Proper DC and AC circuit breakers are essential for safety</li>
+        <li><strong>Professional installation</strong> \u2014 Incorrect wiring can void your warranty and create fire hazards</li>
+      </ul>
+
+      <p>Not sure where to start? <a href="/contact">Contact our team</a> for a free consultation. We\u2019ll assess your property, calculate your energy requirements, and recommend the perfect inverter for your needs \u2014 today and as your system grows.</p>
+    `,
+    relatedPosts: [4, 5],
   },
   {
     id: 4,
-    slug: 'solar-system-maintenance-tips',
-    title: 'Essential Solar System Maintenance Tips to Keep Your System Running at Peak Performance',
-    excerpt: 'Regular maintenance extends the life of your solar investment. Here are practical tips for panel cleaning, battery care, and inverter monitoring in Zimbabwe.',
-    content: `
-      <h2>Why Maintenance Cannot Be Ignored</h2>
-      <p>A solar system is a long-term investment that delivers returns for 20 to 25 years when properly maintained. Unfortunately, many system owners in Zimbabwe adopt a set-and-forget approach after installation, only paying attention when something fails. Proactive maintenance prevents costly breakdowns, maintains optimal energy production, and preserves warranty coverage on your equipment. At Taqon Electrico, our maintenance division services hundreds of systems annually, and we consistently find that well-maintained systems produce 15% to 30% more energy than neglected ones.</p>
-      <p>The good news is that solar systems require relatively little maintenance compared to generators or other power sources. A few simple habits and a twice-yearly professional service call are all it takes to keep your system in top condition.</p>
-
-      <h2>Panel Cleaning and Inspection</h2>
-      <p>Dust accumulation is the number one cause of reduced solar production in Zimbabwe, particularly during the dry season from May to October. A layer of dust can reduce panel output by 10% to 20%, and bird droppings or fallen leaves can cause localised hot spots that damage cells over time. Clean your panels every four to six weeks using a soft brush or cloth with clean water. Early morning is the best time, as panels are cool and dew helps loosen dust. Never use abrasive scouring pads, harsh chemicals, or high-pressure washers.</p>
-      <p>During cleaning, visually inspect your panels for cracks, discolouration, or signs of delamination (bubbling or peeling of the protective layer). Check that all mounting brackets are tight and that no cables have come loose or show signs of rodent damage. If you notice any physical damage, contact Taqon Electrico immediately to arrange a professional assessment before the issue worsens.</p>
-
-      <h2>Battery Maintenance</h2>
-      <p>Lithium batteries like our Pylontech and Dyness range require minimal maintenance thanks to their built-in Battery Management Systems. However, you should check that the battery room or cabinet remains well-ventilated and within the recommended temperature range of 15 to 35 degrees Celsius. Excessive heat accelerates degradation even in lithium chemistry. Ensure the battery firmware is kept up to date, as manufacturers periodically release updates that improve performance and safety.</p>
-      <p>For lead-acid batteries, maintenance requirements are more demanding. Flooded lead-acid batteries need their electrolyte levels checked monthly and topped up with distilled water as needed. Terminals should be cleaned and coated with anti-corrosion grease every three months. Check the specific gravity of each cell with a hydrometer to identify weak cells early. Sealed AGM and gel batteries do not require water topping but should still have their terminals inspected and their voltage tested regularly.</p>
-
-      <h2>Inverter Monitoring</h2>
-      <p>Modern inverters like the Kodak OG and OG PLUS series include LCD displays and optional WiFi monitoring that show real-time production, consumption, and error codes. Make a habit of checking your inverter display weekly for any fault codes or unusual readings. Key metrics to watch include daily production (kWh), battery charge and discharge rates, and grid import/export figures if connected. A sudden drop in daily production that does not correlate with weather changes may indicate a panel issue, wiring fault, or MPPT tracker problem.</p>
-      <p>Ensure the inverter is installed in a cool, dry, well-ventilated location. Dust accumulation on inverter ventilation grilles can cause overheating and reduced efficiency. Clean the external surfaces and vents with a dry cloth monthly. Never open the inverter casing yourself, as this voids the warranty and poses an electrical hazard. If you suspect an internal fault, contact Taqon Electrico for a qualified technician visit.</p>
-
-      <h2>Professional Service Visits</h2>
-      <p>We recommend scheduling a comprehensive professional service at least twice per year: once before the rainy season begins in November and once at the end of the dry season in September. During a Taqon Electrico service visit, our technicians perform thermal imaging of panels to detect hidden hot spots, torque-test all electrical connections, check earthing resistance, test battery capacity, verify inverter calibration, and provide a detailed system health report. Annual service plans start at competitive rates and include priority response times for any fault calls throughout the year.</p>
-    `,
+    slug: 'reasons-solar-batteries-draining-quickly',
+    title: 'Reasons Behind Your Solar Batteries Draining Power Quickly',
     category: 'Maintenance',
-    tags: ['maintenance', 'cleaning', 'batteries', 'inverter', 'tips'],
-    image: 'https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=800&q=80',
-    date: '2026-02-10',
-    readTime: '7 min read',
-    author: { name: 'Simba Chikore', role: 'Maintenance Team Lead' },
-    relatedPosts: [1, 5, 8],
+    image: '/projects/borrowdale-brook-5kva/1.jpg',
+    excerpt:
+      'Are your solar batteries running out faster than expected? Discover the most common reasons behind rapid battery drain and practical steps to extend your battery life.',
+    date: '2024-03-04',
+    readTime: '9 min read',
+    tags: ['solar batteries', 'battery maintenance', 'battery life', 'troubleshooting', 'energy storage'],
+    author: { name: 'Taqon Electrico', role: 'Engineering Team' },
+    content: `
+      <p>It\u2019s 8pm, load shedding just hit, and your batteries are already at 20%. You installed a solar system just six months ago \u2014 what\u2019s going on?</p>
+
+      <p>This is one of the most common frustrations we hear from solar system owners in Zimbabwe. The good news? In most cases, the problem is fixable. Let\u2019s walk through the most likely culprits and what you can do about each one.</p>
+
+      <hr />
+
+      <h2>Your Battery Bank Is Too Small</h2>
+
+      <p>This is the number one reason, and it\u2019s more common than you\u2019d think. Many homeowners underestimate how much power they actually use after sunset \u2014 especially in winter when the sun sets earlier and evenings are longer.</p>
+
+      <h3>How to Check Your Battery Sizing</h3>
+
+      <p>Here\u2019s a quick way to check if your <a href="/shop?category=batteries">battery bank</a> is sized correctly:</p>
+
+      <ul>
+        <li>List every appliance you run between sunset and sunrise</li>
+        <li>Multiply each appliance\u2019s wattage by how many hours it runs</li>
+        <li>Add up the total watt-hours (Wh)</li>
+        <li>For lithium batteries, you can use about 90% of rated capacity. For lead-acid, only count on 50%</li>
+      </ul>
+
+      <p>If your evening consumption exceeds your usable battery capacity, there\u2019s your answer. You either need more batteries or you need to reduce nighttime consumption.</p>
+
+      <h2>Hidden Energy Vampires</h2>
+
+      <p>Some appliances are absolute power hogs \u2014 and many people have no idea. The worst offenders:</p>
+
+      <h3>Electric Geysers</h3>
+
+      <p>The single biggest energy consumer in most Zimbabwean homes. A standard geyser draws 2,000-3,000W. Running one on battery power is like trying to fill a swimming pool with a garden hose \u2014 the maths just doesn\u2019t work. Consider a solar geyser or at minimum, a timer.</p>
+
+      <h3>Electric Stoves and Ovens</h3>
+
+      <p>These consume massive power. If you\u2019re cooking on electricity while running on batteries, you\u2019re draining them at an alarming rate. Gas cooking is a game-changer for solar households.</p>
+
+      <h3>Old Fridges</h3>
+
+      <p>Silent killers. An aging fridge can consume 3-4 times more power than a modern energy-efficient model. That 15-year-old fridge in the garage? It might be costing you more in battery drain than a new one would cost to replace.</p>
+
+      <figure>
+        <img src="/projects/bulawayo-16kva/4.jpg" alt="Taqon Electrico technician securing solar panel connections on a rooftop" />
+        <figcaption>Proper panel installation ensures maximum charging \u2014 one of the keys to keeping batteries full</figcaption>
+      </figure>
+
+      <hr />
+
+      <h2>Your Panels Aren\u2019t Charging Fully</h2>
+
+      <p>If your <a href="/shop?category=panels">solar panels</a> aren\u2019t fully charging your batteries during the day, you\u2019re starting each night at a deficit. Common causes:</p>
+
+      <h3>Not Enough Panels</h3>
+
+      <p>Your array needs to both power your daytime loads AND fully charge your batteries. If you\u2019re using solar power during the day (as you should be), the panels need extra capacity for battery charging on top of that.</p>
+
+      <h3>Shading</h3>
+
+      <p>Even partial shade on one panel can dramatically reduce your entire string\u2019s output. Trees, satellite dishes, neighbouring buildings \u2014 even a shadow from a chimney can cut production by 30% or more.</p>
+
+      <h3>Dirty Panels</h3>
+
+      <p>Dust, bird droppings, and pollen build up quickly in Zimbabwe\u2019s dry season. A dirty panel can lose 15-25% of its output. <a href="/solutions/solar-system-maintenance">Regular cleaning</a> \u2014 at least monthly \u2014 is essential.</p>
+
+      <h3>Wrong Orientation</h3>
+
+      <p>In Zimbabwe (southern hemisphere), panels should face north. East or west-facing panels produce 15-20% less energy. If your roof doesn\u2019t face north, you may need extra panels to compensate.</p>
+
+      <h2>Battery Age and Degradation</h2>
+
+      <p>Every battery degrades over time \u2014 it\u2019s inevitable chemistry. But the rate depends heavily on technology and treatment.</p>
+
+      <h3>Lead-Acid Batteries</h3>
+
+      <p>Typically last 3-5 years. Deep cycling (regularly draining below 50%) accelerates their decline dramatically. If your lead-acid batteries are over 3 years old and you\u2019ve noticed backup times shrinking, it\u2019s probably time.</p>
+
+      <h3>Lithium-Ion (LiFePO4) Batteries</h3>
+
+      <p>Last 10-15 years and handle deeper discharges without significant degradation. Brands like Pylontech and Dyness offer 6,000+ cycle lifespans \u2014 meaning they\u2019ll still be going strong long after lead-acid alternatives have been replaced twice.</p>
+
+      <blockquote><p>If you\u2019re still running lead-acid batteries and experiencing rapid drain, upgrading to lithium is often more cost-effective than replacing with more lead-acid. The upfront cost is higher, but the total cost of ownership over 10 years is dramatically lower.</p></blockquote>
+
+      <figure>
+        <img src="/projects/chisipiti-10kva/2.jpg" alt="Taqon Electrico engineers with Pylontech battery bank and dual Sunsynk inverters" />
+        <figcaption>A properly sized lithium battery bank with dual inverters \u2014 built for reliable, long-lasting backup power</figcaption>
+      </figure>
+
+      <hr />
+
+      <h2>Your Inverter Settings Are Wrong</h2>
+
+      <p>This one is surprisingly common \u2014 and surprisingly easy to fix. Your <a href="/shop?category=inverters">inverter</a> settings directly control how your batteries charge and discharge. Common misconfigurations:</p>
+
+      <ul>
+        <li><strong>Wrong battery type selected</strong> \u2014 Using lead-acid profiles for lithium batteries (or vice versa) causes undercharging or damage</li>
+        <li><strong>Charge current too low</strong> \u2014 Batteries won\u2019t reach full charge during available sunshine hours</li>
+        <li><strong>Depth of discharge set too deep</strong> \u2014 The inverter drains batteries beyond healthy levels</li>
+        <li><strong>Grid charging disabled</strong> when it shouldn\u2019t be \u2014 During rainy season, a top-up from the grid overnight can save your batteries</li>
+      </ul>
+
+      <p>Most modern inverters like Deye and Sunsynk have apps that let you check and adjust these settings remotely. If you\u2019re not sure what your settings should be, ask your installer to review them.</p>
+
+      <h2>Parasitic Loads Are Bleeding You Dry</h2>
+
+      <p>\u201CParasitic loads\u201D are devices that draw power 24/7, even when you think they\u2019re off. Individually, they\u2019re tiny. Combined, they\u2019re significant:</p>
+
+      <ul>
+        <li>TV decoders and set-top boxes on standby</li>
+        <li>Phone chargers left plugged in (even without a phone)</li>
+        <li>Wi-Fi routers and modems (10-20W each, running 24/7)</li>
+        <li>Security cameras, electric fences, and alarm systems</li>
+        <li>Any appliance with a clock display or standby light</li>
+      </ul>
+
+      <blockquote><p>Ten devices drawing 10W each = 100W constant draw = <strong>2.4kWh over 24 hours</strong>. That\u2019s a meaningful chunk of battery capacity being consumed by devices you\u2019re not even actively using.</p></blockquote>
+
+      <h2>Temperature Is Working Against You</h2>
+
+      <p>Batteries are sensitive to temperature extremes. Above 35\u00B0C, chemical degradation accelerates. Below 10\u00B0C, available capacity drops temporarily \u2014 a battery rated at 5kWh might only deliver 4kWh in cold conditions.</p>
+
+      <p>The fix is simple: install batteries in a cool, shaded, well-ventilated area. Avoid garages that bake in summer and outdoor enclosures without shade.</p>
+
+      <hr />
+
+      <h2>What You Can Do Right Now</h2>
+
+      <ol>
+        <li><strong>Audit your consumption</strong> \u2014 Know exactly what each appliance uses and when. Most inverter apps show this data.</li>
+        <li><strong>Shift heavy loads to daytime</strong> \u2014 Washing machines, irons, pool pumps \u2014 run them when the sun is shining</li>
+        <li><strong>Upgrade old appliances</strong> \u2014 LED lights and inverter fridges make a dramatic difference</li>
+        <li><strong>Clean your panels monthly</strong> \u2014 It takes 20 minutes and can boost production by 20%</li>
+        <li><strong>Get an annual inspection</strong> \u2014 Professional checks catch problems before they become expensive</li>
+        <li><strong><a href="/blog/all-you-need-to-know-about-solar-system-monitoring">Monitor your system</a></strong> \u2014 Your inverter app is your best friend. Use it.</li>
+      </ol>
+
+      <p>Still struggling with battery drain? <a href="/contact">Contact Taqon Electrico</a> for a professional system assessment. Our engineers will diagnose the exact issue and recommend the most cost-effective solution.</p>
+    `,
+    relatedPosts: [3, 5],
   },
   {
     id: 5,
-    slug: 'zimbabwe-solar-incentives-and-policies',
-    title: 'Solar Incentives and Policies in Zimbabwe: What You Need to Know in 2026',
-    excerpt: 'An overview of Zimbabwe\'s current solar energy policies, ZERA regulations, duty exemptions, and net metering prospects that affect your solar investment.',
-    content: `
-      <h2>Zimbabwe's Renewable Energy Landscape</h2>
-      <p>Zimbabwe has set ambitious renewable energy targets as part of its National Renewable Energy Policy, aiming to achieve 1,100MW of renewable generation capacity by 2030. Solar energy is central to this vision, given the country's exceptional solar resource averaging 2,000 to 2,100 kilowatt-hours per square metre annually. The Zimbabwe Energy Regulatory Authority (ZERA) plays a pivotal role in regulating the sector, licensing installers, and ensuring quality standards that protect consumers. Companies like Taqon Electrico that carry ZERA recommendation provide assurance of compliance with national installation standards.</p>
-      <p>Understanding the policy environment helps homeowners and businesses make informed investment decisions and take advantage of available incentives that reduce the effective cost of going solar.</p>
-
-      <h2>Import Duty Exemptions on Solar Equipment</h2>
-      <p>One of the most significant incentives for solar adoption in Zimbabwe is the government's exemption of import duties on solar equipment. Solar panels, inverters, charge controllers, and lithium batteries imported for renewable energy purposes benefit from reduced or zero customs duty, making quality international brands like Jinko, Pylontech, and Kodak more affordable for the Zimbabwean market. This policy has been instrumental in bringing prices down over the past three years and is expected to continue as the government prioritises energy independence.</p>
-      <p>It is important to work with licensed importers and installers like Taqon Electrico to ensure your equipment qualifies for these exemptions. Products imported through informal channels may not meet ZERA specifications and could be ineligible for duty relief, costing you more in the long run and potentially voiding manufacturer warranties.</p>
-
-      <h2>ZERA Licensing and Quality Standards</h2>
-      <p>ZERA requires all solar installation companies to be licensed and all installations to meet minimum technical standards. These standards cover panel mounting, electrical wiring, earthing, inverter configuration, and battery installation. Working with a ZERA-recommended installer ensures your system is designed and installed to code, which is essential for insurance purposes and future property valuation. Unlicensed installations may not be covered by homeowner insurance policies in the event of fire or electrical damage.</p>
-      <p>ZERA also maintains a register of approved solar equipment that meets Zimbabwean safety and performance standards. When purchasing equipment, verify that your chosen panels, inverters, and batteries appear on the ZERA approved list. All products stocked by Taqon Electrico carry the necessary approvals and certifications.</p>
-
-      <h2>Net Metering: The Future of Grid-Tied Solar</h2>
-      <p>Net metering, which allows solar system owners to feed excess electricity back to the grid and receive credit on their utility bills, has been under discussion in Zimbabwe for several years. While a comprehensive national net metering framework has not yet been fully implemented, pilot programmes and regulatory groundwork continue to progress. ZETDC (Zimbabwe Electricity Transmission and Distribution Company) has begun exploring distributed generation policies that would enable two-way metering for residential and commercial solar installations.</p>
-      <p>For forward-thinking homeowners, installing a hybrid inverter now positions you to take advantage of net metering when it becomes available. Hybrid systems like those designed by Taqon Electrico can operate in off-grid, grid-tied, or feed-in modes, providing maximum flexibility as the regulatory environment evolves. In the meantime, hybrid systems optimise self-consumption, using solar first and drawing from the grid only when needed, which already provides significant savings on electricity bills.</p>
-
-      <h2>Making the Most of Current Incentives</h2>
-      <p>While Zimbabwe's incentive landscape is still developing compared to markets like South Africa or Kenya, the combination of duty exemptions, falling equipment costs, and unreliable grid supply makes the case for solar stronger than ever. The average Zimbabwean household spending $100 to $300 per month on electricity and generator fuel can achieve payback on a solar installation within three to five years. For businesses, the case is even more compelling, with many commercial installations paying for themselves within two to three years through reduced operating costs and improved productivity during power outages. Contact Taqon Electrico for a personalised financial analysis based on your specific energy consumption and tariff structure.</p>
-    `,
-    category: 'News',
-    tags: ['incentives', 'ZERA', 'policy', 'net metering', 'Zimbabwe'],
-    image: 'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80',
-    date: '2026-02-15',
-    readTime: '7 min read',
-    author: { name: 'Kudzai Mashonga', role: 'Technical Director' },
-    relatedPosts: [3, 7, 8],
-  },
-  {
-    id: 6,
-    slug: 'complete-guide-to-solar-inverters',
-    title: 'The Complete Guide to Solar Inverters: Choosing the Right One for Your System',
-    excerpt: 'Everything you need to know about solar inverters, from string vs hybrid types to MPPT tracking and sizing, tailored for the Zimbabwean market.',
-    content: `
-      <h2>What Does a Solar Inverter Do?</h2>
-      <p>The inverter is the brain of your solar system. It converts the direct current (DC) electricity generated by your solar panels into alternating current (AC) that your household appliances use. Beyond simple conversion, modern inverters manage battery charging, grid interaction, load prioritisation, and system monitoring. Choosing the right inverter is as important as choosing the right panels, yet it is often the component that receives the least attention from first-time solar buyers in Zimbabwe.</p>
-      <p>At Taqon Electrico, we primarily install Kodak and Deye inverters, both of which have proven track records in Zimbabwean conditions. This guide will help you understand the different inverter types and select the right one for your specific needs.</p>
-
-      <h2>Types of Solar Inverters</h2>
-      <p>There are three main categories of solar inverters relevant to the Zimbabwean market. Off-grid inverters operate independently of the utility grid, making them ideal for rural properties or locations with no ZETDC connection. They manage solar charging and battery discharge exclusively. Grid-tied inverters synchronise with the utility grid, allowing solar power to supplement grid electricity and potentially feed excess power back (when net metering becomes available). Hybrid inverters combine both capabilities, operating with or without the grid and managing batteries as well. For most Zimbabwean installations, hybrid inverters offer the best flexibility and value.</p>
-      <p>The Kodak OG PLUS 6.2KVA is an excellent example of a hybrid inverter. It features dual MPPT charge controllers, 48V battery compatibility, and seamless switchover between solar, battery, and grid power. During a load shedding event, the transition is so fast (under 10 milliseconds) that sensitive electronics like computers and televisions do not even register an interruption.</p>
-
-      <h2>Understanding MPPT Charge Controllers</h2>
-      <p>Maximum Power Point Tracking (MPPT) is a technology built into modern inverters that optimises the voltage and current drawn from your solar panels to extract maximum power under varying conditions. As sunlight intensity and temperature change throughout the day, the MPPT controller continuously adjusts to find the panel array's optimal operating point. A quality MPPT controller can harvest 15% to 30% more energy compared to older PWM (Pulse Width Modulation) technology.</p>
-      <p>Inverters with dual MPPT inputs, like the Kodak 6.2KVA, allow you to connect two separate strings of panels with different orientations or tilt angles. This is particularly useful for homes where the roof has multiple faces or partial shading on one section. Each MPPT controller independently optimises its string, ensuring shading or orientation differences on one array do not drag down the performance of the other.</p>
-
-      <h2>Sizing Your Inverter Correctly</h2>
-      <p>Inverter sizing depends on your peak simultaneous load plus a safety margin. If your household peak load is 4,000W (for example, a fridge, microwave, television, lights, and a few charging devices all running at once), a 5kVA inverter provides adequate headroom. Remember that appliances with motors like fridges, pumps, and air conditioners draw two to four times their running wattage during startup. A 5kVA inverter must be able to handle these surge loads without tripping.</p>
-      <p>Common sizing mistakes include choosing an inverter based solely on total daily consumption rather than peak instantaneous load, and failing to account for future additions like an electric geyser or additional air conditioning unit. Our recommendation is to size your inverter for your expected load two to three years from now, not just today's requirements. The marginal cost of stepping up one inverter size is far less than replacing an undersized unit later.</p>
-
-      <h2>Installation and Placement Best Practices</h2>
-      <p>Inverters should be installed in cool, dry, well-ventilated locations away from direct sunlight. A garage wall or dedicated utility room is ideal. Ensure at least 300mm of clearance on all sides for airflow and maintenance access. The inverter should be mounted at eye level for easy monitoring of the display screen. All DC and AC wiring should be correctly sized for the inverter's rated current and installed in conduit to meet Zimbabwean electrical codes. Taqon Electrico handles all installation to ZERA standards, including proper earthing, circuit protection, and commissioning tests that verify your system operates safely and efficiently from day one.</p>
-    `,
+    slug: 'all-you-need-to-know-about-solar-system-monitoring',
+    title: 'All You Need to Know About Solar System Monitoring',
     category: 'Technology',
-    tags: ['inverter', 'MPPT', 'Kodak', 'hybrid', 'off-grid', 'guide'],
-    image: 'https://images.unsplash.com/photo-1559302504-64aae6ca6b6d?w=800&q=80',
-    date: '2026-02-18',
+    image: '/projects/nedbank-borrowdale-8kva/1.jpg',
+    excerpt:
+      'Solar system monitoring lets you track energy production, battery levels, and consumption in real time. Learn why monitoring matters and how to use it effectively.',
+    date: '2024-01-05',
     readTime: '8 min read',
-    author: { name: 'Tafadzwa Nyambuya', role: 'Senior Solar Engineer' },
-    relatedPosts: [2, 3, 7],
-  },
-  {
-    id: 7,
-    slug: 'solar-myths-debunked',
-    title: '7 Common Solar Myths Debunked: Separating Fact from Fiction in Zimbabwe',
-    excerpt: 'From "solar doesn\'t work on cloudy days" to "panels damage your roof," we tackle the most persistent solar energy myths with facts and data.',
+    tags: ['solar monitoring', 'energy management', 'inverter app', 'smart energy', 'technology'],
+    author: { name: 'Taqon Electrico', role: 'Engineering Team' },
     content: `
-      <h2>Myth 1: Solar Panels Do Not Work on Cloudy Days</h2>
-      <p>This is perhaps the most widespread misconception about solar energy. While solar panels produce less electricity on overcast days, they do not stop working entirely. Modern mono-crystalline panels can generate 25% to 40% of their rated output under heavy cloud cover and 60% to 80% under light clouds. Zimbabwe enjoys predominantly clear skies, with even the rainy season featuring sunshine between storm events. Over a full year, cloud cover reduces total production by only 10% to 15% compared to theoretical clear-sky output, which is already factored into professional system designs by companies like Taqon Electrico.</p>
-      <p>Germany, a country with significantly less sunshine than Zimbabwe, is one of the world's largest solar energy producers. If solar works effectively in Berlin, it works exceptionally well in Harare, Bulawayo, or anywhere else in Zimbabwe.</p>
+      <p>You\u2019ve spent thousands of dollars on a <a href="/solutions/solar-installations">solar system</a>. Your panels are on the roof, your batteries are humming, and your inverter is doing its thing. But here\u2019s the question most people forget to ask: <em>how do you know it\u2019s actually working properly?</em></p>
 
-      <h2>Myth 2: Solar Panels Damage Your Roof</h2>
-      <p>Professionally installed solar panels actually protect the portion of roof they cover from UV degradation, rain, and hail. Quality mounting systems distribute weight evenly across roof trusses and use sealed penetration points that maintain waterproofing integrity. At Taqon Electrico, our installation teams are trained to assess roof structural capacity before installation and use mounting hardware that exceeds local wind load requirements. If anything, your roof will last longer under solar panels than without them.</p>
-      <p>Problems only arise when panels are installed by unqualified individuals using inappropriate mounting methods. This is why ZERA licensing and working with recommended companies matters. Every Taqon Electrico installation includes a structural assessment and uses certified mounting hardware designed for Zimbabwean roof types.</p>
+      <p>Without monitoring, you\u2019re flying blind. You won\u2019t notice a faulty panel until your electricity bill creeps back up. You won\u2019t catch a misconfigured setting until your <a href="/blog/reasons-solar-batteries-draining-quickly">batteries start dying prematurely</a>. Solar monitoring changes all of that \u2014 and it\u2019s probably already built into your system.</p>
 
-      <h2>Myth 3: Solar Is Too Expensive for Average Families</h2>
-      <p>While solar was once a luxury reserved for wealthy households, prices have dropped dramatically. Entry-level systems starting at $1,200 can power lights, phone charging, a television, and a small fridge. Our Home Quick Access package provides meaningful energy independence for a fraction of what many families spend on candles, paraffin, and generator fuel over just two to three years. When viewed as a five to twenty-five year investment rather than a one-time expense, solar is one of the most cost-effective decisions a Zimbabwean family can make.</p>
-      <p>Additionally, Taqon Electrico offers flexible payment plans and system designs that allow you to start small and expand over time. Begin with a basic lighting and charging system, then add panels and batteries as your budget allows. Our hybrid inverters are designed to accommodate system growth without requiring replacement.</p>
+      <hr />
 
-      <h2>Myth 4: Batteries Are Not Worth the Investment</h2>
-      <p>In countries with reliable grids and generous net metering, batteries can be optional. In Zimbabwe, where load shedding is common and grid reliability varies significantly by area, batteries transform a solar system from a daytime-only solution into true energy independence. Modern lithium batteries last ten years or more and pay for themselves through avoided generator costs, reduced spoilage of refrigerated goods, and uninterrupted productivity. For businesses, the cost of a single day of lost production during a power outage often exceeds the cost of adequate battery storage.</p>
+      <h2>Why Monitoring Matters</h2>
 
-      <h2>Myth 5: Solar Panels Require Constant Maintenance</h2>
-      <p>Solar panels have no moving parts and require minimal maintenance. A simple wash every four to six weeks and a professional inspection twice a year is all that is needed. Compare this to a generator that requires fuel, oil changes, filter replacements, and mechanical servicing. Over a 25-year panel lifespan, total maintenance costs for a solar system amount to a tiny fraction of what you would spend maintaining a generator over the same period.</p>
+      <p>Think of monitoring as a health dashboard for your solar investment. At a glance, you can see:</p>
 
-      <h2>Myth 6: Solar Technology Is Still Immature and Unreliable</h2>
-      <p>Solar photovoltaic technology has been commercially available for over 50 years and has reached a level of maturity and reliability that rivals any consumer technology. Modern panels come with 25 to 30 year performance warranties, and real-world data shows that quality panels retain over 80% of their original output after 25 years. The inverters and batteries we install at Taqon Electrico are backed by international manufacturers with established warranty support networks. Solar is not experimental; it is proven, bankable technology deployed at gigawatt scale worldwide.</p>
+      <ul>
+        <li><strong>How much energy your panels are producing</strong> right now and historically</li>
+        <li><strong>Your battery state of charge</strong> \u2014 are they full, half-empty, or critically low?</li>
+        <li><strong>Where your power is going</strong> \u2014 which loads are consuming the most?</li>
+        <li><strong>How much grid power you\u2019re using</strong> (and therefore, how much money you\u2019re saving)</li>
+        <li><strong>Any faults or anomalies</strong> \u2014 before they become expensive problems</li>
+      </ul>
 
-      <h2>Myth 7: You Need a Large Roof to Go Solar</h2>
-      <p>Higher-efficiency panels like the JA Solar 555W produce significantly more power per square metre than older technology, meaning you need fewer panels to achieve the same output. A 3kW system using 555W panels requires only six panels, occupying roughly 15 square metres of roof space, which is less than a single parking bay. Even apartments with small balconies can benefit from portable solar panel and battery kits. If roof space is genuinely limited, ground-mounted arrays are an alternative that Taqon Electrico can design and install.</p>
+      <p>A drop in daily production could mean a dirty panel, a shading issue, or a wiring fault. Catching it in your app means fixing it in days, not months. That\u2019s the difference between a system that pays for itself in 3 years and one that disappoints.</p>
+
+      <figure>
+        <img src="/projects/kadoma-24kva/2.jpg" alt="Two Taqon Electrico engineers at a Sunsynk inverter during system commissioning" />
+        <figcaption>System commissioning includes setting up monitoring so homeowners can track performance from day one</figcaption>
+      </figure>
+
+      <h2>How It Works \u2014 The Simple Version</h2>
+
+      <p>Modern solar monitoring has three layers, and it all happens automatically:</p>
+
+      <h3>1. Your Inverter Collects the Data</h3>
+
+      <p>It continuously measures everything \u2014 panel output, battery charge level, grid flow, household consumption. Every 5-15 minutes, it packages this data and sends it to the cloud via your home Wi-Fi.</p>
+
+      <h3>2. The Cloud Stores and Processes It</h3>
+
+      <p>The manufacturer\u2019s servers crunch the numbers, calculate trends, and store your history. This means you can look back days, weeks, or months to spot patterns.</p>
+
+      <h3>3. You View It on Your Phone or Computer</h3>
+
+      <p>A dedicated app (or web portal) presents everything in clean charts and dashboards. Real-time power flow diagrams show you exactly where every watt is going \u2014 from panels to batteries to your home to the grid.</p>
+
+      <hr />
+
+      <h2>Which App Do You Need?</h2>
+
+      <p>Each <a href="/shop?category=inverters">inverter brand</a> has its own monitoring platform. Here\u2019s what to expect from the brands we install most:</p>
+
+      <h3>Deye \u2014 SolarMan App</h3>
+
+      <p>Functional and reliable, with real-time power flow visualisation, historical data views (daily, monthly, yearly), battery SOC and temperature monitoring, and even remote parameter adjustment for installers. Available on both iOS and Android.</p>
+
+      <h3>Sunsynk Connect</h3>
+
+      <p>Widely considered the best monitoring app in the industry. The interface is beautiful and intuitive, with detailed energy flow animations that make it genuinely fun to check your system. It also supports timer programming, advanced settings control, and multi-site management.</p>
+
+      <h3>Sigenergy \u2014 mySigen App</h3>
+
+      <p>Provides comprehensive monitoring for their all-in-one systems. Clean design, AI-powered optimisation suggestions, and smart home integration make it a standout for tech-savvy homeowners.</p>
+
+      <figure>
+        <img src="/projects/nedbank-harare-12kva/3.jpg" alt="Taqon Electrico engineer wiring solar panels at sunset on a commercial rooftop" />
+        <figcaption>Every installation we complete includes full monitoring setup \u2014 so you\u2019re in control from day one</figcaption>
+      </figure>
+
+      <hr />
+
+      <h2>What to Check \u2014 and How Often</h2>
+
+      <p>You don\u2019t need to obsess over your app (though some of our clients do \u2014 and we love that). But checking these metrics weekly will keep you informed:</p>
+
+      <h3>Daily Production</h3>
+
+      <p>Compare today\u2019s output to what you\u2019d expect for the season. In Zimbabwe, a well-designed system should produce about 4-5 kWh per kWp of installed solar on clear summer days, and 3-4 kWh in winter. A sudden drop that doesn\u2019t match the weather? Time to investigate.</p>
+
+      <h3>Battery Cycles</h3>
+
+      <p>Watch how deeply your batteries cycle each day. If you\u2019re consistently hitting 20% SOC or lower, your battery bank may be undersized for your consumption. Consistent deep cycling shortens lifespan \u2014 especially for lead-acid batteries.</p>
+
+      <h3>Grid Usage</h3>
+
+      <p>The whole point of solar is to use less grid power. If your grid consumption is creeping up over time, either your system\u2019s output has decreased (dirty panels? faulty component?) or your household consumption has increased (new appliances? changed habits?).</p>
+
+      <h3>Self-Consumption Ratio</h3>
+
+      <p>This tells you what percentage of your solar production you\u2019re actually using versus wasting. In Zimbabwe, where we don\u2019t have feed-in tariffs, maximising self-consumption is essential. Aim for 80% or higher.</p>
+
+      <h2>Troubleshooting Common Issues</h2>
+
+      <p>Monitoring apps aren\u2019t perfect. Here\u2019s what to do when things look wrong:</p>
+
+      <ul>
+        <li><strong>App shows \u201Coffline\u201D?</strong> Check your Wi-Fi. The inverter\u2019s data logger probably lost its network connection \u2014 common after router restarts. Reconnect it in the inverter\u2019s network settings.</li>
+        <li><strong>Gaps in your history?</strong> Usually just internet outages. Most inverters store data locally and upload it when the connection returns. No data is lost.</li>
+        <li><strong>Readings seem wrong?</strong> The current transformers (CTs) that measure grid and load power may need recalibrating. Your installer can adjust these remotely or on a service visit.</li>
+        <li><strong>No battery data showing?</strong> Check the BMS communication cable between your battery and inverter. A loose connection here is the most common cause.</li>
+      </ul>
+
+      <hr />
+
+      <h2>Set Up Alerts \u2014 Let the System Watch Itself</h2>
+
+      <p>Most monitoring platforms let you configure automatic alerts. Set these up once and forget about them \u2014 your system will tell you when something needs attention:</p>
+
+      <ul>
+        <li><strong>Low battery alert</strong> \u2014 Get notified when SOC drops below 20%</li>
+        <li><strong>Low production alert</strong> \u2014 Know when daily output falls below expected levels</li>
+        <li><strong>Grid failure notification</strong> \u2014 Handy if you want to know when ZESA drops (and returns)</li>
+        <li><strong>Fault code alerts</strong> \u2014 Immediate notification when the inverter reports any error</li>
+      </ul>
+
+      <blockquote><p>With alerts enabled, your system essentially monitors itself. You only need to act when something needs your attention.</p></blockquote>
+
+      <figure>
+        <img src="/projects/kadoma-24kva/3.jpg" alt="Taqon Electrico engineers on a commercial rooftop with solar panels at sunset" />
+        <figcaption>From installation to ongoing monitoring \u2014 our team ensures your system performs at its best, year after year</figcaption>
+      </figure>
+
+      <h2>We\u2019ll Help You Stay on Top of It</h2>
+
+      <p>At Taqon Electrico, monitoring setup is included with every installation. We\u2019ll connect your system to the app, configure optimal settings, and walk you through how to read your dashboard. For clients who want hands-off management, we also offer remote monitoring \u2014 our engineers keep an eye on your system and alert you to issues before you even notice them.</p>
+
+      <p>Solar monitoring transforms your system from a passive installation into an actively managed energy asset. The tools are already built into your inverter \u2014 all you have to do is use them.</p>
+
+      <p>Want to learn more about optimising your system? Check out our guide on <a href="/blog/how-to-choose-the-right-solar-inverter">choosing the right inverter</a>, or browse our <a href="/projects">completed projects</a> to see monitoring in action.</p>
     `,
-    category: 'Education',
-    tags: ['myths', 'facts', 'education', 'solar basics', 'Zimbabwe'],
-    image: 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?w=800&q=80',
-    date: '2026-02-22',
-    readTime: '8 min read',
-    author: { name: 'Simba Chikore', role: 'Maintenance Team Lead' },
-    relatedPosts: [1, 5, 8],
-  },
-  {
-    id: 8,
-    slug: 'future-of-solar-energy-in-africa',
-    title: 'The Future of Solar Energy in Africa: Why Zimbabwe Is Poised to Lead',
-    excerpt: 'Exploring how falling costs, advancing technology, and growing demand position Zimbabwe and the broader African continent at the forefront of the solar revolution.',
-    content: `
-      <h2>Africa's Solar Potential Is Unmatched</h2>
-      <p>Africa receives more sunshine per square kilometre than any other continent, yet it accounts for less than 2% of global solar installed capacity. This gap represents an extraordinary opportunity. The International Energy Agency estimates that Africa's solar generation could increase twentyfold by 2040 if current investment trends continue. Zimbabwe, with its favourable solar irradiance of over 2,000 kWh per square metre annually, stable governance framework for energy investment, and growing technical expertise, is uniquely positioned to be a leader in this transformation.</p>
-      <p>The shift from centralised coal and hydro power to distributed solar generation is not just an environmental choice; it is an economic imperative. As Zimbabwe's electricity demand grows with industrialisation and population increase, solar offers a scalable, rapidly deployable solution that does not depend on rainfall (unlike hydro) or expensive fuel imports (unlike thermal generation).</p>
-
-      <h2>Falling Costs Are Accelerating Adoption</h2>
-      <p>The cost of solar panels has fallen by over 90% in the last decade, and lithium battery prices have dropped by roughly 80% over the same period. In 2016, a basic residential solar system in Zimbabwe cost $5,000 to $8,000. Today, the same capacity can be installed for $1,500 to $3,000 using higher-efficiency panels and more cost-effective batteries. This dramatic cost reduction means solar is now cheaper than grid electricity for most Zimbabwean households when calculated on a levelised cost of energy basis.</p>
-      <p>Further cost reductions are expected as manufacturing scales up across the globe and new technologies like perovskite-silicon tandem cells enter commercial production. Within the next five years, panel efficiencies above 30% could become standard, meaning even smaller arrays will produce enough power for a typical household. For Zimbabweans investing in solar today, the improving economics mean your system will remain competitive and valuable for decades to come.</p>
-
-      <h2>Technology Innovations on the Horizon</h2>
-      <p>Several technological developments promise to reshape the solar industry in Africa. Bi-facial panels, which capture reflected light from the ground beneath them, are already boosting yields by 10% to 20% in Zimbabwean installations. Building-integrated photovoltaics (BIPV), where solar cells are embedded directly into roofing tiles, windows, or facade cladding, will make solar adoption seamless for new construction. Solid-state batteries, expected to reach commercial viability by 2028, promise double the energy density of current lithium cells with improved safety and faster charging.</p>
-      <p>Smart energy management systems powered by artificial intelligence are also advancing rapidly. These systems learn household consumption patterns and optimise battery charging, solar self-consumption, and grid interaction automatically. Taqon Electrico is already deploying inverters with smart load management features, and as AI capabilities improve, our clients will benefit from increasingly intelligent energy optimisation without any manual intervention.</p>
-
-      <h2>The Role of Local Companies Like Taqon Electrico</h2>
-      <p>Africa's solar future depends not just on technology but on the people and companies that deploy it. Local expertise matters enormously in solar installation because every roof, every electrical system, and every client's needs are different. Companies like Taqon Electrico are building the skilled workforce, supply chains, and customer service infrastructure that enable reliable solar deployment at scale. Our engineers understand Zimbabwean roof construction, local electrical codes, climatic conditions, and the specific challenges of operating in our market.</p>
-      <p>By investing in training, maintaining relationships with premium equipment manufacturers, and delivering consistently excellent installations, we are helping to build an industry that creates jobs, reduces energy poverty, and demonstrates that African companies can compete at the highest international standards. Every system we install contributes to Zimbabwe's energy independence and creates a reference point that encourages neighbours, businesses, and communities to follow suit.</p>
-
-      <h2>What This Means for You</h2>
-      <p>The message for Zimbabwean homeowners and businesses is clear: there has never been a better time to invest in solar energy. Costs are at historic lows, technology is mature and improving, government policy is supportive, and the economic case is compelling. Whether you start with a basic home system or invest in a comprehensive commercial installation, you are joining a continental energy transformation that will define Africa's economic future. Taqon Electrico is proud to be at the forefront of this movement in Zimbabwe, and we invite you to be part of it. Contact us today for a free consultation and take your first step toward energy independence.</p>
-    `,
-    category: 'News',
-    tags: ['future', 'Africa', 'technology', 'trends', 'Zimbabwe', 'innovation'],
-    image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&q=80',
-    date: '2026-02-25',
-    readTime: '7 min read',
-    author: { name: 'Kudzai Mashonga', role: 'Technical Director' },
-    relatedPosts: [5, 7, 1],
+    relatedPosts: [3, 4],
   },
 ];

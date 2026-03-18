@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon } from '@phosphor-icons/react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function ThemeToggle({ className = '' }) {

@@ -10,6 +10,19 @@ export default defineConfig({
     compression({ algorithm: 'gzip' }),
     compression({ algorithm: 'brotliCompress', ext: '.br' }),
   ],
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/media': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     chunkSizeWarningLimit: 250,
     rollupOptions: {
@@ -17,7 +30,10 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-motion': ['framer-motion'],
-          'vendor-ui': ['lucide-react', 'sonner'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-icons': ['@phosphor-icons/react'],
+          'vendor-ui': ['sonner', 'zustand'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
         },
       },
     },

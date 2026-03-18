@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Clock, ArrowUpRight, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { MapPin, Phone, EnvelopeSimple, Clock, ArrowUpRight, FacebookLogo, InstagramLogo, XLogo, LinkedinLogo } from '@phosphor-icons/react';
 import { companyInfo } from '../data/siteData';
+import { confirmExternalNavigation } from './ContentLink';
 import logoImg from '../assets/taqon-electrico-logo.jpg';
 
 const footerLinks = {
@@ -38,10 +39,10 @@ const footerLinks = {
 };
 
 const socialIcons = [
-  { icon: Facebook, href: companyInfo.social.facebook },
-  { icon: Instagram, href: companyInfo.social.instagram },
-  { icon: Twitter, href: companyInfo.social.twitter },
-  { icon: Linkedin, href: companyInfo.social.linkedin },
+  { icon: FacebookLogo, href: companyInfo.social.facebook },
+  { icon: InstagramLogo, href: companyInfo.social.instagram },
+  { icon: XLogo, href: companyInfo.social.twitter },
+  { icon: LinkedinLogo, href: companyInfo.social.linkedin },
 ];
 
 export default function Footer({ onOpenPrivacy, onOpenCookies }) {
@@ -93,7 +94,7 @@ export default function Footer({ onOpenPrivacy, onOpenCookies }) {
             </p>
 
             <div className="space-y-3">
-              <a href={companyInfo.mapLink} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 text-white/60 hover:text-taqon-orange transition-colors text-sm">
+              <a href={companyInfo.mapLink} onClick={(e) => confirmExternalNavigation(companyInfo.mapLink, e)} className="flex items-start gap-3 text-white/60 hover:text-taqon-orange transition-colors text-sm cursor-pointer">
                 <MapPin size={16} className="flex-shrink-0 mt-0.5" />
                 {companyInfo.address}
               </a>
@@ -102,7 +103,7 @@ export default function Footer({ onOpenPrivacy, onOpenCookies }) {
                 {companyInfo.phone[0]}
               </a>
               <a href={`mailto:${companyInfo.email}`} className="flex items-center gap-3 text-white/60 hover:text-taqon-orange transition-colors text-sm">
-                <Mail size={16} className="flex-shrink-0" />
+                <EnvelopeSimple size={16} className="flex-shrink-0" />
                 {companyInfo.email}
               </a>
               <div className="flex items-center gap-3 text-white/60 text-sm">
@@ -116,7 +117,8 @@ export default function Footer({ onOpenPrivacy, onOpenCookies }) {
                 <a
                   key={i}
                   href={social.href}
-                  className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-taqon-orange hover:border-taqon-orange transition-all"
+                  onClick={(e) => confirmExternalNavigation(social.href, e)}
+                  className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-taqon-orange hover:border-taqon-orange transition-all cursor-pointer"
                 >
                   <social.icon size={16} />
                 </a>
@@ -182,6 +184,20 @@ export default function Footer({ onOpenPrivacy, onOpenCookies }) {
             <span>•</span>
             <Link to="/contact" className="hover:text-white transition-colors">Terms & Conditions</Link>
           </div>
+        </div>
+      </div>
+      <div className="relative border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 py-4 text-center">
+          <p className="text-white/20 text-xs">
+            Built by{' '}
+            <a
+              href="https://bitstudio.co.zw"
+              onClick={(e) => confirmExternalNavigation('https://bitstudio.co.zw', e)}
+              className="text-white/30 hover:text-taqon-orange transition-colors cursor-pointer"
+            >
+              Bit Studio
+            </a>
+          </p>
         </div>
       </div>
     </footer>

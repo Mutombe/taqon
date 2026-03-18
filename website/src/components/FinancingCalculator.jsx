@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Calculator, DollarSign, Calendar, TrendingUp } from 'lucide-react';
+import { Calculator, CurrencyDollar, Calendar, TrendUp } from '@phosphor-icons/react';
 import { calculateMonthlyPayment, formatCurrency, formatCurrencyDetailed } from '../utils/solarCalculator';
 import { FINANCING_PLANS } from '../data/calculatorData';
 
@@ -31,7 +31,7 @@ export default function FinancingCalculator() {
           System Cost (USD)
         </label>
         <div className="relative">
-          <DollarSign size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-taqon-muted" />
+          <CurrencyDollar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-taqon-muted" />
           <input
             type="number"
             min="500"
@@ -112,7 +112,7 @@ export default function FinancingCalculator() {
           </div>
           <div className="text-center">
             <div className="w-10 h-10 rounded-xl bg-taqon-orange/10 flex items-center justify-center mx-auto mb-2">
-              <DollarSign size={18} className="text-taqon-orange" />
+              <CurrencyDollar size={18} className="text-taqon-orange" />
             </div>
             <p className="text-xs text-taqon-muted dark:text-white/50 mb-1">Total Cost</p>
             <p className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white">
@@ -121,7 +121,7 @@ export default function FinancingCalculator() {
           </div>
           <div className="text-center">
             <div className="w-10 h-10 rounded-xl bg-taqon-orange/10 flex items-center justify-center mx-auto mb-2">
-              <TrendingUp size={18} className="text-taqon-orange" />
+              <TrendUp size={18} className="text-taqon-orange" />
             </div>
             <p className="text-xs text-taqon-muted dark:text-white/50 mb-1">Interest</p>
             <p className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white">

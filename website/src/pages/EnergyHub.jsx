@@ -3,10 +3,11 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-  Sun, Zap, Battery, Home, ArrowRight, ChevronDown, ChevronUp,
-  CheckCircle2, XCircle, Lightbulb, Calculator, Globe
-} from 'lucide-react';
+  Sun, Lightning, BatteryFull, House, ArrowRight, CaretDown, CaretUp,
+  CheckCircle, XCircle, Lightbulb, Calculator, Globe
+} from '@phosphor-icons/react';
 import AnimatedSection, { StaggerContainer, StaggerItem } from '../components/AnimatedSection';
+import { autoLink } from '../components/ContentLink';
 import SEO from '../components/SEO';
 
 const systemTypes = [
@@ -33,7 +34,7 @@ const systemTypes = [
   {
     key: 'off-grid',
     name: 'Off-Grid',
-    icon: Battery,
+    icon: BatteryFull,
     description:
       'An off-grid system operates completely independently of the utility grid. Solar panels charge a battery bank during the day, and the batteries supply power when the sun is not shining. This type requires careful sizing to ensure sufficient generation and storage for all your energy needs, including multiple days of cloudy weather.',
     pros: [
@@ -54,7 +55,7 @@ const systemTypes = [
   {
     key: 'hybrid',
     name: 'Hybrid',
-    icon: Zap,
+    icon: Lightning,
     description:
       'A hybrid system combines the best of both worlds. It connects to the grid and includes battery storage. Solar power is used first, excess charges the batteries, and the grid serves as a backup. During outages, the batteries provide seamless backup power. This is the most versatile and popular option in Zimbabwe.',
     pros: [
@@ -91,7 +92,7 @@ const componentCards = [
   },
   {
     key: 'inverter',
-    icon: Zap,
+    icon: Lightning,
     name: 'Inverter',
     shortDesc: 'Converts DC to AC power for your home',
     details: {
@@ -105,7 +106,7 @@ const componentCards = [
   },
   {
     key: 'battery',
-    icon: Battery,
+    icon: BatteryFull,
     name: 'Battery',
     shortDesc: 'Stores energy for use when the sun is not shining',
     details: {
@@ -358,7 +359,7 @@ export default function EnergyHub() {
           <img
             src="https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=1920&q=80"
             alt=""
-            className="w-full h-full object-cover opacity-15"
+            className="w-full h-full object-cover opacity-30"
             loading="eager"
           />
         </div>
@@ -371,8 +372,7 @@ export default function EnergyHub() {
               Learn About <span className="text-gradient">Solar Energy</span>
             </h1>
             <p className="mt-4 text-white/60 text-lg max-w-xl">
-              Everything you need to know about solar power, from how it works to choosing
-              the right system for your home or business in Zimbabwe.
+              {autoLink('Everything you need to know about solar power, from how it works to choosing the right system for your home or business in Zimbabwe.')}
             </p>
           </motion.div>
         </div>
@@ -390,8 +390,7 @@ export default function EnergyHub() {
               How Solar <span className="text-gradient">Works</span>
             </h2>
             <p className="mt-4 text-taqon-muted max-w-2xl mx-auto">
-              Solar energy conversion is simple and elegant. Sunlight hits your panels, is
-              converted to electricity, and powers your home. Here is the process visualized.
+              {autoLink('Solar energy conversion is simple and elegant. Sunlight hits your panels, is converted to electricity, and powers your home. Here is the process visualized.')}
             </p>
           </AnimatedSection>
 
@@ -419,7 +418,7 @@ export default function EnergyHub() {
                     <h4 className="font-bold font-syne text-taqon-charcoal dark:text-white">
                       {item.title}
                     </h4>
-                    <p className="text-sm text-taqon-muted mt-1">{item.desc}</p>
+                    <p className="text-sm text-taqon-muted mt-1">{autoLink(item.desc)}</p>
                   </motion.div>
                 ))}
               </div>
@@ -439,8 +438,7 @@ export default function EnergyHub() {
               Types of Solar <span className="text-gradient">Systems</span>
             </h2>
             <p className="mt-4 text-taqon-muted max-w-2xl mx-auto">
-              Each system type has its strengths. Choose the one that best fits your location,
-              budget, and energy needs.
+              {autoLink('Each system type has its strengths. Choose the one that best fits your location, budget, and energy needs.')}
             </p>
           </AnimatedSection>
 
@@ -487,14 +485,14 @@ export default function EnergyHub() {
                           {sys.name} System
                         </h3>
                       </div>
-                      <p className="text-taqon-muted leading-relaxed">{sys.description}</p>
+                      <p className="text-taqon-muted leading-relaxed">{autoLink(sys.description)}</p>
 
                       <div className="mt-6 p-4 bg-taqon-orange/5 dark:bg-taqon-orange/10 rounded-xl border border-taqon-orange/10">
                         <h4 className="font-semibold text-taqon-charcoal dark:text-white text-sm flex items-center gap-2">
                           <Lightbulb size={16} className="text-taqon-orange" />
                           Best For
                         </h4>
-                        <p className="mt-1 text-sm text-taqon-muted">{sys.bestFor}</p>
+                        <p className="mt-1 text-sm text-taqon-muted">{autoLink(sys.bestFor)}</p>
                       </div>
                     </div>
 
@@ -507,7 +505,7 @@ export default function EnergyHub() {
                         <ul className="space-y-2">
                           {sys.pros.map((pro, i) => (
                             <li key={i} className="flex items-start gap-2 text-sm">
-                              <CheckCircle2
+                              <CheckCircle
                                 size={16}
                                 className="text-green-500 flex-shrink-0 mt-0.5"
                               />
@@ -554,8 +552,7 @@ export default function EnergyHub() {
               Solar System <span className="text-gradient">Components</span>
             </h2>
             <p className="mt-4 text-taqon-muted max-w-2xl mx-auto">
-              Click on each component to learn how it works, the types available, and what
-              we recommend for Zimbabwean installations.
+              {autoLink('Click on each component to learn how it works, the types available, and what we recommend for Zimbabwean installations.')}
             </p>
           </AnimatedSection>
 
@@ -590,7 +587,7 @@ export default function EnergyHub() {
                           animate={{ rotate: isExpanded ? 180 : 0 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <ChevronDown size={20} className="text-taqon-muted" />
+                          <CaretDown size={20} className="text-taqon-muted" />
                         </motion.div>
                       </div>
 
@@ -612,7 +609,7 @@ export default function EnergyHub() {
                                       : key.charAt(0).toUpperCase() + key.slice(1)}
                                   </h4>
                                   <p className="text-sm text-taqon-charcoal/80 dark:text-white/70 leading-relaxed">
-                                    {value}
+                                    {autoLink(value)}
                                   </p>
                                 </div>
                               ))}
@@ -630,8 +627,8 @@ export default function EnergyHub() {
       </section>
 
       {/* Sizing Guide Link */}
-      <section className="py-20 lg:py-28 bg-taqon-dark relative overflow-hidden">
-        <div className="absolute inset-0 dark-mesh" />
+      <section className="py-20 lg:py-28 bg-taqon-cream dark:bg-taqon-dark relative overflow-hidden">
+        <div className="absolute inset-0 dark:dark-mesh" />
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
           transition={{ duration: 8, repeat: Infinity }}
@@ -642,12 +639,11 @@ export default function EnergyHub() {
             <div className="w-20 h-20 rounded-full bg-taqon-orange/20 flex items-center justify-center mx-auto mb-6">
               <Calculator size={32} className="text-taqon-orange" />
             </div>
-            <h2 className="text-3xl lg:text-5xl font-bold font-syne text-white">
+            <h2 className="text-3xl lg:text-5xl font-bold font-syne text-taqon-charcoal dark:text-white">
               Ready to Size <span className="text-gradient">Your System</span>?
             </h2>
-            <p className="mt-4 text-white/50 text-lg max-w-2xl mx-auto">
-              Use our interactive savings calculator to estimate the right system size based
-              on your energy consumption, and see how much you could save.
+            <p className="mt-4 text-gray-500 dark:text-white/50 text-lg max-w-2xl mx-auto">
+              {autoLink('Use our interactive savings calculator to estimate the right system size based on your energy consumption, and see how much you could save.')}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -659,7 +655,7 @@ export default function EnergyHub() {
               </Link>
               <Link
                 to="/visualizer"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 text-white px-8 py-4 rounded-full text-base font-semibold hover:bg-white/15 transition-all border border-white/10"
+                className="inline-flex items-center justify-center gap-2 bg-gray-100 dark:bg-white/10 text-taqon-charcoal dark:text-white px-8 py-4 rounded-full text-base font-semibold hover:bg-gray-200 dark:hover:bg-white/15 transition-all border border-gray-200 dark:border-white/10"
               >
                 Try System Visualizer
               </Link>
@@ -691,7 +687,7 @@ export default function EnergyHub() {
                     {item.emoji}
                   </div>
                   <p className="text-taqon-charcoal/80 dark:text-white/70 text-sm leading-relaxed">
-                    {item.fact}
+                    {autoLink(item.fact)}
                   </p>
                 </div>
               </StaggerItem>
@@ -708,8 +704,7 @@ export default function EnergyHub() {
               Ready to Start Your Solar Journey?
             </h2>
             <p className="mt-3 text-taqon-muted max-w-lg mx-auto">
-              Now that you understand how solar works, let our experts design the perfect
-              system for your home or business.
+              {autoLink('Now that you understand how solar works, let our experts design the perfect system for your home or business.')}
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <Link

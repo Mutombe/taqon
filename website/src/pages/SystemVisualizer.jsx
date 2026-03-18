@@ -2,7 +2,7 @@ import React from 'react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Plus, Minus, RotateCcw, ArrowRight, Sun, Zap, AlertTriangle, Home } from 'lucide-react';
+import { Plus, Minus, ArrowCounterClockwise, ArrowRight, Sun, Lightning, Warning, House } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 
@@ -177,7 +177,7 @@ export default function SystemVisualizer() {
           <img
             src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=1920&q=80"
             alt=""
-            className="w-full h-full object-cover opacity-15"
+            className="w-full h-full object-cover opacity-30"
             loading="eager"
           />
         </div>
@@ -312,7 +312,7 @@ export default function SystemVisualizer() {
                           }}
                           className="text-sm text-taqon-muted hover:text-taqon-orange transition-colors flex items-center gap-1"
                         >
-                          <RotateCcw size={14} /> Reset
+                          <ArrowCounterClockwise size={14} /> Reset
                         </button>
                       </div>
                       <RoofIllustration
@@ -416,7 +416,7 @@ export default function SystemVisualizer() {
                             <div className="text-xs text-white/70">Panels</div>
                           </div>
                           <div className="bg-white/15 rounded-xl p-4 text-center backdrop-blur-sm">
-                            <Zap size={24} className="mx-auto mb-2 opacity-80" />
+                            <Lightning size={24} className="mx-auto mb-2 opacity-80" />
                             <div className="text-2xl font-bold font-syne">{systemSizeKW} kW</div>
                             <div className="text-xs text-white/70">System Size</div>
                           </div>
@@ -437,7 +437,7 @@ export default function SystemVisualizer() {
 
                       {/* Disclaimer */}
                       <div className="flex gap-3 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                        <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                        <Warning size={18} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                         <p className="text-xs text-amber-800 dark:text-amber-300/80 leading-relaxed">
                           This visualization is approximate. A proper site survey is required for
                           accurate system design. Panel count, orientation, and shading analysis
@@ -455,7 +455,7 @@ export default function SystemVisualizer() {
           {!selectedTemplate && (
             <AnimatedSection className="text-center py-16">
               <div className="w-20 h-20 rounded-full bg-taqon-orange/10 dark:bg-taqon-orange/20 flex items-center justify-center mx-auto mb-4">
-                <Home size={32} className="text-taqon-orange" />
+                <House size={32} className="text-taqon-orange" />
               </div>
               <h3 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white">
                 Select a Roof Type Above

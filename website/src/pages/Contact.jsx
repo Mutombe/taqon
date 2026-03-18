@@ -1,9 +1,10 @@
 import React from 'react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Clock, Send, MessageSquare, ArrowUpRight } from 'lucide-react';
+import { MapPin, Phone, EnvelopeSimple, Clock, PaperPlaneTilt, ChatsTeardrop, ArrowSquareOut } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import AnimatedSection from '../components/AnimatedSection';
+import { confirmExternalNavigation } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import JsonLd, { localBusinessSchema } from '../components/JsonLd';
 import { companyInfo } from '../data/siteData';
@@ -50,22 +51,22 @@ export default function Contact() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16 lg:py-24 bg-taqon-cream">
+      <section className="py-16 lg:py-24 bg-taqon-cream dark:bg-taqon-dark">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-5 gap-12">
             {/* Contact Info */}
             <div className="lg:col-span-2">
               <AnimatedSection>
-                <h2 className="text-2xl font-bold font-syne text-taqon-charcoal mb-6">Let's Talk</h2>
+                <h2 className="text-2xl font-bold font-syne text-taqon-charcoal dark:text-white mb-6">Let's Talk</h2>
 
                 <div className="space-y-5">
-                  <a href={companyInfo.mapLink} target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 group">
+                  <a href={companyInfo.mapLink} onClick={(e) => confirmExternalNavigation(companyInfo.mapLink, e)} className="flex items-start gap-4 group cursor-pointer">
                     <div className="w-12 h-12 rounded-2xl bg-taqon-orange/10 flex items-center justify-center flex-shrink-0 group-hover:bg-taqon-orange group-hover:text-white transition-all">
                       <MapPin size={20} className="text-taqon-orange group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <p className="font-semibold text-taqon-charcoal">Visit Us</p>
-                      <p className="text-sm text-taqon-muted mt-0.5">{companyInfo.visitAddress}</p>
+                      <p className="font-semibold text-taqon-charcoal dark:text-white">Visit Us</p>
+                      <p className="text-sm text-taqon-muted dark:text-white/50 mt-0.5">{companyInfo.visitAddress}</p>
                     </div>
                   </a>
 
@@ -74,19 +75,19 @@ export default function Contact() {
                       <Phone size={20} className="text-taqon-orange group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <p className="font-semibold text-taqon-charcoal">Call Us</p>
-                      <p className="text-sm text-taqon-muted mt-0.5">{companyInfo.phone[0]}</p>
-                      <p className="text-sm text-taqon-muted">{companyInfo.phone[1]}</p>
+                      <p className="font-semibold text-taqon-charcoal dark:text-white">Call Us</p>
+                      <p className="text-sm text-taqon-muted dark:text-white/50 mt-0.5">{companyInfo.phone[0]}</p>
+                      <p className="text-sm text-taqon-muted dark:text-white/50">{companyInfo.phone[1]}</p>
                     </div>
                   </a>
 
                   <a href={`mailto:${companyInfo.email}`} className="flex items-start gap-4 group">
                     <div className="w-12 h-12 rounded-2xl bg-taqon-orange/10 flex items-center justify-center flex-shrink-0 group-hover:bg-taqon-orange transition-all">
-                      <Mail size={20} className="text-taqon-orange group-hover:text-white transition-colors" />
+                      <EnvelopeSimple size={20} className="text-taqon-orange group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <p className="font-semibold text-taqon-charcoal">Email Us</p>
-                      <p className="text-sm text-taqon-muted mt-0.5">{companyInfo.email}</p>
+                      <p className="font-semibold text-taqon-charcoal dark:text-white">Email Us</p>
+                      <p className="text-sm text-taqon-muted dark:text-white/50 mt-0.5">{companyInfo.email}</p>
                     </div>
                   </a>
 
@@ -95,10 +96,10 @@ export default function Contact() {
                       <Clock size={20} className="text-taqon-orange" />
                     </div>
                     <div>
-                      <p className="font-semibold text-taqon-charcoal">Business Hours</p>
-                      <p className="text-sm text-taqon-muted mt-0.5">Mon-Fri: {companyInfo.hours.weekday}</p>
-                      <p className="text-sm text-taqon-muted">Sat: {companyInfo.hours.saturday}</p>
-                      <p className="text-sm text-taqon-muted">Sun & Holidays: Closed</p>
+                      <p className="font-semibold text-taqon-charcoal dark:text-white">Business Hours</p>
+                      <p className="text-sm text-taqon-muted dark:text-white/50 mt-0.5">Mon-Fri: {companyInfo.hours.weekday}</p>
+                      <p className="text-sm text-taqon-muted dark:text-white/50">Sat: {companyInfo.hours.saturday}</p>
+                      <p className="text-sm text-taqon-muted dark:text-white/50">Sun & Holidays: Closed</p>
                     </div>
                   </div>
                 </div>
@@ -106,18 +107,17 @@ export default function Contact() {
                 {/* WhatsApp CTA */}
                 <a
                   href="https://wa.me/263772771036?text=Hi Taqon Electrico, I'd like to enquire about your services."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-8 w-full flex items-center justify-center gap-2 bg-green-500 text-white py-3.5 rounded-2xl font-semibold hover:bg-green-600 transition-all"
+                  onClick={(e) => confirmExternalNavigation('https://wa.me/263772771036', e)}
+                  className="mt-8 w-full flex items-center justify-center gap-2 bg-green-500 text-white py-3.5 rounded-2xl font-semibold hover:bg-green-600 transition-all cursor-pointer"
                 >
-                  <MessageSquare size={18} />
+                  <ChatsTeardrop size={18} />
                   Chat on WhatsApp
                 </a>
 
                 {/* Map */}
-                <div className="mt-8 rounded-2xl overflow-hidden border border-gray-200 h-[250px]">
+                <div className="mt-8 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 h-[250px]">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3798.5!2d31.05!3d-17.82!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQ5JzEyLjAiUyAzMcKwMDMnMDAuMCJF!5e0!3m2!1sen!2szw!4v1"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3798.5!2d31.019658!3d-17.7817166!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1931a4e706099b3d%3A0x1234567890abcdef!2sTaqon+Electrico!5e0!3m2!1sen!2szw!4v1"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -133,31 +133,31 @@ export default function Contact() {
             {/* Contact Form */}
             <div className="lg:col-span-3">
               <AnimatedSection variant="fadeRight">
-                <div className="bg-white rounded-3xl p-8 lg:p-10 border border-gray-100 shadow-sm">
-                  <h2 className="text-2xl font-bold font-syne text-taqon-charcoal mb-2">Send Us a Message</h2>
-                  <p className="text-taqon-muted text-sm mb-8">Fill in the form and our team will respond within 24 hours.</p>
+                <div className="bg-white dark:bg-taqon-charcoal rounded-3xl p-8 lg:p-10 border border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none">
+                  <h2 className="text-2xl font-bold font-syne text-taqon-charcoal dark:text-white mb-2">Send Us a Message</h2>
+                  <p className="text-taqon-muted dark:text-white/50 text-sm mb-8">Fill in the form and our team will respond within 24 hours.</p>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
-                        <label className="block text-sm font-medium text-taqon-charcoal mb-1.5">Full Name *</label>
+                        <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-1.5">Full Name *</label>
                         <input
                           type="text"
                           required
                           value={form.name}
                           onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          className="w-full bg-taqon-cream border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all"
+                          className="w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-taqon-charcoal dark:text-white outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all"
                           placeholder="John Doe"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-taqon-charcoal mb-1.5">Email *</label>
+                        <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-1.5">Email *</label>
                         <input
                           type="email"
                           required
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          className="w-full bg-taqon-cream border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all"
+                          className="w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-taqon-charcoal dark:text-white outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all"
                           placeholder="john@example.com"
                         />
                       </div>
@@ -165,21 +165,21 @@ export default function Contact() {
 
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
-                        <label className="block text-sm font-medium text-taqon-charcoal mb-1.5">Phone Number</label>
+                        <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-1.5">Phone Number</label>
                         <input
                           type="tel"
                           value={form.phone}
                           onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                          className="w-full bg-taqon-cream border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all"
+                          className="w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-taqon-charcoal dark:text-white outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all"
                           placeholder="+263 7XX XXX XXX"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-taqon-charcoal mb-1.5">Service Needed</label>
+                        <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-1.5">Service Needed</label>
                         <select
                           value={form.service}
                           onChange={(e) => setForm({ ...form, service: e.target.value })}
-                          className="w-full bg-taqon-cream border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all"
+                          className="w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-taqon-charcoal dark:text-white outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all"
                         >
                           <option value="">Select a service</option>
                           <option value="solar-installation">Solar Installation</option>
@@ -194,13 +194,13 @@ export default function Contact() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-taqon-charcoal mb-1.5">Message *</label>
+                      <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-1.5">Message *</label>
                       <textarea
                         required
                         rows="5"
                         value={form.message}
                         onChange={(e) => setForm({ ...form, message: e.target.value })}
-                        className="w-full bg-taqon-cream border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all resize-none"
+                        className="w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-taqon-charcoal dark:text-white outline-none focus:border-taqon-orange focus:ring-2 focus:ring-taqon-orange/10 transition-all resize-none"
                         placeholder="Tell us about your project or enquiry..."
                       />
                     </div>
@@ -214,7 +214,7 @@ export default function Contact() {
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       ) : (
                         <>
-                          <Send size={18} />
+                          <PaperPlaneTilt size={18} />
                           Send Message
                         </>
                       )}

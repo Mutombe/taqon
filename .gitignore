@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+**/venv/
+**/node_modules/
+backend/logs/
+backend/staticfiles/
+backend/media/
+**/__pycache__/
+
+# Node
+website/node_modules/
+website/dist/
+
+# Environment
+.env
+.env.local
+.env.development
+backend/.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project photos (not part of codebase)
+*.xlsx
+*.pdf
+10KVA*/
+16KVA*/
+Borrowdale*/
+Bulawayo*/
+Kadoma*/
+NEDBANK*/
+Shawasha*/
+chisipiti*/
+
+# Claude agent memory
+website/.claude/
+.claude/projects/
+
+# Misc
+*.log

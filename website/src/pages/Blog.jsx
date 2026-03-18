@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Search, Calendar, Clock, ArrowRight, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
+import { MagnifyingGlass, Calendar, Clock, ArrowRight, CaretLeft, CaretRight, Tag } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { blogPosts } from '../data/blogData';
@@ -74,9 +74,9 @@ export default function Blog() {
         <div className="absolute inset-0 dark-mesh" />
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1920&q=80"
+            src="/projects/kadoma-24kva/1.jpg"
             alt=""
-            className="w-full h-full object-cover opacity-15"
+            className="w-full h-full object-cover opacity-30"
             loading="eager"
           />
         </div>
@@ -120,7 +120,7 @@ export default function Blog() {
 
             {/* Search */}
             <div className="relative w-full lg:w-72">
-              <Search
+              <MagnifyingGlass
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted"
               />
@@ -261,7 +261,7 @@ export default function Blog() {
                 disabled={currentPage === 1}
                 className="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white disabled:opacity-30 hover:border-taqon-orange transition-colors"
               >
-                <ChevronLeft size={16} /> Prev
+                <CaretLeft size={16} /> Prev
               </button>
               {Array.from({ length: totalPages }).map((_, i) => (
                 <button
@@ -281,7 +281,7 @@ export default function Blog() {
                 disabled={currentPage === totalPages}
                 className="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white disabled:opacity-30 hover:border-taqon-orange transition-colors"
               >
-                Next <ChevronRight size={16} />
+                Next <CaretRight size={16} />
               </button>
             </div>
           )}

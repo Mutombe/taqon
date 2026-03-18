@@ -1,9 +1,10 @@
 import React from 'react';
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Star, ThumbsUp, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, ThumbsUp, ArrowSquareOut, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { useInView } from '../hooks/useAnimations';
 import { reviews, averageRating, totalReviews } from '../data/reviewsData';
+import { autoLink, confirmExternalNavigation } from './ContentLink';
 
 function StarRating({ rating }) {
   return (
@@ -21,28 +22,43 @@ function StarRating({ rating }) {
 
 function ReviewCard({ review }) {
   return (
-    <div className="flex-shrink-0 w-[320px] sm:w-[360px] bg-white dark:bg-taqon-charcoal rounded-2xl p-6 border border-gray-100 dark:border-white/10 hover:border-taqon-orange/20 dark:hover:border-taqon-orange/20 transition-all duration-300 hover:shadow-lg">
+    <div className="flex-shrink-0 w-[320px] sm:w-[360px] bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/15 hover:border-taqon-orange/30 hover:bg-white/15 transition-all duration-300">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-taqon-orange/10 flex items-center justify-center flex-shrink-0">
+        {review.avatarUrl ? (
+          <img
+            src={review.avatarUrl}
+            alt={review.name}
+            className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <div
+          className="w-10 h-10 rounded-full bg-taqon-orange/10 items-center justify-center flex-shrink-0"
+          style={{ display: review.avatarUrl ? 'none' : 'flex' }}
+        >
           <span className="text-sm font-bold text-taqon-orange">{review.avatar}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-taqon-charcoal dark:text-white text-sm truncate">{review.name}</p>
+          <p className="font-semibold text-white text-sm truncate">{review.name}</p>
           <div className="flex items-center gap-2 mt-0.5">
             <StarRating rating={review.rating} />
-            <span className="text-xs text-taqon-muted dark:text-white/40">{review.date}</span>
+            <span className="text-xs text-white/40">{review.date}</span>
           </div>
         </div>
       </div>
 
       {/* Review Text */}
-      <p className="mt-4 text-sm text-taqon-muted dark:text-white/60 leading-relaxed line-clamp-4">
-        {review.text}
+      <p className="mt-4 text-sm text-white/70 leading-relaxed line-clamp-4">
+        {autoLink(review.text, { maxLinks: 3 })}
       </p>
 
       {/* Helpful */}
-      <div className="mt-4 flex items-center gap-1.5 text-xs text-taqon-muted dark:text-white/30">
+      <div className="mt-4 flex items-center gap-1.5 text-xs text-white/30">
         <ThumbsUp size={12} />
         <span>Helpful ({review.helpful})</span>
       </div>
@@ -70,7 +86,7 @@ export default function GoogleReviews() {
       initial={{ opacity: 0, y: 40 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      className="py-20 lg:py-28 bg-taqon-cream dark:bg-taqon-dark"
+      className="py-20 lg:py-28"
     >
       <div className="max-w-7xl mx-auto px-4">
         {/* Google Branding Header */}
@@ -84,14 +100,14 @@ export default function GoogleReviews() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              <span className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white">
+              <span className="text-xl font-bold font-syne text-white">
                 Google Reviews
               </span>
             </div>
 
             {/* Average Rating */}
             <div className="flex items-center gap-3">
-              <span className="text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
+              <span className="text-4xl font-bold font-syne text-white">
                 {averageRating}
               </span>
               <div>
@@ -110,7 +126,7 @@ export default function GoogleReviews() {
                     />
                   ))}
                 </div>
-                <p className="text-xs text-taqon-muted dark:text-white/40 mt-0.5">
+                <p className="text-xs text-white/50 mt-0.5">
                   Based on {totalReviews} reviews
                 </p>
               </div>
@@ -121,17 +137,17 @@ export default function GoogleReviews() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => scroll('left')}
-              className="w-10 h-10 rounded-full bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:border-taqon-orange/30 transition-colors"
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white hover:border-taqon-orange/30 transition-colors"
               aria-label="Scroll reviews left"
             >
-              <ChevronLeft size={18} />
+              <CaretLeft size={18} />
             </button>
             <button
               onClick={() => scroll('right')}
-              className="w-10 h-10 rounded-full bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:border-taqon-orange/30 transition-colors"
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white hover:border-taqon-orange/30 transition-colors"
               aria-label="Scroll reviews right"
             >
-              <ChevronRight size={18} />
+              <CaretRight size={18} />
             </button>
           </div>
         </div>
@@ -151,12 +167,11 @@ export default function GoogleReviews() {
         <div className="mt-8 text-center">
           <a
             href="https://www.google.com/maps/place/Taqon+Electrico/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-taqon-orange hover:text-taqon-amber transition-colors"
+            onClick={(e) => confirmExternalNavigation('https://www.google.com/maps/place/Taqon+Electrico/', e)}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-taqon-orange hover:text-taqon-amber transition-colors cursor-pointer"
           >
             View all reviews on Google
-            <ExternalLink size={14} />
+            <ArrowSquareOut size={14} />
           </a>
         </div>
       </div>

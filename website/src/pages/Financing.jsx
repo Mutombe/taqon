@@ -7,22 +7,22 @@ import {
   ArrowRight,
   Check,
   Star,
-  ChevronDown,
-  Smartphone,
+  CaretDown,
+  DeviceMobile,
   Wallet,
-  Building,
-  Banknote,
+  Buildings,
+  Money,
   Shield,
   Clock,
   Percent,
-  HelpCircle,
-} from 'lucide-react';
+  Question,
+} from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import FinancingCalculator from '../components/FinancingCalculator';
 import { FINANCING_PLANS, PAYMENT_METHODS } from '../data/calculatorData';
 
-const paymentIcons = { Smartphone, Wallet, Building, Banknote };
+const paymentIcons = { Smartphone: DeviceMobile, Wallet, Building: Buildings, Banknote: Money };
 
 const FINANCING_FAQS = [
   {
@@ -240,7 +240,7 @@ export default function Financing() {
         <div className="max-w-3xl mx-auto px-4">
           <AnimatedSection className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-3">
-              <HelpCircle size={18} className="text-taqon-orange" />
+              <Question size={18} className="text-taqon-orange" />
               <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">FAQ</span>
             </div>
             <h2 className="text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
@@ -257,7 +257,7 @@ export default function Financing() {
                     className="w-full flex items-center justify-between p-5 text-left"
                   >
                     <span className="font-semibold text-taqon-charcoal dark:text-white pr-4">{faq.question}</span>
-                    <ChevronDown
+                    <CaretDown
                       size={20}
                       className={`flex-shrink-0 text-taqon-orange transition-transform duration-300 ${
                         openFaq === i ? 'rotate-180' : ''
@@ -287,13 +287,13 @@ export default function Financing() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-taqon-dark">
+      <section className="py-16 bg-taqon-cream dark:bg-taqon-dark">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <AnimatedSection>
-            <h2 className="text-3xl lg:text-4xl font-bold font-syne text-white">
+            <h2 className="text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
               Ready to Go Solar?
             </h2>
-            <p className="mt-3 text-white/50 max-w-lg mx-auto">
+            <p className="mt-3 text-gray-500 dark:text-white/50 max-w-lg mx-auto">
               Start with a free consultation and find the perfect payment plan for your solar investment.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
@@ -305,7 +305,7 @@ export default function Financing() {
               </Link>
               <Link
                 to="/calculator"
-                className="inline-flex items-center gap-2 border border-white/20 text-white px-8 py-4 rounded-full font-semibold hover:bg-white/10 transition-all"
+                className="inline-flex items-center gap-2 border border-gray-300 dark:border-white/20 text-taqon-charcoal dark:text-white px-8 py-4 rounded-full font-semibold hover:bg-gray-100 dark:hover:bg-white/10 transition-all"
               >
                 Try Savings Calculator
               </Link>

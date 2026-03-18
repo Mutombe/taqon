@@ -1,5 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap');
+/* Fonts are loaded via <link> in index.html with preconnect + preload
+   for non-blocking parallel loading (~200ms faster first paint).
+   Space Grotesk removed — it was imported but never used. */
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-taqon-orange: #F26522;
@@ -11,6 +16,14 @@
   --color-taqon-gray: #2A2A2A;
   --color-taqon-muted: #6B7280;
   --color-taqon-cream: #FFFBF5;
+
+  /* Warm neutral scale for light mode */
+  --color-warm-50: #FAF8F5;
+  --color-warm-100: #F3EDE4;
+  --color-warm-200: #E8E2D9;
+  --color-warm-300: #D4CDC3;
+  --color-warm-400: #B8B0A5;
+
   --font-syne: 'Syne', sans-serif;
   --font-outfit: 'Outfit', sans-serif;
 }
@@ -19,12 +32,16 @@
 :root {
   --bg-primary: #FFFBF5;
   --bg-secondary: #FFFFFF;
-  --bg-tertiary: #F9FAFB;
+  --bg-tertiary: #F9F6F1;
   --text-primary: #1A1A1A;
-  --text-secondary: #6B7280;
-  --border-color: #F3F4F6;
+  --text-secondary: #374151;
+  --text-muted: #6B7280;
+  --border-color: #E8E2D9;
+  --border-subtle: #F3EDE4;
   --card-bg: #FFFFFF;
-  --card-border: #F3F4F6;
+  --card-border: #E8E2D9;
+  --input-bg: #FFFBF5;
+  --input-border: #D4CDC3;
 }
 
 .dark {
@@ -32,10 +49,14 @@
   --bg-secondary: #1A1A1A;
   --bg-tertiary: #2A2A2A;
   --text-primary: #F9FAFB;
-  --text-secondary: #9CA3AF;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9CA3AF;
   --border-color: rgba(255,255,255,0.1);
+  --border-subtle: rgba(255,255,255,0.05);
   --card-bg: #1A1A1A;
   --card-border: rgba(255,255,255,0.1);
+  --input-bg: #0D0D0D;
+  --input-border: rgba(255,255,255,0.1);
 }
 
 body {
@@ -61,7 +82,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0D0D0D;
+  background: var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -110,9 +131,14 @@ body {
 .animate-blob { animation: blob 7s ease-in-out infinite; }
 
 .glass {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 226, 217, 0.5);
+}
+
+.dark .glass {
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -131,12 +157,12 @@ body {
 }
 
 .mesh-gradient {
-  background: 
-    radial-gradient(at 40% 20%, rgba(242, 101, 34, 0.15) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(255, 140, 66, 0.1) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
-    radial-gradient(at 80% 50%, rgba(242, 101, 34, 0.05) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(255, 140, 66, 0.1) 0px, transparent 50%);
+  background:
+    radial-gradient(at 40% 20%, rgba(242, 101, 34, 0.08) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(255, 140, 66, 0.06) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(245, 158, 11, 0.04) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(242, 101, 34, 0.03) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(255, 140, 66, 0.06) 0px, transparent 50%);
 }
 
 .dark-mesh {
@@ -184,11 +210,202 @@ body {
     #0D0D0D;
 }
 
+/* Auth modal inputs — use CSS vars for reliable dark mode */
+.auth-input {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  min-height: 2.75rem;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.auth-input select {
+  min-height: 2.75rem;
+}
+.auth-input::placeholder {
+  color: var(--text-muted);
+}
+.auth-input:focus {
+  border-color: rgba(242, 101, 34, 0.5);
+  box-shadow: 0 0 0 1px rgba(242, 101, 34, 0.5);
+  outline: none;
+}
+.auth-label {
+  color: var(--text-secondary);
+}
+.auth-text {
+  color: var(--text-primary);
+}
+.auth-muted {
+  color: var(--text-muted);
+}
+.auth-divider {
+  background: var(--border-color);
+}
+.auth-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+.auth-btn-secondary {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: background 0.2s;
+}
+.auth-btn-secondary:hover {
+  background: var(--border-subtle);
+}
+.auth-icon {
+  color: var(--text-muted);
+}
+
 /* Dark mode page loader */
 @keyframes spin-slow {
   to { transform: rotate(360deg); }
 }
 .animate-spin-slow { animation: spin-slow 1.5s linear infinite; }
+
+/* ============================================
+   Blog Article Typography — Taqon Prose Overrides
+   Targets the .prose container in BlogPost.jsx
+   ============================================ */
+
+/* --- Figures: images need breathing room --- */
+.prose figure {
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.prose figure img {
+  border-radius: 1rem;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.prose figcaption {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6B7280;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.dark .prose figcaption {
+  color: #9CA3AF;
+}
+
+/* --- Blockquotes: callout / tip treatment --- */
+.prose blockquote {
+  border-left: 4px solid #F26522;
+  background: rgba(242, 101, 34, 0.05);
+  border-radius: 0 0.75rem 0.75rem 0;
+  padding: 1.25rem 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  font-style: normal;
+}
+
+.prose blockquote p {
+  color: #1A1A1A;
+  font-weight: 500;
+  margin: 0;
+}
+
+.dark .prose blockquote {
+  background: rgba(242, 101, 34, 0.08);
+}
+
+.dark .prose blockquote p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* --- Lists: proper spacing and bullet styling --- */
+.prose ul,
+.prose ol {
+  margin-top: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
+}
+
+.prose li::marker {
+  color: #F26522;
+}
+
+/* --- H3 subheadings: used within h2 sections --- */
+.prose h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.375rem;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: #1A1A1A;
+}
+
+.dark .prose h3 {
+  color: #FFFFFF;
+}
+
+/* --- H4: minor subheading / label --- */
+.prose h4 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #1A1A1A;
+}
+
+.dark .prose h4 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* --- Links: backlinks in orange with smooth hover --- */
+.prose a {
+  color: #F26522;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+  text-underline-offset: 3px;
+}
+
+.prose a:hover {
+  color: #FF8C42;
+  text-decoration: underline;
+}
+
+/* --- Horizontal rules: section dividers --- */
+.prose hr {
+  border: none;
+  border-top: 1px solid #E8E2D9;
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+
+.dark .prose hr {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Inline code --- */
+.prose code:not(pre code) {
+  background: rgba(242, 101, 34, 0.08);
+  color: #F26522;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-weight: 500;
+}
 
 /* Smooth page transitions */
 .page-transition-enter {

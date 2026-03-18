@@ -5,15 +5,15 @@ import { motion } from 'framer-motion';
 import {
   Calculator,
   Sun,
-  Zap,
-  DollarSign,
+  Lightning,
+  CurrencyDollar,
   Leaf,
-  TrendingUp,
+  TrendUp,
   ArrowRight,
-  BarChart3,
+  ChartBar,
   Clock,
-  PanelTop,
-} from 'lucide-react';
+  SquaresFour,
+} from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { calculateSolarSystem, calculateFromKwh, formatCurrency } from '../utils/solarCalculator';
@@ -215,13 +215,13 @@ export default function SavingsCalculator() {
                       sub: `${result.panelCount} panels`,
                     },
                     {
-                      icon: PanelTop,
+                      icon: SquaresFour,
                       label: 'Panel Count',
                       value: `${result.panelCount}`,
                       sub: '550W each',
                     },
                     {
-                      icon: DollarSign,
+                      icon: CurrencyDollar,
                       label: 'Estimated Cost',
                       value: `${formatCurrency(result.costMin)} - ${formatCurrency(result.costMax)}`,
                       sub: 'Installed',
@@ -233,7 +233,7 @@ export default function SavingsCalculator() {
                       sub: 'Return on investment',
                     },
                     {
-                      icon: Zap,
+                      icon: Lightning,
                       label: 'Monthly Savings',
                       value: `$${result.monthlySavings}`,
                       sub: 'On electricity bill',
@@ -276,7 +276,7 @@ export default function SavingsCalculator() {
                 <div className="bg-white dark:bg-taqon-charcoal rounded-3xl p-6 lg:p-8 border border-gray-100 dark:border-white/10">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-taqon-orange/10 flex items-center justify-center">
-                      <BarChart3 size={20} className="text-taqon-orange" />
+                      <ChartBar size={20} className="text-taqon-orange" />
                     </div>
                     <div>
                       <h4 className="font-bold font-syne text-taqon-charcoal dark:text-white">
@@ -396,7 +396,7 @@ export default function SavingsCalculator() {
                   {/* Chart legend */}
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-white/10">
                     <div className="flex items-center gap-2">
-                      <TrendingUp size={14} className="text-taqon-orange" />
+                      <TrendUp size={14} className="text-taqon-orange" />
                       <span className="text-xs text-taqon-muted dark:text-white/50">
                         Accounts for 0.5% annual panel degradation &amp; 8% electricity inflation
                       </span>
@@ -425,13 +425,13 @@ export default function SavingsCalculator() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-taqon-dark">
+      <section className="py-16 bg-taqon-cream dark:bg-taqon-dark">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <AnimatedSection>
-            <h2 className="text-3xl lg:text-4xl font-bold font-syne text-white">
+            <h2 className="text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
               Ready to Start Saving?
             </h2>
-            <p className="mt-3 text-white/50 max-w-lg mx-auto">
+            <p className="mt-3 text-gray-500 dark:text-white/50 max-w-lg mx-auto">
               Get a personalised quote from our engineers and start your solar journey today.
             </p>
             <Link

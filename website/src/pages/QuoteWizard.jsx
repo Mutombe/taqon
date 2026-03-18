@@ -3,35 +3,39 @@ import { useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Home,
-  Building2,
+  House,
+  Buildings,
   GraduationCap,
   Tractor,
   ArrowRight,
   ArrowLeft,
   Check,
-  ChevronRight,
+  CaretRight,
   Lightbulb,
-  Tv,
+  Television,
   Wind,
-  Droplets,
+  Drop,
   Flame,
   Monitor,
   Shield,
-  Shirt,
-  Refrigerator,
-  Zap,
+  TShirt,
+  ThermometerCold,
+  WashingMachine,
+  Lightning,
   User,
-  Mail,
+  EnvelopeSimple,
   Phone,
-  MessageSquare,
-  Send,
-  Sparkles,
-} from 'lucide-react';
+  ChatsTeardrop,
+  PaperPlaneTilt,
+  Sparkle,
+} from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
+import { confirmExternalNavigation } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { PROPERTY_TYPES, ROOF_TYPES, BUDGET_RANGES, COMMON_APPLIANCES } from '../data/calculatorData';
 import { calculateSolarSystem, formatCurrency } from '../utils/solarCalculator';
+import { quotationsApi } from '../api/quotations';
+import { toast } from 'sonner';
 
 const WHATSAPP_NUMBER = '263772771036';
 
@@ -43,7 +47,7 @@ const STEPS = [
   { title: 'Contact Details', subtitle: 'How to reach you' },
 ];
 
-const propertyIcons = { residential: Home, commercial: Building2, institutional: GraduationCap, farm: Tractor };
+const propertyIcons = { residential: House, commercial: Buildings, institutional: GraduationCap, farm: Tractor };
 const roofIllustrations = {
   pitched: 'M 10 50 L 50 10 L 90 50 L 90 80 L 10 80 Z',
   flat: 'M 10 30 L 90 30 L 90 80 L 10 80 Z',
@@ -51,7 +55,7 @@ const roofIllustrations = {
 };
 
 const applianceIcons = {
-  Lightbulb, Refrigerator, Tv, WashingMachine: Zap, Microwave: Flame, Flame, Wind, Droplets, Monitor, Shirt, Shield,
+  Lightbulb, ThermometerCold, Tv: Television, WashingMachine, Microwave: Flame, Flame, Wind, Droplets: Drop, Monitor, Shirt: TShirt, Shield,
 };
 
 const initialState = {
@@ -97,6 +101,7 @@ export default function QuoteWizard() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const canProceed = () => {
     switch (step) {
@@ -124,9 +129,34 @@ export default function QuoteWizard() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canProceed()) return;
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      await quotationsApi.submitRequest({
+        name: state.name.trim(),
+        email: state.email.trim(),
+        phone: state.phone.trim(),
+        message: state.message.trim(),
+        property_type: state.propertyType,
+        roof_type: state.roofType,
+        monthly_bill: state.monthlyBill,
+        appliances: state.appliances,
+        budget_range: state.budgetRange,
+        recommended_system_kw: result.systemSizeKw,
+        recommended_panels: result.panelCount,
+        estimated_cost_min: result.costMin,
+        estimated_cost_max: result.costMax,
+      });
+      setSubmitted(true);
+      toast.success('Quote request submitted!');
+    } catch (error) {
+      // Even if backend fails, still show result (frontend-calculated)
+      console.warn('Backend submission failed, showing local result:', error);
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Calculate recommended system for results
@@ -160,7 +190,7 @@ export default function QuoteWizard() {
               className="bg-white dark:bg-taqon-charcoal rounded-3xl p-8 lg:p-10 border border-gray-100 dark:border-white/10 shadow-sm text-center"
             >
               <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
-                <Sparkles size={36} className="text-green-600 dark:text-green-400" />
+                <Sparkle size={36} className="text-green-600 dark:text-green-400" />
               </div>
 
               <h2 className="text-3xl font-bold font-syne text-taqon-charcoal dark:text-white mb-2">
@@ -194,11 +224,10 @@ export default function QuoteWizard() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-4 rounded-xl font-semibold hover:bg-green-600 transition-all"
+                  onClick={(e) => confirmExternalNavigation(`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`, e)}
+                  className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-4 rounded-xl font-semibold hover:bg-green-600 transition-all cursor-pointer"
                 >
-                  <MessageSquare size={18} />
+                  <ChatsTeardrop size={18} />
                   Chat on WhatsApp
                 </a>
                 <Link
@@ -302,7 +331,7 @@ export default function QuoteWizard() {
                     </h3>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {PROPERTY_TYPES.map((pt) => {
-                        const Icon = propertyIcons[pt.id] || Home;
+                        const Icon = propertyIcons[pt.id] || House;
                         const selected = state.propertyType === pt.id;
                         return (
                           <button
@@ -410,7 +439,7 @@ export default function QuoteWizard() {
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {COMMON_APPLIANCES.map((ap) => {
                           const selected = state.appliances.includes(ap.name);
-                          const Icon = applianceIcons[ap.icon] || Zap;
+                          const Icon = applianceIcons[ap.icon] || Lightning;
                           return (
                             <button
                               key={ap.name}
@@ -461,7 +490,7 @@ export default function QuoteWizard() {
                                 {br.label}
                               </p>
                             </div>
-                            <ChevronRight size={16} className={selected ? 'text-taqon-orange' : 'text-taqon-muted'} />
+                            <CaretRight size={16} className={selected ? 'text-taqon-orange' : 'text-taqon-muted'} />
                           </button>
                         );
                       })}
@@ -498,7 +527,7 @@ export default function QuoteWizard() {
                           Email *
                         </label>
                         <div className="relative">
-                          <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-taqon-muted" />
+                          <EnvelopeSimple size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-taqon-muted" />
                           <input
                             type="email"
                             required
@@ -566,10 +595,10 @@ export default function QuoteWizard() {
               ) : (
                 <button
                   onClick={handleSubmit}
-                  disabled={!canProceed()}
+                  disabled={!canProceed() || submitting}
                   className="flex items-center gap-2 bg-taqon-orange text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-taqon-orange/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-taqon-orange/25"
                 >
-                  <Send size={16} /> Get My Quote
+                  <PaperPlaneTilt size={16} /> {submitting ? 'Submitting...' : 'Get My Quote'}
                 </button>
               )}
             </div>

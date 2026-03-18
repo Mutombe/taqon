@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Zap } from 'lucide-react';
+import { Lightning, ArrowSquareOut } from '@phosphor-icons/react';
 import { useInView } from '../hooks/useAnimations';
 
 const BASE_KWP = 3000;
@@ -74,9 +74,10 @@ export default function LiveCounter() {
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className="relative"
     >
-      <div className="relative bg-gradient-to-br from-taqon-charcoal to-taqon-dark rounded-3xl p-8 lg:p-10 border border-white/5 overflow-hidden">
+      <div className="relative bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/15 group-hover:bg-white/15 group-hover:border-taqon-orange/30 transition-all duration-500 overflow-hidden">
         {/* Background glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-taqon-orange/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <ArrowSquareOut size={16} className="absolute top-4 right-4 text-white/30 group-hover:text-taqon-orange transition-colors z-10" />
 
         <div className="relative z-10">
           {/* Live Badge */}
@@ -89,22 +90,22 @@ export default function LiveCounter() {
           </div>
 
           {/* Counter Display */}
-          <div className="flex items-baseline gap-3">
-            <span className="text-5xl lg:text-7xl font-bold font-syne text-gradient tabular-nums">
+          <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+            <span className="text-3xl sm:text-5xl lg:text-6xl font-bold font-syne text-gradient tabular-nums">
               {formattedValue}
             </span>
-            <span className="text-xl lg:text-2xl font-semibold text-white/40">kWp</span>
+            <span className="text-base sm:text-xl lg:text-2xl font-semibold text-white/40">kWp</span>
           </div>
 
           {/* Label */}
-          <p className="mt-3 text-white/50 text-sm lg:text-base">
-            Total kWp Installed
+          <p className="mt-3 text-sm lg:text-base">
+            <span className="text-taqon-orange underline decoration-taqon-orange/30 underline-offset-2 group-hover:decoration-taqon-orange transition-all">Total kWp Installed</span>
           </p>
 
           {/* Sub-info */}
           <div className="mt-6 flex items-center gap-2 text-taqon-orange/80">
-            <Zap size={16} />
-            <span className="text-xs font-medium">Powering homes and businesses across Zimbabwe</span>
+            <Lightning size={16} />
+            <span className="text-xs font-medium">Powering homes & businesses across <span className="underline decoration-taqon-orange/30 underline-offset-2">Zimbabwe</span></span>
           </div>
         </div>
       </div>

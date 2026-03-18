@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Shield, Cookie } from 'lucide-react';
+import { X, Shield, Cookie } from '@phosphor-icons/react';
 
 // Privacy Policy Modal
 export function PrivacyModal({ isOpen, onClose }) {

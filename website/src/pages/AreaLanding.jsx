@@ -3,9 +3,9 @@ import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Sun, Zap, MapPin, Users, ArrowRight, Phone, CheckCircle2,
-  AlertCircle, ArrowLeft
-} from 'lucide-react';
+  Sun, Lightning, MapPin, Users, ArrowRight, Phone, CheckCircle,
+  WarningCircle, ArrowLeft
+} from '@phosphor-icons/react';
 import AnimatedSection, { StaggerContainer, StaggerItem } from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { areas } from '../data/areaData';
@@ -29,7 +29,7 @@ export default function AreaLanding() {
         <SEO title="City Not Found" description="The city page you are looking for could not be found." />
         <section className="min-h-screen flex items-center justify-center bg-taqon-cream dark:bg-taqon-dark">
           <div className="text-center px-4">
-            <AlertCircle size={64} className="text-taqon-orange mx-auto mb-6" />
+            <WarningCircle size={64} className="text-taqon-orange mx-auto mb-6" />
             <h1 className="text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
               City Not Found
             </h1>
@@ -77,7 +77,7 @@ export default function AreaLanding() {
       desc: `${area.name} receives an excellent ${area.peakSunHours} peak sun hours daily, providing abundant solar energy potential year-round.`,
     },
     {
-      icon: Zap,
+      icon: Lightning,
       title: 'Reduce Electricity Costs',
       desc: `With electricity costing ${area.avgElectricityCost}, a properly sized solar system can reduce your energy bills by 70-100% in ${area.name}.`,
     },
@@ -87,7 +87,7 @@ export default function AreaLanding() {
       desc: `Join hundreds of homeowners and businesses in ${area.name} who have already made the switch to clean, reliable solar power.`,
     },
     {
-      icon: CheckCircle2,
+      icon: CheckCircle,
       title: 'ZERA Approved Installation',
       desc: `All our installations in ${area.name} meet ZERA standards, ensuring safety, quality, and valid warranty coverage for your investment.`,
     },
@@ -109,7 +109,7 @@ export default function AreaLanding() {
           <img
             src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=1920&q=80"
             alt={`Solar installation in ${area.name}`}
-            className="w-full h-full object-cover opacity-15"
+            className="w-full h-full object-cover opacity-30"
             loading="eager"
           />
         </div>
@@ -198,8 +198,8 @@ export default function AreaLanding() {
       </section>
 
       {/* Local Stats */}
-      <section className="py-20 lg:py-28 bg-taqon-dark relative overflow-hidden">
-        <div className="absolute inset-0 dark-mesh" />
+      <section className="py-20 lg:py-28 bg-taqon-cream dark:bg-taqon-dark relative overflow-hidden">
+        <div className="absolute inset-0 dark:dark-mesh" />
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
           transition={{ duration: 8, repeat: Infinity }}
@@ -207,7 +207,7 @@ export default function AreaLanding() {
         />
         <div className="relative max-w-7xl mx-auto px-4">
           <AnimatedSection className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold font-syne text-white">
+            <h2 className="text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
               {area.name} Solar <span className="text-gradient">At a Glance</span>
             </h2>
           </AnimatedSection>
@@ -220,11 +220,11 @@ export default function AreaLanding() {
               { value: area.province, label: 'Province' },
             ].map((stat, i) => (
               <StaggerItem key={i}>
-                <div className="text-center p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-500">
+                <div className="text-center p-6 rounded-3xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 backdrop-blur-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-all duration-500">
                   <div className="text-3xl lg:text-4xl font-bold font-syne text-gradient">
                     {stat.value}
                   </div>
-                  <p className="mt-2 text-white/50 text-sm">{stat.label}</p>
+                  <p className="mt-2 text-gray-500 dark:text-white/50 text-sm">{stat.label}</p>
                 </div>
               </StaggerItem>
             ))}
@@ -322,7 +322,7 @@ export default function AreaLanding() {
                   <ul className="mt-5 space-y-2 flex-1">
                     {pkg.features.map((f, j) => (
                       <li key={j} className="flex items-center gap-2 text-sm text-taqon-charcoal dark:text-white/80">
-                        <CheckCircle2 size={14} className="text-taqon-orange flex-shrink-0" />
+                        <CheckCircle size={14} className="text-taqon-orange flex-shrink-0" />
                         {f}
                       </li>
                     ))}

@@ -4,9 +4,11 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Calendar, Clock, User, Tag, ArrowLeft, ArrowRight,
-  Share2, ChevronRight, AlertCircle
-} from 'lucide-react';
+  ShareNetwork, CaretRight, WarningCircle
+} from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
+import CommentSection from '../components/CommentSection';
+import { confirmExternalNavigation } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { blogPosts } from '../data/blogData';
 
@@ -49,14 +51,13 @@ function ShareButtons({ title, url }) {
 
   return (
     <div className="flex items-center gap-2">
-      <Share2 size={16} className="text-taqon-muted" />
+      <ShareNetwork size={16} className="text-taqon-muted" />
       {shares.map((s) => (
         <a
           key={s.name}
           href={s.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`w-8 h-8 rounded-full ${s.color} text-white flex items-center justify-center transition-colors`}
+          onClick={(e) => confirmExternalNavigation(s.href, e)}
+          className={`w-8 h-8 rounded-full ${s.color} text-white flex items-center justify-center transition-colors cursor-pointer`}
           title={`Share on ${s.name}`}
         >
           {s.icon}
@@ -168,7 +169,7 @@ export default function BlogPost() {
         <SEO title="Article Not Found" description="The article you are looking for could not be found." />
         <section className="min-h-screen flex items-center justify-center bg-taqon-cream dark:bg-taqon-dark">
           <div className="text-center px-4">
-            <AlertCircle size={64} className="text-taqon-orange mx-auto mb-6" />
+            <WarningCircle size={64} className="text-taqon-orange mx-auto mb-6" />
             <h1 className="text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
               Article Not Found
             </h1>
@@ -256,10 +257,15 @@ export default function BlogPost() {
               <article
                 className="prose prose-lg max-w-none
                   prose-headings:font-syne prose-headings:font-bold prose-headings:text-taqon-charcoal dark:prose-headings:text-white
-                  prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:border-l-4 prose-h2:border-taqon-orange prose-h2:pl-4
-                  prose-p:text-taqon-charcoal/80 dark:prose-p:text-white/70 prose-p:leading-relaxed prose-p:mb-4
-                  prose-a:text-taqon-orange prose-a:no-underline hover:prose-a:underline
+                  prose-h2:text-2xl prose-h2:lg:text-[1.75rem] prose-h2:mt-12 prose-h2:mb-5 prose-h2:border-l-4 prose-h2:border-taqon-orange prose-h2:pl-4
+                  prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+                  prose-p:text-taqon-charcoal/80 dark:prose-p:text-white/70 prose-p:leading-[1.8] prose-p:mb-5
+                  prose-a:text-taqon-orange prose-a:font-medium prose-a:no-underline hover:prose-a:underline
                   prose-strong:text-taqon-charcoal dark:prose-strong:text-white
+                  prose-li:text-taqon-charcoal/80 dark:prose-li:text-white/70
+                  prose-blockquote:not-italic
+                  prose-figcaption:text-center
+                  prose-img:rounded-2xl
                   [&_h2]:scroll-mt-24"
                 dangerouslySetInnerHTML={{ __html: processedContent }}
               />
@@ -293,6 +299,9 @@ export default function BlogPost() {
           </div>
         </div>
       </section>
+
+      {/* Comments */}
+      <CommentSection type="article" slug={post.slug} title={post.title} />
 
       {/* Related Posts */}
       {relatedPosts.length > 0 && (
@@ -329,7 +338,7 @@ export default function BlogPost() {
                         </h3>
                         <div className="mt-3 flex items-center gap-2 text-taqon-orange text-sm font-medium">
                           Read more
-                          <ChevronRight
+                          <CaretRight
                             size={14}
                             className="group-hover:translate-x-1 transition-transform"
                           />

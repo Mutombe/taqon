@@ -3,23 +3,25 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Shield,
-  Award,
+  Trophy,
   CheckCircle,
   ArrowRight,
   Sun,
-  Battery,
+  BatteryFull,
   Cpu,
   Wrench,
   Users,
-  Zap,
-  ExternalLink,
-} from 'lucide-react';
+  Lightning,
+  ArrowSquareOut,
+} from '@phosphor-icons/react';
 import SEO from '../components/SEO';
+import { autoLink } from '../components/ContentLink';
 import AnimatedSection from '../components/AnimatedSection';
 
 const certifications = [
   {
     icon: Shield,
+    logo: '/zera.png',
     title: 'ZERA Recommended',
     issuer: 'Zimbabwe Energy Regulatory Authority',
     description:
@@ -27,7 +29,8 @@ const certifications = [
     highlights: ['Licensed solar installer', 'Regulatory compliance', 'Consumer protection assured'],
   },
   {
-    icon: Award,
+    icon: Trophy,
+    logo: '/iso.png',
     title: 'ISO 9001:2015',
     issuer: 'International Organization for Standardization',
     description:
@@ -36,6 +39,7 @@ const certifications = [
   },
   {
     icon: CheckCircle,
+    logo: '/energy-logo.png',
     title: 'Electrical Contractors License',
     issuer: 'Ministry of Energy & Power Development',
     description:
@@ -44,6 +48,7 @@ const certifications = [
   },
   {
     icon: Shield,
+    logo: '/nssa.png',
     title: 'Health & Safety Compliance',
     issuer: 'NSSA — National Social Security Authority',
     description:
@@ -56,20 +61,23 @@ const brandPartners = [
   {
     name: 'Jinko Solar',
     icon: Sun,
+    logo: '/jinko.png',
     tier: 'Tier 1 Manufacturer',
     description:
       'World-leading solar panel manufacturer. Jinko Solar panels deliver industry-leading efficiency and durability, backed by 25-year performance warranties. We are an authorized Jinko dealer in Zimbabwe.',
   },
   {
     name: 'Pylontech',
-    icon: Battery,
+    icon: BatteryFull,
+    logo: '/pylontech.png',
     tier: 'Premium Battery Partner',
     description:
       'A global leader in lithium battery energy storage. Pylontech batteries offer 6,000+ cycle life, smart BMS technology, and stackable modular design for scalable home and commercial storage solutions.',
   },
   {
     name: 'Dyness',
-    icon: Battery,
+    icon: BatteryFull,
+    logo: '/Dyness.png',
     tier: 'Energy Storage Partner',
     description:
       'Innovative lithium-ion battery manufacturer specializing in residential and commercial energy storage. Dyness systems are known for reliability, sleek design, and seamless integration with solar inverters.',
@@ -77,29 +85,32 @@ const brandPartners = [
   {
     name: 'Kodak',
     icon: Cpu,
+    logo: null,
     tier: 'Inverter Partner',
     description:
       'Kodak solar inverters combine proven technology with advanced MPPT charge controllers for maximum solar harvest. Their OG series delivers exceptional performance for off-grid and hybrid installations.',
   },
   {
-    name: 'JA Solar',
+    name: 'Sigenergy',
     icon: Sun,
-    tier: 'Tier 1 Manufacturer',
+    logo: '/sigenergy.png',
+    tier: 'Smart Energy Partner',
     description:
-      'One of the world\'s largest solar cell and module manufacturers. JA Solar panels feature high-efficiency mono-crystalline cells with bifacial technology, delivering outstanding energy yield in Zimbabwe\'s climate.',
+      'Sigenergy delivers intelligent energy management solutions combining solar, storage, and EV charging into one seamless ecosystem. Their cutting-edge technology enables smart homes and businesses across Zimbabwe.',
   },
   {
-    name: 'Deye',
+    name: 'Sunsynk',
     icon: Cpu,
-    tier: 'Inverter & Battery Partner',
+    logo: '/sunsynk.png',
+    tier: 'Inverter Partner',
     description:
-      'Deye produces advanced hybrid inverters and lithium batteries designed for residential and commercial use. Their systems offer seamless grid-tie and off-grid functionality with intelligent energy management.',
+      'Sunsynk produces advanced hybrid inverters designed for residential and commercial use. Their systems offer seamless grid-tie and off-grid functionality with intelligent energy management and remote monitoring.',
   },
 ];
 
 const teamQualifications = [
   {
-    icon: Zap,
+    icon: Lightning,
     title: 'Electrical Engineering',
     description:
       'Our engineers hold qualifications from leading Zimbabwean institutions including the University of Zimbabwe and Harare Institute of Technology. Each technician is registered with the Zimbabwe Institution of Engineers (ZIE).',
@@ -117,7 +128,7 @@ const teamQualifications = [
     title: 'Installation & Maintenance',
     description:
       'Hands-on expertise built through 500+ successful installations across residential, commercial, and institutional projects. Our technicians are trained in safe working-at-height procedures and electrical safety.',
-    skills: ['Rooftop mounting', 'Battery commissioning', 'Preventive maintenance', 'Rapid fault response'],
+    skills: ['Rooftop mounting', 'BatteryFull commissioning', 'Preventive maintenance', 'Rapid fault response'],
   },
   {
     icon: Users,
@@ -154,8 +165,7 @@ export default function Certifications() {
               Certifications & <span className="text-gradient">Partners</span>
             </h1>
             <p className="mt-4 text-white/60 text-lg max-w-2xl">
-              Backed by industry certifications and partnerships with the world's leading solar brands,
-              we deliver installations you can trust for decades.
+              {autoLink('Backed by industry certifications and partnerships with the world\'s leading solar brands, we deliver installations you can trust for decades.')}
             </p>
           </motion.div>
         </div>
@@ -172,8 +182,7 @@ export default function Certifications() {
               Industry <span className="text-gradient">Certifications</span>
             </h2>
             <p className="mt-4 text-taqon-muted dark:text-white/50 max-w-2xl mx-auto">
-              Every certification represents our commitment to quality, safety, and regulatory compliance
-              in the solar and electrical engineering industry.
+              {autoLink('Every certification represents our commitment to quality, safety, and regulatory compliance in the solar and electrical engineering industry.')}
             </p>
           </AnimatedSection>
 
@@ -182,8 +191,12 @@ export default function Certifications() {
               <AnimatedSection key={i} delay={i * 0.1}>
                 <div className="bg-taqon-cream dark:bg-taqon-dark rounded-3xl p-8 border border-gray-100 dark:border-white/5 hover:border-taqon-orange/20 dark:hover:border-taqon-orange/20 transition-all duration-500 h-full">
                   <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-taqon-orange/10 flex items-center justify-center flex-shrink-0">
-                      <cert.icon size={24} className="text-taqon-orange" />
+                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center flex-shrink-0 border border-gray-100 dark:border-white/10 p-2">
+                      {cert.logo ? (
+                        <img src={cert.logo} alt={cert.title} className="w-full h-full object-contain" />
+                      ) : (
+                        <cert.icon size={28} className="text-taqon-orange" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white">
@@ -194,7 +207,7 @@ export default function Certifications() {
                   </div>
 
                   <p className="mt-5 text-taqon-muted dark:text-white/50 text-sm leading-relaxed">
-                    {cert.description}
+                    {autoLink(cert.description)}
                   </p>
 
                   <div className="mt-5 flex flex-wrap gap-2">
@@ -227,8 +240,7 @@ export default function Certifications() {
               Trusted <span className="text-gradient">Brand Partners</span>
             </h2>
             <p className="mt-4 text-taqon-muted dark:text-white/50 max-w-2xl mx-auto">
-              We partner exclusively with globally recognized, Tier 1 solar equipment manufacturers
-              to ensure every installation delivers long-term performance and reliability.
+              {autoLink('We partner exclusively with globally recognized, Tier 1 solar equipment manufacturers to ensure every installation delivers long-term performance and reliability.')}
             </p>
           </AnimatedSection>
 
@@ -236,9 +248,13 @@ export default function Certifications() {
             {brandPartners.map((brand, i) => (
               <AnimatedSection key={i} delay={i * 0.08}>
                 <div className="bg-white dark:bg-taqon-charcoal rounded-3xl p-7 border border-gray-100 dark:border-white/5 hover:border-taqon-orange/20 dark:hover:border-taqon-orange/20 hover:shadow-lg transition-all duration-500 h-full group">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-taqon-orange/10 flex items-center justify-center group-hover:bg-taqon-orange/20 transition-colors">
-                      <brand.icon size={22} className="text-taqon-orange" />
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-14 h-14 rounded-xl bg-gray-50 dark:bg-white/10 flex items-center justify-center group-hover:bg-gray-100 dark:group-hover:bg-white/15 transition-colors border border-gray-100 dark:border-white/10 p-2 flex-shrink-0">
+                      {brand.logo ? (
+                        <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <brand.icon size={24} className="text-taqon-orange" />
+                      )}
                     </div>
                     <div>
                       <h3 className="font-bold font-syne text-taqon-charcoal dark:text-white text-lg">
@@ -249,7 +265,7 @@ export default function Certifications() {
                   </div>
 
                   <p className="text-sm text-taqon-muted dark:text-white/50 leading-relaxed">
-                    {brand.description}
+                    {autoLink(brand.description)}
                   </p>
                 </div>
               </AnimatedSection>
@@ -269,8 +285,7 @@ export default function Certifications() {
               Team <span className="text-gradient">Qualifications</span>
             </h2>
             <p className="mt-4 text-taqon-muted dark:text-white/50 max-w-2xl mx-auto">
-              Our team combines formal engineering qualifications with extensive hands-on experience
-              across every aspect of solar and electrical installation.
+              {autoLink('Our team combines formal engineering qualifications with extensive hands-on experience across every aspect of solar and electrical installation.')}
             </p>
           </AnimatedSection>
 
@@ -287,7 +302,7 @@ export default function Certifications() {
                   </h3>
 
                   <p className="text-sm text-taqon-muted dark:text-white/50 leading-relaxed mb-5">
-                    {qual.description}
+                    {autoLink(qual.description)}
                   </p>
 
                   <div className="space-y-2">
@@ -306,25 +321,24 @@ export default function Certifications() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-taqon-dark relative overflow-hidden">
-        <div className="absolute inset-0 dark-mesh" />
+      <section className="py-20 bg-taqon-cream dark:bg-taqon-dark relative overflow-hidden">
+        <div className="absolute inset-0 dark:dark-mesh" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-taqon-orange/5 rounded-full blur-3xl" />
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
           <AnimatedSection>
-            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-6">
+            <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full px-4 py-1.5 mb-6">
               <Shield size={14} className="text-taqon-orange" />
-              <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">
+              <span className="text-gray-500 dark:text-white/60 text-xs font-semibold uppercase tracking-wider">
                 Certified & Trusted
               </span>
             </div>
 
-            <h2 className="text-3xl lg:text-5xl font-bold font-syne text-white">
+            <h2 className="text-3xl lg:text-5xl font-bold font-syne text-taqon-charcoal dark:text-white">
               Ready to Go <span className="text-gradient">Solar?</span>
             </h2>
-            <p className="mt-4 text-white/50 max-w-xl mx-auto">
-              Work with a ZERA-certified team backed by the world's leading solar brands.
-              Get a free consultation and custom system design today.
+            <p className="mt-4 text-gray-500 dark:text-white/50 max-w-xl mx-auto">
+              {autoLink('Work with a ZERA-certified team backed by the world\'s leading solar brands. Get a free consultation and custom system design today.')}
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -336,9 +350,9 @@ export default function Certifications() {
               </Link>
               <Link
                 to="/packages"
-                className="inline-flex items-center gap-2 bg-white/5 border border-white/10 text-white px-8 py-4 rounded-full font-semibold hover:bg-white/10 transition-all"
+                className="inline-flex items-center gap-2 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white px-8 py-4 rounded-full font-semibold hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
               >
-                View Packages <ExternalLink size={16} />
+                View Packages <ArrowSquareOut size={16} />
               </Link>
             </div>
           </AnimatedSection>

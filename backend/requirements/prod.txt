@@ -1,0 +1,4 @@
+-r base.txt
+sentry-sdk[django]>=2.0
+django-storages[s3]>=1.14
+boto3>=1.34

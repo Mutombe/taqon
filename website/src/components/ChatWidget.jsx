@@ -1,7 +1,8 @@
 import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Bot, User, ExternalLink } from 'lucide-react';
+import { ChatCircle, X, PaperPlaneTilt, Robot, User, ArrowSquareOut } from '@phosphor-icons/react';
+import { confirmExternalNavigation } from './ContentLink';
 
 const WHATSAPP_LINK = 'https://wa.me/263772771036?text=Hi%20Taqon%20Electrico%2C%20I%27d%20like%20to%20enquire%20about%20your%20services.';
 
@@ -63,8 +64,8 @@ const RESPONSES = {
 
 const DEFAULT_RESPONSE = {
   reply: "I appreciate your question! For more detailed assistance, I'd recommend speaking with our team directly. You can call us at +263 772 771 036 or chat on WhatsApp for an immediate response.",
-  suggestions: ['WhatsApp us', 'Contact page', 'Pricing info'],
-  links: { 'Contact page': '/contact' },
+  suggestions: ['WhatsApp us', 'Create Ticket', 'View FAQ'],
+  links: { 'Create Ticket': '/support/create', 'View FAQ': '/faq' },
 };
 
 function getResponse(message) {
@@ -191,7 +192,7 @@ export default function ChatWidget() {
             className="fixed bottom-24 right-6 z-[55] w-14 h-14 rounded-full bg-taqon-orange text-white shadow-lg shadow-taqon-orange/30 flex items-center justify-center hover:bg-taqon-orange/90 transition-colors"
             aria-label="Open chat"
           >
-            <MessageCircle size={24} />
+            <ChatCircle size={24} />
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
           </motion.button>
         )}
@@ -211,7 +212,7 @@ export default function ChatWidget() {
             <div className="bg-taqon-orange px-5 py-4 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                  <Bot size={18} className="text-white" />
+                  <Robot size={18} className="text-white" />
                 </div>
                 <div>
                   <p className="text-white font-semibold text-sm font-syne">Taqon Assistant</p>
@@ -235,7 +236,7 @@ export default function ChatWidget() {
                     <div className="flex items-end gap-2">
                       {msg.sender === 'bot' && (
                         <div className="w-6 h-6 rounded-full bg-taqon-orange/10 flex items-center justify-center flex-shrink-0">
-                          <Bot size={12} className="text-taqon-orange" />
+                          <Robot size={12} className="text-taqon-orange" />
                         </div>
                       )}
                       <div
@@ -276,7 +277,7 @@ export default function ChatWidget() {
               {isTyping && (
                 <div className="flex items-end gap-2">
                   <div className="w-6 h-6 rounded-full bg-taqon-orange/10 flex items-center justify-center flex-shrink-0">
-                    <Bot size={12} className="text-taqon-orange" />
+                    <Robot size={12} className="text-taqon-orange" />
                   </div>
                   <div className="bg-gray-100 dark:bg-taqon-dark rounded-2xl rounded-bl-md px-4 py-3">
                     <div className="flex gap-1">
@@ -295,11 +296,10 @@ export default function ChatWidget() {
             <div className="px-4 py-2 border-t border-gray-100 dark:border-white/5 flex-shrink-0">
               <a
                 href={WHATSAPP_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 text-xs text-green-600 dark:text-green-400 hover:underline"
+                onClick={(e) => confirmExternalNavigation(WHATSAPP_LINK, e)}
+                className="flex items-center justify-center gap-2 text-xs text-green-600 dark:text-green-400 hover:underline cursor-pointer"
               >
-                <ExternalLink size={12} />
+                <ArrowSquareOut size={12} />
                 Prefer WhatsApp? Chat with a real person
               </a>
             </div>
@@ -322,7 +322,7 @@ export default function ChatWidget() {
                   className="w-8 h-8 rounded-lg bg-taqon-orange text-white flex items-center justify-center hover:bg-taqon-orange/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   aria-label="Send message"
                 >
-                  <Send size={14} />
+                  <PaperPlaneTilt size={14} />
                 </button>
               </div>
             </div>

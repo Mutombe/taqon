@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: A4;
+    margin: 1.5cm 2cm;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    color: #1a1a1a;
+    line-height: 1.5;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid #F26522;
+  }
+
+  .company-info {
+    max-width: 55%;
+  }
+
+  .company-name {
+    font-size: 22pt;
+    font-weight: 800;
+    color: #F26522;
+    letter-spacing: -0.5px;
+  }
+
+  .company-tagline {
+    font-size: 8pt;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  .company-details {
+    margin-top: 10px;
+    font-size: 8pt;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  .invoice-badge {
+    text-align: right;
+  }
+
+  .invoice-badge h2 {
+    font-size: 18pt;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .invoice-number {
+    font-size: 12pt;
+    color: #F26522;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  .invoice-meta {
+    margin-top: 10px;
+    font-size: 8.5pt;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  .invoice-meta strong {
+    color: #333;
+  }
+
+  /* Bill To */
+  .bill-to {
+    margin-bottom: 25px;
+    padding: 15px 20px;
+    background: #f8f8f8;
+    border-radius: 6px;
+  }
+
+  .bill-to h3 {
+    font-size: 8pt;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .bill-to p {
+    font-size: 9.5pt;
+    line-height: 1.5;
+  }
+
+  .bill-to .customer-name {
+    font-weight: 700;
+    font-size: 11pt;
+    color: #1a1a1a;
+  }
+
+  /* Items Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+  }
+
+  thead th {
+    background: #1a1a1a;
+    color: white;
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  thead th:last-child,
+  thead th:nth-child(3),
+  thead th:nth-child(4) {
+    text-align: right;
+  }
+
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 9pt;
+    vertical-align: top;
+  }
+
+  tbody td:last-child,
+  tbody td:nth-child(3),
+  tbody td:nth-child(4) {
+    text-align: right;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #fafafa;
+  }
+
+  .item-name {
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .item-desc {
+    font-size: 8pt;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  /* Totals */
+  .totals {
+    width: 300px;
+    margin-left: auto;
+    margin-bottom: 30px;
+  }
+
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 9pt;
+    color: #555;
+  }
+
+  .totals-row.grand-total {
+    border-top: 2px solid #1a1a1a;
+    margin-top: 6px;
+    padding-top: 10px;
+    font-size: 13pt;
+    font-weight: 800;
+    color: #1a1a1a;
+  }
+
+  .totals-row.amount-due {
+    color: #F26522;
+    font-weight: 700;
+    font-size: 11pt;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-paid { background: #dcfce7; color: #166534; }
+  .status-sent { background: #dbeafe; color: #1e40af; }
+  .status-overdue { background: #fee2e2; color: #991b1b; }
+  .status-draft { background: #f3f4f6; color: #374151; }
+
+  /* Notes & Terms */
+  .footer-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
+
+  .footer-section h4 {
+    font-size: 8pt;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .footer-section p {
+    font-size: 8pt;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  /* Payment Info */
+  .payment-info {
+    margin-top: 20px;
+    padding: 15px 20px;
+    background: #fff7ed;
+    border-left: 3px solid #F26522;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .payment-info h4 {
+    font-size: 9pt;
+    font-weight: 700;
+    color: #F26522;
+    margin-bottom: 6px;
+  }
+
+  .payment-info p {
+    font-size: 8pt;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  /* Bottom bar */
+  .bottom-bar {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 2px solid #F26522;
+    text-align: center;
+    font-size: 7.5pt;
+    color: #999;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="company-info">
+    <div class="company-name">TAQON ELECTRICO</div>
+    <div class="company-tagline">Solar &amp; Electrical Solutions</div>
+    <div class="company-details">
+      Harare, Zimbabwe<br>
+      +263 77 277 1036<br>
+      info@taqon.co.zw &bull; www.taqon.co.zw
+    </div>
+  </div>
+  <div class="invoice-badge">
+    <h2>Invoice</h2>
+    <div class="invoice-number">{{ invoice.invoice_number }}</div>
+    <div class="invoice-meta">
+      <strong>Issue Date:</strong> {{ invoice.issue_date|date:"d M Y" }}<br>
+      {% if invoice.due_date %}<strong>Due Date:</strong> {{ invoice.due_date|date:"d M Y" }}<br>{% endif %}
+      <strong>Status:</strong>
+      <span class="status-badge status-{{ invoice.status }}">{{ invoice.status|upper }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Bill To -->
+<div class="bill-to">
+  <h3>Bill To</h3>
+  <p class="customer-name">{{ invoice.customer_name }}</p>
+  <p>
+    {{ invoice.customer_email }}<br>
+    {% if invoice.customer_phone %}{{ invoice.customer_phone }}<br>{% endif %}
+    {% if invoice.customer_address %}{{ invoice.customer_address }}{% endif %}
+  </p>
+</div>
+
+<!-- Items Table -->
+<table>
+  <thead>
+    <tr>
+      <th style="width: 5%">#</th>
+      <th style="width: 50%">Description</th>
+      <th style="width: 10%">Qty</th>
+      <th style="width: 15%">Unit Price</th>
+      <th style="width: 20%">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>
+        <div class="item-name">{{ item.name }}</div>
+        {% if item.description %}<div class="item-desc">{{ item.description }}</div>{% endif %}
+      </td>
+      <td style="text-align: right">{{ item.quantity }}</td>
+      <td style="text-align: right">{{ invoice.currency }} {{ item.unit_price|floatformat:2 }}</td>
+      <td style="text-align: right">{{ invoice.currency }} {{ item.total_price|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Totals -->
+<div class="totals">
+  <div class="totals-row">
+    <span>Subtotal</span>
+    <span>{{ invoice.currency }} {{ invoice.subtotal|floatformat:2 }}</span>
+  </div>
+  {% if invoice.tax_amount %}
+  <div class="totals-row">
+    <span>Tax ({{ invoice.tax_rate }}%)</span>
+    <span>{{ invoice.currency }} {{ invoice.tax_amount|floatformat:2 }}</span>
+  </div>
+  {% endif %}
+  {% if invoice.discount_amount %}
+  <div class="totals-row">
+    <span>Discount</span>
+    <span>-{{ invoice.currency }} {{ invoice.discount_amount|floatformat:2 }}</span>
+  </div>
+  {% endif %}
+  <div class="totals-row grand-total">
+    <span>Total</span>
+    <span>{{ invoice.currency }} {{ invoice.total|floatformat:2 }}</span>
+  </div>
+  {% if invoice.amount_paid %}
+  <div class="totals-row">
+    <span>Amount Paid</span>
+    <span>{{ invoice.currency }} {{ invoice.amount_paid|floatformat:2 }}</span>
+  </div>
+  {% endif %}
+  {% if invoice.amount_due %}
+  <div class="totals-row amount-due">
+    <span>Amount Due</span>
+    <span>{{ invoice.currency }} {{ invoice.amount_due|floatformat:2 }}</span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Payment Info -->
+<div class="payment-info">
+  <h4>Payment Methods</h4>
+  <p>
+    <strong>EcoCash:</strong> 0772 771 036 (Taqon Electrico)<br>
+    <strong>Bank Transfer:</strong> CBZ Bank &bull; Acc: 12345678 &bull; Branch: Harare<br>
+    <strong>Reference:</strong> {{ invoice.invoice_number }}
+  </p>
+</div>
+
+<!-- Notes -->
+{% if invoice.notes %}
+<div class="footer-section">
+  <h4>Notes</h4>
+  <p>{{ invoice.notes }}</p>
+</div>
+{% endif %}
+
+<!-- Terms -->
+{% if invoice.terms %}
+<div class="footer-section">
+  <h4>Terms &amp; Conditions</h4>
+  <p>{{ invoice.terms }}</p>
+</div>
+{% endif %}
+
+<!-- Bottom Bar -->
+<div class="bottom-bar">
+  Taqon Electrico &bull; Solar &amp; Electrical Solutions &bull; Harare, Zimbabwe<br>
+  Thank you for your business!
+</div>
+
+</body>
+</html>

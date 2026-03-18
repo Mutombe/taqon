@@ -10,6 +10,12 @@
     <meta name="apple-mobile-web-app-title" content="Taqon Electrico" />
     <link rel="apple-touch-icon" href="/fav.png" />
     <link rel="manifest" href="/manifest.json" />
+    <!-- Preconnect to Google Fonts (eliminates DNS+TLS round trips ~100-300ms) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preload the font CSS so it loads in parallel with JS instead of blocking via @import -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap" />
     <title>Taqon Electrico — Zimbabwe's Premier Solar & Electrical Company</title>
     <meta name="description" content="Taqon Electrico provides professional solar installations, electrical maintenance, and renewable energy solutions in Harare, Zimbabwe. ZERA recommended solar company." />
     <!-- Analytics: Uncomment to activate Plausible -->
