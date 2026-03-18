@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MapPin, Lightning } from '@phosphor-icons/react';
+import { ArrowRight, MapPin, Lightning, Heart } from '@phosphor-icons/react';
 import AnimatedSection, { AnimatedCounter } from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { projectsData } from '../data/projectsData';
+import useSavesStore from '../stores/savesStore';
 
 const categories = ['all', 'residential', 'commercial'];
 
 export default function Projects() {
   const [active, setActive] = useState('all');
+  const { toggleProject, likedProjects } = useSavesStore();
 
   const filtered =
     active === 'all'
@@ -137,8 +139,15 @@ export default function Projects() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-                      {/* kVA badge */}
-                      <div className="absolute top-4 right-4">
+                      {/* kVA badge + like */}
+                      <div className="absolute top-4 right-4 flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProject(project.slug); }}
+                          className="w-8 h-8 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                          aria-label={likedProjects.includes(project.slug) ? 'Unlike project' : 'Like project'}
+                        >
+                          <Heart size={16} weight={likedProjects.includes(project.slug) ? 'fill' : 'regular'} className={likedProjects.includes(project.slug) ? 'text-red-500' : 'text-gray-400'} />
+                        </button>
                         <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-taqon-orange text-white text-xs font-bold shadow-lg">
                           <Lightning size={12} weight="fill" />
                           {project.kva}

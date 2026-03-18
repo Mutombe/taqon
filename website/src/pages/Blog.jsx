@@ -2,10 +2,11 @@ import React from 'react';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { MagnifyingGlass, Calendar, Clock, ArrowRight, CaretLeft, CaretRight, Tag } from '@phosphor-icons/react';
+import { MagnifyingGlass, Calendar, Clock, ArrowRight, CaretLeft, CaretRight, Tag, Heart } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { blogPosts } from '../data/blogData';
+import useSavesStore from '../stores/savesStore';
 
 const POSTS_PER_PAGE = 6;
 
@@ -13,6 +14,7 @@ const categories = ['All', 'Education', 'Technology', 'Guide', 'Maintenance', 'N
 
 export default function Blog() {
   const [activeCategory, setActiveCategory] = useState('All');
+  const { toggleBlog, likedBlogs } = useSavesStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -207,6 +209,13 @@ export default function Blog() {
                             {post.category}
                           </span>
                         </div>
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBlog(post.slug); }}
+                          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                          aria-label={likedBlogs.includes(post.slug) ? 'Unlike article' : 'Like article'}
+                        >
+                          <Heart size={18} weight={likedBlogs.includes(post.slug) ? 'fill' : 'regular'} className={likedBlogs.includes(post.slug) ? 'text-red-500' : 'text-gray-400'} />
+                        </button>
                       </div>
                       <div className="p-6 flex flex-col flex-1">
                         <h3 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white group-hover:text-taqon-orange transition-colors line-clamp-2">

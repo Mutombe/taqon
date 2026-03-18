@@ -5,7 +5,7 @@ import {
   List, X, MagnifyingGlass, Bag, CaretDown, CaretRight, Phone, MapPin,
   User, SignOut, Package, Gear, SquaresFour, Sun, Moon,
   Wrench, Lightning, SolarPanel, Drop, HardDrives, Lamp,
-  Calculator, BatteryFull, Gauge, LinkSimple, Toolbox, Lightbulb, ArrowRight, Star,
+  Calculator, BatteryFull, Gauge, LinkSimple, Toolbox, Lightbulb, ArrowRight, Star, Heart,
 } from '@phosphor-icons/react';
 import { companyInfo, services, packages, products, solarTips, faqs } from '../data/siteData';
 import logoImg from '../assets/taqon-electrico-logo.jpg';
@@ -550,9 +550,18 @@ export default function Navbar() {
                 <MagnifyingGlass size={18} />
               </button>
 
+              {/* Saves */}
+              <Link
+                to="/saves"
+                className={`relative p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
+                aria-label="Saved items"
+              >
+                <Heart size={18} />
+              </Link>
+
               {/* Shop bag */}
               <Link
-                to="/shop"
+                to="/cart"
                 className={`p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
               >
                 <Bag size={18} />

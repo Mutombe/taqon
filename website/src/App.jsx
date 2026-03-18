@@ -42,6 +42,7 @@ const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const Saves = lazy(() => import('./pages/Saves'));
 const EnergyHub = lazy(() => import('./pages/EnergyHub'));
 const AreaLanding = lazy(() => import('./pages/AreaLanding'));
 const SystemVisualizer = lazy(() => import('./pages/SystemVisualizer'));
@@ -232,6 +233,7 @@ function AppContent() {
             <Route path="/families/:slug" element={<Navigate to="/packages" replace />} />
             <Route path="/terms" element={<TermsConditions />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/saves" element={<Saves />} />
             <Route path="/dashboard" element={<CustomerDashboard />} />
             <Route path="/financing" element={<Financing />} />
             <Route path="/certifications" element={<Certifications />} />

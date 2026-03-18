@@ -571,23 +571,12 @@ export default function Shop() {
                             </div>
                           )}
 
-                          {/* Quick Add to Cart Overlay */}
-                          <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                            <div className="p-3 bg-gradient-to-t from-black/60 to-transparent">
-                              <button
-                                onClick={(e) => handleAddToCart(e, product.id)}
-                                disabled={!product.in_stock || addingToCartId === product.id}
-                                className="w-full bg-taqon-orange text-white py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-taqon-orange/90 transition-all disabled:opacity-50"
-                              >
-                                {addingToCartId === product.id ? (
-                                  <CircleNotch size={16} className="animate-spin" />
-                                ) : (
-                                  <ShoppingCart size={16} />
-                                )}
-                                {!product.in_stock ? 'Out of Stock' : 'Add to Cart'}
-                              </button>
+                          {/* Out of stock overlay */}
+                          {!product.in_stock && (
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                              <span className="bg-red-500/90 text-white text-xs font-bold px-4 py-1.5 rounded-full">Out of Stock</span>
                             </div>
-                          </div>
+                          )}
                         </div>
 
                         {/* Product Info */}
@@ -606,21 +595,30 @@ export default function Shop() {
                           )}
 
                           {/* Price */}
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-white/10">
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-lg font-bold text-taqon-charcoal dark:text-white font-syne">
-                                ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <div className="flex items-baseline gap-1.5 mt-3">
+                            <span className="text-lg font-bold text-taqon-charcoal dark:text-white font-syne">
+                              ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            {product.is_on_sale && comparePrice && (
+                              <span className="text-xs text-gray-400 dark:text-white/30 line-through">
+                                ${comparePrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
-                              {product.is_on_sale && comparePrice && (
-                                <span className="text-xs text-gray-400 dark:text-white/30 line-through">
-                                  ${comparePrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                              )}
-                            </div>
-                            {!product.in_stock && (
-                              <span className="text-[10px] text-red-400 font-medium">Out of stock</span>
                             )}
                           </div>
+
+                          {/* Always-visible Add to Cart */}
+                          <button
+                            onClick={(e) => handleAddToCart(e, product.id)}
+                            disabled={!product.in_stock || addingToCartId === product.id}
+                            className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed bg-taqon-orange/10 text-taqon-orange hover:bg-taqon-orange hover:text-white"
+                          >
+                            {addingToCartId === product.id ? (
+                              <CircleNotch size={15} className="animate-spin" />
+                            ) : (
+                              <ShoppingCart size={15} />
+                            )}
+                            {!product.in_stock ? 'Out of Stock' : 'Add to Cart'}
+                          </button>
                         </div>
                       </Link>
                     </motion.div>
