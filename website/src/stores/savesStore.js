@@ -1,36 +1,28 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-/**
- * Saves/Likes store — persists to localStorage.
- * Works without authentication. Stores slugs of liked items.
- */
 const useSavesStore = create(
   persist(
     (set, get) => ({
-      likedBlogs: [],    // array of blog slugs
-      likedProjects: [], // array of project slugs
+      likedBlogs: [],
+      likedProjects: [],
+      likedProducts: [],
+      likedPackages: [],
 
-      toggleBlog: (slug) => set((state) => ({
-        likedBlogs: state.likedBlogs.includes(slug)
-          ? state.likedBlogs.filter((s) => s !== slug)
-          : [...state.likedBlogs, slug],
+      toggleBlog: (slug) => set((s) => ({
+        likedBlogs: s.likedBlogs.includes(slug) ? s.likedBlogs.filter((x) => x !== slug) : [...s.likedBlogs, slug],
       })),
-
-      toggleProject: (slug) => set((state) => ({
-        likedProjects: state.likedProjects.includes(slug)
-          ? state.likedProjects.filter((s) => s !== slug)
-          : [...state.likedProjects, slug],
+      toggleProject: (slug) => set((s) => ({
+        likedProjects: s.likedProjects.includes(slug) ? s.likedProjects.filter((x) => x !== slug) : [...s.likedProjects, slug],
       })),
-
-      isBlogLiked: (slug) => get().likedBlogs.includes(slug),
-      isProjectLiked: (slug) => get().likedProjects.includes(slug),
-
-      totalSaves: () => get().likedBlogs.length + get().likedProjects.length,
+      toggleProduct: (slug) => set((s) => ({
+        likedProducts: s.likedProducts.includes(slug) ? s.likedProducts.filter((x) => x !== slug) : [...s.likedProducts, slug],
+      })),
+      togglePackage: (slug) => set((s) => ({
+        likedPackages: s.likedPackages.includes(slug) ? s.likedPackages.filter((x) => x !== slug) : [...s.likedPackages, slug],
+      })),
     }),
-    {
-      name: 'taqon-saves',
-    }
+    { name: 'taqon-saves' }
   )
 );
 

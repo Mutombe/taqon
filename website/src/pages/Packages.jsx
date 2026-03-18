@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Star, ArrowRight, Lightning, ArrowsLeftRight, MagnifyingGlass } from '@phosphor-icons/react';
+import { Check, Star, ArrowRight, Lightning, ArrowsLeftRight, MagnifyingGlass, Heart } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import { autoLink } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { packagesDetailed } from '../data/packagesData';
 import { useFamilies } from '../hooks/useQueries';
+import useSavesStore from '../stores/savesStore';
 
 const tierColors = {
   starter: 'from-gray-50 to-white dark:from-taqon-charcoal dark:to-taqon-charcoal border-gray-200 dark:border-white/10',
@@ -39,6 +40,7 @@ export default function Packages() {
   // React Query: cached families data. On return visits, renders instantly
   // from cache while silently revalidating in the background.
   const { data: families, isLoading: loading } = useFamilies();
+  const { togglePackage, likedPackages } = useSavesStore();
 
   // Use API families if available, otherwise fall back to static data
   const useApi = families && families.length > 0;
@@ -145,12 +147,21 @@ export default function Packages() {
                           <p className="mt-2 text-sm text-taqon-muted dark:text-white/50 max-w-lg">{family.short_description}</p>
                         )}
                       </div>
-                      <Link
-                        to={`/families/${family.slug}`}
-                        className="inline-flex items-center gap-2 px-5 py-2 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white rounded-xl font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all whitespace-nowrap"
-                      >
-                        View Family <ArrowRight size={14} />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => togglePackage(family.slug)}
+                          className="w-10 h-10 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                          aria-label="Save package family"
+                        >
+                          <Heart size={18} weight={likedPackages.includes(family.slug) ? 'fill' : 'regular'} className={likedPackages.includes(family.slug) ? 'text-red-500' : 'text-gray-400'} />
+                        </button>
+                        <Link
+                          to={`/families/${family.slug}`}
+                          className="inline-flex items-center gap-2 px-5 py-2 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white rounded-xl font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all whitespace-nowrap"
+                        >
+                          View Family <ArrowRight size={14} />
+                        </Link>
+                      </div>
                     </div>
 
                     {/* Suitable for tags */}

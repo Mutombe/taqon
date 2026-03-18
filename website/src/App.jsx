@@ -43,6 +43,7 @@ const BlogPost = lazy(() => import('./pages/BlogPost'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Saves = lazy(() => import('./pages/Saves'));
+const FamilyDetail = lazy(() => import('./pages/FamilyDetail'));
 const EnergyHub = lazy(() => import('./pages/EnergyHub'));
 const AreaLanding = lazy(() => import('./pages/AreaLanding'));
 const SystemVisualizer = lazy(() => import('./pages/SystemVisualizer'));
@@ -230,7 +231,7 @@ function AppContent() {
             {/* New routes */}
             <Route path="/calculator" element={<SavingsCalculator />} />
             <Route path="/quote" element={<Navigate to="/solar-advisor" replace />} />
-            <Route path="/families/:slug" element={<Navigate to="/packages" replace />} />
+            <Route path="/families/:slug" element={<FamilyDetail />} />
             <Route path="/terms" element={<TermsConditions />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/saves" element={<Saves />} />

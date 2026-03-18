@@ -11,6 +11,7 @@ import { companyInfo, services, packages, products, solarTips, faqs } from '../d
 import logoImg from '../assets/taqon-electrico-logo.jpg';
 import NotificationBell from './NotificationBell';
 import useAuthStore from '../stores/authStore';
+import useSavesStore from '../stores/savesStore';
 import { useTheme } from '../contexts/ThemeContext';
 import { prefetchRoute } from '../lib/routePrefetch';
 
@@ -312,6 +313,8 @@ export default function Navbar() {
   const leaveTimerRef = useRef(null);
 
   const { isAuthenticated, user, logout, openAuthModal } = useAuthStore();
+  const { likedBlogs, likedProjects, likedProducts, likedPackages } = useSavesStore();
+  const savesCount = likedBlogs.length + likedProjects.length + likedProducts.length + likedPackages.length;
   const { theme, toggleTheme } = useTheme();
 
   // ── Scroll tracking ─────────────────────────────────────────────────────────
@@ -557,6 +560,11 @@ export default function Navbar() {
                 aria-label="Saved items"
               >
                 <Heart size={18} />
+                {savesCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {savesCount > 99 ? '99+' : savesCount}
+                  </span>
+                )}
               </Link>
 
               {/* Shop bag */}

@@ -4,11 +4,12 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   MagnifyingGlass, X, Tag, Star, ArrowRight, Phone,
   ShoppingCart, SlidersHorizontal, CircleNotch,
-  CaretLeft, CaretRight, Bag,
+  CaretLeft, CaretRight, Bag, Heart,
 } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import useCartStore from '../stores/cartStore';
+import useSavesStore from '../stores/savesStore';
 import { toast } from 'sonner';
 import { useProducts, useCategories, useBrands, usePrefetch } from '../hooks/useQueries';
 
@@ -101,6 +102,7 @@ export default function Shop() {
   const searchTimeoutRef = useRef(null);
 
   const { addItem } = useCartStore();
+  const { toggleProduct, likedProducts } = useSavesStore();
   const { prefetchProduct } = usePrefetch();
 
   // Build query params object (stable reference via useMemo to avoid spurious refetches)
@@ -565,11 +567,20 @@ export default function Shop() {
                               <Tag size={10} weight="bold" /> {product.sale_percentage || 'SALE'}% OFF
                             </div>
                           )}
-                          {product.brand && (
-                            <div className="absolute top-3 right-3 bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm text-[10px] font-medium px-2.5 py-1 rounded-full text-taqon-charcoal dark:text-white">
-                              {product.brand.name}
-                            </div>
-                          )}
+                          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                            <button
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProduct(product.slug); }}
+                              className="w-8 h-8 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                              aria-label="Save product"
+                            >
+                              <Heart size={15} weight={likedProducts.includes(product.slug) ? 'fill' : 'regular'} className={likedProducts.includes(product.slug) ? 'text-red-500' : 'text-gray-400'} />
+                            </button>
+                            {product.brand && (
+                              <span className="bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm text-[10px] font-medium px-2.5 py-1 rounded-full text-taqon-charcoal dark:text-white">
+                                {product.brand.name}
+                              </span>
+                            )}
+                          </div>
 
                           {/* Out of stock overlay */}
                           {!product.in_stock && (

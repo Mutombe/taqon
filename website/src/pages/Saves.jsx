@@ -1,30 +1,46 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Heart, BookmarkSimple, Calendar, Clock, MapPin, Lightning, ArrowRight } from '@phosphor-icons/react';
+import { Heart, BookmarkSimple, Calendar, Clock, MapPin, Lightning, ArrowRight, ShoppingCart, Package } from '@phosphor-icons/react';
 import SEO from '../components/SEO';
 import useSavesStore from '../stores/savesStore';
 import { blogPosts } from '../data/blogData';
 import { projectsData } from '../data/projectsData';
+import { useFamilies, useProducts } from '../hooks/useQueries';
 
 export default function Saves() {
-  const { likedBlogs, likedProjects, toggleBlog, toggleProject } = useSavesStore();
+  const { likedBlogs, likedProjects, likedProducts, likedPackages, toggleBlog, toggleProject, toggleProduct, togglePackage } = useSavesStore();
 
   const savedBlogs = blogPosts.filter((p) => likedBlogs.includes(p.slug));
   const savedProjects = projectsData.filter((p) => likedProjects.includes(p.slug));
-  const totalSaves = savedBlogs.length + savedProjects.length;
+
+  // Fetch products and families for saved items
+  const { data: productsData } = useProducts();
+  const { data: familiesData } = useFamilies();
+
+  const allProducts = productsData?.results || productsData || [];
+  const allFamilies = familiesData || [];
+
+  const savedProducts = allProducts.filter((p) => likedProducts.includes(p.slug));
+  const savedPackages = allFamilies.filter((f) => likedPackages.includes(f.slug));
+
+  const totalSaves = savedBlogs.length + savedProjects.length + savedProducts.length + savedPackages.length;
+
+  const sectionTitle = (icon, label, count) => (
+    <h2 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white mb-6 flex items-center gap-2">
+      {icon} {label} ({count})
+    </h2>
+  );
 
   return (
     <>
-      <SEO title="Saved Items" description="Your saved articles and projects." />
+      <SEO title="Saved Items" description="Your saved articles, projects, products, and packages." />
 
       <section className="relative bg-taqon-dark pt-28 pb-12">
         <div className="absolute inset-0 dark-mesh" />
         <div className="relative max-w-7xl mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">Your Collection</span>
-            <h1 className="mt-3 text-4xl font-bold font-syne text-white">
-              Saved <span className="text-gradient">Items</span>
-            </h1>
+            <h1 className="mt-3 text-4xl font-bold font-syne text-white">Saved <span className="text-gradient">Items</span></h1>
             <p className="mt-3 text-white/50">
               {totalSaves > 0 ? `${totalSaves} saved item${totalSaves !== 1 ? 's' : ''}` : 'Nothing saved yet'}
             </p>
@@ -36,55 +52,92 @@ export default function Saves() {
         <div className="max-w-7xl mx-auto px-4">
 
           {totalSaves === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
               <BookmarkSimple size={56} className="text-gray-300 dark:text-white/15 mx-auto mb-4" />
               <h2 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white mb-2">No saved items yet</h2>
-              <p className="text-taqon-muted dark:text-white/40 mb-6">
-                Tap the heart icon on articles and projects to save them here.
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <Link to="/blog" className="px-6 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 transition-all">
-                  Browse Articles
-                </Link>
-                <Link to="/projects" className="px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all">
-                  View Projects
-                </Link>
+              <p className="text-taqon-muted dark:text-white/40 mb-6">Tap the heart icon on articles, projects, products, or packages to save them here.</p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Link to="/blog" className="px-6 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 transition-all">Articles</Link>
+                <Link to="/projects" className="px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all">Projects</Link>
+                <Link to="/shop" className="px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all">Shop</Link>
+                <Link to="/packages" className="px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all">Packages</Link>
               </div>
             </motion.div>
+          )}
+
+          {/* Saved Products */}
+          {savedProducts.length > 0 && (
+            <div className="mb-12">
+              {sectionTitle(<ShoppingCart size={20} className="text-taqon-orange" />, 'Saved Products', savedProducts.length)}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {savedProducts.map((product, i) => (
+                  <motion.div key={product.slug} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                    <Link to={`/shop/${product.slug}`} className="group block bg-white dark:bg-taqon-charcoal rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 hover:border-taqon-orange/20 hover:shadow-xl transition-all h-full">
+                      <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-taqon-dark">
+                        <img src={product.images?.[0]?.image || product.image_url || ''} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProduct(product.slug); }}
+                          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                        >
+                          <Heart size={15} weight="fill" className="text-red-500" />
+                        </button>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-[10px] text-taqon-orange font-semibold uppercase">{product.category?.name}</p>
+                        <h3 className="font-semibold text-sm text-taqon-charcoal dark:text-white line-clamp-2 mt-1">{product.name}</h3>
+                        <p className="text-lg font-bold text-taqon-charcoal dark:text-white font-syne mt-2">${parseFloat(product.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Saved Packages */}
+          {savedPackages.length > 0 && (
+            <div className="mb-12">
+              {sectionTitle(<Package size={20} className="text-taqon-orange" />, 'Saved Packages', savedPackages.length)}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {savedPackages.map((family, i) => (
+                  <motion.div key={family.slug} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                    <Link to={`/families/${family.slug}`} className="group block bg-white dark:bg-taqon-charcoal rounded-2xl border border-gray-100 dark:border-white/10 p-6 hover:border-taqon-orange/20 hover:shadow-xl transition-all h-full">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Lightning size={20} className="text-taqon-orange" />
+                          <h3 className="font-bold font-syne text-taqon-charcoal dark:text-white group-hover:text-taqon-orange transition-colors">{family.name}</h3>
+                        </div>
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePackage(family.slug); }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 transition-all"
+                        >
+                          <Heart size={16} weight="fill" className="text-red-500" />
+                        </button>
+                      </div>
+                      <p className="text-sm text-taqon-muted">{family.kva_rating} kVA &bull; {family.package_count} variants</p>
+                      {family.price_min && <p className="mt-2 text-lg font-bold text-taqon-orange font-syne">${parseFloat(family.price_min).toLocaleString()} – ${parseFloat(family.price_max).toLocaleString()}</p>}
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Saved Articles */}
           {savedBlogs.length > 0 && (
             <div className="mb-12">
-              <h2 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white mb-6 flex items-center gap-2">
-                <Heart size={20} className="text-red-500" weight="fill" />
-                Saved Articles ({savedBlogs.length})
-              </h2>
+              {sectionTitle(<Heart size={20} className="text-red-500" weight="fill" />, 'Saved Articles', savedBlogs.length)}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {savedBlogs.map((post, i) => (
-                  <motion.div
-                    key={post.slug}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                  >
+                  <motion.div key={post.slug} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                     <Link to={`/blog/${post.slug}`} className="group block h-full">
                       <div className="bg-white dark:bg-taqon-charcoal rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 hover:border-taqon-orange/20 hover:shadow-xl transition-all h-full flex flex-col">
                         <div className="relative aspect-[16/10] overflow-hidden">
                           <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                          <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBlog(post.slug); }}
-                            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
-                          >
+                          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBlog(post.slug); }} className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
                             <Heart size={18} weight="fill" className="text-red-500" />
                           </button>
-                          <span className="absolute top-3 left-3 px-3 py-1 bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm text-taqon-orange text-xs font-semibold rounded-full">
-                            {post.category}
-                          </span>
+                          <span className="absolute top-3 left-3 px-3 py-1 bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm text-taqon-orange text-xs font-semibold rounded-full">{post.category}</span>
                         </div>
                         <div className="p-5 flex flex-col flex-1">
                           <h3 className="font-bold font-syne text-taqon-charcoal dark:text-white group-hover:text-taqon-orange transition-colors line-clamp-2">{post.title}</h3>
@@ -105,36 +158,21 @@ export default function Saves() {
           {/* Saved Projects */}
           {savedProjects.length > 0 && (
             <div>
-              <h2 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white mb-6 flex items-center gap-2">
-                <Heart size={20} className="text-red-500" weight="fill" />
-                Saved Projects ({savedProjects.length})
-              </h2>
+              {sectionTitle(<Heart size={20} className="text-red-500" weight="fill" />, 'Saved Projects', savedProjects.length)}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {savedProjects.map((project, i) => (
-                  <motion.div
-                    key={project.slug}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                  >
+                  <motion.div key={project.slug} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                     <Link to={`/projects/${project.slug}`} className="group block h-full">
                       <div className="bg-white dark:bg-taqon-charcoal rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 hover:border-taqon-orange/20 hover:shadow-xl transition-all h-full flex flex-col">
                         <div className="relative aspect-[16/10] overflow-hidden">
                           <img src={project.heroImage} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                          <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProject(project.slug); }}
-                            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
-                          >
+                          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProject(project.slug); }} className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
                             <Heart size={18} weight="fill" className="text-red-500" />
                           </button>
                           <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-taqon-orange text-white text-xs font-bold">
-                              <Lightning size={10} weight="fill" /> {project.kva}
-                            </span>
-                            <span className="flex items-center gap-1 text-white/80 text-xs">
-                              <MapPin size={10} /> {project.location}
-                            </span>
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-taqon-orange text-white text-xs font-bold"><Lightning size={10} weight="fill" /> {project.kva}</span>
+                            <span className="flex items-center gap-1 text-white/80 text-xs"><MapPin size={10} /> {project.location}</span>
                           </div>
                         </div>
                         <div className="p-5 flex flex-col flex-1">
