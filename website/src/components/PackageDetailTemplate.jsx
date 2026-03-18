@@ -184,7 +184,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 className="mt-6 flex flex-wrap gap-3"
               >
                 <Link
-                  to="/quote"
+                  to="/solar-advisor"
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-taqon-orange text-white font-semibold rounded-xl hover:bg-taqon-orange/90 transition-all shadow-lg shadow-taqon-orange/25"
                 >
                   Get a Quote <ArrowRight size={16} />
@@ -453,7 +453,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
-                to="/quote"
+                to="/solar-advisor"
                 className="inline-flex items-center gap-2 px-10 py-4 bg-taqon-orange text-white font-bold rounded-xl hover:bg-taqon-orange/90 transition-all shadow-lg shadow-taqon-orange/25 text-lg"
               >
                 Get Your Quote <ArrowRight size={18} />
@@ -547,7 +547,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 <p className="text-xs text-taqon-muted dark:text-white/50">{pkg.name}</p>
               </div>
               <Link
-                to="/quote"
+                to="/solar-advisor"
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-taqon-orange text-white font-semibold rounded-xl hover:bg-taqon-orange/90 transition-all shadow-lg shadow-taqon-orange/25 text-sm"
               >
                 Get Quote <ArrowRight size={14} />

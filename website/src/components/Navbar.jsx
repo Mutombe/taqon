@@ -639,7 +639,7 @@ export default function Navbar() {
 
               {/* Get a Quote CTA */}
               <Link
-                to="/quote"
+                to="/solar-advisor"
                 className="hidden lg:inline-flex items-center gap-2 bg-taqon-orange text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-taqon-orange/90 transition-all hover:shadow-lg hover:shadow-taqon-orange/25 active:scale-95"
               >
                 Get a Quote
@@ -919,7 +919,7 @@ export default function Navbar() {
                   </button>
                 )}
                 <Link
-                  to="/quote"
+                  to="/solar-advisor"
                   className="block w-full text-center bg-taqon-orange text-white py-4 rounded-2xl font-semibold text-lg hover:bg-taqon-orange/90 transition-all"
                 >
                   Get a Free Quote

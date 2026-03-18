@@ -53,7 +53,7 @@ export default function QuotationList() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
             <ClipboardText className="w-16 h-16 text-gray-300 dark:text-white/20 mx-auto mb-4" />
             <h2 className="text-xl text-gray-500 dark:text-white/50 mb-4">No quotations yet</h2>
-            <Link to="/quote" className="inline-flex items-center gap-2 bg-taqon-orange text-white px-6 py-3 rounded-xl font-semibold hover:bg-taqon-orange/90 transition-all">
+            <Link to="/solar-advisor" className="inline-flex items-center gap-2 bg-taqon-orange text-white px-6 py-3 rounded-xl font-semibold hover:bg-taqon-orange/90 transition-all">
               Request a Quote
             </Link>
           </motion.div>

@@ -232,7 +232,7 @@ export default function ProjectDetail() {
 
                   <div className="mt-8 pt-6 border-t border-[var(--card-border)] space-y-3">
                     <Link
-                      to="/quote"
+                      to="/solar-advisor"
                       className="flex items-center justify-center gap-2 w-full bg-taqon-orange text-white px-6 py-3.5 rounded-xl font-semibold hover:bg-taqon-orange/90 transition-all shadow-lg shadow-taqon-orange/25"
                     >
                       Get a Similar System <ArrowRight size={16} weight="bold" />

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { solarConfigApi } from '../api/solarConfig';
+import { quotationsApi } from '../api/quotations';
 
 /* ─── Constants ─── */
 
@@ -448,6 +449,20 @@ function QuoteModal({ pkg, tierKey, distanceKm, onClose }) {
       a.click();
       URL.revokeObjectURL(url);
       toast.success('Quote downloaded!');
+
+      // Background: submit QuotationRequest so admin has a record
+      quotationsApi.submitRequest({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        message: `Instant quote for ${pkg.family_name || pkg.name} (${tierLabels[tierKey]}) at ${distanceKm}km. Address: ${form.address || 'N/A'}`,
+        property_type: 'residential',
+        roof_type: 'pitched',
+        monthly_bill: 0,
+        budget_range: '$1000-$3000',
+        appliances: [],
+      }).catch(() => {}); // silent — don't block the user
+
       onClose();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to generate quote');

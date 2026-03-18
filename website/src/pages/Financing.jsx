@@ -151,7 +151,7 @@ export default function Financing() {
                     </div>
 
                     <Link
-                      to="/quote"
+                      to="/solar-advisor"
                       className={`mt-8 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all ${
                         isPopular
                           ? 'bg-taqon-orange text-white hover:bg-taqon-orange/90 shadow-lg shadow-taqon-orange/25'
@@ -298,7 +298,7 @@ export default function Financing() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
               <Link
-                to="/quote"
+                to="/solar-advisor"
                 className="inline-flex items-center gap-2 bg-taqon-orange text-white px-8 py-4 rounded-full font-semibold hover:bg-taqon-orange/90 transition-all hover:shadow-xl hover:shadow-taqon-orange/25"
               >
                 Get a Free Quote <ArrowRight size={18} />

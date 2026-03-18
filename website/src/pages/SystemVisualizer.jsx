@@ -428,7 +428,7 @@ export default function SystemVisualizer() {
                           </p>
                         </div>
                         <Link
-                          to="/quote"
+                          to="/solar-advisor"
                           className="mt-4 w-full inline-flex items-center justify-center gap-2 bg-white text-taqon-orange py-3 rounded-xl font-semibold hover:bg-white/90 transition-colors"
                         >
                           Get a Quote <ArrowRight size={16} />
@@ -482,7 +482,7 @@ export default function SystemVisualizer() {
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                to="/quote"
+                to="/solar-advisor"
                 className="inline-flex items-center justify-center gap-2 bg-taqon-orange text-white px-8 py-4 rounded-full font-semibold hover:bg-taqon-orange/90 transition-all hover:shadow-xl hover:shadow-taqon-orange/25"
               >
                 Request Free Site Survey <ArrowRight size={16} />

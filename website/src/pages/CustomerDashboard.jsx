@@ -473,7 +473,7 @@ export default function CustomerDashboard() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
               <Link
-                to="/quote"
+                to="/solar-advisor"
                 className="inline-flex items-center gap-2 bg-taqon-orange text-white px-8 py-4 rounded-full font-semibold hover:bg-taqon-orange/90 transition-all hover:shadow-xl hover:shadow-taqon-orange/25"
               >
                 Get a Free Quote <ArrowRight size={18} />

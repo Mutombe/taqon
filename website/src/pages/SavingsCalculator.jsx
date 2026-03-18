@@ -190,7 +190,7 @@ export default function SavingsCalculator() {
                   </div>
 
                   <Link
-                    to="/quote"
+                    to="/solar-advisor"
                     className="mt-6 w-full flex items-center justify-center gap-2 bg-taqon-orange text-white py-4 rounded-xl font-semibold hover:bg-taqon-orange/90 transition-all hover:shadow-lg hover:shadow-taqon-orange/25"
                   >
                     Get a Free Quote <ArrowRight size={16} />
@@ -435,7 +435,7 @@ export default function SavingsCalculator() {
               Get a personalised quote from our engineers and start your solar journey today.
             </p>
             <Link
-              to="/quote"
+              to="/solar-advisor"
               className="inline-flex items-center gap-2 bg-taqon-orange text-white px-8 py-4 rounded-full font-semibold mt-8 hover:bg-taqon-orange/90 transition-all hover:shadow-xl hover:shadow-taqon-orange/25"
             >
               Get Your Free Quote <ArrowRight size={18} />

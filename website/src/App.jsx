@@ -226,7 +226,7 @@ function AppContent() {
             <Route path="/solar-secrets" element={<SolarSecrets />} />
             {/* New routes */}
             <Route path="/calculator" element={<SavingsCalculator />} />
-            <Route path="/quote" element={<QuoteWizard />} />
+            <Route path="/quote" element={<Navigate to="/solar-advisor" replace />} />
             <Route path="/dashboard" element={<CustomerDashboard />} />
             <Route path="/financing" element={<Financing />} />
             <Route path="/certifications" element={<Certifications />} />
