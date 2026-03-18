@@ -1,3 +1,4 @@
+import io
 import logging
 from django.template.loader import render_to_string
 
@@ -5,13 +6,30 @@ logger = logging.getLogger(__name__)
 
 
 def _render_pdf(html_string):
-    """Try WeasyPrint, fall back to raw HTML bytes if unavailable."""
+    """Convert HTML to PDF. Tries xhtml2pdf first (pure Python), then WeasyPrint, then HTML fallback."""
+    # Option 1: xhtml2pdf (pure Python, no native deps — works everywhere)
+    try:
+        from xhtml2pdf import pisa
+        buf = io.BytesIO()
+        result = pisa.CreatePDF(io.StringIO(html_string), dest=buf)
+        if not result.err:
+            return buf.getvalue()
+        logger.warning('xhtml2pdf returned errors, trying WeasyPrint')
+    except ImportError:
+        pass
+    except Exception:
+        logger.warning('xhtml2pdf failed, trying WeasyPrint')
+
+    # Option 2: WeasyPrint (needs native GTK libs)
     try:
         from weasyprint import HTML
         return HTML(string=html_string).write_pdf()
     except Exception:
-        logger.warning('WeasyPrint unavailable — returning HTML fallback.')
-        return html_string.encode('utf-8')
+        pass
+
+    # Option 3: HTML fallback
+    logger.warning('No PDF library available — returning HTML')
+    return html_string.encode('utf-8')
 
 
 def generate_quotation_pdf(quotation):

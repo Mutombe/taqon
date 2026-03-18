@@ -3,358 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  @page {
-    size: A4;
-    margin: 1.5cm 2cm;
-  }
+  @page { size: A4; margin: 1.5cm 2cm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; line-height: 1.5; }
 
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+  .header-table { width: 100%; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #F26522; }
+  .company-name { font-size: 20pt; font-weight: bold; color: #F26522; }
+  .company-tagline { font-size: 8pt; color: #666; }
+  .company-details { font-size: 8pt; color: #555; line-height: 1.6; margin-top: 8px; }
+  .doc-title { font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; text-align: right; }
+  .doc-number { font-size: 12pt; color: #F26522; font-weight: bold; text-align: right; margin-top: 4px; }
+  .doc-meta { font-size: 8pt; color: #555; text-align: right; margin-top: 8px; line-height: 1.6; }
 
-  body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 10pt;
-    color: #1a1a1a;
-    line-height: 1.5;
-  }
+  .section-box { margin-bottom: 15px; padding: 12px 16px; background-color: #f8f8f8; }
+  .section-title { font-size: 8pt; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .customer-name { font-weight: bold; font-size: 11pt; }
 
-  /* Header */
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 3px solid #F26522;
-  }
+  .highlight-box { margin-bottom: 15px; padding: 12px 16px; background-color: #fff7ed; border-left: 3px solid #F26522; }
+  .highlight-title { font-size: 10pt; font-weight: bold; color: #F26522; margin-bottom: 4px; }
 
-  .company-info {
-    max-width: 55%;
-  }
+  table.items { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+  table.items th { background-color: #1a1a1a; color: white; font-size: 8pt; font-weight: bold; text-transform: uppercase; padding: 8px 10px; text-align: left; }
+  table.items th.right { text-align: right; }
+  table.items td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 9pt; }
+  table.items td.right { text-align: right; }
+  .item-name { font-weight: bold; }
+  .item-desc { font-size: 8pt; color: #888; }
+  .item-warranty { font-size: 7.5pt; color: #F26522; }
 
-  .company-name {
-    font-size: 22pt;
-    font-weight: 800;
-    color: #F26522;
-    letter-spacing: -0.5px;
-  }
+  table.totals { width: 250px; margin-left: auto; margin-bottom: 20px; }
+  table.totals td { padding: 4px 0; font-size: 9pt; color: #555; }
+  table.totals td.right { text-align: right; }
+  table.totals tr.grand td { border-top: 2px solid #1a1a1a; padding-top: 8px; font-size: 13pt; font-weight: bold; color: #1a1a1a; }
 
-  .company-tagline {
-    font-size: 8pt;
-    color: #666;
-    margin-top: 2px;
-  }
+  .validity { margin: 12px 0; padding: 8px 14px; background-color: #fffbeb; border: 1px solid #fde68a; font-size: 8pt; color: #92400e; }
+  .terms { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
+  .terms-title { font-size: 8pt; color: #999; text-transform: uppercase; margin-bottom: 4px; }
+  .terms-text { font-size: 7.5pt; color: #666; line-height: 1.6; }
+  .footer-bar { margin-top: 20px; padding-top: 10px; border-top: 2px solid #F26522; text-align: center; font-size: 7.5pt; color: #999; }
 
-  .company-details {
-    margin-top: 10px;
-    font-size: 8pt;
-    color: #555;
-    line-height: 1.6;
-  }
-
-  .doc-badge {
-    text-align: right;
-  }
-
-  .doc-badge h2 {
-    font-size: 18pt;
-    font-weight: 700;
-    color: #1a1a1a;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-  }
-
-  .doc-number {
-    font-size: 12pt;
-    color: #F26522;
-    font-weight: 600;
-    margin-top: 4px;
-  }
-
-  .doc-meta {
-    margin-top: 10px;
-    font-size: 8.5pt;
-    color: #555;
-    line-height: 1.6;
-  }
-
-  .doc-meta strong {
-    color: #333;
-  }
-
-  /* Prepared For */
-  .prepared-for {
-    margin-bottom: 25px;
-    padding: 15px 20px;
-    background: #f8f8f8;
-    border-radius: 6px;
-  }
-
-  .prepared-for h3 {
-    font-size: 8pt;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-  }
-
-  .prepared-for p {
-    font-size: 9.5pt;
-    line-height: 1.5;
-  }
-
-  .prepared-for .customer-name {
-    font-weight: 700;
-    font-size: 11pt;
-    color: #1a1a1a;
-  }
-
-  /* Project info */
-  .project-info {
-    margin-bottom: 25px;
-    padding: 12px 20px;
-    background: #fff7ed;
-    border-left: 3px solid #F26522;
-    border-radius: 0 6px 6px 0;
-  }
-
-  .project-info h4 {
-    font-size: 9pt;
-    font-weight: 700;
-    color: #F26522;
-    margin-bottom: 4px;
-  }
-
-  .project-info p {
-    font-size: 8.5pt;
-    color: #555;
-    line-height: 1.5;
-  }
-
-  /* Items Table */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 25px;
-  }
-
-  thead th {
-    background: #1a1a1a;
-    color: white;
-    font-size: 8pt;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 10px 12px;
-    text-align: left;
-  }
-
-  thead th:last-child,
-  thead th:nth-child(3),
-  thead th:nth-child(4) {
-    text-align: right;
-  }
-
-  tbody td {
-    padding: 10px 12px;
-    border-bottom: 1px solid #eee;
-    font-size: 9pt;
-    vertical-align: top;
-  }
-
-  tbody td:last-child,
-  tbody td:nth-child(3),
-  tbody td:nth-child(4) {
-    text-align: right;
-  }
-
-  tbody tr:nth-child(even) {
-    background: #fafafa;
-  }
-
-  .item-name {
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-
-  .item-desc {
-    font-size: 8pt;
-    color: #888;
-    margin-top: 2px;
-  }
-
-  .item-type {
-    display: inline-block;
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 7pt;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    background: #f0f0f0;
-    color: #666;
-    margin-left: 6px;
-  }
-
-  .item-warranty {
-    font-size: 7.5pt;
-    color: #F26522;
-    margin-top: 2px;
-  }
-
-  /* Totals */
-  .totals {
-    width: 300px;
-    margin-left: auto;
-    margin-bottom: 30px;
-  }
-
-  .totals-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    font-size: 9pt;
-    color: #555;
-  }
-
-  .totals-row.grand-total {
-    border-top: 2px solid #1a1a1a;
-    margin-top: 6px;
-    padding-top: 10px;
-    font-size: 13pt;
-    font-weight: 800;
-    color: #1a1a1a;
-  }
-
-  /* Validity notice */
-  .validity-notice {
-    margin-bottom: 20px;
-    padding: 10px 16px;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    border-radius: 6px;
-    font-size: 8.5pt;
-    color: #92400e;
-  }
-
-  .validity-notice strong {
-    color: #78350f;
-  }
-
-  .status-badge {
-    display: inline-block;
-    padding: 3px 12px;
-    border-radius: 20px;
-    font-size: 8pt;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .status-draft { background: #f3f4f6; color: #374151; }
-  .status-sent { background: #dbeafe; color: #1e40af; }
-  .status-viewed { background: #e0e7ff; color: #3730a3; }
-  .status-accepted { background: #dcfce7; color: #166534; }
-  .status-rejected { background: #fee2e2; color: #991b1b; }
-  .status-expired { background: #fef3c7; color: #92400e; }
-  .status-revised { background: #e0f2fe; color: #075985; }
-
-  /* Notes & Terms */
-  .footer-section {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-  }
-
-  .footer-section h4 {
-    font-size: 8pt;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-  }
-
-  .footer-section p {
-    font-size: 8pt;
-    color: #666;
-    line-height: 1.6;
-  }
-
-  /* Bottom bar */
-  .bottom-bar {
-    margin-top: 30px;
-    padding-top: 15px;
-    border-top: 2px solid #F26522;
-    text-align: center;
-    font-size: 7.5pt;
-    color: #999;
-  }
+  .status-badge { padding: 2px 10px; font-size: 8pt; font-weight: bold; text-transform: uppercase; }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="header">
-  <div class="company-info">
-    <div class="company-name">TAQON ELECTRICO</div>
-    <div class="company-tagline">Solar &amp; Electrical Solutions</div>
-    <div class="company-details">
-      Harare, Zimbabwe<br>
-      +263 77 277 1036<br>
-      info@taqon.co.zw &bull; www.taqon.co.zw
-    </div>
-  </div>
-  <div class="doc-badge">
-    <h2>Quotation</h2>
-    <div class="doc-number">{{ quotation.quotation_number }}</div>
-    <div class="doc-meta">
-      <strong>Date:</strong> {{ quotation.created_at|date:"d M Y" }}<br>
-      {% if quotation.valid_until %}<strong>Valid Until:</strong> {{ quotation.valid_until|date:"d M Y" }}<br>{% endif %}
-      <strong>Status:</strong>
-      <span class="status-badge status-{{ quotation.status }}">{{ quotation.status|upper }}</span>
-    </div>
-  </div>
+<table class="header-table" cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="width: 55%; vertical-align: top;">
+      <div class="company-name">TAQON ELECTRICO</div>
+      <div class="company-tagline">Solar &amp; Electrical Solutions</div>
+      <div class="company-details">Harare, Zimbabwe<br/>+263 77 277 1036<br/>info@taqon.co.zw &bull; www.taqon.co.zw</div>
+    </td>
+    <td style="width: 45%; vertical-align: top;">
+      <div class="doc-title">Quotation</div>
+      <div class="doc-number">{{ quotation.quotation_number }}</div>
+      <div class="doc-meta">
+        <strong>Date:</strong> {{ quotation.created_at|date:"d M Y" }}<br/>
+        {% if quotation.valid_until %}<strong>Valid Until:</strong> {{ quotation.valid_until|date:"d M Y" }}<br/>{% endif %}
+        <strong>Status:</strong> <span class="status-badge">{{ quotation.status|upper }}</span>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<div class="section-box">
+  <div class="section-title">Prepared For</div>
+  <div class="customer-name">{{ quotation.customer_name }}</div>
+  {{ quotation.customer_email }}<br/>
+  {% if quotation.customer_phone %}{{ quotation.customer_phone }}<br/>{% endif %}
+  {% if quotation.customer_address %}{{ quotation.customer_address }}{% endif %}
 </div>
 
-<!-- Prepared For -->
-<div class="prepared-for">
-  <h3>Prepared For</h3>
-  <p class="customer-name">{{ quotation.customer_name }}</p>
-  <p>
-    {{ quotation.customer_email }}<br>
-    {% if quotation.customer_phone %}{{ quotation.customer_phone }}<br>{% endif %}
-    {% if quotation.customer_address %}{{ quotation.customer_address }}{% endif %}
-  </p>
-</div>
-
-<!-- Project Info -->
 {% if quotation.title or quotation.description %}
-<div class="project-info">
-  <h4>{{ quotation.title }}</h4>
-  {% if quotation.description %}<p>{{ quotation.description }}</p>{% endif %}
-  {% if quotation.system_size_kw %}<p><strong>System Size:</strong> {{ quotation.system_size_kw }} kW</p>{% endif %}
+<div class="highlight-box">
+  <div class="highlight-title">{{ quotation.title }}</div>
+  {% if quotation.description %}<p style="font-size: 8.5pt; color: #555;">{{ quotation.description }}</p>{% endif %}
+  {% if quotation.system_size_kw %}<p style="font-size: 8.5pt; color: #555;"><strong>System Size:</strong> {{ quotation.system_size_kw }} kW</p>{% endif %}
 </div>
 {% endif %}
 
-<!-- Validity Notice -->
 {% if quotation.valid_until %}
-<div class="validity-notice">
+<div class="validity">
   <strong>Note:</strong> This quotation is valid until <strong>{{ quotation.valid_until|date:"d M Y" }}</strong>.
-  Prices may change after the expiry date.
 </div>
 {% endif %}
 
-<!-- Items Table -->
-<table>
+<table class="items">
   <thead>
     <tr>
-      <th style="width: 5%">#</th>
-      <th style="width: 45%">Description</th>
-      <th style="width: 10%">Qty</th>
-      <th style="width: 18%">Unit Price</th>
-      <th style="width: 22%">Total</th>
+      <th style="width: 5%;">#</th>
+      <th style="width: 45%;">Description</th>
+      <th class="right" style="width: 10%;">Qty</th>
+      <th class="right" style="width: 18%;">Unit Price</th>
+      <th class="right" style="width: 22%;">Total</th>
     </tr>
   </thead>
   <tbody>
@@ -362,64 +103,41 @@
     <tr>
       <td>{{ forloop.counter }}</td>
       <td>
-        <div class="item-name">
-          {{ item.name }}
-          {% if item.item_type != 'product' %}<span class="item-type">{{ item.item_type }}</span>{% endif %}
-        </div>
-        {% if item.description %}<div class="item-desc">{{ item.description }}</div>{% endif %}
-        {% if item.warranty %}<div class="item-warranty">Warranty: {{ item.warranty }}</div>{% endif %}
+        <span class="item-name">{{ item.name }}</span>
+        {% if item.description %}<br/><span class="item-desc">{{ item.description }}</span>{% endif %}
+        {% if item.warranty %}<br/><span class="item-warranty">Warranty: {{ item.warranty }}</span>{% endif %}
       </td>
-      <td style="text-align: right">{{ item.quantity }}</td>
-      <td style="text-align: right">{{ quotation.currency }} {{ item.unit_price|floatformat:2 }}</td>
-      <td style="text-align: right">{{ quotation.currency }} {{ item.total_price|floatformat:2 }}</td>
+      <td class="right">{{ item.quantity }}</td>
+      <td class="right">{{ quotation.currency }} {{ item.unit_price|floatformat:2 }}</td>
+      <td class="right">{{ quotation.currency }} {{ item.total_price|floatformat:2 }}</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 
-<!-- Totals -->
-<div class="totals">
-  <div class="totals-row">
-    <span>Subtotal</span>
-    <span>{{ quotation.currency }} {{ quotation.subtotal|floatformat:2 }}</span>
-  </div>
-  {% if quotation.tax_amount %}
-  <div class="totals-row">
-    <span>Tax ({{ quotation.tax_rate }}%)</span>
-    <span>{{ quotation.currency }} {{ quotation.tax_amount|floatformat:2 }}</span>
-  </div>
-  {% endif %}
-  {% if quotation.discount_amount %}
-  <div class="totals-row">
-    <span>Discount{% if quotation.discount_description %} ({{ quotation.discount_description }}){% endif %}</span>
-    <span>-{{ quotation.currency }} {{ quotation.discount_amount|floatformat:2 }}</span>
-  </div>
-  {% endif %}
-  <div class="totals-row grand-total">
-    <span>Total</span>
-    <span>{{ quotation.currency }} {{ quotation.total|floatformat:2 }}</span>
-  </div>
-</div>
+<table class="totals">
+  <tr><td>Subtotal</td><td class="right">{{ quotation.currency }} {{ quotation.subtotal|floatformat:2 }}</td></tr>
+  {% if quotation.tax_amount %}<tr><td>Tax ({{ quotation.tax_rate }}%)</td><td class="right">{{ quotation.currency }} {{ quotation.tax_amount|floatformat:2 }}</td></tr>{% endif %}
+  {% if quotation.discount_amount %}<tr><td>Discount</td><td class="right">-{{ quotation.currency }} {{ quotation.discount_amount|floatformat:2 }}</td></tr>{% endif %}
+  <tr class="grand"><td>Total</td><td class="right">{{ quotation.currency }} {{ quotation.total|floatformat:2 }}</td></tr>
+</table>
 
-<!-- Notes -->
 {% if quotation.notes %}
-<div class="footer-section">
-  <h4>Notes</h4>
-  <p>{{ quotation.notes }}</p>
+<div class="terms">
+  <div class="terms-title">Notes</div>
+  <div class="terms-text">{{ quotation.notes }}</div>
 </div>
 {% endif %}
 
-<!-- Terms & Conditions -->
 {% if quotation.terms_and_conditions %}
-<div class="footer-section">
-  <h4>Terms &amp; Conditions</h4>
-  <p>{{ quotation.terms_and_conditions }}</p>
+<div class="terms">
+  <div class="terms-title">Terms &amp; Conditions</div>
+  <div class="terms-text">{{ quotation.terms_and_conditions }}</div>
 </div>
 {% endif %}
 
-<!-- Bottom Bar -->
-<div class="bottom-bar">
-  Taqon Electrico &bull; Solar &amp; Electrical Solutions &bull; Harare, Zimbabwe<br>
+<div class="footer-bar">
+  Taqon Electrico &bull; Solar &amp; Electrical Solutions &bull; Harare, Zimbabwe<br/>
   Thank you for considering Taqon Electrico for your solar needs!
 </div>
 

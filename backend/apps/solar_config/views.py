@@ -354,17 +354,14 @@ class InstantQuoteView(APIView):
 
         html_string = render_to_string('pdfs/instant_quote.html', context)
 
-        try:
-            from weasyprint import HTML
-            pdf_bytes = HTML(string=html_string).write_pdf()
-            response = HttpResponse(pdf_bytes, content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="{ref_number}.pdf"'
-            return response
-        except Exception:
-            # WeasyPrint not available (missing GTK on Windows) — serve as HTML
-            response = HttpResponse(html_string, content_type='text/html')
-            response['Content-Disposition'] = f'attachment; filename="{ref_number}.html"'
-            return response
+        from apps.quotations.pdf import _render_pdf
+        pdf_bytes = _render_pdf(html_string)
+        is_pdf = pdf_bytes[:4] == b'%PDF'
+        content_type = 'application/pdf' if is_pdf else 'text/html'
+        ext = 'pdf' if is_pdf else 'html'
+        response = HttpResponse(pdf_bytes, content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{ref_number}.{ext}"'
+        return response
 
 
 class PackagePriceView(APIView):
