@@ -151,7 +151,7 @@ export default function SolutionPageTemplate({ solution, allSolutions }) {
               <img
                 src={solution.image}
                 alt={solution.title}
-                className="w-full aspect-[21/9] object-cover object-center"
+                className="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] object-cover object-center"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
