@@ -1432,58 +1432,55 @@ export default function SolarAdvisor() {
                           return (
                             <div
                               key={appliance.id}
-                              className={`relative rounded-xl border transition-all ${
+                              onClick={() => updateQty(appliance.id, 1)}
+                              className={`relative rounded-xl border cursor-pointer select-none transition-all active:scale-[0.97] ${
                                 qty > 0
-                                  ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10 ring-1 ring-taqon-orange/20'
-                                  : 'border-gray-200 dark:border-white/10 bg-white dark:bg-taqon-charcoal hover:border-gray-300 dark:hover:border-white/20'
+                                  ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10 ring-1 ring-taqon-orange/20 shadow-sm shadow-taqon-orange/10'
+                                  : 'border-gray-200 dark:border-white/10 bg-white dark:bg-taqon-charcoal hover:border-taqon-orange/30 hover:shadow-md'
                               }`}
                             >
                               {/* Quantity badge */}
                               {qty > 0 && (
-                                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-taqon-orange text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm tabular-nums z-10">
+                                <div className="absolute -top-2 -right-2 w-6 h-6 bg-taqon-orange text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-md tabular-nums z-10">
                                   {qty}
                                 </div>
                               )}
 
-                              {/* Compact card: name row + controls row */}
-                              <div className="p-2.5 sm:p-3">
-                                <div className="flex items-start justify-between gap-1.5 mb-1.5">
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-[11px] sm:text-xs text-taqon-charcoal dark:text-white leading-tight line-clamp-2">
-                                      {appliance.name}
-                                    </h4>
-                                  </div>
-                                  <span className="text-[9px] sm:text-[10px] text-taqon-muted dark:text-white/40 tabular-nums shrink-0 mt-0.5">
+                              <div className="p-3 sm:p-3.5">
+                                {/* Name + wattage */}
+                                <h4 className="font-semibold text-xs sm:text-sm text-taqon-charcoal dark:text-white leading-snug line-clamp-2 mb-2">
+                                  {appliance.name}
+                                </h4>
+
+                                {/* Wattage chip + controls */}
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-taqon-muted dark:text-white/40 font-medium">
                                     {appliance.typical_wattage}W
                                   </span>
-                                </div>
 
-                                {/* Controls row: minus / qty / plus */}
-                                <div className="flex items-center justify-between">
-                                  <div className="flex gap-2 text-[9px] text-taqon-muted dark:text-white/30 tabular-nums">
-                                    <span>PP:{appliance.power_points}</span>
-                                    <span>EP:{appliance.energy_points}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      onClick={() => updateQty(appliance.id, -1)}
-                                      disabled={qty === 0}
-                                      className="w-7 h-7 rounded-md bg-gray-100 dark:bg-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white disabled:opacity-20 hover:bg-gray-200 dark:hover:bg-white/20 active:scale-90 transition-all"
-                                      aria-label={`Decrease ${appliance.name} quantity`}
-                                    >
-                                      <Minus size={11} weight="bold" />
-                                    </button>
-                                    <span className="w-5 text-center text-xs font-bold text-taqon-charcoal dark:text-white tabular-nums">
-                                      {qty}
-                                    </span>
-                                    <button
-                                      onClick={() => updateQty(appliance.id, 1)}
-                                      className="w-7 h-7 rounded-md bg-taqon-orange/10 flex items-center justify-center text-taqon-orange hover:bg-taqon-orange/20 active:scale-90 transition-all"
-                                      aria-label={`Increase ${appliance.name} quantity`}
-                                    >
-                                      <Plus size={11} weight="bold" />
-                                    </button>
-                                  </div>
+                                  {qty > 0 ? (
+                                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                      <button
+                                        onClick={() => updateQty(appliance.id, -1)}
+                                        className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 active:scale-90 transition-all"
+                                        aria-label={`Remove one ${appliance.name}`}
+                                      >
+                                        <Minus size={12} weight="bold" />
+                                      </button>
+                                      <span className="w-6 text-center text-sm font-bold text-taqon-orange tabular-nums">
+                                        {qty}
+                                      </span>
+                                      <button
+                                        onClick={() => updateQty(appliance.id, 1)}
+                                        className="w-7 h-7 rounded-lg bg-taqon-orange/10 flex items-center justify-center text-taqon-orange hover:bg-taqon-orange/20 active:scale-90 transition-all"
+                                        aria-label={`Add one more ${appliance.name}`}
+                                      >
+                                        <Plus size={12} weight="bold" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[10px] text-taqon-orange font-medium">Tap to add</span>
+                                  )}
                                 </div>
                               </div>
                             </div>
