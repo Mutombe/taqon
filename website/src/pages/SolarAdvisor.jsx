@@ -1523,22 +1523,35 @@ export default function SolarAdvisor() {
                       </p>
                     </div>
 
-                    {/* Tier cards — single column mobile, 3 columns desktop */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
-                      {['budget', 'good_fit', 'excellent'].map((tierKey) => {
+                    {/* Tier cards — deduplicated, responsive grid */}
+                    {(() => {
+                      const seen = new Set();
+                      const uniqueTiers = ['budget', 'good_fit', 'excellent'].filter((tierKey) => {
                         const tier = recommendation.tiers[tierKey];
-                        if (!tier || !tier.package) return null;
-                        return (
-                          <RecommendationCard
-                            key={tierKey}
-                            tierKey={tierKey}
-                            tier={tier}
-                            isHighlighted={tierKey === 'good_fit'}
-                            distanceKm={distanceKm}
-                          />
-                        );
-                      })}
-                    </div>
+                        if (!tier?.package) return false;
+                        const pkgId = tier.package.id || tier.package.slug;
+                        if (seen.has(pkgId)) return false;
+                        seen.add(pkgId);
+                        return true;
+                      });
+                      return (
+                        <div className={`grid grid-cols-1 gap-4 sm:gap-6 max-w-5xl mx-auto ${
+                          uniqueTiers.length === 1 ? 'md:grid-cols-1 max-w-lg' :
+                          uniqueTiers.length === 2 ? 'md:grid-cols-2 max-w-3xl' :
+                          'md:grid-cols-3'
+                        }`}>
+                          {uniqueTiers.map((tierKey) => (
+                            <RecommendationCard
+                              key={tierKey}
+                              tierKey={tierKey}
+                              tier={recommendation.tiers[tierKey]}
+                              isHighlighted={tierKey === 'good_fit' || uniqueTiers.length === 1}
+                              distanceKm={distanceKm}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {/* Bottom actions */}
                     <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
