@@ -417,6 +417,111 @@ function DesktopSidebar({ totals, hasSelections, selections, appliances, onUpdat
 }
 
 
+/* ─── Casino-style Slot Number ─── */
+
+function SlotNumber({ finalValue, settled, prefix = '', suffix = '' }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (settled) {
+      setDisplay(finalValue);
+      return;
+    }
+    const interval = setInterval(() => {
+      setDisplay(Math.floor(Math.random() * (finalValue * 3 || 20)) + 1);
+    }, 60);
+    return () => clearInterval(interval);
+  }, [settled, finalValue]);
+
+  return (
+    <span className={`tabular-nums transition-colors duration-300 ${settled ? 'text-taqon-charcoal dark:text-white' : 'text-taqon-orange'}`}>
+      {prefix}{typeof finalValue === 'number' ? display.toLocaleString() : display}{suffix}
+    </span>
+  );
+}
+
+function RecommendationSlotCards({ settled }) {
+  const tiers = [
+    { key: 'budget', label: 'Budget', color: 'border-blue-300 dark:border-blue-500/30' },
+    { key: 'good_fit', label: 'Good Fit', color: 'border-taqon-orange ring-2 ring-taqon-orange/20' },
+    { key: 'excellent', label: 'Excellent', color: 'border-emerald-300 dark:border-emerald-500/30' },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto mt-6">
+      {tiers.map(({ key, label, color }, i) => (
+        <motion.div
+          key={key}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
+          className={`relative rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 bg-white dark:bg-taqon-charcoal/50 ${color} ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02]' : ''}`}
+        >
+          {key === 'good_fit' && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-taqon-orange/30 whitespace-nowrap">
+              <Star size={12} weight="fill" /> Recommended
+            </div>
+          )}
+
+          {/* Tier badge */}
+          <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold mb-3 ${
+            key === 'budget' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300' :
+            key === 'good_fit' ? 'bg-taqon-orange/10 text-taqon-orange' :
+            'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+          }`}>
+            {label}
+          </div>
+
+          {/* Package name skeleton */}
+          <div className={`h-6 rounded-lg w-3/4 mb-1 ${settled ? 'bg-transparent' : 'bg-gray-200 dark:bg-white/10 animate-pulse'}`} />
+          <div className={`h-3 rounded w-1/2 mb-4 ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
+
+          {/* Specs with casino numbers */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
+              <p className="text-lg sm:text-xl font-bold font-syne">
+                <SlotNumber finalValue={key === 'budget' ? 3 : key === 'good_fit' ? 5 : 8} settled={settled} />
+              </p>
+              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kVA</p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
+              <p className="text-lg sm:text-xl font-bold font-syne">
+                <SlotNumber finalValue={key === 'budget' ? 5 : key === 'good_fit' ? 10 : 15} settled={settled} suffix="" />
+              </p>
+              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kWh</p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
+              <p className="text-lg sm:text-xl font-bold font-syne">
+                <SlotNumber finalValue={key === 'budget' ? 4 : key === 'good_fit' ? 8 : 12} settled={settled} />
+              </p>
+              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">Panels</p>
+            </div>
+          </div>
+
+          {/* Price with casino effect */}
+          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10">
+            <div className={`h-4 rounded w-1/3 mb-2 ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
+            <p className="text-2xl font-bold font-syne">
+              <SlotNumber
+                finalValue={key === 'budget' ? 1800 : key === 'good_fit' ? 3200 : 5500}
+                settled={settled}
+                prefix="$"
+              />
+            </p>
+          </div>
+
+          {/* CTA skeletons */}
+          <div className="mt-5 space-y-2">
+            <div className={`h-11 rounded-xl ${settled ? 'bg-transparent' : key === 'good_fit' ? 'bg-taqon-orange/20 animate-pulse' : 'bg-gray-200 dark:bg-white/10 animate-pulse'}`} />
+            <div className={`h-11 rounded-xl ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+
 /* ─── Instant Quote Modal ─── */
 
 function QuoteModal({ pkg, tierKey, distanceKm, onClose }) {
@@ -1505,6 +1610,11 @@ export default function SolarAdvisor() {
                   error={recommendError}
                   onComplete={() => setAnalysisComplete(true)}
                 />
+
+                {/* Casino-style slot cards during analysis */}
+                {!analysisComplete && (
+                  <RecommendationSlotCards settled={false} />
+                )}
 
                 {/* Recommendations (appear after analysis completes) */}
                 {analysisComplete && recommendation && (
