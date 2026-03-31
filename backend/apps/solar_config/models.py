@@ -44,15 +44,15 @@ class Appliance(SoftDeleteModel):
     """
 
     CATEGORY_CHOICES = [
-        ('lighting', 'Lighting'),
+        ('lounge', 'Lounge'),
         ('kitchen', 'Kitchen'),
-        ('entertainment', 'Entertainment'),
-        ('cooling', 'Cooling & Heating'),
-        ('laundry', 'Laundry & Cleaning'),
-        ('water', 'Water & Pumps'),
-        ('office', 'Office & Computing'),
+        ('bedroom', 'Bedroom'),
+        ('bathroom', 'Bathroom'),
+        ('laundry', 'Laundry'),
+        ('office', 'Office'),
+        ('garage', 'Garage & Workshop'),
+        ('outdoor', 'Outdoor'),
         ('security', 'Security'),
-        ('outdoor', 'Outdoor & Garden'),
         ('other', 'Other'),
     ]
 

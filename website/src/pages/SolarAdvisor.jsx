@@ -5,7 +5,7 @@ import {
   Lightning, Plus, Minus, ArrowRight, ArrowLeft,
   MapPin, Check, Star, Lightbulb, CookingPot, Television,
   Thermometer, TShirt, Drop, Desktop, ShieldCheck,
-  Tree, DotsThree, MagnifyingGlass, SpinnerGap,
+  Tree, DotsThree, MagnifyingGlass, SpinnerGap, Couch, Bed, Bathtub, Wrench,
   CaretDown, CaretUp, Info, X, CaretLeft, CaretRight,
   Terminal, BatteryCharging, Cpu, CurrencyDollar,
   CheckCircle, GearSix, Funnel, FileText, DownloadSimple,
@@ -22,15 +22,15 @@ const NAVBAR_HEIGHT = 80; // lg:h-20 = 80px
 const SIDEBAR_TOP = NAVBAR_HEIGHT + 24; // 24px breathing room below navbar
 
 const categoryIcons = {
-  lighting: Lightbulb,
+  lounge: Couch,
   kitchen: CookingPot,
-  entertainment: Television,
-  cooling: Thermometer,
+  bedroom: Bed,
+  bathroom: Bathtub,
   laundry: TShirt,
-  water: Drop,
   office: Desktop,
-  security: ShieldCheck,
+  garage: Wrench,
   outdoor: Tree,
+  security: ShieldCheck,
   other: DotsThree,
 };
 
