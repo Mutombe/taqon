@@ -1260,6 +1260,8 @@ export default function SolarAdvisor() {
         distance_km: distanceKm,
       });
       setRecommendation(res.data);
+      // Let slot numbers spin for a moment before settling
+      setTimeout(() => setAnalysisComplete(true), 2500);
     } catch (err) {
       console.error('Recommendation failed:', err);
       setRecommendError(err.response?.data?.detail || err.message || 'Failed to get recommendations');
@@ -1599,18 +1601,6 @@ export default function SolarAdvisor() {
                 ═══════════════════════════════════════════════ */}
             {step === 3 && (
               <motion.div key="step3" {...stepTransition}>
-                {/* Calculation Log */}
-                <CalculationLog
-                  key={recommendRun}
-                  selections={selections}
-                  appliances={appliances}
-                  totals={totals}
-                  distanceKm={distanceKm}
-                  recommendation={recommendation}
-                  error={recommendError}
-                  onComplete={() => setAnalysisComplete(true)}
-                />
-
                 {/* Casino-style slot cards during analysis */}
                 {!analysisComplete && (
                   <RecommendationSlotCards settled={false} />
