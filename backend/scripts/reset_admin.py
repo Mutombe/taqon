@@ -3,14 +3,18 @@ from apps.accounts.models import User
 email = 'admin@taqon.co.zw'
 password = 'TaqonAdmin2026'
 
-try:
-    u = User.objects.get(email=email)
-    u.set_password(password)
-    u.is_verified = True
-    u.save()
-    print('Admin password reset: ' + email)
-except User.DoesNotExist:
-    u = User.objects.create_superuser(email=email, password=password, first_name='Admin', last_name='Taqon')
-    u.is_verified = True
-    u.save()
-    print('Admin created: ' + email)
+# Delete old account and everything attached to it
+User.objects.filter(email=email).delete()
+print('Deleted old admin (if existed)')
+
+# Create fresh
+u = User.objects.create_superuser(
+    email=email,
+    password=password,
+    first_name='Admin',
+    last_name='Taqon',
+)
+u.is_verified = True
+u.role = 'superadmin'
+u.save()
+print('Created fresh admin: ' + email)
