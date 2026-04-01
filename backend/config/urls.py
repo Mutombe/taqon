@@ -61,12 +61,6 @@ def debug_api(request, path=''):
 
 urlpatterns = [
     path('health/', health_check),
-    path('reset-admin/', lambda request: (
-        __import__('apps.accounts.models', fromlist=['User']).User.objects.filter(email='admin@taqon.co.zw').first() and
-        (lambda u: (u.set_password('TaqonAdmin2026'), u.save(), JsonResponse({'status': 'password reset to TaqonAdmin2026'}))[-1])(
-            __import__('apps.accounts.models', fromlist=['User']).User.objects.get(email='admin@taqon.co.zw')
-        ) or JsonResponse({'error': 'admin not found'}, status=404)
-    )),
     path('debug-api/<path:path>', debug_api),
     path('admin/', admin.site.urls),
 
