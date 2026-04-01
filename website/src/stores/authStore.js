@@ -48,8 +48,9 @@ const useAuthStore = create((set, get) => ({
       get().setAuth(user, tokens);
       return response.data;
     } catch (error) {
-      const msg =
-        error.response?.data?.details || error.response?.data?.error || 'Registration failed.';
+      const data = error.response?.data;
+      // Details can be an object with field-level errors
+      const msg = data?.details || data?.error || 'Registration failed. Please try again.';
       set({ error: msg, isLoading: false });
       throw error;
     } finally {
@@ -65,7 +66,12 @@ const useAuthStore = create((set, get) => ({
       get().setAuth(user, tokens);
       return response.data;
     } catch (error) {
-      const msg = error.response?.data?.error || 'Invalid email or password.';
+      const data = error.response?.data;
+      const msg = data?.details?.non_field_errors?.[0]
+        || data?.details?.email?.[0]
+        || data?.details?.password?.[0]
+        || data?.error
+        || 'Something went wrong. Please try again.';
       set({ error: msg, isLoading: false });
       throw error;
     } finally {
