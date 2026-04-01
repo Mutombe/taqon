@@ -19,7 +19,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError('A user with this email already exists.')
+            raise serializers.ValidationError('This email is already registered. Try logging in or use "Forgot password".')
         return value.lower()
 
     def validate_phone_number(self, value):
@@ -51,11 +51,23 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, attrs):
         email = attrs.get('email', '').lower()
         password = attrs.get('password')
+
+        # Check if user exists first for specific error messages
+        try:
+            user_exists = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError('No account found with this email address.')
+
+        if not user_exists.is_active:
+            raise serializers.ValidationError('This account has been deactivated. Please contact support.')
+
+        if not user_exists.is_verified:
+            raise serializers.ValidationError('Please verify your email address. Check your inbox for the verification link.')
+
         user = authenticate(email=email, password=password)
         if not user:
-            raise serializers.ValidationError('Invalid email or password.')
-        if not user.is_active:
-            raise serializers.ValidationError('This account has been deactivated.')
+            raise serializers.ValidationError('Incorrect password. Please try again or use "Forgot password" to reset it.')
+
         attrs['user'] = user
         return attrs
 
