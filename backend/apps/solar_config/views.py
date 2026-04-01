@@ -77,14 +77,18 @@ class ApplianceCategoriesView(APIView):
     """Return available appliance categories with counts."""
     permission_classes = [AllowAny]
 
+    # Customer-facing category order (how sales reps ask questions)
+    CATEGORY_ORDER = ['lounge', 'kitchen', 'bedroom', 'bathroom', 'laundry', 'office', 'garage', 'outdoor', 'security', 'other']
+
     def get(self, request):
         categories = (
             Appliance.objects
             .filter(is_active=True, is_deleted=False)
             .values('category')
             .annotate(count=Count('id'))
-            .order_by('category')
         )
+        order_map = {v: i for i, v in enumerate(self.CATEGORY_ORDER)}
+        categories = sorted(categories, key=lambda c: order_map.get(c['category'], 99))
         result = [
             {
                 'value': c['category'],
