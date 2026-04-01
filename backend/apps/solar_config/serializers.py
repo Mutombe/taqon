@@ -56,12 +56,27 @@ class ApplianceSelectionSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value=1, default=1)
 
 
+class UserPreferencesSerializer(serializers.Serializer):
+    """User preferences for recommendation tuning."""
+    priority = serializers.ChoiceField(
+        choices=['lowest_cost', 'balanced', 'max_comfort'],
+        default='balanced', required=False,
+    )
+    willing_to_manage = serializers.BooleanField(default=False, required=False)
+    use_style = serializers.ChoiceField(
+        choices=['backup', 'backup_solar', 'independence'],
+        default='backup_solar', required=False,
+    )
+    wants_smart = serializers.BooleanField(default=False, required=False)
+
+
 class RecommendRequestSerializer(serializers.Serializer):
     """Request body for the recommendation endpoint."""
     appliances = ApplianceSelectionSerializer(many=True)
     distance_km = serializers.DecimalField(
         max_digits=8, decimal_places=1, required=False, default=10,
     )
+    preferences = UserPreferencesSerializer(required=False)
 
 
 class PriceBreakdownSerializer(serializers.Serializer):

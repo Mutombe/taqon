@@ -1172,6 +1172,12 @@ export default function SolarAdvisor() {
   const [search, setSearch] = useState('');
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [recommendRun, setRecommendRun] = useState(0);
+  const [preferences, setPreferences] = useState({
+    priority: 'balanced',
+    willing_to_manage: false,
+    use_style: 'backup_solar',
+    wants_smart: false,
+  });
 
   // Scroll to top on step change
   useEffect(() => {
@@ -1248,7 +1254,7 @@ export default function SolarAdvisor() {
     setRecommendation(null);
     setRecommendError(null);
     setRecommendRun((prev) => prev + 1);
-    setStep(3);
+    setStep(4);
 
     try {
       const applianceList = Object.entries(selections)
@@ -1258,6 +1264,7 @@ export default function SolarAdvisor() {
       const res = await solarConfigApi.getRecommendation({
         appliances: applianceList,
         distance_km: distanceKm,
+        preferences,
       });
       setRecommendation(res.data);
       // Let slot numbers spin for a moment before settling
@@ -1300,13 +1307,13 @@ export default function SolarAdvisor() {
             {[
               { num: 1, label: 'Appliances' },
               { num: 2, label: 'Location' },
-              { num: 3, label: 'Results' },
+              { num: 3, label: 'Preferences' },
+              { num: 4, label: 'Results' },
             ].map(({ num, label }) => (
               <div key={num} className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   onClick={() => {
-                    // Allow navigating back to completed steps
-                    if (num < step) { setStep(num); if (num < 3) setAnalysisComplete(false); }
+                    if (num < step) { setStep(num); if (num < 4) setAnalysisComplete(false); }
                   }}
                   disabled={num > step}
                   className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all ${
@@ -1323,7 +1330,7 @@ export default function SolarAdvisor() {
                 }`}>
                   {label}
                 </span>
-                {num < 3 && (
+                {num < 4 && (
                   <div className={`w-6 sm:w-8 h-0.5 rounded-full transition-colors ${
                     step > num ? 'bg-taqon-orange' : 'bg-white/10'
                   }`} />
@@ -1582,10 +1589,10 @@ export default function SolarAdvisor() {
                       <ArrowLeft size={14} /> Back
                     </button>
                     <button
-                      onClick={handleRecommend}
+                      onClick={() => setStep(3)}
                       className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
                     >
-                      Get Recommendations
+                      Continue
                       <ArrowRight size={14} weight="bold" />
                     </button>
                   </div>
@@ -1594,10 +1601,104 @@ export default function SolarAdvisor() {
             )}
 
             {/* ═══════════════════════════════════════════════
-                Step 3: Analysis + Recommendations
+                Step 3: Preferences
                 ═══════════════════════════════════════════════ */}
             {step === 3 && (
-              <motion.div key="step3" {...stepTransition}>
+              <motion.div key="step3" {...stepTransition} className="max-w-2xl mx-auto">
+                <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm space-y-6">
+                  <h2 className="text-xl sm:text-2xl font-bold font-syne text-taqon-charcoal dark:text-white">
+                    Your Preferences
+                  </h2>
+
+                  {/* Q1: Priority */}
+                  <div>
+                    <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">What matters most to you?</label>
+                    <div className="grid sm:grid-cols-3 gap-2">
+                      {[
+                        { value: 'lowest_cost', label: 'Lowest Cost', desc: 'Most affordable workable system' },
+                        { value: 'balanced', label: 'Best Balance', desc: 'Cost and performance balanced' },
+                        { value: 'max_comfort', label: 'Max Comfort', desc: 'Maximum performance and comfort' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setPreferences(p => ({ ...p, priority: opt.value }))}
+                          className={`p-4 rounded-xl border-2 text-left transition-all ${preferences.priority === opt.value ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10' : 'border-gray-200 dark:border-white/10 hover:border-taqon-orange/30'}`}
+                        >
+                          <p className={`font-semibold text-sm ${preferences.priority === opt.value ? 'text-taqon-orange' : 'text-taqon-charcoal dark:text-white'}`}>{opt.label}</p>
+                          <p className="text-xs text-taqon-muted dark:text-white/40 mt-1">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Q2: Load management */}
+                  <div>
+                    <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">
+                      Are you comfortable switching off heavy appliances when battery is low?
+                    </label>
+                    <div className="flex gap-3">
+                      {[{ value: true, label: 'Yes, I can manage that' }, { value: false, label: 'No, I want full convenience' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          onClick={() => setPreferences(p => ({ ...p, willing_to_manage: opt.value }))}
+                          className={`flex-1 p-3 rounded-xl border-2 text-sm font-medium transition-all ${preferences.willing_to_manage === opt.value ? 'border-taqon-orange bg-taqon-orange/5 text-taqon-orange' : 'border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white hover:border-taqon-orange/30'}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Q3: Use style */}
+                  <div>
+                    <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">How do you want the system to work?</label>
+                    <div className="space-y-2">
+                      {[
+                        { value: 'backup', label: 'Mainly for backup', desc: 'Keep the lights on during outages' },
+                        { value: 'backup_solar', label: 'Backup + solar savings', desc: 'Backup power plus daytime solar to reduce bills' },
+                        { value: 'independence', label: 'Maximum solar independence', desc: 'As little grid dependency as possible' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setPreferences(p => ({ ...p, use_style: opt.value }))}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${preferences.use_style === opt.value ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10' : 'border-gray-200 dark:border-white/10 hover:border-taqon-orange/30'}`}
+                        >
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${preferences.use_style === opt.value ? 'border-taqon-orange' : 'border-gray-300 dark:border-white/20'}`}>
+                            {preferences.use_style === opt.value && <div className="w-2 h-2 rounded-full bg-taqon-orange" />}
+                          </div>
+                          <div>
+                            <p className={`font-semibold text-sm ${preferences.use_style === opt.value ? 'text-taqon-orange' : 'text-taqon-charcoal dark:text-white'}`}>{opt.label}</p>
+                            <p className="text-xs text-taqon-muted dark:text-white/40">{opt.desc}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
+                    <button
+                      onClick={() => setStep(2)}
+                      className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
+                    >
+                      <ArrowLeft size={14} /> Back
+                    </button>
+                    <button
+                      onClick={handleRecommend}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
+                    >
+                      Get Recommendations <ArrowRight size={14} weight="bold" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ═══════════════════════════════════════════════
+                Step 4: Analysis + Recommendations
+                ═══════════════════════════════════════════════ */}
+            {step === 4 && (
+              <motion.div key="step4" {...stepTransition}>
                 {/* Casino-style slot cards during analysis */}
                 {!analysisComplete && (
                   <RecommendationSlotCards settled={false} />
@@ -1620,22 +1721,24 @@ export default function SolarAdvisor() {
                       </p>
                     </div>
 
-                    {/* Tier cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
-                      {['budget', 'good_fit', 'excellent'].map((tierKey) => {
-                        const tier = recommendation.tiers[tierKey];
-                        if (!tier || !tier.package) return null;
-                        return (
-                          <RecommendationCard
-                            key={tierKey}
-                            tierKey={tierKey}
-                            tier={tier}
-                            isHighlighted={tierKey === 'good_fit'}
-                            distanceKm={distanceKm}
-                          />
-                        );
-                      })}
-                    </div>
+                    {/* Tier cards — dynamic grid based on result count */}
+                    {(() => {
+                      const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
+                      const cols = tierEntries.length === 1 ? 'max-w-lg mx-auto' : tierEntries.length === 2 ? 'grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto' : 'grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto';
+                      return (
+                        <div className={cols}>
+                          {tierEntries.map((tierKey) => (
+                            <RecommendationCard
+                              key={tierKey}
+                              tierKey={tierKey}
+                              tier={recommendation.tiers[tierKey]}
+                              isHighlighted={tierKey === 'good_fit' || tierEntries.length === 1}
+                              distanceKm={distanceKm}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {/* Bottom actions */}
                     <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">

@@ -179,9 +179,16 @@ class RecommendView(APIView):
             appliance = appliances_map[str(item['appliance_id'])]
             selections.append((appliance, item['quantity']))
 
+        # Extract preferences
+        preferences = data.get('preferences', {})
+        if preferences and hasattr(preferences, 'items'):
+            preferences = dict(preferences)
+        else:
+            preferences = {}
+
         # Run recommendation engine
         from .engine.recommender import recommend_packages
-        result = recommend_packages(selections, distance_km=distance_km)
+        result = recommend_packages(selections, distance_km=distance_km, preferences=preferences)
 
         # Serialize response
         response_data = {
@@ -195,13 +202,16 @@ class RecommendView(APIView):
             pkg = tier_data['package']
             response_data['tiers'][tier_name] = {
                 'package': SolarPackageListSerializer(pkg).data if pkg else None,
-                'inverter_kva': str(tier_data['inverter_kva']),
-                'battery_kwh': str(tier_data['battery_kwh']),
-                'adjusted_pp': str(tier_data['adjusted_pp']),
-                'adjusted_ep': str(tier_data['adjusted_ep']),
+                'score': tier_data.get('score', 0),
+                'pp_fit': tier_data.get('pp_fit', 0),
+                'ep_fit': tier_data.get('ep_fit', 0),
+                'inverter_kva': str(tier_data.get('inverter_kva', '')),
+                'battery_kwh': str(tier_data.get('battery_kwh', '')),
+                'adjusted_pp': str(tier_data.get('adjusted_pp', 0)),
+                'adjusted_ep': str(tier_data.get('adjusted_ep', 0)),
                 'price_breakdown': {
                     k: str(v) for k, v in tier_data['price_breakdown'].items()
-                } if tier_data['price_breakdown'] else None,
+                } if tier_data.get('price_breakdown') else None,
             }
 
         return Response(response_data)

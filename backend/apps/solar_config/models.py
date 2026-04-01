@@ -224,6 +224,29 @@ class SolarPackageTemplate(SoftDeleteModel):
         help_text='e.g., ["residential", "small_business"]',
     )
 
+    # Capability bands (for recommendation engine v2)
+    variant_code = models.CharField(max_length=10, blank=True, db_index=True, help_text='e.g. HE-1, HL-1')
+    pp_min = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text='Minimum PP this package serves')
+    pp_max = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text='Maximum PP this package serves')
+    ep_min = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text='Minimum EP this package serves')
+    ep_max = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text='Maximum EP this package serves')
+    smart_load_supported = models.BooleanField(default=False, help_text='Inverter supports smart load scheduling')
+    inverter_brand = models.CharField(max_length=50, blank=True, help_text='must, growatt, sunsynk')
+
+    RECHARGE_CHOICES = [
+        ('basic', 'Basic'), ('moderate', 'Moderate'), ('balanced', 'Balanced'),
+        ('strong', 'Strong'), ('premium', 'Premium'),
+    ]
+    COMFORT_CHOICES = [
+        ('budget', 'Budget'), ('balanced', 'Balanced'), ('premium', 'Premium'),
+    ]
+    MGMT_CHOICES = [
+        ('high', 'High'), ('medium', 'Medium'), ('low', 'Low'),
+    ]
+    recharge_class = models.CharField(max_length=20, choices=RECHARGE_CHOICES, default='moderate')
+    comfort_class = models.CharField(max_length=20, choices=COMFORT_CHOICES, default='balanced')
+    management_tolerance = models.CharField(max_length=20, choices=MGMT_CHOICES, default='medium')
+
     is_active = models.BooleanField(default=True, db_index=True)
     is_popular = models.BooleanField(default=False)
     sort_order = models.PositiveIntegerField(default=0)
