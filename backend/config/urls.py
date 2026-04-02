@@ -12,42 +12,40 @@ import traceback
 
 
 def _debug_login(request):
-    """Debug: test admin login and show exactly what fails."""
+    """Debug + fix: reset admin password and test."""
     from apps.accounts.models import User
-    from django.contrib.auth import authenticate
+    from django.contrib.auth.hashers import make_password
 
     email = 'admin@taqon.co.zw'
     password = 'TaqonAdmin2026'
     checks = {}
 
-    # 1. Does user exist?
     try:
         u = User.objects.get(email=email)
-        checks['user_exists'] = True
-        checks['user_id'] = str(u.id)
-        checks['role'] = u.role
-        checks['is_active'] = u.is_active
-        checks['is_verified'] = u.is_verified
-        checks['is_staff'] = u.is_staff
-        checks['is_superuser'] = u.is_superuser
-        checks['has_usable_password'] = u.has_usable_password()
-        checks['password_check'] = u.check_password(password)
+        checks['old_id'] = str(u.id)
+        checks['old_password_algo'] = u.password[:20] + '...'
+
+        # Force reset password right now
+        u.password = make_password(password)
+        u.is_verified = True
+        u.is_active = True
+        u.save(update_fields=['password', 'is_verified', 'is_active'])
+
+        # Reload from DB
+        u.refresh_from_db()
+        checks['new_password_algo'] = u.password[:20] + '...'
+        checks['check_password_after_reset'] = u.check_password(password)
+
     except User.DoesNotExist:
-        checks['user_exists'] = False
-        return JsonResponse(checks)
-
-    # 2. Does authenticate() work?
-    auth_user = authenticate(email=email, password=password)
-    checks['authenticate_result'] = str(auth_user) if auth_user else 'None'
-
-    # 3. Try authenticate with username field
-    auth_user2 = authenticate(username=email, password=password)
-    checks['authenticate_username_result'] = str(auth_user2) if auth_user2 else 'None'
-
-    # 4. Check AUTH_USER_MODEL and backends
-    checks['auth_user_model'] = str(settings.AUTH_USER_MODEL)
-    checks['auth_backends'] = str(settings.AUTHENTICATION_BACKENDS) if hasattr(settings, 'AUTHENTICATION_BACKENDS') else 'default'
-    checks['username_field'] = User.USERNAME_FIELD
+        u = User(
+            email=email, first_name='Admin', last_name='Taqon',
+            role='superadmin', is_staff=True, is_superuser=True,
+            is_active=True, is_verified=True,
+        )
+        u.password = make_password(password)
+        u.save()
+        checks['created'] = True
+        checks['check_password'] = u.check_password(password)
 
     return JsonResponse(checks)
 
