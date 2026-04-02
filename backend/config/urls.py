@@ -11,6 +11,47 @@ from drf_spectacular.views import (
 import traceback
 
 
+def _debug_login(request):
+    """Debug: test admin login and show exactly what fails."""
+    from apps.accounts.models import User
+    from django.contrib.auth import authenticate
+
+    email = 'admin@taqon.co.zw'
+    password = 'TaqonAdmin2026'
+    checks = {}
+
+    # 1. Does user exist?
+    try:
+        u = User.objects.get(email=email)
+        checks['user_exists'] = True
+        checks['user_id'] = str(u.id)
+        checks['role'] = u.role
+        checks['is_active'] = u.is_active
+        checks['is_verified'] = u.is_verified
+        checks['is_staff'] = u.is_staff
+        checks['is_superuser'] = u.is_superuser
+        checks['has_usable_password'] = u.has_usable_password()
+        checks['password_check'] = u.check_password(password)
+    except User.DoesNotExist:
+        checks['user_exists'] = False
+        return JsonResponse(checks)
+
+    # 2. Does authenticate() work?
+    auth_user = authenticate(email=email, password=password)
+    checks['authenticate_result'] = str(auth_user) if auth_user else 'None'
+
+    # 3. Try authenticate with username field
+    auth_user2 = authenticate(username=email, password=password)
+    checks['authenticate_username_result'] = str(auth_user2) if auth_user2 else 'None'
+
+    # 4. Check AUTH_USER_MODEL and backends
+    checks['auth_user_model'] = str(settings.AUTH_USER_MODEL)
+    checks['auth_backends'] = str(settings.AUTHENTICATION_BACKENDS) if hasattr(settings, 'AUTHENTICATION_BACKENDS') else 'default'
+    checks['username_field'] = User.USERNAME_FIELD
+
+    return JsonResponse(checks)
+
+
 def health_check(request):
     """Debug endpoint to check DB, storage, and settings."""
     checks = {}
@@ -61,6 +102,7 @@ def debug_api(request, path=''):
 
 urlpatterns = [
     path('health/', health_check),
+    path('debug-login/', lambda request: _debug_login(request)),
     path('debug-api/<path:path>', debug_api),
     path('admin/', admin.site.urls),
 
