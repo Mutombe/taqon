@@ -1,20 +1,28 @@
 from apps.accounts.models import User
+from django.contrib.auth.hashers import make_password
 
 email = 'admin@taqon.co.zw'
 password = 'TaqonAdmin2026'
 
-# Delete old account and everything attached to it
-User.objects.filter(email=email).delete()
-print('Deleted old admin (if existed)')
+# Delete old
+deleted = User.objects.filter(email=email).delete()
+print('Deleted: ' + str(deleted))
 
-# Create fresh
-u = User.objects.create_superuser(
+# Create fresh with explicit password hash
+u = User(
     email=email,
-    password=password,
     first_name='Admin',
     last_name='Taqon',
+    role='superadmin',
+    is_staff=True,
+    is_superuser=True,
+    is_active=True,
+    is_verified=True,
 )
-u.is_verified = True
-u.role = 'superadmin'
+u.password = make_password(password)
 u.save()
-print('Created fresh admin: ' + email)
+
+# Verify it works
+assert u.check_password(password), 'PASSWORD CHECK FAILED!'
+print('Created admin: ' + email)
+print('Password check: ' + str(u.check_password(password)))
