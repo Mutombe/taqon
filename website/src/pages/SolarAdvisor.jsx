@@ -443,11 +443,11 @@ function RecommendationSlotCards({ settled }) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
-          className={`relative rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 bg-white dark:bg-taqon-charcoal/50 ${color} ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02] mt-4' : ''}`}
+          className={`relative rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 bg-white dark:bg-taqon-charcoal/50 ${color} ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02] pt-10 sm:pt-10' : ''}`}
         >
           {key === 'good_fit' && (
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-xs font-bold px-5 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-taqon-orange/30 whitespace-nowrap z-10">
-              <Star size={12} weight="fill" /> Recommended
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-sm font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-taqon-orange/30 whitespace-nowrap z-10">
+              <Star size={14} weight="fill" /> Recommended
             </div>
           )}
 
@@ -457,7 +457,7 @@ function RecommendationSlotCards({ settled }) {
             key === 'good_fit' ? 'bg-taqon-orange/10 text-taqon-orange' :
             'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
           }`}>
-            {label}
+            {key === 'good_fit' ? 'Best Fit' : label}
           </div>
 
           {/* Package name skeleton */}
