@@ -52,7 +52,7 @@ export default function GemFamilySection({
                   className="inline-block w-2 h-2 rounded-full"
                   style={{ backgroundColor: gem.accent }}
                 />
-                {gem.gem} Collection
+                {family.name}
               </span>
 
               {/* Family name */}

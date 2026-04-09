@@ -171,7 +171,7 @@ export default function Packages() {
                           {/* Gem badge */}
                           <span className={`gem-badge self-start mb-3 ${gem.badgeBg} ${gem.badgeText}`}>
                             <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: gem.accent }} />
-                            {gem.gem}
+                            {pkg.name}
                           </span>
 
                           <div className="flex items-center gap-2 mb-3">

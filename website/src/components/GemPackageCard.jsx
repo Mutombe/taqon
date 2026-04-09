@@ -24,6 +24,7 @@ export default function GemPackageCard({
   pkg,
   familySlug,
   familyKva,
+  familyName = '',
   index = 0,
   linkPrefix = '/packages',
 }) {
@@ -78,7 +79,7 @@ export default function GemPackageCard({
                   className="inline-block w-2 h-2 rounded-full"
                   style={{ backgroundColor: gem.accent }}
                 />
-                {gem.gem}
+                {familyName}
               </span>
 
               {isPopular && (

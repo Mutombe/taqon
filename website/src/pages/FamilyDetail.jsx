@@ -74,7 +74,7 @@ export default function FamilyDetail() {
                 className="inline-block w-2 h-2 rounded-full"
                 style={{ backgroundColor: gem.accent }}
               />
-              {gem.gem} Collection
+              {family.name}
             </span>
 
             <div className="flex items-center gap-3 mb-3">
