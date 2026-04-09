@@ -1266,7 +1266,7 @@ export default function SolarAdvisor() {
       const a = appliances.find((app) => app.id === id);
       if (!a) continue;
       pp += parseFloat(a.power_points) * qty * parseFloat(a.concurrency_factor);
-      ep += parseFloat(a.energy_points) * qty * (1 + parseFloat(a.night_use_factor));
+      ep += parseFloat(a.energy_points) * qty * parseFloat(a.night_use_factor);
       count += qty;
     }
     return { pp: pp.toFixed(1), ep: ep.toFixed(1), count };
