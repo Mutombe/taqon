@@ -51,7 +51,7 @@ const stepTransition = {
 };
 
 
-/* ─── Horizontally scrollable category tabs with edge-fade indicators ─── */
+/* ─── Category Tabs with arrow scroll buttons ─── */
 
 function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
   const scrollRef = useRef(null);
@@ -78,32 +78,28 @@ function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
 
   const scroll = (dir) => {
     const el = scrollRef.current;
-    if (el) el.scrollBy({ left: dir * 180, behavior: 'smooth' });
+    if (el) el.scrollBy({ left: dir * 200, behavior: 'smooth' });
   };
 
   return (
     <div className="relative mb-4 sm:mb-6">
-      {/* Left fade + arrow */}
-      {canScrollLeft && (
-        <div className="absolute left-0 top-0 bottom-2 w-10 z-10 bg-gradient-to-r from-taqon-cream dark:from-taqon-dark to-transparent pointer-events-none lg:hidden" />
-      )}
+      {/* Left arrow — always visible when scrollable */}
       {canScrollLeft && (
         <button
           onClick={() => scroll(-1)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white dark:bg-taqon-charcoal shadow-md border border-gray-200 dark:border-white/10 flex items-center justify-center text-taqon-muted hover:text-taqon-orange transition-colors lg:hidden"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-taqon-charcoal shadow-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:text-taqon-orange hover:border-taqon-orange/30 transition-all"
           aria-label="Scroll categories left"
         >
-          <CaretLeft size={14} weight="bold" />
+          <CaretLeft size={16} weight="bold" />
         </button>
       )}
 
       {/* Scrollable row */}
       <div
         ref={scrollRef}
-        className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+        className="flex gap-1.5 sm:gap-2 overflow-x-auto px-10"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <style>{`.solar-tabs::-webkit-scrollbar { display: none; }`}</style>
         {categories.map((cat) => {
           const Icon = categoryIcons[cat.value] || DotsThree;
           const isActive = activeCategory === cat.value;
@@ -111,7 +107,7 @@ function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
             <button
               key={cat.value}
               onClick={() => { onSelect(cat.value); onClearSearch(); }}
-              className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all shrink-0 min-h-[44px] ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all shrink-0 min-h-[44px] ${
                 isActive
                   ? 'bg-taqon-orange text-white shadow-lg shadow-taqon-orange/25'
                   : 'bg-white dark:bg-taqon-charcoal text-taqon-muted dark:text-white/50 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10'
@@ -119,25 +115,20 @@ function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
             >
               <Icon size={16} />
               {cat.label}
-              <span className={`text-[10px] ml-0.5 ${isActive ? 'text-white/70' : 'opacity-50'}`}>
-                {cat.count}
-              </span>
+              <span className={`text-[10px] ml-0.5 ${isActive ? 'text-white/70' : 'opacity-50'}`}>{cat.count}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Right fade + arrow */}
-      {canScrollRight && (
-        <div className="absolute right-0 top-0 bottom-2 w-10 z-10 bg-gradient-to-l from-taqon-cream dark:from-taqon-dark to-transparent pointer-events-none lg:hidden" />
-      )}
+      {/* Right arrow — always visible when scrollable */}
       {canScrollRight && (
         <button
           onClick={() => scroll(1)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white dark:bg-taqon-charcoal shadow-md border border-gray-200 dark:border-white/10 flex items-center justify-center text-taqon-muted hover:text-taqon-orange transition-colors lg:hidden"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-taqon-charcoal shadow-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:text-taqon-orange hover:border-taqon-orange/30 transition-all"
           aria-label="Scroll categories right"
         >
-          <CaretRight size={14} weight="bold" />
+          <CaretRight size={16} weight="bold" />
         </button>
       )}
     </div>

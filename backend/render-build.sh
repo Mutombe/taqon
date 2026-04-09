@@ -16,4 +16,5 @@ pip install -r requirements/prod.txt
 python manage.py collectstatic --noinput
 python manage.py migrate
 python manage.py seed_capability_bands
+python manage.py sync_appliances_to_spec
 python manage.py shell < scripts/reset_admin.py
