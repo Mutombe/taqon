@@ -409,6 +409,187 @@ body {
   font-weight: 500;
 }
 
+/* ============================================
+   Gem Card System — Premium Package Cards
+   ============================================ */
+
+/* Shimmer sweep animation — diagonal light pass across card */
+@keyframes gem-shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(25deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(25deg); }
+}
+
+/* Slow, subtle color pulse for the border glow */
+@keyframes gem-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Facet sparkle — tiny dot that appears and fades */
+@keyframes gem-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* Card base — shared across all gem cards */
+.gem-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gem-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gem-card:hover::before {
+  opacity: 1;
+}
+
+/* Shimmer overlay — the diagonal light sweep on hover */
+.gem-shimmer {
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    25deg,
+    transparent 0%,
+    transparent 35%,
+    var(--gem-shimmer, rgba(255,255,255,0.08)) 45%,
+    var(--gem-shimmer, rgba(255,255,255,0.12)) 50%,
+    var(--gem-shimmer, rgba(255,255,255,0.08)) 55%,
+    transparent 65%,
+    transparent 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.gem-card:hover .gem-shimmer {
+  opacity: 1;
+  animation: gem-shimmer 1.8s ease-in-out;
+}
+
+/* Glow ring — outer shadow that pulses on hover */
+.gem-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gem-card:hover .gem-glow {
+  opacity: 1;
+  animation: gem-pulse 3s ease-in-out infinite;
+}
+
+/* Inner gradient backdrop for the card header area */
+.gem-header-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.4s ease;
+}
+
+.gem-card:hover .gem-header-gradient {
+  opacity: 1;
+}
+
+/* Gem badge — the stone category label */
+.gem-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Spec stat boxes inside the card */
+.gem-spec {
+  padding: 10px 8px;
+  border-radius: 12px;
+  text-align: center;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.gem-card:hover .gem-spec {
+  transform: translateY(-1px);
+}
+
+/* Family section header card on the Packages page */
+.gem-family-header {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  transition: box-shadow 0.4s ease;
+}
+
+.gem-family-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.15;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.gem-family-header:hover::after {
+  opacity: 0.3;
+}
+
+/* Recommendation card — elevated version of gem-card */
+.gem-rec-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gem-rec-card.gem-rec-highlighted {
+  box-shadow:
+    0 0 0 1px var(--gem-border, rgba(242,101,34,0.3)),
+    0 8px 32px -4px var(--gem-glow, rgba(242,101,34,0.15)),
+    0 4px 16px -2px rgba(0,0,0,0.1);
+}
+
+.gem-rec-card:hover {
+  transform: translateY(-4px);
+}
+
+.gem-rec-card.gem-rec-highlighted:hover {
+  box-shadow:
+    0 0 0 1px var(--gem-border, rgba(242,101,34,0.4)),
+    0 12px 40px -4px var(--gem-glow, rgba(242,101,34,0.25)),
+    0 8px 24px -4px rgba(0,0,0,0.15);
+}
+
 /* Smooth page transitions */
 .page-transition-enter {
   opacity: 0;

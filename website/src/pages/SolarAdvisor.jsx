@@ -34,16 +34,13 @@ const categoryIcons = {
   other: DotsThree,
 };
 
-const tierLabels = { budget: 'Budget', good_fit: 'Good Fit', excellent: 'Excellent' };
-const tierColors = {
-  budget: 'border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/5',
-  good_fit: 'border-taqon-orange ring-2 ring-taqon-orange/20 bg-taqon-orange/5 dark:bg-taqon-orange/10',
-  excellent: 'border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/5',
-};
+import { getGemFamily, TIER_GEMS } from '../data/gemFamilies';
+
+const tierLabels = { budget: 'Budget', good_fit: 'Recommended', excellent: 'Excellent' };
 const tierBadgeColors = {
-  budget: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
+  budget: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
   good_fit: 'bg-taqon-orange/10 text-taqon-orange',
-  excellent: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+  excellent: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
 };
 
 const stepTransition = {
@@ -674,154 +671,203 @@ function QuoteModal({ pkg, tierKey, distanceKm, onClose }) {
 }
 
 
-/* ─── Recommendation Card (Step 3) ─── */
+/* ─── Recommendation Card (Step 3) — Gem-styled ─── */
 
 function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const pkg = tier.package;
+  const tierGem = TIER_GEMS[tierKey];
+  const familyGem = getGemFamily(pkg.family_slug || pkg.slug);
 
   return (
     <AnimatedSection delay={tierKey === 'budget' ? 0 : tierKey === 'good_fit' ? 0.1 : 0.2}>
       <div
-        className={`relative rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 transition-all h-full flex flex-col ${tierColors[tierKey]} ${
-          isHighlighted ? 'shadow-xl md:scale-[1.02]' : ''
+        className={`gem-rec-card relative rounded-2xl sm:rounded-3xl border-2 h-full flex flex-col bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm ${tierGem.borderColor} ${
+          isHighlighted ? 'gem-rec-highlighted' : ''
         }`}
+        style={{
+          '--gem-border': tierGem.glowColor,
+          '--gem-glow': tierGem.glowColorSubtle,
+          '--gem-shimmer': tierGem.shimmerColor,
+        }}
       >
+        {/* Background gradient */}
+        <div className={`absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br ${tierGem.gradient} pointer-events-none`} />
+
+        {/* Shimmer overlay */}
+        <div className="gem-shimmer" />
+
+        {/* Highlighted badge */}
         {isHighlighted && (
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-taqon-orange/30 whitespace-nowrap">
-            <Star size={12} weight="fill" /> Recommended
+          <div
+            className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-lg whitespace-nowrap"
+            style={{
+              backgroundColor: tierGem.accent,
+              boxShadow: `0 4px 14px -2px ${tierGem.glowColor}`,
+            }}
+          >
+            <Star size={12} weight="fill" /> {tierGem.label}
           </div>
         )}
 
-        {/* Tier badge + package name */}
-        <div>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold mb-3 ${tierBadgeColors[tierKey]}`}>
-            {tierLabels[tierKey]}
-          </span>
-          <h3 className="text-lg sm:text-xl font-bold font-syne text-taqon-charcoal dark:text-white">
+        <div className="relative z-10 p-5 sm:p-6 flex flex-col flex-1">
+          {/* Tier + Gem badges */}
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            <span className={`gem-badge ${tierGem.badgeBg} ${tierGem.badgeText}`}>
+              <span
+                className="inline-block w-2 h-2 rounded-full"
+                style={{ backgroundColor: tierGem.accent }}
+              />
+              {tierGem.label}
+            </span>
+            <span className={`gem-badge ${familyGem.badgeBg} ${familyGem.badgeText}`}>
+              {familyGem.gem}
+            </span>
+          </div>
+
+          {/* Package name */}
+          <h3 className="text-lg sm:text-xl font-bold font-syne text-taqon-charcoal dark:text-white leading-tight">
             {pkg.family_name || pkg.name}
           </h3>
           {pkg.variant_name && (
             <p className="text-xs text-taqon-muted dark:text-white/40 mt-0.5">{pkg.variant_name}</p>
           )}
-        </div>
 
-        {/* Specs grid */}
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="p-2.5 rounded-xl bg-white/60 dark:bg-white/5 text-center">
-            <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
-              {pkg.inverter_kva || tier.inverter_kva}
-            </p>
-            <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kVA</p>
-          </div>
-          <div className="p-2.5 rounded-xl bg-white/60 dark:bg-white/5 text-center">
-            <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
-              {pkg.battery_capacity_kwh || tier.battery_kwh}
-            </p>
-            <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kWh</p>
-          </div>
-          {pkg.panel_count > 0 && (
-            <div className="p-2.5 rounded-xl bg-white/60 dark:bg-white/5 text-center">
+          {/* Specs grid */}
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className={`gem-spec ${tierGem.specBg}`}>
               <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
-                {pkg.panel_count}
+                {pkg.inverter_kva || tier.inverter_kva}
               </p>
-              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">Panels</p>
+              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kVA</p>
+            </div>
+            <div className={`gem-spec ${tierGem.specBg}`}>
+              <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
+                {pkg.battery_capacity_kwh || tier.battery_kwh}
+              </p>
+              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kWh</p>
+            </div>
+            {pkg.panel_count > 0 && (
+              <div className={`gem-spec ${tierGem.specBg}`}>
+                <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
+                  {pkg.panel_count}
+                </p>
+                <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">Panels</p>
+              </div>
+            )}
+          </div>
+
+          {/* Price breakdown */}
+          {tier.price_breakdown && (
+            <div className="mt-4 flex-1">
+              {/* Mobile: collapsible */}
+              <div className="md:hidden">
+                <button
+                  onClick={() => setShowBreakdown(!showBreakdown)}
+                  className="w-full flex items-center justify-between py-2.5 min-h-[44px]"
+                >
+                  <span
+                    className="text-2xl font-bold tabular-nums font-syne"
+                    style={{ color: tierGem.accent }}
+                  >
+                    ${parseFloat(tier.price_breakdown.total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                  <span className="flex items-center gap-1 text-xs text-taqon-muted dark:text-white/40 font-medium">
+                    {showBreakdown ? 'Hide' : 'Show'} breakdown
+                    {showBreakdown
+                      ? <CaretUp size={12} weight="bold" />
+                      : <CaretDown size={12} weight="bold" />
+                    }
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {showBreakdown && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-2 pb-2">
+                        <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                          <span>Materials</span>
+                          <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                          <span>Labour (8%)</span>
+                          <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                          <span>Transport ({distanceKm}km)</span>
+                          <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Desktop: always visible */}
+              <div className="hidden md:block space-y-2">
+                <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                  <span>Materials</span>
+                  <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                  <span>Labour (8%)</span>
+                  <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                  <span>Transport ({distanceKm}km)</span>
+                  <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
+                </div>
+                <div
+                  className="pt-2.5 mt-2.5 flex justify-between items-baseline"
+                  style={{ borderTop: `1px solid color-mix(in srgb, ${tierGem.accent} 20%, transparent)` }}
+                >
+                  <span className="font-semibold text-sm text-taqon-charcoal dark:text-white">Total</span>
+                  <span
+                    className="text-2xl font-bold tabular-nums font-syne"
+                    style={{ color: tierGem.accent }}
+                  >
+                    ${parseFloat(tier.price_breakdown.total).toLocaleString()}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Price breakdown — always visible on all devices */}
-        {tier.price_breakdown && (
-          <div className="mt-4 flex-1">
-            {/* Mobile: collapsible breakdown */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setShowBreakdown(!showBreakdown)}
-                className="w-full flex items-center justify-between py-2.5 min-h-[44px]"
-              >
-                <span className="text-2xl font-bold text-taqon-orange tabular-nums">
-                  ${parseFloat(tier.price_breakdown.total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </span>
-                <span className="flex items-center gap-1 text-xs text-taqon-muted dark:text-white/40 font-medium">
-                  {showBreakdown ? 'Hide' : 'Show'} breakdown
-                  {showBreakdown
-                    ? <CaretUp size={12} weight="bold" />
-                    : <CaretDown size={12} weight="bold" />
-                  }
-                </span>
-              </button>
-              <AnimatePresence>
-                {showBreakdown && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-2 pb-2">
-                      <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                        <span>Materials</span>
-                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                        <span>Labour (8%)</span>
-                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                        <span>Transport ({distanceKm}km)</span>
-                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Desktop: always-visible breakdown */}
-            <div className="hidden md:block space-y-2">
-              <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                <span>Materials</span>
-                <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                <span>Labour (8%)</span>
-                <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                <span>Transport ({distanceKm}km)</span>
-                <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
-              </div>
-              <div className="pt-2.5 mt-2.5 border-t border-gray-200 dark:border-white/10 flex justify-between items-baseline">
-                <span className="font-semibold text-sm text-taqon-charcoal dark:text-white">Total</span>
-                <span className="text-2xl font-bold text-taqon-orange tabular-nums">
-                  ${parseFloat(tier.price_breakdown.total).toLocaleString()}
-                </span>
-              </div>
-            </div>
+          {/* CTAs */}
+          <div className="mt-5 space-y-2">
+            <Link
+              to={`/packages/${pkg.slug}`}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-white active:scale-[0.98] transition-all min-h-[44px]"
+              style={{
+                backgroundColor: tierGem.accent,
+                boxShadow: `0 4px 14px -2px ${tierGem.glowColorSubtle}`,
+              }}
+            >
+              View Details <ArrowRight size={14} weight="bold" />
+            </Link>
+            <button
+              onClick={() => setShowQuoteModal(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px]"
+            >
+              <FileText size={14} /> Get Instant Quote
+            </button>
           </div>
-        )}
-
-        {/* CTAs */}
-        <div className="mt-5 space-y-2">
-          <Link
-            to={`/packages/${pkg.slug}`}
-            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm active:scale-[0.98] transition-all min-h-[44px] ${
-              isHighlighted
-                ? 'bg-taqon-orange text-white hover:bg-taqon-orange/90 shadow-lg shadow-taqon-orange/25'
-                : 'bg-taqon-charcoal dark:bg-white/10 text-white hover:bg-taqon-charcoal/90 dark:hover:bg-white/20'
-            }`}
-          >
-            View Details <ArrowRight size={14} weight="bold" />
-          </Link>
-          <button
-            onClick={() => setShowQuoteModal(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px]"
-          >
-            <FileText size={14} /> Get Instant Quote
-          </button>
         </div>
+
+        {/* Bottom accent bar */}
+        <div
+          className="h-[2px] rounded-b-2xl sm:rounded-b-3xl"
+          style={{
+            background: `linear-gradient(90deg, transparent, ${tierGem.accent}, transparent)`,
+            opacity: isHighlighted ? 0.6 : 0.25,
+          }}
+        />
       </div>
 
       {/* Quote Modal */}

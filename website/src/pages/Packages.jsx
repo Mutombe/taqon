@@ -1,48 +1,38 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Star, ArrowRight, Lightning, ArrowsLeftRight, MagnifyingGlass, Heart } from '@phosphor-icons/react';
+import { Check, Star, ArrowRight, Lightning, MagnifyingGlass, Heart } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
+import GemFamilySection from '../components/GemFamilySection';
+import GemPackageCard from '../components/GemPackageCard';
 import { autoLink } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { packagesDetailed } from '../data/packagesData';
+import { getGemFamily } from '../data/gemFamilies';
 import { useFamilies } from '../hooks/useQueries';
 import useSavesStore from '../stores/savesStore';
 
-const tierColors = {
-  starter: 'from-gray-50 to-white dark:from-taqon-charcoal dark:to-taqon-charcoal border-gray-200 dark:border-white/10',
-  popular: 'from-taqon-orange/5 to-white dark:from-taqon-orange/10 dark:to-taqon-charcoal border-taqon-orange/30',
-  premium: 'from-taqon-charcoal to-taqon-gray border-taqon-charcoal',
-  commercial: 'from-gray-900 to-gray-800 border-gray-700',
+/**
+ * Slug-to-gem mapping for the static fallback cards.
+ * Maps each packagesDetailed slug to a gem family slug.
+ */
+const STATIC_GEM_MAP = {
+  economy: 'home-economy',
+  'quick-access': 'home-quick-access',
+  luxury: 'home-luxury',
+  'luxury-beta': 'home-luxury-beta',
+  deluxe: 'home-deluxe',
+  '8kva-ultra-power': '8kva-ultra-power',
+  '10kva-premium-power': '10kva-premium-power',
+  '12kva-propower': '12kva-propower',
+  '16kva-masterpower': '16kva-masterpower',
+  '20-24kva-ultramax': '20-24kva-ultramax',
 };
-
-const tierBadgeColors = {
-  starter: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-  popular: 'bg-taqon-orange/10 text-taqon-orange',
-  premium: 'bg-purple-500/20 text-purple-300',
-  commercial: 'bg-emerald-500/20 text-emerald-300',
-};
-
-const tierLabels = {
-  starter: 'Starter',
-  popular: 'Most Popular',
-  premium: 'Premium',
-  commercial: 'Commercial',
-};
-
-function formatPrice(price) {
-  const num = parseFloat(price);
-  if (!num || isNaN(num)) return 'Contact for Price';
-  return `From $${num.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-}
 
 export default function Packages() {
-  // React Query: cached families data. On return visits, renders instantly
-  // from cache while silently revalidating in the background.
   const { data: families, isLoading: loading } = useFamilies();
   const { togglePackage, likedPackages } = useSavesStore();
 
-  // Use API families if available, otherwise fall back to static data
   const useApi = families && families.length > 0;
 
   return (
@@ -64,7 +54,7 @@ export default function Packages() {
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">Solar Packages</span>
             <h1 className="mt-3 text-4xl lg:text-6xl font-bold font-syne text-white">
-              Compare <span className="text-gradient">Packages</span>
+              The <span className="text-gradient">Gem</span> Collection
             </h1>
             <p className="mt-4 text-white/60 text-lg max-w-xl">
               {autoLink('From starter systems to commercial powerhouses — find your perfect solar solution.')}
@@ -106,15 +96,18 @@ export default function Packages() {
       <section className="py-16 lg:py-24 bg-taqon-cream dark:bg-taqon-dark">
         <div className="max-w-7xl mx-auto px-4">
           {loading ? (
-            <div className="space-y-6">
+            /* Loading skeletons with gem-like shimmer hint */
+            <div className="space-y-8">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-6 lg:p-8 animate-pulse">
+                <div key={i} className="rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-6 lg:p-8 animate-pulse overflow-hidden relative">
+                  <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-taqon-orange/20 via-taqon-orange/40 to-taqon-orange/20 rounded-full" />
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                     <div className="flex-1">
-                      <div className="h-6 bg-gray-200 dark:bg-white/10 rounded-lg w-48 mb-2" />
-                      <div className="h-4 bg-gray-100 dark:bg-white/5 rounded w-64" />
+                      <div className="h-5 bg-gray-200 dark:bg-white/10 rounded-full w-28 mb-3" />
+                      <div className="h-7 bg-gray-200 dark:bg-white/10 rounded-lg w-56 mb-2" />
+                      <div className="h-4 bg-gray-100 dark:bg-white/5 rounded w-72" />
                     </div>
-                    <div className="h-10 w-32 bg-gray-200 dark:bg-white/10 rounded-xl" />
+                    <div className="h-10 w-36 bg-gray-200 dark:bg-white/10 rounded-xl" />
                   </div>
                   <div className="flex gap-2">
                     <div className="h-5 w-20 bg-gray-100 dark:bg-white/5 rounded-full" />
@@ -124,134 +117,135 @@ export default function Packages() {
               ))}
             </div>
           ) : useApi ? (
-            /* ── API-driven family cards ── */
-            <div className="space-y-12">
+            /* ── API-driven gem family cards ── */
+            <div className="space-y-8">
               {families.map((family, fi) => (
-                <AnimatedSection key={family.id} delay={fi * 0.1}>
-                  <div className="rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-6 lg:p-8 shadow-sm">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                      <div>
-                        <h2 className="text-2xl font-bold font-syne text-taqon-charcoal dark:text-white flex items-center gap-2">
-                          <Lightning size={22} className="text-taqon-orange" />
-                          {family.name}
-                        </h2>
-                        <p className="mt-1 text-sm text-taqon-muted dark:text-white/50">
-                          {family.kva_rating} kVA &middot; {family.package_count} variant{family.package_count !== 1 ? 's' : ''}
-                          {family.price_min && family.price_max && (
-                            <span className="ml-2 text-taqon-orange font-semibold">
-                              ${parseFloat(family.price_min).toLocaleString()} – ${parseFloat(family.price_max).toLocaleString()}
-                            </span>
-                          )}
-                        </p>
-                        {family.short_description && (
-                          <p className="mt-2 text-sm text-taqon-muted dark:text-white/50 max-w-lg">{family.short_description}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => togglePackage(family.slug)}
-                          className="w-10 h-10 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
-                          aria-label="Save package family"
-                        >
-                          <Heart size={18} weight={likedPackages.includes(family.slug) ? 'fill' : 'regular'} className={likedPackages.includes(family.slug) ? 'text-red-500' : 'text-gray-400'} />
-                        </button>
-                        <Link
-                          to={`/families/${family.slug}`}
-                          className="inline-flex items-center gap-2 px-5 py-2 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white rounded-xl font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all whitespace-nowrap"
-                        >
-                          View Family <ArrowRight size={14} />
-                        </Link>
-                      </div>
-                    </div>
-
-                    {/* Suitable for tags */}
-                    {family.suitable_for && family.suitable_for.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {family.suitable_for.map((tag) => (
-                          <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-taqon-orange/10 text-taqon-orange font-medium capitalize">
-                            {tag.replace('_', ' ')}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </AnimatedSection>
+                <GemFamilySection
+                  key={family.id}
+                  family={family}
+                  index={fi}
+                  isLiked={likedPackages.includes(family.slug)}
+                  onToggleLike={togglePackage}
+                />
               ))}
             </div>
           ) : (
-            /* ── Static fallback cards ── */
+            /* ── Static fallback: gem-styled individual cards ── */
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {packagesDetailed.map((pkg, i) => {
+                const gemSlug = STATIC_GEM_MAP[pkg.slug] || pkg.slug;
+                const gem = getGemFamily(gemSlug);
                 const isDark = pkg.tier === 'premium' || pkg.tier === 'commercial';
+
                 return (
-                  <AnimatedSection key={pkg.slug} delay={i * 0.1}>
-                    <Link
-                      to={`/packages/${pkg.slug}`}
-                      className="block h-full"
-                    >
-                      <motion.div
-                        whileHover={{ y: -6 }}
-                        transition={{ duration: 0.2 }}
-                        className={`relative rounded-3xl p-8 border bg-gradient-to-b ${tierColors[pkg.tier]} h-full flex flex-col cursor-pointer ${pkg.popular ? 'ring-2 ring-taqon-orange shadow-xl shadow-taqon-orange/10' : ''}`}
+                  <AnimatedSection key={pkg.slug} delay={i * 0.08}>
+                    <Link to={`/packages/${pkg.slug}`} className="group block h-full">
+                      <div
+                        className={`gem-card relative rounded-3xl border ${gem.borderColor} h-full flex flex-col bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm ${pkg.popular ? `ring-2 ${gem.ringColor}` : ''}`}
+                        style={{ '--gem-shimmer': gem.shimmerColor }}
                       >
+                        {/* Glow */}
+                        <div
+                          className="gem-glow"
+                          style={{
+                            boxShadow: `0 0 24px 2px ${gem.glowColorSubtle}, inset 0 0 24px 2px ${gem.glowColorSubtle}`,
+                          }}
+                        />
+                        <div className="gem-shimmer" />
+                        <div className={`gem-header-gradient bg-gradient-to-br ${gem.headerGradient}`} />
+
+                        {/* Popular badge */}
                         {pkg.popular && (
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
-                            <Star size={12} /> Most Popular
+                          <div
+                            className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-lg"
+                            style={{
+                              backgroundColor: gem.accent,
+                              boxShadow: `0 4px 14px -2px ${gem.glowColor}`,
+                            }}
+                          >
+                            <Star size={12} weight="fill" /> Most Popular
                           </div>
                         )}
 
-                        {/* Tier badge */}
-                        <span className={`self-start inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-3 ${tierBadgeColors[pkg.tier]}`}>
-                          {tierLabels[pkg.tier]}
-                        </span>
+                        <div className="relative z-10 p-8 flex flex-col h-full">
+                          {/* Gem badge */}
+                          <span className={`gem-badge self-start mb-3 ${gem.badgeBg} ${gem.badgeText}`}>
+                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: gem.accent }} />
+                            {gem.gem}
+                          </span>
 
-                        <div className="flex items-center gap-2 mb-4">
-                          <Lightning size={20} className="text-taqon-orange" />
-                          <h3 className={`text-xl font-bold font-syne ${isDark ? 'text-white' : 'text-taqon-charcoal dark:text-white'}`}>{pkg.name}</h3>
-                        </div>
-
-                        <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-taqon-muted dark:text-white/50'}`}>{autoLink(pkg.description)}</p>
-
-                        <div className={`text-3xl font-bold font-syne mb-6 ${isDark ? 'text-gradient' : 'text-taqon-charcoal dark:text-white'}`}>
-                          {pkg.price}
-                        </div>
-
-                        {/* Capacity bar mini */}
-                        <div className="mb-6">
-                          <div className="h-1.5 rounded-full bg-gray-200 dark:bg-white/10 w-full">
+                          <div className="flex items-center gap-2 mb-3">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-yellow-400 via-taqon-orange to-red-500 transition-all duration-700"
-                              style={{ width: `${pkg.capacityPercent}%` }}
-                            />
-                          </div>
-                          <div className="flex justify-between mt-1.5 text-[10px] text-taqon-muted dark:text-white/30">
-                            <span>Starter</span>
-                            <span>{pkg.kvaRating}</span>
-                            <span>Commercial</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3 flex-1">
-                          {pkg.features.slice(0, 4).map((feature, j) => (
-                            <div key={j} className="flex items-center gap-2">
-                              <Check size={16} className="text-taqon-orange flex-shrink-0" />
-                              <span className={`text-sm ${isDark ? 'text-white/70' : 'text-taqon-muted dark:text-white/60'}`}>{feature}</span>
+                              className="w-7 h-7 rounded-lg flex items-center justify-center"
+                              style={{ backgroundColor: `color-mix(in srgb, ${gem.accent} 15%, transparent)` }}
+                            >
+                              <Lightning size={16} weight="fill" style={{ color: gem.accent }} />
                             </div>
-                          ))}
+                            <h3 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white group-hover:text-taqon-orange transition-colors">
+                              {pkg.name}
+                            </h3>
+                          </div>
+
+                          <p className="text-sm text-taqon-muted dark:text-white/50 mb-4 leading-relaxed">
+                            {autoLink(pkg.description)}
+                          </p>
+
+                          {/* Price */}
+                          <div className="text-3xl font-bold font-syne mb-5 tabular-nums" style={{ color: gem.accent }}>
+                            {pkg.price}
+                          </div>
+
+                          {/* Capacity bar with gem accent */}
+                          <div className="mb-5">
+                            <div className="h-1.5 rounded-full bg-gray-200 dark:bg-white/10 w-full overflow-hidden">
+                              <motion.div
+                                className="h-full rounded-full"
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${pkg.capacityPercent}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                                style={{
+                                  background: `linear-gradient(90deg, ${gem.accentLight}, ${gem.accent})`,
+                                }}
+                              />
+                            </div>
+                            <div className="flex justify-between mt-1.5 text-[10px] text-taqon-muted dark:text-white/30">
+                              <span>Starter</span>
+                              <span style={{ color: gem.accent }}>{pkg.kvaRating}</span>
+                              <span>Commercial</span>
+                            </div>
+                          </div>
+
+                          {/* Features */}
+                          <div className="space-y-2.5 flex-1">
+                            {pkg.features.slice(0, 4).map((feature, j) => (
+                              <div key={j} className="flex items-center gap-2">
+                                <Check size={14} weight="bold" style={{ color: gem.accent }} className="flex-shrink-0" />
+                                <span className="text-sm text-taqon-muted dark:text-white/60">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* CTA */}
+                          <div
+                            className="mt-6 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
+                            style={{
+                              backgroundColor: gem.accent,
+                              boxShadow: `0 4px 14px -2px ${gem.glowColorSubtle}`,
+                            }}
+                          >
+                            View Details <ArrowRight size={14} weight="bold" />
+                          </div>
                         </div>
 
+                        {/* Bottom accent line */}
                         <div
-                          className={`mt-8 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all ${
-                            pkg.popular
-                              ? 'bg-taqon-orange text-white hover:bg-taqon-orange/90 shadow-lg shadow-taqon-orange/25'
-                              : isDark
-                              ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
-                              : 'bg-taqon-charcoal text-white hover:bg-taqon-charcoal/90'
-                          }`}
-                        >
-                          View Package Details <ArrowRight size={14} />
-                        </div>
-                      </motion.div>
+                          className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full opacity-30"
+                          style={{
+                            background: `linear-gradient(90deg, transparent, ${gem.accent}, transparent)`,
+                          }}
+                        />
+                      </div>
                     </Link>
                   </AnimatedSection>
                 );
