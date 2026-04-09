@@ -473,7 +473,8 @@ body {
   z-index: 2;
 }
 
-.gem-card:hover .gem-shimmer {
+.gem-card:hover .gem-shimmer,
+.gem-rec-card:hover .gem-shimmer {
   opacity: 1;
   animation: gem-shimmer 1.8s ease-in-out;
 }
@@ -565,11 +566,24 @@ body {
 }
 
 /* Recommendation card — elevated version of gem-card */
+/* overflow: visible so badges (e.g. "Recommended") positioned above the
+   card edge with negative top aren't clipped.  The shimmer & gradient are
+   clipped by their own .gem-rec-inner wrapper instead. */
 .gem-rec-card {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
               box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Inner clipping container — clips the shimmer sweep & background gradient
+   so they don't bleed outside the card's rounded corners. */
+.gem-rec-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .gem-rec-card.gem-rec-highlighted {

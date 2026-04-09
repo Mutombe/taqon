@@ -45,13 +45,12 @@ export default function GemRecommendationCard({
           '--gem-shimmer': tierGem.shimmerColor,
         }}
       >
-        {/* Background gradient */}
-        <div
-          className={`absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br ${tierGem.gradient} pointer-events-none`}
-        />
-
-        {/* Shimmer overlay */}
-        <div className="gem-shimmer" />
+        {/* Inner clip — contains gradient & shimmer so they respect border-radius
+            while the outer card keeps overflow:visible for the badge */}
+        <div className="gem-rec-inner">
+          <div className={`absolute inset-0 bg-gradient-to-br ${tierGem.gradient} pointer-events-none`} />
+          <div className="gem-shimmer" />
+        </div>
 
         {/* Highlighted badge */}
         {isHighlighted && (

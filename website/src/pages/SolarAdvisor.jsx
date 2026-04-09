@@ -443,7 +443,7 @@ function RecommendationSlotCards({ settled }) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
-          className={`relative rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 bg-white dark:bg-taqon-charcoal/50 ${color} ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02] pt-10 sm:pt-10' : ''}`}
+          className={`relative overflow-visible rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 bg-white dark:bg-taqon-charcoal/50 ${color} ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02] pt-10 sm:pt-10' : ''}`}
         >
           {key === 'good_fit' && (
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-sm font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-taqon-orange/30 whitespace-nowrap z-10">
@@ -697,11 +697,12 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm }) {
           '--gem-shimmer': tierGem.shimmerColor,
         }}
       >
-        {/* Background gradient */}
-        <div className={`absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br ${tierGem.gradient} pointer-events-none`} />
-
-        {/* Shimmer overlay */}
-        <div className="gem-shimmer" />
+        {/* Inner clip — contains gradient & shimmer so they respect border-radius
+            while the outer card keeps overflow:visible for the badge */}
+        <div className="gem-rec-inner">
+          <div className={`absolute inset-0 bg-gradient-to-br ${tierGem.gradient} pointer-events-none`} />
+          <div className="gem-shimmer" />
+        </div>
 
         {/* Highlighted badge */}
         {isHighlighted && (
