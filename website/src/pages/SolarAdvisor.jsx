@@ -443,10 +443,10 @@ function RecommendationSlotCards({ settled }) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
-          className={`relative rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 bg-white dark:bg-taqon-charcoal/50 ${color} ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02]' : ''}`}
+          className={`relative rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 bg-white dark:bg-taqon-charcoal/50 ${color} ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02] mt-4' : ''}`}
         >
           {key === 'good_fit' && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-taqon-orange/30 whitespace-nowrap">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-xs font-bold px-5 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-taqon-orange/30 whitespace-nowrap z-10">
               <Star size={12} weight="fill" /> Recommended
             </div>
           )}
@@ -542,6 +542,20 @@ function QuoteModal({ pkg, tierKey, distanceKm, onClose }) {
       a.click();
       URL.revokeObjectURL(url);
       toast.success('Quote downloaded!');
+
+      // Track quote download
+      try {
+        const events = JSON.parse(localStorage.getItem('taqon-advisor-events') || '[]');
+        events.push({
+          event: 'quote_downloaded',
+          timestamp: new Date().toISOString(),
+          package: pkg.family_name || pkg.name,
+          tier: tierKey,
+          customer_email: form.email,
+          distance_km: distanceKm,
+        });
+        localStorage.setItem('taqon-advisor-events', JSON.stringify(events));
+      } catch {}
 
       // Background: submit QuotationRequest so admin has a record
       quotationsApi.submitRequest({
@@ -1196,25 +1210,62 @@ function CalculationLog({ selections, appliances, totals, distanceKm, recommenda
 
 /* ─── Main Component ─── */
 
+// ── Session storage helpers ──
+const SESSION_KEY = 'taqon-advisor-draft';
+function loadDraft() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function saveDraft(data) {
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(data)); } catch {}
+}
+
 export default function SolarAdvisor() {
-  const [step, setStep] = useState(1);
+  const draft = useRef(loadDraft());
+
+  const [step, setStepRaw] = useState(draft.current?.step || 1);
   const [appliances, setAppliances] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
-  const [selections, setSelections] = useState({});
-  const [distanceKm, setDistanceKm] = useState(10);
+  const [selections, setSelections] = useState(draft.current?.selections || {});
+  const [distanceKm, setDistanceKm] = useState(draft.current?.distanceKm || 10);
   const [recommendation, setRecommendation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingAppliances, setLoadingAppliances] = useState(true);
   const [search, setSearch] = useState('');
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [recommendRun, setRecommendRun] = useState(0);
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState(draft.current?.preferences || {
     priority: 'balanced',
     willing_to_manage: false,
     use_style: 'backup_solar',
     wants_smart: false,
   });
+
+  // ── Persist draft to sessionStorage ──
+  useEffect(() => {
+    saveDraft({ step, selections, distanceKm, preferences });
+  }, [step, selections, distanceKm, preferences]);
+
+  // ── Browser back/forward support ──
+  const setStep = useCallback((newStep) => {
+    setStepRaw(newStep);
+    window.history.pushState({ step: newStep }, '', `#step-${newStep}`);
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (e.state?.step) {
+        setStepRaw(e.state.step);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    // Set initial history state
+    window.history.replaceState({ step }, '', `#step-${step}`);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll to top on step change
   useEffect(() => {
@@ -1286,6 +1337,38 @@ export default function SolarAdvisor() {
 
   const [recommendError, setRecommendError] = useState(null);
 
+  // ── Analytics tracking ──
+  const trackEvent = useCallback((event, data = {}) => {
+    try {
+      const payload = {
+        event,
+        timestamp: new Date().toISOString(),
+        session_id: sessionStorage.getItem('taqon-session-id') || (() => {
+          const id = `sa-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+          sessionStorage.setItem('taqon-session-id', id);
+          return id;
+        })(),
+        ...data,
+      };
+      // Store locally for dashboard retrieval
+      const events = JSON.parse(localStorage.getItem('taqon-advisor-events') || '[]');
+      events.push(payload);
+      // Keep last 200 events
+      if (events.length > 200) events.splice(0, events.length - 200);
+      localStorage.setItem('taqon-advisor-events', JSON.stringify(events));
+      // Also fire to backend analytics (fire-and-forget)
+      navigator.sendBeacon?.(
+        '/api/v1/analytics/advisor-event/',
+        new Blob([JSON.stringify(payload)], { type: 'application/json' })
+      );
+    } catch {}
+  }, []);
+
+  // Track step progression
+  useEffect(() => {
+    trackEvent('step_view', { step });
+  }, [step, trackEvent]);
+
   const handleRecommend = async () => {
     setAnalysisComplete(false);
     setRecommendation(null);
@@ -1306,6 +1389,15 @@ export default function SolarAdvisor() {
       setRecommendation(res.data);
       // Let slot numbers spin for a moment before settling
       setTimeout(() => setAnalysisComplete(true), 2500);
+      // Track successful recommendation
+      trackEvent('recommendation_complete', {
+        total_pp: res.data.total_pp,
+        total_ep: res.data.total_ep,
+        tiers: Object.keys(res.data.tiers),
+        appliance_count: applianceList.length,
+        distance_km: distanceKm,
+        preferences,
+      });
     } catch (err) {
       console.error('Recommendation failed:', err);
       setRecommendError(err.response?.data?.detail || err.message || 'Failed to get recommendations');
