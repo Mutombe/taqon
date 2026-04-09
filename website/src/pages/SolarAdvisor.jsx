@@ -225,9 +225,9 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
               </div>
               <div className="text-left min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-taqon-orange tabular-nums">PP {totals.pp}</span>
+                  <span className="text-sm font-bold text-taqon-orange tabular-nums flex items-center gap-1"><Lightning size={12} className="text-yellow-500" />{totals.pp}</span>
                   <span className="text-gray-300 dark:text-white/20">|</span>
-                  <span className="text-sm font-bold text-taqon-orange tabular-nums">EP {totals.ep}</span>
+                  <span className="text-sm font-bold text-taqon-orange tabular-nums flex items-center gap-1"><BatteryCharging size={12} className="text-blue-400" />{totals.ep}</span>
                 </div>
                 <p className="text-xs text-taqon-muted dark:text-white/40 truncate">
                   {hasSelections
@@ -259,7 +259,7 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
             <div className="flex gap-2 mt-2.5">
               <div className="flex-1">
                 <div className="flex justify-between text-[10px] text-taqon-muted dark:text-white/30 mb-0.5">
-                  <span>Power</span>
+                  <span className="flex items-center gap-0.5"><Lightning size={10} className="text-yellow-500" /> Power</span>
                   <span>{totals.pp}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -271,7 +271,7 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
               </div>
               <div className="flex-1">
                 <div className="flex justify-between text-[10px] text-taqon-muted dark:text-white/30 mb-0.5">
-                  <span>Energy</span>
+                  <span className="flex items-center gap-0.5"><BatteryCharging size={10} className="text-blue-400" /> Energy</span>
                   <span>{totals.ep}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -316,7 +316,7 @@ function DesktopSidebar({ totals, hasSelections, selections, appliances, onUpdat
             <div className="space-y-2.5 mb-3">
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-taqon-muted dark:text-white/50">Power Points</span>
+                  <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><Lightning size={12} className="text-yellow-500" /> Power</span>
                   <span className="font-bold text-taqon-orange tabular-nums">{totals.pp}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -328,7 +328,7 @@ function DesktopSidebar({ totals, hasSelections, selections, appliances, onUpdat
               </div>
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-taqon-muted dark:text-white/50">Energy Points</span>
+                  <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><BatteryCharging size={12} className="text-blue-400" /> Energy</span>
                   <span className="font-bold text-taqon-orange tabular-nums">{totals.ep}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -972,10 +972,10 @@ function CalculationLog({ selections, appliances, totals, distanceKm, recommenda
       q(250, { agent: 'SCANNER', type: 'detail', text: `  ${cat}: ${names}${more}` });
     });
 
-    q(400, { agent: 'PP_ENGINE', type: 'compute', text: 'Computing Power Points (PP) — concurrent load analysis...' });
-    q(650, { agent: 'PP_ENGINE', type: 'result', text: `Total Power Points: ${totals.pp}` });
-    q(350, { agent: 'EP_ENGINE', type: 'compute', text: 'Computing Energy Points (EP) — daily consumption model...' });
-    q(650, { agent: 'EP_ENGINE', type: 'result', text: `Total Energy Points: ${totals.ep}` });
+    q(400, { agent: 'PP_ENGINE', type: 'compute', text: 'Computing Power (PP) — concurrent load analysis...' });
+    q(650, { agent: 'PP_ENGINE', type: 'result', text: `Total Power: ${totals.pp}` });
+    q(350, { agent: 'EP_ENGINE', type: 'compute', text: 'Computing Energy (EP) — daily consumption model...' });
+    q(650, { agent: 'EP_ENGINE', type: 'result', text: `Total Energy: ${totals.ep}` });
     q(400, { agent: 'SYSTEM', type: 'system', text: 'Submitting to 3-tier recommendation engine...' });
 
     d += 300;
@@ -1605,8 +1605,8 @@ export default function SolarAdvisor() {
                       <div className="grid grid-cols-3 gap-2 sm:gap-4">
                         {[
                           { value: totals.count, label: 'Appliances' },
-                          { value: totals.pp, label: 'Power Points' },
-                          { value: totals.ep, label: 'Energy Points' },
+                          { value: totals.pp, label: 'Power' },
+                          { value: totals.ep, label: 'Energy' },
                         ].map(({ value, label }) => (
                           <div key={label} className="p-2.5 sm:p-3 rounded-xl bg-white dark:bg-white/5 text-center">
                             <p className="text-xl sm:text-2xl font-bold text-taqon-orange tabular-nums">{value}</p>
