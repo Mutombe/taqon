@@ -687,27 +687,55 @@ function QuoteModal({ pkg, tierKey, distanceKm, onClose }) {
 }
 
 
-/* ─── Package Explanation Helper ─── */
+/* ─── Fixed Package Explanations (per kVA range, never change) ─── */
 
-function getPackageExplanation(pkg, tierKey) {
+function getPackageExplanation(pkg) {
   const kva = parseFloat(pkg.inverter_kva) || 0;
-  if (kva <= 3) return { bestFor: 'Small homes needing essential backup', howItWorks: 'Runs lights, TV, WiFi and fridge during outages', whyUpgrade: 'Upgrade to run more appliances simultaneously' };
-  if (kva <= 5) return { bestFor: 'Medium homes with standard appliances', howItWorks: 'Handles most daily appliances including cooking', whyUpgrade: 'Upgrade for heavy loads like geysers and ACs' };
-  if (kva <= 8) return { bestFor: 'Large homes wanting reliable power', howItWorks: 'Powers most home appliances with comfort', whyUpgrade: 'Upgrade for full energy independence' };
-  if (kva <= 12) return { bestFor: 'Large homes or small businesses', howItWorks: 'Full backup with solar savings during the day', whyUpgrade: 'Upgrade for maximum capacity and heavy loads' };
-  return { bestFor: 'Businesses and large properties', howItWorks: 'Commercial-grade power with full solar independence', whyUpgrade: null };
+  if (kva <= 3) return { bestFor: 'Small homes needing essential backup power for lights, TV, WiFi and a fridge.', howItWorks: 'Provides basic backup during outages. Best used with manual load management to extend battery life.', whyUpgrade: 'Consider upgrading if you need to run kitchen appliances, washing machines or air conditioning.' };
+  if (kva <= 6) return { bestFor: 'Medium homes with standard daily appliances including a fridge, TV, lights and small kitchen equipment.', howItWorks: 'Handles everyday household loads comfortably. Solar panels recharge batteries during the day for overnight use.', whyUpgrade: 'Consider upgrading if you have a geyser, air conditioning, or multiple heavy appliances running simultaneously.' };
+  if (kva <= 8) return { bestFor: 'Larger homes wanting reliable power across most rooms including kitchen, laundry and entertainment.', howItWorks: 'Powers most home appliances with good battery reserves. Smart load management available on Sunsynk inverters.', whyUpgrade: 'Consider upgrading if you want full energy independence or have very heavy loads like welders or commercial equipment.' };
+  if (kva <= 12) return { bestFor: 'Large homes, home offices or small businesses needing comprehensive power coverage.', howItWorks: 'Full backup capability with strong solar recharging. Supports heavy appliances, geysers, and multiple air conditioners.', whyUpgrade: 'Consider upgrading for commercial-scale operations or properties requiring three-phase power.' };
+  if (kva <= 16) return { bestFor: 'Large properties, lodges, retail stores or light commercial operations.', howItWorks: 'Commercial-grade inverter with extensive battery storage and solar array. Handles sustained heavy loads throughout the day.', whyUpgrade: 'Consider upgrading for enterprise-scale power demands or full off-grid independence.' };
+  return { bestFor: 'Commercial enterprises, institutions, multi-storey buildings and large industrial properties.', howItWorks: 'Enterprise-level solar system providing maximum power output, extensive battery reserves and full solar independence.', whyUpgrade: null };
+}
+
+/* ─── Dynamic "Why this matches you" (only for highlighted card) ─── */
+
+const PRIORITY_TEXT = {
+  lowest_cost: 'You selected lowest cost as your priority, so this system focuses on delivering the most affordable workable solution.',
+  balanced: 'You selected best balance, so this system provides a good mix of affordability and performance.',
+  max_comfort: 'You selected maximum comfort, so this system prioritizes stronger performance with fewer limitations.',
+};
+
+const LOAD_BEHAVIOR_TEXT = {
+  true: 'Since you are comfortable managing heavy appliances when needed, this system allows some manual control to keep costs lower.',
+  false: 'Since you prefer full convenience, this system is designed to run more appliances without needing manual control.',
+};
+
+const SYSTEM_GOAL_TEXT = {
+  backup: 'This configuration is optimized mainly to provide backup power during outages.',
+  backup_solar: 'This configuration supports both reliable backup and daily electricity savings.',
+  independence: 'This configuration is designed to maximize solar usage and reduce reliance on grid power.',
+};
+
+function getWhyThisMatchesYou(preferences) {
+  const priority = PRIORITY_TEXT[preferences.priority] || PRIORITY_TEXT.balanced;
+  const loadBehavior = LOAD_BEHAVIOR_TEXT[String(preferences.willing_to_manage)] || LOAD_BEHAVIOR_TEXT.false;
+  const goal = SYSTEM_GOAL_TEXT[preferences.use_style] || SYSTEM_GOAL_TEXT.backup_solar;
+  return { priority, loadBehavior, goal };
 }
 
 
 /* ─── Recommendation Card (Step 3) — Gem-styled ─── */
 
-function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, clientFormRef }) {
+function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, clientFormRef, preferences }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [downloadingQuote, setDownloadingQuote] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const pkg = tier.package;
-  const explanation = getPackageExplanation(pkg, tierKey);
+  const explanation = getPackageExplanation(pkg);
+  const matchReason = isHighlighted && preferences ? getWhyThisMatchesYou(preferences) : null;
   const tierGem = TIER_GEMS[tierKey];
   const familyGem = getGemFamily(pkg.family_slug || pkg.slug);
 
@@ -838,8 +866,8 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             </div>
           )}
 
-          {/* Package explanation */}
-          <div className="mt-4 p-3 rounded-xl bg-gray-50 dark:bg-white/5 space-y-1.5">
+          {/* Fixed package explanation (same for every client) */}
+          <div className="mt-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 space-y-1.5">
             <p className="text-xs text-taqon-charcoal dark:text-white/70">
               <span className="font-semibold">Best for:</span> {explanation.bestFor}
             </p>
@@ -852,6 +880,28 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
               </p>
             )}
           </div>
+
+          {/* Dynamic "Why this matches you" — highlighted card only */}
+          {matchReason && (
+            <div className="mt-3 p-3 rounded-xl border border-taqon-orange/20 bg-taqon-orange/5 dark:bg-taqon-orange/10 space-y-2">
+              <p className="text-xs font-bold text-taqon-orange flex items-center gap-1.5">
+                <Star size={12} weight="fill" /> Why this matches you
+              </p>
+              <p className="text-xs text-taqon-charcoal dark:text-white/80 leading-relaxed">
+                {matchReason.priority}
+              </p>
+              <ul className="text-xs text-taqon-muted dark:text-white/60 space-y-1 pl-3">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-taqon-orange mt-0.5 shrink-0">•</span>
+                  {matchReason.loadBehavior}
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-taqon-orange mt-0.5 shrink-0">•</span>
+                  {matchReason.goal}
+                </li>
+              </ul>
+            </div>
+          )}
 
           {/* CTAs */}
           <div className="mt-5 space-y-2">
@@ -2016,6 +2066,7 @@ export default function SolarAdvisor() {
                               clientDetails={clientDetails}
                               detailsCollected={detailsCollected}
                               clientFormRef={clientFormRef}
+                              preferences={preferences}
                             />
                           ))}
                         </div>
