@@ -199,6 +199,7 @@ class RecommendView(APIView):
             'total_pp': str(result['total_pp']),
             'total_ep': str(result['total_ep']),
             'distance_km': str(result['distance_km']),
+            'best_match_tier': result.get('best_match_tier', 'good_fit'),
             'tiers': {},
         }
 
@@ -213,6 +214,7 @@ class RecommendView(APIView):
                 'battery_kwh': str(tier_data.get('battery_kwh', '')),
                 'adjusted_pp': str(tier_data.get('adjusted_pp', 0)),
                 'adjusted_ep': str(tier_data.get('adjusted_ep', 0)),
+                'best_match': tier_data.get('best_match', False),
                 'price_breakdown': {
                     k: str(v) for k, v in tier_data['price_breakdown'].items()
                 } if tier_data.get('price_breakdown') else None,
