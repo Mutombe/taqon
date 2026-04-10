@@ -140,9 +140,14 @@ function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
 
 /* ─── Mobile Bottom Bar (expandable) ─── */
 
-function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext, onRemove }) {
+function MobileBottomBar({ step, totals, hasSelections, selections, appliances, onNext, onBack, onRemove }) {
   const [expanded, setExpanded] = useState(false);
   const selectedItems = Object.entries(selections).filter(([, qty]) => qty > 0);
+
+  // Step-specific config
+  const showBack = step > 1;
+  const nextLabel = step === 3 ? 'Get Results' : 'Next';
+  const nextDisabled = step === 1 ? !hasSelections : false;
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
@@ -159,39 +164,25 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
             <div className="px-4 pt-4 pb-2">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold font-syne text-taqon-charcoal dark:text-white">
-                  Selected Appliances ({selectedItems.length})
+                  Selected ({selectedItems.length})
                 </h4>
                 <button
                   onClick={() => setExpanded(false)}
-                  className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-taqon-muted hover:text-taqon-charcoal dark:hover:text-white transition-colors"
-                  aria-label="Close selection panel"
+                  className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-taqon-muted"
                 >
                   <X size={14} weight="bold" />
                 </button>
               </div>
-              <div className="max-h-52 overflow-y-auto space-y-1 -mx-1 px-1">
+              <div className="max-h-48 overflow-y-auto space-y-1">
                 {selectedItems.map(([id, qty]) => {
                   const a = appliances.find((app) => app.id === id);
                   return a ? (
-                    <div
-                      key={id}
-                      className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                    >
-                      <span className="text-sm text-taqon-charcoal dark:text-white/80 truncate mr-3 flex-1">
-                        {a.name}
-                      </span>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-xs text-taqon-muted dark:text-white/40 font-semibold tabular-nums">
-                          x{qty}
-                        </span>
-                        <button
-                          onClick={() => onRemove(id)}
-                          className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 flex items-center justify-center active:scale-95 transition-all"
-                          aria-label={`Remove ${a.name}`}
-                        >
-                          <X size={12} weight="bold" />
-                        </button>
-                      </div>
+                    <div key={id} className="flex items-center justify-between py-1.5 px-2 rounded-lg">
+                      <span className="text-xs text-taqon-charcoal dark:text-white/80 truncate mr-2 flex-1">{a.name}</span>
+                      <span className="text-xs text-taqon-muted tabular-nums mr-2">x{qty}</span>
+                      <button onClick={() => onRemove(id)} className="w-6 h-6 rounded text-red-400 flex items-center justify-center">
+                        <X size={10} weight="bold" />
+                      </button>
                     </div>
                   ) : null;
                 })}
@@ -201,99 +192,51 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
         )}
       </AnimatePresence>
 
-      {/* Bottom bar — with safe area padding for iOS */}
+      {/* Bottom bar */}
       <div
         className="bg-white dark:bg-taqon-charcoal border-t border-gray-200 dark:border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
-        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
-        <div className="px-4 pt-3 pb-1">
-          {/* Score summary row */}
-          <div className="flex items-center justify-between gap-3">
-            <button
-              onClick={() => setExpanded(!expanded)}
-              disabled={!hasSelections}
-              className="flex items-center gap-3 min-w-0 disabled:opacity-50 min-h-[44px]"
-              aria-label={expanded ? 'Collapse selection' : 'Expand selection'}
-            >
-              <div className="relative shrink-0">
-                <div className="w-10 h-10 rounded-full bg-taqon-orange/10 flex items-center justify-center">
-                  <Lightning size={18} className="text-taqon-orange" />
+        <div className="px-4 py-2.5">
+          {/* Row 1: Scores + selected count (only on step 1) */}
+          {step === 1 && hasSelections && (
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-taqon-orange tabular-nums">
+                  <Lightning size={12} className="text-yellow-500" />{totals.pp}
                 </div>
-                {totals.count > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-taqon-orange text-white rounded-full text-[10px] font-bold flex items-center justify-center shadow-sm">
-                    {totals.count}
-                  </span>
-                )}
-              </div>
-              <div className="text-left min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-taqon-orange tabular-nums flex items-center gap-1"><Lightning size={12} className="text-yellow-500" />{totals.pp}</span>
-                  <span className="text-gray-300 dark:text-white/20">|</span>
-                  <span className="text-sm font-bold text-taqon-orange tabular-nums flex items-center gap-1"><BatteryCharging size={12} className="text-blue-400" />{totals.ep}</span>
+                <span className="text-gray-300 dark:text-white/20 text-xs">|</span>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-taqon-orange tabular-nums">
+                  <BatteryCharging size={12} className="text-blue-400" />{totals.ep}
                 </div>
-                <p className="text-xs text-taqon-muted dark:text-white/40 truncate">
-                  {hasSelections
-                    ? `${totals.count} appliance${totals.count !== 1 ? 's' : ''} selected`
-                    : 'No appliances selected'}
-                </p>
               </div>
-              {hasSelections && (
-                <span className="shrink-0 ml-1">
-                  {expanded
-                    ? <CaretDown size={14} className="text-taqon-muted" />
-                    : <CaretUp size={14} className="text-taqon-muted" />
-                  }
-                </span>
-              )}
-            </button>
-
-            {hasSelections && (
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="shrink-0 px-3 py-2 rounded-lg border border-taqon-orange/30 text-taqon-orange text-xs font-semibold active:scale-95 transition-all"
+                className="text-xs text-taqon-orange font-medium flex items-center gap-1"
               >
-                View Selected ({selectedItems.length})
+                {totals.count} selected {expanded ? <CaretDown size={10} /> : <CaretUp size={10} />}
               </button>
-            )}
-
-            <button
-              onClick={onNext}
-              disabled={!hasSelections}
-              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm disabled:opacity-40 shadow-lg shadow-taqon-orange/25 active:scale-95 transition-all min-h-[44px]"
-            >
-              Next <ArrowRight size={14} weight="bold" />
-            </button>
-          </div>
-
-          {/* Mini progress bars */}
-          {hasSelections && (
-            <div className="flex gap-2 mt-2.5">
-              <div className="flex-1">
-                <div className="flex justify-between text-[10px] text-taqon-muted dark:text-white/30 mb-0.5">
-                  <span className="flex items-center gap-0.5"><Lightning size={10} className="text-yellow-500" /> Power Need</span>
-                  <span>{totals.pp}</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-taqon-orange transition-all duration-500"
-                    style={{ width: `${Math.min(100, (parseFloat(totals.pp) / 30) * 100)}%` }}
-                  />
-                </div>
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between text-[10px] text-taqon-muted dark:text-white/30 mb-0.5">
-                  <span className="flex items-center gap-0.5"><BatteryCharging size={10} className="text-blue-400" /> Battery Need</span>
-                  <span>{totals.ep}</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-400 to-taqon-orange transition-all duration-500"
-                    style={{ width: `${Math.min(100, (parseFloat(totals.ep) / 35) * 100)}%` }}
-                  />
-                </div>
-              </div>
             </div>
           )}
+
+          {/* Row 2: Action buttons */}
+          <div className="flex items-center gap-3">
+            {showBack && (
+              <button
+                onClick={onBack}
+                className="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm active:scale-95 transition-all min-h-[44px]"
+              >
+                <ArrowLeft size={14} /> Back
+              </button>
+            )}
+            <button
+              onClick={onNext}
+              disabled={nextDisabled}
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm disabled:opacity-40 shadow-lg shadow-taqon-orange/25 active:scale-95 transition-all min-h-[44px]"
+            >
+              {nextLabel} <ArrowRight size={14} weight="bold" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1741,15 +1684,7 @@ export default function SolarAdvisor() {
                   />
                 </div>
 
-                {/* ── Mobile sticky bottom bar ── */}
-                <MobileBottomBar
-                  totals={totals}
-                  hasSelections={hasSelections}
-                  selections={selections}
-                  appliances={appliances}
-                  onNext={() => setStep(2)}
-                  onRemove={(id) => updateQty(id, -(selections[id] || 0))}
-                />
+                {/* Mobile bottom bar rendered outside steps */}
               </motion.div>
             )}
 
@@ -2233,6 +2168,24 @@ export default function SolarAdvisor() {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Mobile sticky bottom bar — visible on steps 1-3 */}
+        {step <= 3 && (
+          <MobileBottomBar
+            step={step}
+            totals={totals}
+            hasSelections={hasSelections}
+            selections={selections}
+            appliances={appliances}
+            onNext={() => {
+              if (step === 1) setStep(2);
+              else if (step === 2) setStep(3);
+              else if (step === 3) handleRecommend();
+            }}
+            onBack={() => setStep(step - 1)}
+            onRemove={(id) => updateQty(id, -(selections[id] || 0))}
+          />
+        )}
       </section>
     </>
   );
