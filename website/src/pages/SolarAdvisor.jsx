@@ -1844,11 +1844,11 @@ export default function SolarAdvisor() {
                     </div>
                   </div>
 
-                  {/* Navigation */}
-                  <div className="mt-6 sm:mt-8 flex gap-3">
+                  {/* Navigation — desktop only (mobile uses sticky bottom bar) */}
+                  <div className="mt-6 sm:mt-8 hidden lg:flex gap-3">
                     <button
                       onClick={() => setStep(1)}
-                      className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
                     >
                       <ArrowLeft size={14} /> Back
                     </button>
@@ -1856,8 +1856,7 @@ export default function SolarAdvisor() {
                       onClick={() => setStep(3)}
                       className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
                     >
-                      Continue
-                      <ArrowRight size={14} weight="bold" />
+                      Continue <ArrowRight size={14} weight="bold" />
                     </button>
                   </div>
                 </div>
@@ -1940,10 +1939,11 @@ export default function SolarAdvisor() {
                   </div>
 
                   {/* Navigation */}
-                  <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
+                  {/* Navigation — desktop only (mobile uses sticky bottom bar) */}
+                  <div className="hidden lg:flex gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
                     <button
                       onClick={() => setStep(2)}
-                      className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
                     >
                       <ArrowLeft size={14} /> Back
                     </button>
