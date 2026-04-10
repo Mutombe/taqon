@@ -3,7 +3,7 @@
  * HQ: Taqon Electrico, Harare CBD (-17.8292, 31.0522)
  */
 
-export const HQ_COORDS = [-17.8292, 31.0522]; // Taqon HQ, Harare
+export const HQ_COORDS = [-17.7817166, 31.019658]; // Taqon Electrico HQ
 
 export const ZIMBABWE_AREAS = [
   // Harare & Surrounds
