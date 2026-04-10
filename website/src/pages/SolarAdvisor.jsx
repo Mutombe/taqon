@@ -705,6 +705,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [downloadingQuote, setDownloadingQuote] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const pkg = tier.package;
   const explanation = getPackageExplanation(pkg, tierKey);
   const tierGem = TIER_GEMS[tierKey];
@@ -738,7 +739,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
               boxShadow: `0 4px 14px -2px ${tierGem.glowColor}`,
             }}
           >
-            <Star size={12} weight="fill" /> Best Match for You
+            <Star size={12} weight="fill" /> Based on Your Preferences
           </div>
         )}
 
@@ -766,7 +767,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
           )}
 
           {/* Specs grid */}
-          <div className="mt-4 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-3 gap-2">
             <div className={`gem-spec ${tierGem.specBg}`}>
               <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
                 {pkg.inverter_kva || tier.inverter_kva}
@@ -775,7 +776,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             </div>
             <div className={`gem-spec ${tierGem.specBg}`}>
               <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
-                {pkg.battery_capacity_kwh || tier.battery_kwh}
+                {tier.battery_kwh && tier.battery_kwh !== '0.00' ? tier.battery_kwh : (pkg.battery_capacity_kwh || '—')}
               </p>
               <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kWh</p>
             </div>
@@ -789,83 +790,50 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             )}
           </div>
 
+          {/* Mobile: Total price + expand toggle */}
+          {tier.price_breakdown && (
+            <div className="mt-3 md:hidden">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="w-full flex items-center justify-between py-2"
+              >
+                <span className="text-xl font-bold tabular-nums font-syne" style={{ color: tierGem.accent }}>
+                  ${parseFloat(tier.price_breakdown.total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
+                <span className="flex items-center gap-1 text-xs text-taqon-muted font-medium">
+                  {expanded ? 'Less' : 'More details'}
+                  {expanded ? <CaretUp size={12} weight="bold" /> : <CaretDown size={12} weight="bold" />}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* Expandable details on mobile, always visible on desktop */}
+          <div className={`${expanded ? 'block' : 'hidden'} md:block`}>
+
           {/* Price breakdown */}
           {tier.price_breakdown && (
-            <div className="mt-4 flex-1">
-              {/* Mobile: collapsible */}
-              <div className="md:hidden">
-                <button
-                  onClick={() => setShowBreakdown(!showBreakdown)}
-                  className="w-full flex items-center justify-between py-2.5 min-h-[44px]"
-                >
-                  <span
-                    className="text-2xl font-bold tabular-nums font-syne"
-                    style={{ color: tierGem.accent }}
-                  >
-                    ${parseFloat(tier.price_breakdown.total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </span>
-                  <span className="flex items-center gap-1 text-xs text-taqon-muted dark:text-white/40 font-medium">
-                    {showBreakdown ? 'Hide' : 'Show'} breakdown
-                    {showBreakdown
-                      ? <CaretUp size={12} weight="bold" />
-                      : <CaretDown size={12} weight="bold" />
-                    }
-                  </span>
-                </button>
-                <AnimatePresence>
-                  {showBreakdown && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="space-y-2 pb-2">
-                        <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                          <span>Materials</span>
-                          <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                          <span>Labour (8%)</span>
-                          <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                          <span>Transport ({distanceKm}km)</span>
-                          <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+            <div className="mt-3 space-y-2">
+              <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                <span>Materials</span>
+                <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
               </div>
-
-              {/* Desktop: always visible */}
-              <div className="hidden md:block space-y-2">
-                <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                  <span>Materials</span>
-                  <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                  <span>Labour (8%)</span>
-                  <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                  <span>Transport ({distanceKm}km)</span>
-                  <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
-                </div>
-                <div
-                  className="pt-2.5 mt-2.5 flex justify-between items-baseline"
-                  style={{ borderTop: `1px solid color-mix(in srgb, ${tierGem.accent} 20%, transparent)` }}
-                >
-                  <span className="font-semibold text-sm text-taqon-charcoal dark:text-white">Total</span>
-                  <span
-                    className="text-2xl font-bold tabular-nums font-syne"
-                    style={{ color: tierGem.accent }}
-                  >
-                    ${parseFloat(tier.price_breakdown.total).toLocaleString()}
-                  </span>
-                </div>
+              <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                <span>Labour (8%)</span>
+                <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
+                <span>Transport ({distanceKm}km)</span>
+                <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
+              </div>
+              <div
+                className="pt-2.5 mt-2.5 flex justify-between items-baseline"
+                style={{ borderTop: `1px solid color-mix(in srgb, ${tierGem.accent} 20%, transparent)` }}
+              >
+                <span className="font-semibold text-sm text-taqon-charcoal dark:text-white">Total</span>
+                <span className="text-2xl font-bold tabular-nums font-syne" style={{ color: tierGem.accent }}>
+                  ${parseFloat(tier.price_breakdown.total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
               </div>
             </div>
           )}
@@ -940,6 +908,8 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
               )}
             </button>
           </div>
+
+          </div>{/* end expandable wrapper */}
         </div>
 
         {/* Bottom accent bar */}
@@ -1916,7 +1886,7 @@ export default function SolarAdvisor() {
               <motion.div key="step3" {...stepTransition} className="max-w-2xl mx-auto">
                 <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm space-y-6">
                   <h2 className="text-xl sm:text-2xl font-bold font-syne text-taqon-charcoal dark:text-white">
-                    Your Preferences
+                    What Are Your Preferences?
                   </h2>
 
                   {/* Q1: Priority */}
