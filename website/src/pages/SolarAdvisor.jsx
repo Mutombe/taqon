@@ -35,7 +35,8 @@ const categoryIcons = {
 };
 
 import { getGemFamily, TIER_GEMS } from '../data/gemFamilies';
-import { ZIMBABWE_AREAS, getDistanceByArea } from '../data/zimbabweAreas';
+import { ZIMBABWE_AREAS, getDistanceByArea, getAreaCoords } from '../data/zimbabweAreas';
+import DistanceMap from '../components/DistanceMap';
 
 const tierLabels = { budget: 'Budget', good_fit: 'Recommended', excellent: 'Excellent' };
 const tierBadgeColors = {
@@ -1859,6 +1860,13 @@ export default function SolarAdvisor() {
                           <span>Transport is charged at $0.65/km. Harare-based installations are cheapest.</span>
                         </p>
                       </div>
+
+                      {/* Distance Map */}
+                      <DistanceMap
+                        clientCoords={selectedArea ? getAreaCoords(selectedArea) : null}
+                        distanceKm={distanceKm}
+                        areaName={selectedArea}
+                      />
                     </div>
 
                     {/* Selection Summary */}
@@ -2132,7 +2140,8 @@ export default function SolarAdvisor() {
                             setDownloadingAll(true);
                             const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
                             try {
-                              for (const tierKey of tierEntries) {
+                              for (let idx = 0; idx < tierEntries.length; idx++) {
+                                const tierKey = tierEntries[idx];
                                 const pkg = recommendation.tiers[tierKey].package;
                                 const res = await solarConfigApi.getInstantQuote({
                                   package_slug: pkg.slug,
@@ -2149,9 +2158,13 @@ export default function SolarAdvisor() {
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement('a');
                                 a.href = url;
-                                a.download = `Taqon-Quote-${pkg.family_name || pkg.name}.${ext}`;
+                                a.download = `Taqon-${tierLabels[tierKey] || tierKey}-${pkg.family_name || pkg.name}.${ext}`;
+                                document.body.appendChild(a);
                                 a.click();
+                                document.body.removeChild(a);
                                 URL.revokeObjectURL(url);
+                                // Delay between downloads so browser doesn't block them
+                                if (idx < tierEntries.length - 1) await new Promise(r => setTimeout(r, 800));
                               }
                               toast.success(`${tierEntries.length} quotes downloaded!`);
                             } catch (err) {
