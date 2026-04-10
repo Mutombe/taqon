@@ -1773,7 +1773,7 @@ export default function SolarAdvisor() {
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -4 }}
                               transition={{ duration: 0.15 }}
-                              className="absolute z-30 mt-1.5 w-full bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden"
+                              className="absolute z-[1000] mt-1.5 w-full bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden"
                             >
                               {/* Search inside dropdown */}
                               <div className="p-2 border-b border-gray-100 dark:border-white/10">

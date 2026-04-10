@@ -43,7 +43,7 @@ function FitBounds({ hq, client }) {
 
 export default function DistanceMap({ clientCoords, distanceKm, areaName }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 mt-4" style={{ height: 220 }}>
+    <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 mt-4 relative z-0" style={{ height: 220 }}>
       <MapContainer
         center={HQ_COORDS}
         zoom={6}
