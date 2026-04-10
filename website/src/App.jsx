@@ -164,6 +164,7 @@ function AppContent() {
   const { clearAuth, openAuthModal } = useAuthStore();
   const { pathname } = useLocation();
   const isAdminRoute = pathname.startsWith('/admin');
+  const isSolarAdvisor = pathname.startsWith('/solar-advisor');
 
   // Wire axios auth failure handler
   useEffect(() => {
@@ -318,8 +319,8 @@ function AppContent() {
         />
       )}
 
-      {!isAdminRoute && <ChatWidget />}
-      {!isAdminRoute && <BackToTop />}
+      {!isAdminRoute && !isSolarAdvisor && <ChatWidget />}
+      {!isAdminRoute && !isSolarAdvisor && <BackToTop />}
       <CookieConsent onOpenCookies={() => setCookiesOpen(true)} />
       <AuthModal />
       <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
