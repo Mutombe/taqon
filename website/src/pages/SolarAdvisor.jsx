@@ -35,6 +35,7 @@ const categoryIcons = {
 };
 
 import { getGemFamily, TIER_GEMS } from '../data/gemFamilies';
+import { ZIMBABWE_AREAS, getDistanceByArea } from '../data/zimbabweAreas';
 
 const tierLabels = { budget: 'Budget', good_fit: 'Recommended', excellent: 'Excellent' };
 const tierBadgeColors = {
@@ -245,6 +246,15 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
               )}
             </button>
 
+            {hasSelections && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="shrink-0 px-3 py-2 rounded-lg border border-taqon-orange/30 text-taqon-orange text-xs font-semibold active:scale-95 transition-all"
+              >
+                View Selected ({selectedItems.length})
+              </button>
+            )}
+
             <button
               onClick={onNext}
               disabled={!hasSelections}
@@ -259,7 +269,7 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
             <div className="flex gap-2 mt-2.5">
               <div className="flex-1">
                 <div className="flex justify-between text-[10px] text-taqon-muted dark:text-white/30 mb-0.5">
-                  <span className="flex items-center gap-0.5"><Lightning size={10} className="text-yellow-500" /> Power</span>
+                  <span className="flex items-center gap-0.5"><Lightning size={10} className="text-yellow-500" /> Power Need</span>
                   <span>{totals.pp}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -271,7 +281,7 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
               </div>
               <div className="flex-1">
                 <div className="flex justify-between text-[10px] text-taqon-muted dark:text-white/30 mb-0.5">
-                  <span className="flex items-center gap-0.5"><BatteryCharging size={10} className="text-blue-400" /> Energy</span>
+                  <span className="flex items-center gap-0.5"><BatteryCharging size={10} className="text-blue-400" /> Battery Need</span>
                   <span>{totals.ep}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -316,7 +326,7 @@ function DesktopSidebar({ totals, hasSelections, selections, appliances, onUpdat
             <div className="space-y-2.5 mb-3">
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><Lightning size={12} className="text-yellow-500" /> Power</span>
+                  <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><Lightning size={12} className="text-yellow-500" /> Power Need</span>
                   <span className="font-bold text-taqon-orange tabular-nums">{totals.pp}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -328,7 +338,7 @@ function DesktopSidebar({ totals, hasSelections, selections, appliances, onUpdat
               </div>
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><BatteryCharging size={12} className="text-blue-400" /> Energy</span>
+                  <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><BatteryCharging size={12} className="text-blue-400" /> Battery Need</span>
                   <span className="font-bold text-taqon-orange tabular-nums">{totals.ep}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -676,12 +686,26 @@ function QuoteModal({ pkg, tierKey, distanceKm, onClose }) {
 }
 
 
+/* ─── Package Explanation Helper ─── */
+
+function getPackageExplanation(pkg, tierKey) {
+  const kva = parseFloat(pkg.inverter_kva) || 0;
+  if (kva <= 3) return { bestFor: 'Small homes needing essential backup', howItWorks: 'Runs lights, TV, WiFi and fridge during outages', whyUpgrade: 'Upgrade to run more appliances simultaneously' };
+  if (kva <= 5) return { bestFor: 'Medium homes with standard appliances', howItWorks: 'Handles most daily appliances including cooking', whyUpgrade: 'Upgrade for heavy loads like geysers and ACs' };
+  if (kva <= 8) return { bestFor: 'Large homes wanting reliable power', howItWorks: 'Powers most home appliances with comfort', whyUpgrade: 'Upgrade for full energy independence' };
+  if (kva <= 12) return { bestFor: 'Large homes or small businesses', howItWorks: 'Full backup with solar savings during the day', whyUpgrade: 'Upgrade for maximum capacity and heavy loads' };
+  return { bestFor: 'Businesses and large properties', howItWorks: 'Commercial-grade power with full solar independence', whyUpgrade: null };
+}
+
+
 /* ─── Recommendation Card (Step 3) — Gem-styled ─── */
 
-function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm }) {
+function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, clientFormRef }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [downloadingQuote, setDownloadingQuote] = useState(false);
   const pkg = tier.package;
+  const explanation = getPackageExplanation(pkg, tierKey);
   const tierGem = TIER_GEMS[tierKey];
   const familyGem = getGemFamily(pkg.family_slug || pkg.slug);
 
@@ -713,7 +737,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm }) {
               boxShadow: `0 4px 14px -2px ${tierGem.glowColor}`,
             }}
           >
-            <Star size={12} weight="fill" /> {tierGem.label}
+            <Star size={12} weight="fill" /> Best Match for You
           </div>
         )}
 
@@ -845,6 +869,21 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm }) {
             </div>
           )}
 
+          {/* Package explanation */}
+          <div className="mt-4 p-3 rounded-xl bg-gray-50 dark:bg-white/5 space-y-1.5">
+            <p className="text-xs text-taqon-charcoal dark:text-white/70">
+              <span className="font-semibold">Best for:</span> {explanation.bestFor}
+            </p>
+            <p className="text-xs text-taqon-muted dark:text-white/50">
+              <span className="font-semibold text-taqon-charcoal dark:text-white/70">How it works:</span> {explanation.howItWorks}
+            </p>
+            {explanation.whyUpgrade && (
+              <p className="text-xs text-taqon-muted dark:text-white/50">
+                <span className="font-semibold text-taqon-charcoal dark:text-white/70">Why upgrade:</span> {explanation.whyUpgrade}
+              </p>
+            )}
+          </div>
+
           {/* CTAs */}
           <div className="mt-5 space-y-2">
             <Link
@@ -858,10 +897,46 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm }) {
               View Details <ArrowRight size={14} weight="bold" />
             </Link>
             <button
-              onClick={() => setShowQuoteModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px]"
+              onClick={async () => {
+                if (!detailsCollected) {
+                  clientFormRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  return;
+                }
+                setDownloadingQuote(true);
+                try {
+                  const res = await solarConfigApi.getInstantQuote({
+                    package_slug: pkg.slug,
+                    distance_km: distanceKm,
+                    customer_name: clientDetails.name,
+                    customer_email: clientDetails.email,
+                    customer_phone: clientDetails.phone,
+                    customer_address: clientDetails.area,
+                    tier_label: tierLabels[tierKey] || tierKey,
+                  });
+                  const contentType = res.headers['content-type'] || 'application/pdf';
+                  const ext = contentType.includes('html') ? 'html' : 'pdf';
+                  const blob = new Blob([res.data], { type: contentType });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `Taqon-Quote-${pkg.family_name || pkg.name}.${ext}`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success('Quote downloaded!');
+                } catch (err) {
+                  toast.error(err.response?.data?.error || 'Failed to generate quote');
+                } finally {
+                  setDownloadingQuote(false);
+                }
+              }}
+              disabled={downloadingQuote}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px] disabled:opacity-60"
             >
-              <FileText size={14} /> Get Instant Quote
+              {downloadingQuote ? (
+                <SpinnerGap size={16} className="animate-spin" />
+              ) : (
+                <><DownloadSimple size={14} /> {detailsCollected ? 'Download Quote' : 'Get Instant Quote'}</>
+              )}
             </button>
           </div>
         </div>
@@ -1244,11 +1319,18 @@ export default function SolarAdvisor() {
     use_style: 'backup_solar',
     wants_smart: false,
   });
+  const [selectedArea, setSelectedArea] = useState(draft.current?.selectedArea || '');
+  const [clientDetails, setClientDetails] = useState(draft.current?.clientDetails || { name: '', phone: '', email: '', area: '' });
+  const [detailsCollected, setDetailsCollected] = useState(false);
+  const [areaSearch, setAreaSearch] = useState('');
+  const [areaDropdownOpen, setAreaDropdownOpen] = useState(false);
+  const clientFormRef = useRef(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
   // ── Persist draft to sessionStorage ──
   useEffect(() => {
-    saveDraft({ step, selections, distanceKm, preferences });
-  }, [step, selections, distanceKm, preferences]);
+    saveDraft({ step, selections, distanceKm, preferences, selectedArea, clientDetails });
+  }, [step, selections, distanceKm, preferences, selectedArea, clientDetails]);
 
   // ── Browser back/forward support ──
   const setStep = useCallback((newStep) => {
@@ -1661,26 +1743,115 @@ export default function SolarAdvisor() {
                   </h2>
 
                   <div className="space-y-5 sm:space-y-6">
-                    {/* Distance slider */}
+                    {/* Area / suburb dropdown */}
                     <div>
                       <label className="flex items-center gap-1.5 text-sm font-medium text-taqon-charcoal dark:text-white mb-4">
                         <MapPin size={16} className="text-taqon-orange" />
-                        Distance from Harare (km)
+                        Your Area / Suburb
                       </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="500"
-                        step="5"
-                        value={distanceKm}
-                        onChange={(e) => setDistanceKm(Number(e.target.value))}
-                        className="w-full accent-taqon-orange h-2 rounded-full cursor-pointer"
-                      />
-                      <div className="flex justify-between items-baseline mt-2">
-                        <span className="text-xs text-taqon-muted">0 km</span>
-                        <span className="text-2xl font-bold text-taqon-orange tabular-nums">{distanceKm} km</span>
-                        <span className="text-xs text-taqon-muted">500 km</span>
+
+                      {/* Searchable dropdown */}
+                      <div className="relative">
+                        <div
+                          onClick={() => setAreaDropdownOpen(!areaDropdownOpen)}
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 cursor-pointer hover:border-taqon-orange/40 transition-colors"
+                        >
+                          <span className={`text-sm ${selectedArea ? 'text-taqon-charcoal dark:text-white' : 'text-gray-400'}`}>
+                            {selectedArea || 'Select your area...'}
+                          </span>
+                          {areaDropdownOpen
+                            ? <CaretUp size={14} className="text-taqon-muted shrink-0" />
+                            : <CaretDown size={14} className="text-taqon-muted shrink-0" />
+                          }
+                        </div>
+
+                        <AnimatePresence>
+                          {areaDropdownOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute z-30 mt-1.5 w-full bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden"
+                            >
+                              {/* Search inside dropdown */}
+                              <div className="p-2 border-b border-gray-100 dark:border-white/10">
+                                <div className="relative">
+                                  <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted pointer-events-none" />
+                                  <input
+                                    type="text"
+                                    value={areaSearch}
+                                    onChange={(e) => setAreaSearch(e.target.value)}
+                                    placeholder="Search area..."
+                                    className="w-full pl-8 pr-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Grouped area list */}
+                              <div className="max-h-60 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                                {(() => {
+                                  const q = areaSearch.toLowerCase();
+                                  const filtered = q
+                                    ? ZIMBABWE_AREAS.filter(a => a.name.toLowerCase().includes(q) || a.province.toLowerCase().includes(q))
+                                    : ZIMBABWE_AREAS;
+                                  const grouped = {};
+                                  filtered.forEach(a => {
+                                    if (!grouped[a.province]) grouped[a.province] = [];
+                                    grouped[a.province].push(a);
+                                  });
+                                  const provinces = Object.keys(grouped);
+                                  if (provinces.length === 0) {
+                                    return (
+                                      <div className="px-4 py-6 text-center text-sm text-taqon-muted dark:text-white/40">
+                                        No areas found
+                                      </div>
+                                    );
+                                  }
+                                  return provinces.map(prov => (
+                                    <div key={prov}>
+                                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-taqon-muted dark:text-white/30 bg-gray-50 dark:bg-white/5 sticky top-0">
+                                        {prov}
+                                      </div>
+                                      {grouped[prov].map(area => (
+                                        <button
+                                          key={area.name}
+                                          onClick={() => {
+                                            setSelectedArea(area.name);
+                                            setDistanceKm(getDistanceByArea(area.name));
+                                            setAreaDropdownOpen(false);
+                                            setAreaSearch('');
+                                          }}
+                                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-taqon-orange/5 dark:hover:bg-taqon-orange/10 transition-colors flex items-center justify-between ${
+                                            selectedArea === area.name ? 'bg-taqon-orange/10 text-taqon-orange font-medium' : 'text-taqon-charcoal dark:text-white/80'
+                                          }`}
+                                        >
+                                          <span>{area.name}</span>
+                                          <span className="text-xs text-taqon-muted dark:text-white/30 tabular-nums">{area.distance}km</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  ));
+                                })()}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
+
+                      {/* Transport cost display */}
+                      {selectedArea && (
+                        <div className="mt-3 flex items-baseline justify-between">
+                          <span className="text-sm text-taqon-muted dark:text-white/50">
+                            Transport: {distanceKm}km × $0.65/km
+                          </span>
+                          <span className="text-lg font-bold text-taqon-orange tabular-nums">
+                            ${(distanceKm * 0.65).toFixed(0)}
+                          </span>
+                        </div>
+                      )}
 
                       <div className="mt-4 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
                         <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
@@ -1698,8 +1869,8 @@ export default function SolarAdvisor() {
                       <div className="grid grid-cols-3 gap-2 sm:gap-4">
                         {[
                           { value: totals.count, label: 'Appliances' },
-                          { value: totals.pp, label: 'Power' },
-                          { value: totals.ep, label: 'Energy' },
+                          { value: totals.pp, label: 'Power Need' },
+                          { value: totals.ep, label: 'Battery Need' },
                         ].map(({ value, label }) => (
                           <div key={label} className="p-2.5 sm:p-3 rounded-xl bg-white dark:bg-white/5 text-center">
                             <p className="text-xl sm:text-2xl font-bold text-taqon-orange tabular-nums">{value}</p>
@@ -1862,13 +2033,144 @@ export default function SolarAdvisor() {
                               key={tierKey}
                               tierKey={tierKey}
                               tier={recommendation.tiers[tierKey]}
-                              isHighlighted={tierKey === 'good_fit' || tierEntries.length === 1}
+                              isHighlighted={recommendation.tiers[tierKey].best_match || tierEntries.length === 1}
                               distanceKm={distanceKm}
+                              clientDetails={clientDetails}
+                              detailsCollected={detailsCollected}
+                              clientFormRef={clientFormRef}
                             />
                           ))}
                         </div>
                       );
                     })()}
+
+                    {/* Client details form */}
+                    <div ref={clientFormRef} className="max-w-xl mx-auto mt-10 sm:mt-12">
+                      {!detailsCollected ? (
+                        <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm">
+                          <div className="flex items-center gap-2 mb-5">
+                            <FileText size={20} className="text-taqon-orange" />
+                            <h3 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white">
+                              Get Your Quotes
+                            </h3>
+                          </div>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (!clientDetails.name.trim() || !clientDetails.phone.trim()) return;
+                              setDetailsCollected(true);
+                              toast.success('Details saved! You can now download quotes.');
+                            }}
+                            className="space-y-4"
+                          >
+                            <div>
+                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Full Name *</label>
+                              <input
+                                type="text"
+                                required
+                                value={clientDetails.name}
+                                onChange={(e) => setClientDetails(d => ({ ...d, name: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                placeholder="John Doe"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone *</label>
+                              <input
+                                type="tel"
+                                required
+                                value={clientDetails.phone}
+                                onChange={(e) => setClientDetails(d => ({ ...d, phone: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                placeholder="+263 77 123 4567"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email</label>
+                              <input
+                                type="email"
+                                value={clientDetails.email}
+                                onChange={(e) => setClientDetails(d => ({ ...d, email: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                placeholder="john@example.com"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
+                              <input
+                                type="text"
+                                value={clientDetails.area}
+                                onChange={(e) => setClientDetails(d => ({ ...d, area: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                placeholder="Borrowdale, Harare"
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
+                            >
+                              <DownloadSimple size={16} weight="bold" /> Unlock Downloads
+                            </button>
+                          </form>
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/10 p-5 sm:p-6 flex items-center gap-3">
+                          <CheckCircle size={24} className="text-emerald-500 shrink-0" weight="fill" />
+                          <div>
+                            <p className="font-semibold text-sm text-emerald-700 dark:text-emerald-300">Details saved</p>
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400/70 mt-0.5">You can now download quotes for any package above.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Download All Quotes button */}
+                    {detailsCollected && recommendation && (
+                      <div className="max-w-xl mx-auto mt-4">
+                        <button
+                          onClick={async () => {
+                            setDownloadingAll(true);
+                            const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
+                            try {
+                              for (const tierKey of tierEntries) {
+                                const pkg = recommendation.tiers[tierKey].package;
+                                const res = await solarConfigApi.getInstantQuote({
+                                  package_slug: pkg.slug,
+                                  distance_km: distanceKm,
+                                  customer_name: clientDetails.name,
+                                  customer_email: clientDetails.email,
+                                  customer_phone: clientDetails.phone,
+                                  customer_address: clientDetails.area,
+                                  tier_label: tierLabels[tierKey] || tierKey,
+                                });
+                                const contentType = res.headers['content-type'] || 'application/pdf';
+                                const ext = contentType.includes('html') ? 'html' : 'pdf';
+                                const blob = new Blob([res.data], { type: contentType });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `Taqon-Quote-${pkg.family_name || pkg.name}.${ext}`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }
+                              toast.success(`${tierEntries.length} quotes downloaded!`);
+                            } catch (err) {
+                              toast.error(err.response?.data?.error || 'Failed to download all quotes');
+                            } finally {
+                              setDownloadingAll(false);
+                            }
+                          }}
+                          disabled={downloadingAll}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-charcoal dark:bg-white/10 text-white font-semibold text-sm hover:bg-taqon-charcoal/90 dark:hover:bg-white/15 active:scale-[0.98] transition-all shadow-lg min-h-[44px] disabled:opacity-60"
+                        >
+                          {downloadingAll ? (
+                            <><SpinnerGap size={16} className="animate-spin" /> Downloading...</>
+                          ) : (
+                            <><DownloadSimple size={16} weight="bold" /> Download All Quotes</>
+                          )}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Bottom actions */}
                     <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
