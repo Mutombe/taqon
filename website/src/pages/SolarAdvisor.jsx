@@ -1575,8 +1575,8 @@ export default function SolarAdvisor() {
       </section>
 
       {/* ─── Content ─── */}
-      <section className="bg-taqon-cream dark:bg-taqon-dark" style={{ height: 'calc(100vh - 180px)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full overflow-y-auto py-4 lg:py-6">
+      <section className="py-6 lg:py-10 bg-taqon-cream dark:bg-taqon-dark min-h-[60vh]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <AnimatePresence mode="wait">
 
             {/* ═══════════════════════════════════════════════
