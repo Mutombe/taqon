@@ -301,7 +301,119 @@ function MobileBottomBar({ totals, hasSelections, selections, appliances, onNext
 }
 
 
-/* DesktopSidebar removed — replaced by inline right-column in desktop SPA layout */
+/* ─── Desktop Sticky Sidebar ─── */
+
+function DesktopSidebar({ totals, hasSelections, selections, appliances, onUpdateQty, onNext }) {
+  return (
+    <div className="hidden lg:block w-[280px] shrink-0">
+      <div
+        className="sticky"
+        style={{
+          top: `${SIDEBAR_TOP}px`,
+          maxHeight: `calc(100vh - ${SIDEBAR_TOP + 24}px)`,
+        }}
+      >
+        <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden flex flex-col"
+          style={{ maxHeight: `calc(100vh - ${SIDEBAR_TOP + 24}px)` }}
+        >
+          {/* Header — always visible */}
+          <div className="px-5 pt-5 pb-0 shrink-0">
+            <h3 className="font-bold font-syne text-sm text-taqon-charcoal dark:text-white mb-3 flex items-center gap-2">
+              <Lightning size={16} className="text-taqon-orange" />
+              Your Selection
+            </h3>
+
+            {/* Score meters — compact */}
+            <div className="space-y-2.5 mb-3">
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><Lightning size={12} className="text-yellow-500" /> Power Need</span>
+                  <span className="font-bold text-taqon-orange tabular-nums">{totals.pp}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-yellow-400 via-taqon-orange to-red-500 transition-all duration-500"
+                    style={{ width: `${Math.min(100, (parseFloat(totals.pp) / 30) * 100)}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><BatteryCharging size={12} className="text-blue-400" /> Battery Need</span>
+                  <span className="font-bold text-taqon-orange tabular-nums">{totals.ep}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-400 via-taqon-orange to-red-500 transition-all duration-500"
+                    style={{ width: `${Math.min(100, (parseFloat(totals.ep) / 35) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between text-xs py-2 border-t border-gray-100 dark:border-white/10">
+              <span className="text-taqon-muted dark:text-white/50">Appliances</span>
+              <span className="font-semibold text-taqon-charcoal dark:text-white tabular-nums">{totals.count}</span>
+            </div>
+          </div>
+
+          {/* Selected items — scrollable region */}
+          {hasSelections && (
+            <div className="px-5 flex-1 min-h-0 overflow-y-auto">
+              <div className="pt-2 border-t border-gray-100 dark:border-white/10 space-y-0.5 pb-1">
+                {Object.entries(selections)
+                  .filter(([, qty]) => qty > 0)
+                  .map(([id, qty]) => {
+                    const a = appliances.find((app) => app.id === id);
+                    return a ? (
+                      <div
+                        key={id}
+                        className="flex items-center justify-between py-1 text-[11px] group"
+                      >
+                        <span className="text-taqon-charcoal dark:text-white/70 truncate mr-2 flex-1">
+                          {a.name}
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-taqon-muted dark:text-white/40 font-medium tabular-nums">
+                            x{qty}
+                          </span>
+                          <button
+                            onClick={() => onUpdateQty(id, -qty)}
+                            className="opacity-0 group-hover:opacity-100 w-4 h-4 rounded text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center transition-all"
+                            title="Remove"
+                            aria-label={`Remove ${a.name}`}
+                          >
+                            <X size={8} weight="bold" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : null;
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* Footer CTA — always visible */}
+          <div className="px-5 py-4 shrink-0 border-t border-gray-100 dark:border-white/10">
+            <button
+              onClick={onNext}
+              disabled={!hasSelections}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 transition-all shadow-lg shadow-taqon-orange/25 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+            >
+              Continue <ArrowRight size={14} weight="bold" />
+            </button>
+
+            {!hasSelections && (
+              <p className="mt-2 text-[10px] text-center text-taqon-muted dark:text-white/30">
+                Select appliances to get started
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
 /* ─── Casino-style Slot Number ─── */
@@ -630,7 +742,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
   return (
     <AnimatedSection delay={tierKey === 'budget' ? 0 : tierKey === 'good_fit' ? 0.1 : 0.2}>
       <div
-        className={`gem-rec-card relative rounded-2xl sm:rounded-3xl border-2 flex flex-col bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm ${tierGem.borderColor} ${
+        className={`gem-rec-card relative rounded-2xl sm:rounded-3xl border-2 h-full flex flex-col bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm ${tierGem.borderColor} ${
           isHighlighted ? 'gem-rec-highlighted' : ''
         }`}
         style={{
@@ -1423,8 +1535,8 @@ export default function SolarAdvisor() {
             </p>
           </motion.div>
 
-          {/* Step indicators — mobile only (desktop shows everything on one page) */}
-          <div className="mt-6 sm:mt-8 flex items-center gap-2 sm:gap-3 lg:hidden">
+          {/* Step indicators */}
+          <div className="mt-6 sm:mt-8 flex items-center gap-2 sm:gap-3">
             {[
               { num: 1, label: 'Appliances' },
               { num: 2, label: 'Location' },
@@ -1459,745 +1571,23 @@ export default function SolarAdvisor() {
               </div>
             ))}
           </div>
-
-          {/* Desktop subtitle — replaces step indicators */}
-          <p className="hidden lg:block mt-6 text-white/40 text-sm">
-            Select your appliances, choose your location, set your preferences — see recommendations live.
-          </p>
         </div>
       </section>
 
       {/* ─── Content ─── */}
       <section className="py-6 lg:py-10 bg-taqon-cream dark:bg-taqon-dark min-h-[60vh]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <AnimatePresence mode="wait">
 
-          {/* ═══════════════════════════════════════════════════════════
-              DESKTOP: Single-page split-panel layout (lg: and above)
-              Left 58% = all inputs stacked | Right 42% = sticky live preview
-              ═══════════════════════════════════════════════════════════ */}
-          <div className="hidden lg:flex lg:gap-8 lg:items-start">
+            {/* ═══════════════════════════════════════════════
+                Step 1: Select Appliances
+                ═══════════════════════════════════════════════ */}
+            {step === 1 && (
+              <motion.div key="step1" {...stepTransition}>
+                <div className="flex flex-col lg:flex-row lg:gap-6 lg:items-start">
 
-            {/* ── LEFT COLUMN: All inputs ── */}
-            <div className="flex-1 min-w-0 space-y-8">
-
-              {/* ─── Section 1: Appliance Selection ─── */}
-              <div>
-                <h2 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white mb-4 flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-full bg-taqon-orange text-white flex items-center justify-center text-xs font-bold">1</span>
-                  Select Your Appliances
-                </h2>
-
-                {/* Search input */}
-                <div className="relative mb-4">
-                  <MagnifyingGlass
-                    size={18}
-                    className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-taqon-muted pointer-events-none"
-                  />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search appliances..."
-                    className="w-full pl-10 sm:pl-12 pr-4 py-3 rounded-xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-taqon-muted focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none transition-all"
-                  />
-                  {search && (
-                    <button
-                      onClick={() => setSearch('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md bg-gray-100 dark:bg-white/10 flex items-center justify-center text-taqon-muted hover:text-taqon-charcoal dark:hover:text-white transition-colors"
-                      aria-label="Clear search"
-                    >
-                      <X size={12} weight="bold" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Category tabs */}
-                {loadingAppliances ? (
-                  <div className="flex gap-1.5 sm:gap-2 mb-4 sm:mb-6 overflow-hidden">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="h-10 rounded-xl bg-gray-200 dark:bg-white/10 animate-pulse shrink-0" style={{ width: `${80 + i * 15}px` }} />
-                    ))}
-                  </div>
-                ) : (
-                  <CategoryTabs
-                    categories={categories}
-                    activeCategory={activeCategory}
-                    onSelect={setActiveCategory}
-                    onClearSearch={() => setSearch('')}
-                  />
-                )}
-
-                {/* Appliance cards grid */}
-                {loadingAppliances ? (
-                  <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-2.5">
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <div key={i} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-taqon-charcoal p-2.5 sm:p-3 animate-pulse">
-                        <div className="flex items-start justify-between gap-1.5 mb-3">
-                          <div className="flex-1">
-                            <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-3/4 mb-1.5" />
-                            <div className="h-2 bg-gray-100 dark:bg-white/5 rounded w-1/3" />
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="h-2 bg-gray-100 dark:bg-white/5 rounded w-1/2" />
-                          <div className="flex gap-1">
-                            <div className="w-7 h-7 rounded-md bg-gray-100 dark:bg-white/10" />
-                            <div className="w-5 h-7" />
-                            <div className="w-7 h-7 rounded-md bg-gray-100 dark:bg-white/10" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : filteredAppliances.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 gap-3">
-                    <MagnifyingGlass size={40} className="text-taqon-muted/30" />
-                    <p className="text-sm text-taqon-muted dark:text-white/40">
-                      No appliances found{search ? ` for "${search}"` : ' in this category'}
-                    </p>
-                    {search && (
-                      <button
-                        onClick={() => setSearch('')}
-                        className="text-sm text-taqon-orange hover:underline"
-                      >
-                        Clear search
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-2.5">
-                    {filteredAppliances.map((appliance) => {
-                      const qty = selections[appliance.id] || 0;
-                      return (
-                        <div
-                          key={appliance.id}
-                          onClick={() => updateQty(appliance.id, 1)}
-                          className={`relative rounded-xl border cursor-pointer select-none transition-all active:scale-[0.97] ${
-                            qty > 0
-                              ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10 ring-1 ring-taqon-orange/20 shadow-sm shadow-taqon-orange/10'
-                              : 'border-gray-200 dark:border-white/10 bg-white dark:bg-taqon-charcoal hover:border-taqon-orange/30 hover:shadow-md'
-                          }`}
-                        >
-                          {qty > 0 && (
-                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-taqon-orange text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-md tabular-nums z-10">
-                              {qty}
-                            </div>
-                          )}
-                          <div className="p-3 sm:p-3.5">
-                            <h4 className="font-semibold text-xs sm:text-sm text-taqon-charcoal dark:text-white leading-snug line-clamp-2 mb-2">
-                              {appliance.name}
-                            </h4>
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-taqon-muted dark:text-white/40 font-medium">
-                                {appliance.typical_wattage}W
-                              </span>
-                              {qty > 0 ? (
-                                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                  <button
-                                    onClick={() => updateQty(appliance.id, -1)}
-                                    className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 active:scale-90 transition-all"
-                                    aria-label={`Remove one ${appliance.name}`}
-                                  >
-                                    <Minus size={12} weight="bold" />
-                                  </button>
-                                  <span className="w-6 text-center text-sm font-bold text-taqon-orange tabular-nums">
-                                    {qty}
-                                  </span>
-                                  <button
-                                    onClick={() => updateQty(appliance.id, 1)}
-                                    className="w-7 h-7 rounded-lg bg-taqon-orange/10 flex items-center justify-center text-taqon-orange hover:bg-taqon-orange/20 active:scale-90 transition-all"
-                                    aria-label={`Add one more ${appliance.name}`}
-                                  >
-                                    <Plus size={12} weight="bold" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="text-[10px] text-taqon-orange font-medium">Click to add</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* ─── Section 2: Location & Distance ─── */}
-              <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-6 shadow-sm">
-                <h2 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white mb-5 flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-full bg-taqon-orange text-white flex items-center justify-center text-xs font-bold">2</span>
-                  Location & Distance
-                </h2>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="flex items-center gap-1.5 text-sm font-medium text-taqon-charcoal dark:text-white mb-3">
-                      <MapPin size={16} className="text-taqon-orange" />
-                      Your Area / Suburb
-                    </label>
-
-                    {/* Searchable dropdown */}
-                    <div className="relative">
-                      <div
-                        onClick={() => setAreaDropdownOpen(!areaDropdownOpen)}
-                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 cursor-pointer hover:border-taqon-orange/40 transition-colors"
-                      >
-                        <span className={`text-sm ${selectedArea ? 'text-taqon-charcoal dark:text-white' : 'text-gray-400'}`}>
-                          {selectedArea || 'Select your area...'}
-                        </span>
-                        {areaDropdownOpen
-                          ? <CaretUp size={14} className="text-taqon-muted shrink-0" />
-                          : <CaretDown size={14} className="text-taqon-muted shrink-0" />
-                        }
-                      </div>
-
-                      <AnimatePresence>
-                        {areaDropdownOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute z-[1000] mt-1.5 w-full bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden"
-                          >
-                            <div className="p-2 border-b border-gray-100 dark:border-white/10">
-                              <div className="relative">
-                                <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted pointer-events-none" />
-                                <input
-                                  type="text"
-                                  value={areaSearch}
-                                  onChange={(e) => setAreaSearch(e.target.value)}
-                                  placeholder="Search area..."
-                                  className="w-full pl-8 pr-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                  autoFocus
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              </div>
-                            </div>
-                            <div className="max-h-60 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                              {(() => {
-                                const q = areaSearch.toLowerCase();
-                                const filtered = q
-                                  ? ZIMBABWE_AREAS.filter(a => a.name.toLowerCase().includes(q) || a.province.toLowerCase().includes(q))
-                                  : ZIMBABWE_AREAS;
-                                const grouped = {};
-                                filtered.forEach(a => {
-                                  if (!grouped[a.province]) grouped[a.province] = [];
-                                  grouped[a.province].push(a);
-                                });
-                                const provinces = Object.keys(grouped);
-                                if (provinces.length === 0) {
-                                  return (
-                                    <div className="px-4 py-6 text-center text-sm text-taqon-muted dark:text-white/40">
-                                      No areas found
-                                    </div>
-                                  );
-                                }
-                                return provinces.map(prov => (
-                                  <div key={prov}>
-                                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-taqon-muted dark:text-white/30 bg-gray-50 dark:bg-white/5 sticky top-0">
-                                      {prov}
-                                    </div>
-                                    {grouped[prov].map(area => (
-                                      <button
-                                        key={area.name}
-                                        onClick={() => {
-                                          setSelectedArea(area.name);
-                                          setDistanceKm(getDistanceByArea(area.name));
-                                          setAreaDropdownOpen(false);
-                                          setAreaSearch('');
-                                        }}
-                                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-taqon-orange/5 dark:hover:bg-taqon-orange/10 transition-colors flex items-center justify-between ${
-                                          selectedArea === area.name ? 'bg-taqon-orange/10 text-taqon-orange font-medium' : 'text-taqon-charcoal dark:text-white/80'
-                                        }`}
-                                      >
-                                        <span>{area.name}</span>
-                                        <span className="text-xs text-taqon-muted dark:text-white/30 tabular-nums">{area.distance}km</span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                ));
-                              })()}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Transport cost */}
-                    {selectedArea && (
-                      <div className="mt-3 flex items-baseline justify-between">
-                        <span className="text-sm text-taqon-muted dark:text-white/50">
-                          Transport: {distanceKm}km x $0.65/km
-                        </span>
-                        <span className="text-lg font-bold text-taqon-orange tabular-nums">
-                          ${(distanceKm * 0.65).toFixed(0)}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="mt-4 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
-                      <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
-                        <Info size={14} className="mt-0.5 shrink-0" />
-                        <span>Transport is charged at $0.65/km. Harare-based installations are cheapest.</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ─── Section 3: Preferences ─── */}
-              <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-6 shadow-sm space-y-5">
-                <h2 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-full bg-taqon-orange text-white flex items-center justify-center text-xs font-bold">3</span>
-                  Your Preferences
-                </h2>
-
-                {/* Q1: Priority */}
-                <div>
-                  <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">What matters most to you?</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { value: 'lowest_cost', label: 'Lowest Cost', desc: 'Most affordable workable system' },
-                      { value: 'balanced', label: 'Best Balance', desc: 'Cost and performance balanced' },
-                      { value: 'max_comfort', label: 'Max Comfort', desc: 'Maximum performance and comfort' },
-                    ].map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setPreferences(p => ({ ...p, priority: opt.value }))}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${preferences.priority === opt.value ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10' : 'border-gray-200 dark:border-white/10 hover:border-taqon-orange/30'}`}
-                      >
-                        <p className={`font-semibold text-sm ${preferences.priority === opt.value ? 'text-taqon-orange' : 'text-taqon-charcoal dark:text-white'}`}>{opt.label}</p>
-                        <p className="text-xs text-taqon-muted dark:text-white/40 mt-1">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Q2: Load management */}
-                <div>
-                  <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">
-                    Comfortable switching off heavy appliances when battery is low?
-                  </label>
-                  <div className="flex gap-3">
-                    {[{ value: true, label: 'Yes, I can manage that' }, { value: false, label: 'No, I want full convenience' }].map(opt => (
-                      <button
-                        key={String(opt.value)}
-                        onClick={() => setPreferences(p => ({ ...p, willing_to_manage: opt.value }))}
-                        className={`flex-1 p-3 rounded-xl border-2 text-sm font-medium transition-all ${preferences.willing_to_manage === opt.value ? 'border-taqon-orange bg-taqon-orange/5 text-taqon-orange' : 'border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white hover:border-taqon-orange/30'}`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Q3: Use style */}
-                <div>
-                  <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">How do you want the system to work?</label>
-                  <div className="space-y-2">
-                    {[
-                      { value: 'backup', label: 'Mainly for backup', desc: 'Keep the lights on during outages' },
-                      { value: 'backup_solar', label: 'Backup + solar savings', desc: 'Backup power plus daytime solar to reduce bills' },
-                      { value: 'independence', label: 'Maximum solar independence', desc: 'As little grid dependency as possible' },
-                    ].map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setPreferences(p => ({ ...p, use_style: opt.value }))}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${preferences.use_style === opt.value ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10' : 'border-gray-200 dark:border-white/10 hover:border-taqon-orange/30'}`}
-                      >
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${preferences.use_style === opt.value ? 'border-taqon-orange' : 'border-gray-300 dark:border-white/20'}`}>
-                          {preferences.use_style === opt.value && <div className="w-2 h-2 rounded-full bg-taqon-orange" />}
-                        </div>
-                        <div>
-                          <p className={`font-semibold text-sm ${preferences.use_style === opt.value ? 'text-taqon-orange' : 'text-taqon-charcoal dark:text-white'}`}>{opt.label}</p>
-                          <p className="text-xs text-taqon-muted dark:text-white/40">{opt.desc}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Get Recommendations CTA */}
-                <div className="pt-4 border-t border-gray-100 dark:border-white/10">
-                  <button
-                    onClick={handleRecommend}
-                    disabled={!hasSelections}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <SpinnerGap size={18} className="animate-spin" />
-                    ) : (
-                      <>Get Recommendations <ArrowRight size={14} weight="bold" /></>
-                    )}
-                  </button>
-                  {!hasSelections && (
-                    <p className="mt-2 text-xs text-center text-taqon-muted dark:text-white/30">
-                      Select at least one appliance to get started
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* ─── Desktop: Results section (below inputs, full-width) ─── */}
-              {step === 4 && analysisComplete && recommendation && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-8"
-                >
-                  {/* Header */}
-                  <div>
-                    <h2 className="text-2xl font-bold font-syne text-taqon-charcoal dark:text-white">
-                      Your <span className="text-gradient">Recommendations</span>
-                    </h2>
-                    <p className="mt-2 text-sm text-taqon-muted dark:text-white/50">
-                      Based on {totals.count} appliance{totals.count !== 1 ? 's' : ''} at {distanceKm}km from Harare
-                    </p>
-                  </div>
-
-                  {/* Tier cards */}
-                  {(() => {
-                    const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
-                    const cols = tierEntries.length === 1 ? 'max-w-lg' : tierEntries.length === 2 ? 'grid grid-cols-2 items-start gap-6' : 'grid grid-cols-3 items-start gap-6';
-                    return (
-                      <div className={cols}>
-                        {tierEntries.map((tierKey) => (
-                          <RecommendationCard
-                            key={tierKey}
-                            tierKey={tierKey}
-                            tier={recommendation.tiers[tierKey]}
-                            isHighlighted={recommendation.tiers[tierKey].best_match || tierEntries.length === 1}
-                            distanceKm={distanceKm}
-                            clientDetails={clientDetails}
-                            detailsCollected={detailsCollected}
-                            clientFormRef={clientFormRef}
-                            preferences={preferences}
-                          />
-                        ))}
-                      </div>
-                    );
-                  })()}
-
-                  {/* Client details form */}
-                  <div ref={clientFormRef} className="max-w-xl">
-                    {!detailsCollected ? (
-                      <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-6 shadow-sm">
-                        <div className="flex items-center gap-2 mb-5">
-                          <FileText size={20} className="text-taqon-orange" />
-                          <h3 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white">
-                            Get Your Quotes
-                          </h3>
-                        </div>
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            if (!clientDetails.name.trim() || !clientDetails.phone.trim()) return;
-                            setDetailsCollected(true);
-                            toast.success('Details saved! You can now download quotes.');
-                          }}
-                          className="space-y-4"
-                        >
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Full Name *</label>
-                              <input
-                                type="text"
-                                required
-                                value={clientDetails.name}
-                                onChange={(e) => setClientDetails(d => ({ ...d, name: e.target.value }))}
-                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                placeholder="John Doe"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone *</label>
-                              <input
-                                type="tel"
-                                required
-                                value={clientDetails.phone}
-                                onChange={(e) => setClientDetails(d => ({ ...d, phone: e.target.value }))}
-                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                placeholder="+263 77 123 4567"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email</label>
-                              <input
-                                type="email"
-                                value={clientDetails.email}
-                                onChange={(e) => setClientDetails(d => ({ ...d, email: e.target.value }))}
-                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                placeholder="john@example.com"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
-                              <input
-                                type="text"
-                                value={clientDetails.area}
-                                onChange={(e) => setClientDetails(d => ({ ...d, area: e.target.value }))}
-                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                placeholder="Borrowdale, Harare"
-                              />
-                            </div>
-                          </div>
-                          <button
-                            type="submit"
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
-                          >
-                            <DownloadSimple size={16} weight="bold" /> Unlock Downloads
-                          </button>
-                        </form>
-                      </div>
-                    ) : (
-                      <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/10 p-5 sm:p-6 flex items-center gap-3">
-                        <CheckCircle size={24} className="text-emerald-500 shrink-0" weight="fill" />
-                        <div>
-                          <p className="font-semibold text-sm text-emerald-700 dark:text-emerald-300">Details saved</p>
-                          <p className="text-xs text-emerald-600 dark:text-emerald-400/70 mt-0.5">You can now download quotes for any package above.</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Download All Quotes */}
-                  {detailsCollected && recommendation && (
-                    <div className="max-w-xl">
-                      <button
-                        onClick={async () => {
-                          setDownloadingAll(true);
-                          const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
-                          try {
-                            for (let idx = 0; idx < tierEntries.length; idx++) {
-                              const tierKey = tierEntries[idx];
-                              const pkg = recommendation.tiers[tierKey].package;
-                              const res = await solarConfigApi.getInstantQuote({
-                                package_slug: pkg.slug,
-                                distance_km: distanceKm,
-                                customer_name: clientDetails.name,
-                                customer_email: clientDetails.email,
-                                customer_phone: clientDetails.phone,
-                                customer_address: clientDetails.area,
-                                tier_label: tierLabels[tierKey] || tierKey,
-                              });
-                              const contentType = res.headers['content-type'] || 'application/pdf';
-                              const ext = contentType.includes('html') ? 'html' : 'pdf';
-                              const blob = new Blob([res.data], { type: contentType });
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `Taqon-${tierLabels[tierKey] || tierKey}-${pkg.family_name || pkg.name}.${ext}`;
-                              document.body.appendChild(a);
-                              a.click();
-                              document.body.removeChild(a);
-                              URL.revokeObjectURL(url);
-                              if (idx < tierEntries.length - 1) await new Promise(r => setTimeout(r, 800));
-                            }
-                            toast.success(`${tierEntries.length} quotes downloaded!`);
-                          } catch (err) {
-                            toast.error(err.response?.data?.error || 'Failed to download all quotes');
-                          } finally {
-                            setDownloadingAll(false);
-                          }
-                        }}
-                        disabled={downloadingAll}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-charcoal dark:bg-white/10 text-white font-semibold text-sm hover:bg-taqon-charcoal/90 dark:hover:bg-white/15 active:scale-[0.98] transition-all shadow-lg min-h-[44px] disabled:opacity-60"
-                      >
-                        {downloadingAll ? (
-                          <><SpinnerGap size={16} className="animate-spin" /> Downloading...</>
-                        ) : (
-                          <><DownloadSimple size={16} weight="bold" /> Download All Quotes</>
-                        )}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Bottom actions */}
-                  <div className="flex items-center gap-4">
-                    <Link
-                      to="/packages"
-                      className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-taqon-orange/10 text-taqon-orange font-semibold text-sm hover:bg-taqon-orange/20 active:scale-[0.98] transition-all min-h-[44px]"
-                    >
-                      Browse All Packages <ArrowRight size={14} weight="bold" />
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-
-            {/* ── RIGHT COLUMN: Sticky live preview ── */}
-            <div className="w-[380px] shrink-0">
-              <div
-                className="sticky space-y-4"
-                style={{
-                  top: `${SIDEBAR_TOP}px`,
-                  maxHeight: `calc(100vh - ${SIDEBAR_TOP + 24}px)`,
-                  overflowY: 'auto',
-                  scrollbarWidth: 'thin',
-                }}
-              >
-                {/* PP / EP meters */}
-                <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
-                  <div className="px-5 pt-5 pb-4">
-                    <h3 className="font-bold font-syne text-sm text-taqon-charcoal dark:text-white mb-4 flex items-center gap-2">
-                      <Lightning size={16} className="text-taqon-orange" />
-                      Your Power Profile
-                    </h3>
-
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><Lightning size={12} className="text-yellow-500" /> Power Need (PP)</span>
-                          <span className="font-bold text-taqon-orange tabular-nums">{totals.pp}</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
-                          <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-yellow-400 via-taqon-orange to-red-500"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(100, (parseFloat(totals.pp) / 30) * 100)}%` }}
-                            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-taqon-muted dark:text-white/50 flex items-center gap-1"><BatteryCharging size={12} className="text-blue-400" /> Battery Need (EP)</span>
-                          <span className="font-bold text-taqon-orange tabular-nums">{totals.ep}</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
-                          <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-blue-400 via-taqon-orange to-red-500"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(100, (parseFloat(totals.ep) / 35) * 100)}%` }}
-                            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between text-xs py-2.5 mt-3 border-t border-gray-100 dark:border-white/10">
-                      <span className="text-taqon-muted dark:text-white/50">Appliances</span>
-                      <span className="font-semibold text-taqon-charcoal dark:text-white tabular-nums">{totals.count}</span>
-                    </div>
-                  </div>
-
-                  {/* Selected items list */}
-                  {hasSelections && (
-                    <div className="px-5 pb-4 border-t border-gray-100 dark:border-white/10">
-                      <div className="pt-3 space-y-0.5 max-h-40 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                        {Object.entries(selections)
-                          .filter(([, qty]) => qty > 0)
-                          .map(([id, qty]) => {
-                            const a = appliances.find((app) => app.id === id);
-                            return a ? (
-                              <div key={id} className="flex items-center justify-between py-1 text-[11px] group">
-                                <span className="text-taqon-charcoal dark:text-white/70 truncate mr-2 flex-1">
-                                  {a.name}
-                                </span>
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="text-taqon-muted dark:text-white/40 font-medium tabular-nums">x{qty}</span>
-                                  <button
-                                    onClick={() => updateQty(id, -qty)}
-                                    className="opacity-0 group-hover:opacity-100 w-4 h-4 rounded text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center transition-all"
-                                    title="Remove"
-                                    aria-label={`Remove ${a.name}`}
-                                  >
-                                    <X size={8} weight="bold" />
-                                  </button>
-                                </div>
-                              </div>
-                            ) : null;
-                          })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Map preview — appears when area selected */}
-                {selectedArea && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden"
-                  >
-                    <div className="px-5 pt-4 pb-2">
-                      <h4 className="font-bold font-syne text-sm text-taqon-charcoal dark:text-white mb-1 flex items-center gap-2">
-                        <MapPin size={14} className="text-taqon-orange" />
-                        {selectedArea}
-                      </h4>
-                      <p className="text-xs text-taqon-muted dark:text-white/40">{distanceKm}km from Harare</p>
-                    </div>
-                    <div className="px-3 pb-3">
-                      <DistanceMap
-                        clientCoords={getAreaCoords(selectedArea)}
-                        distanceKm={distanceKm}
-                        areaName={selectedArea}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Analysis terminal — desktop */}
-                {step === 4 && !analysisComplete && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <CalculationLog
-                      key={`log-${recommendRun}`}
-                      selections={selections}
-                      appliances={appliances}
-                      totals={totals}
-                      distanceKm={distanceKm}
-                      recommendation={recommendation}
-                      error={recommendError}
-                      onComplete={() => setAnalysisComplete(true)}
-                    />
-                  </motion.div>
-                )}
-
-                {/* Quick summary of preferences chosen */}
-                {(preferences.priority !== 'balanced' || preferences.use_style !== 'backup_solar' || preferences.willing_to_manage) && hasSelections && (
-                  <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 shadow-sm p-4">
-                    <h4 className="font-bold font-syne text-xs text-taqon-muted dark:text-white/40 uppercase tracking-wider mb-2">Preferences</h4>
-                    <div className="space-y-1.5 text-xs text-taqon-charcoal dark:text-white/70">
-                      <p className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-taqon-orange shrink-0" />
-                        {preferences.priority === 'lowest_cost' ? 'Lowest cost' : preferences.priority === 'max_comfort' ? 'Maximum comfort' : 'Best balance'}
-                      </p>
-                      <p className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-taqon-orange shrink-0" />
-                        {preferences.willing_to_manage ? 'Can manage loads' : 'Full convenience'}
-                      </p>
-                      <p className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-taqon-orange shrink-0" />
-                        {preferences.use_style === 'backup' ? 'Backup only' : preferences.use_style === 'independence' ? 'Max solar independence' : 'Backup + solar savings'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-
-          {/* ═══════════════════════════════════════════════════════════
-              MOBILE: Step-by-step wizard (below lg:)
-              ═══════════════════════════════════════════════════════════ */}
-          <div className="lg:hidden">
-            <AnimatePresence mode="wait">
-
-              {/* ── Step 1: Select Appliances ── */}
-              {step === 1 && (
-                <motion.div key="step1" {...stepTransition}>
-                  <div className="pb-44 sm:pb-40 flex-1 min-w-0">
+                  {/* ── Main content area ── */}
+                  <div className="pb-44 sm:pb-40 lg:pb-0 flex-1 min-w-0">
                     {/* Search input */}
                     <div className="relative mb-4">
                       <MagnifyingGlass
@@ -2240,7 +1630,7 @@ export default function SolarAdvisor() {
 
                     {/* Appliance cards grid */}
                     {loadingAppliances ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-2.5">
                         {Array.from({ length: 9 }).map((_, i) => (
                           <div key={i} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-taqon-charcoal p-2.5 sm:p-3 animate-pulse">
                             <div className="flex items-start justify-between gap-1.5 mb-3">
@@ -2276,7 +1666,7 @@ export default function SolarAdvisor() {
                         )}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-2.5">
                         {filteredAppliances.map((appliance) => {
                           const qty = selections[appliance.id] || 0;
                           return (
@@ -2289,19 +1679,25 @@ export default function SolarAdvisor() {
                                   : 'border-gray-200 dark:border-white/10 bg-white dark:bg-taqon-charcoal hover:border-taqon-orange/30 hover:shadow-md'
                               }`}
                             >
+                              {/* Quantity badge */}
                               {qty > 0 && (
                                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-taqon-orange text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-md tabular-nums z-10">
                                   {qty}
                                 </div>
                               )}
+
                               <div className="p-3 sm:p-3.5">
+                                {/* Name + wattage */}
                                 <h4 className="font-semibold text-xs sm:text-sm text-taqon-charcoal dark:text-white leading-snug line-clamp-2 mb-2">
                                   {appliance.name}
                                 </h4>
+
+                                {/* Wattage chip + controls */}
                                 <div className="flex items-center justify-between">
                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-taqon-muted dark:text-white/40 font-medium">
                                     {appliance.typical_wattage}W
                                   </span>
+
                                   {qty > 0 ? (
                                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                       <button
@@ -2334,500 +1730,508 @@ export default function SolarAdvisor() {
                     )}
                   </div>
 
-                  {/* Mobile sticky bottom bar */}
-                  <MobileBottomBar
+                  {/* ── Desktop sticky sidebar ── */}
+                  <DesktopSidebar
                     totals={totals}
                     hasSelections={hasSelections}
                     selections={selections}
                     appliances={appliances}
+                    onUpdateQty={updateQty}
                     onNext={() => setStep(2)}
-                    onRemove={(id) => updateQty(id, -(selections[id] || 0))}
                   />
-                </motion.div>
-              )}
+                </div>
 
-              {/* ── Step 2: Location & Distance ── */}
-              {step === 2 && (
-                <motion.div key="step2" {...stepTransition} className="max-w-xl mx-auto">
-                  <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm">
-                    <h2 className="text-xl sm:text-2xl font-bold font-syne text-taqon-charcoal dark:text-white mb-5 sm:mb-6">
-                      Location & Distance
-                    </h2>
+                {/* ── Mobile sticky bottom bar ── */}
+                <MobileBottomBar
+                  totals={totals}
+                  hasSelections={hasSelections}
+                  selections={selections}
+                  appliances={appliances}
+                  onNext={() => setStep(2)}
+                  onRemove={(id) => updateQty(id, -(selections[id] || 0))}
+                />
+              </motion.div>
+            )}
 
-                    <div className="space-y-5 sm:space-y-6">
-                      <div>
-                        <label className="flex items-center gap-1.5 text-sm font-medium text-taqon-charcoal dark:text-white mb-4">
-                          <MapPin size={16} className="text-taqon-orange" />
-                          Your Area / Suburb
-                        </label>
+            {/* ═══════════════════════════════════════════════
+                Step 2: Location & Distance
+                ═══════════════════════════════════════════════ */}
+            {step === 2 && (
+              <motion.div key="step2" {...stepTransition} className="max-w-xl mx-auto">
+                <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm">
+                  <h2 className="text-xl sm:text-2xl font-bold font-syne text-taqon-charcoal dark:text-white mb-5 sm:mb-6">
+                    Location & Distance
+                  </h2>
 
-                        {/* Searchable dropdown */}
-                        <div className="relative">
-                          <div
-                            onClick={() => setAreaDropdownOpen(!areaDropdownOpen)}
-                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 cursor-pointer hover:border-taqon-orange/40 transition-colors"
-                          >
-                            <span className={`text-sm ${selectedArea ? 'text-taqon-charcoal dark:text-white' : 'text-gray-400'}`}>
-                              {selectedArea || 'Select your area...'}
-                            </span>
-                            {areaDropdownOpen
-                              ? <CaretUp size={14} className="text-taqon-muted shrink-0" />
-                              : <CaretDown size={14} className="text-taqon-muted shrink-0" />
-                            }
-                          </div>
-
-                          <AnimatePresence>
-                            {areaDropdownOpen && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -4 }}
-                                transition={{ duration: 0.15 }}
-                                className="absolute z-[1000] mt-1.5 w-full bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden"
-                              >
-                                <div className="p-2 border-b border-gray-100 dark:border-white/10">
-                                  <div className="relative">
-                                    <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted pointer-events-none" />
-                                    <input
-                                      type="text"
-                                      value={areaSearch}
-                                      onChange={(e) => setAreaSearch(e.target.value)}
-                                      placeholder="Search area..."
-                                      className="w-full pl-8 pr-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                      autoFocus
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                  </div>
-                                </div>
-                                <div className="max-h-60 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                                  {(() => {
-                                    const q = areaSearch.toLowerCase();
-                                    const filtered = q
-                                      ? ZIMBABWE_AREAS.filter(a => a.name.toLowerCase().includes(q) || a.province.toLowerCase().includes(q))
-                                      : ZIMBABWE_AREAS;
-                                    const grouped = {};
-                                    filtered.forEach(a => {
-                                      if (!grouped[a.province]) grouped[a.province] = [];
-                                      grouped[a.province].push(a);
-                                    });
-                                    const provinces = Object.keys(grouped);
-                                    if (provinces.length === 0) {
-                                      return (
-                                        <div className="px-4 py-6 text-center text-sm text-taqon-muted dark:text-white/40">
-                                          No areas found
-                                        </div>
-                                      );
-                                    }
-                                    return provinces.map(prov => (
-                                      <div key={prov}>
-                                        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-taqon-muted dark:text-white/30 bg-gray-50 dark:bg-white/5 sticky top-0">
-                                          {prov}
-                                        </div>
-                                        {grouped[prov].map(area => (
-                                          <button
-                                            key={area.name}
-                                            onClick={() => {
-                                              setSelectedArea(area.name);
-                                              setDistanceKm(getDistanceByArea(area.name));
-                                              setAreaDropdownOpen(false);
-                                              setAreaSearch('');
-                                            }}
-                                            className={`w-full text-left px-4 py-2.5 text-sm hover:bg-taqon-orange/5 dark:hover:bg-taqon-orange/10 transition-colors flex items-center justify-between ${
-                                              selectedArea === area.name ? 'bg-taqon-orange/10 text-taqon-orange font-medium' : 'text-taqon-charcoal dark:text-white/80'
-                                            }`}
-                                          >
-                                            <span>{area.name}</span>
-                                            <span className="text-xs text-taqon-muted dark:text-white/30 tabular-nums">{area.distance}km</span>
-                                          </button>
-                                        ))}
-                                      </div>
-                                    ));
-                                  })()}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-
-                        {/* Transport cost display */}
-                        {selectedArea && (
-                          <div className="mt-3 flex items-baseline justify-between">
-                            <span className="text-sm text-taqon-muted dark:text-white/50">
-                              Transport: {distanceKm}km x $0.65/km
-                            </span>
-                            <span className="text-lg font-bold text-taqon-orange tabular-nums">
-                              ${(distanceKm * 0.65).toFixed(0)}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="mt-4 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
-                          <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
-                            <Info size={14} className="mt-0.5 shrink-0" />
-                            <span>Transport is charged at $0.65/km. Harare-based installations are cheapest.</span>
-                          </p>
-                        </div>
-
-                        {/* Distance Map */}
-                        <DistanceMap
-                          clientCoords={selectedArea ? getAreaCoords(selectedArea) : null}
-                          distanceKm={distanceKm}
-                          areaName={selectedArea}
-                        />
-                      </div>
-
-                      {/* Selection Summary */}
-                      <div className="p-4 rounded-xl bg-taqon-cream dark:bg-taqon-dark border border-gray-100 dark:border-white/10">
-                        <h4 className="text-sm font-semibold text-taqon-charcoal dark:text-white mb-3">
-                          Your Selection Summary
-                        </h4>
-                        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                          {[
-                            { value: totals.count, label: 'Appliances' },
-                            { value: totals.pp, label: 'Power Need' },
-                            { value: totals.ep, label: 'Battery Need' },
-                          ].map(({ value, label }) => (
-                            <div key={label} className="p-2.5 sm:p-3 rounded-xl bg-white dark:bg-white/5 text-center">
-                              <p className="text-xl sm:text-2xl font-bold text-taqon-orange tabular-nums">{value}</p>
-                              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 mt-0.5">{label}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Navigation */}
-                    <div className="mt-6 sm:mt-8 flex gap-3">
-                      <button
-                        onClick={() => setStep(1)}
-                        className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
-                      >
-                        <ArrowLeft size={14} /> Back
-                      </button>
-                      <button
-                        onClick={() => setStep(3)}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
-                      >
-                        Continue
-                        <ArrowRight size={14} weight="bold" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Step 3: Preferences ── */}
-              {step === 3 && (
-                <motion.div key="step3" {...stepTransition} className="max-w-2xl mx-auto">
-                  <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm space-y-6">
-                    <h2 className="text-xl sm:text-2xl font-bold font-syne text-taqon-charcoal dark:text-white">
-                      What Are Your Preferences?
-                    </h2>
-
-                    {/* Q1: Priority */}
+                  <div className="space-y-5 sm:space-y-6">
+                    {/* Area / suburb dropdown */}
                     <div>
-                      <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">What matters most to you?</label>
-                      <div className="grid sm:grid-cols-3 gap-2">
-                        {[
-                          { value: 'lowest_cost', label: 'Lowest Cost', desc: 'Most affordable workable system' },
-                          { value: 'balanced', label: 'Best Balance', desc: 'Cost and performance balanced' },
-                          { value: 'max_comfort', label: 'Max Comfort', desc: 'Maximum performance and comfort' },
-                        ].map(opt => (
-                          <button
-                            key={opt.value}
-                            onClick={() => setPreferences(p => ({ ...p, priority: opt.value }))}
-                            className={`p-4 rounded-xl border-2 text-left transition-all ${preferences.priority === opt.value ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10' : 'border-gray-200 dark:border-white/10 hover:border-taqon-orange/30'}`}
-                          >
-                            <p className={`font-semibold text-sm ${preferences.priority === opt.value ? 'text-taqon-orange' : 'text-taqon-charcoal dark:text-white'}`}>{opt.label}</p>
-                            <p className="text-xs text-taqon-muted dark:text-white/40 mt-1">{opt.desc}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Q2: Load management */}
-                    <div>
-                      <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">
-                        Are you comfortable switching off heavy appliances when battery is low?
+                      <label className="flex items-center gap-1.5 text-sm font-medium text-taqon-charcoal dark:text-white mb-4">
+                        <MapPin size={16} className="text-taqon-orange" />
+                        Your Area / Suburb
                       </label>
-                      <div className="flex gap-3">
-                        {[{ value: true, label: 'Yes, I can manage that' }, { value: false, label: 'No, I want full convenience' }].map(opt => (
-                          <button
-                            key={String(opt.value)}
-                            onClick={() => setPreferences(p => ({ ...p, willing_to_manage: opt.value }))}
-                            className={`flex-1 p-3 rounded-xl border-2 text-sm font-medium transition-all ${preferences.willing_to_manage === opt.value ? 'border-taqon-orange bg-taqon-orange/5 text-taqon-orange' : 'border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white hover:border-taqon-orange/30'}`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
 
-                    {/* Q3: Use style */}
-                    <div>
-                      <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">How do you want the system to work?</label>
-                      <div className="space-y-2">
-                        {[
-                          { value: 'backup', label: 'Mainly for backup', desc: 'Keep the lights on during outages' },
-                          { value: 'backup_solar', label: 'Backup + solar savings', desc: 'Backup power plus daytime solar to reduce bills' },
-                          { value: 'independence', label: 'Maximum solar independence', desc: 'As little grid dependency as possible' },
-                        ].map(opt => (
-                          <button
-                            key={opt.value}
-                            onClick={() => setPreferences(p => ({ ...p, use_style: opt.value }))}
-                            className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${preferences.use_style === opt.value ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10' : 'border-gray-200 dark:border-white/10 hover:border-taqon-orange/30'}`}
-                          >
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${preferences.use_style === opt.value ? 'border-taqon-orange' : 'border-gray-300 dark:border-white/20'}`}>
-                              {preferences.use_style === opt.value && <div className="w-2 h-2 rounded-full bg-taqon-orange" />}
-                            </div>
-                            <div>
-                              <p className={`font-semibold text-sm ${preferences.use_style === opt.value ? 'text-taqon-orange' : 'text-taqon-charcoal dark:text-white'}`}>{opt.label}</p>
-                              <p className="text-xs text-taqon-muted dark:text-white/40">{opt.desc}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                      {/* Searchable dropdown */}
+                      <div className="relative">
+                        <div
+                          onClick={() => setAreaDropdownOpen(!areaDropdownOpen)}
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 cursor-pointer hover:border-taqon-orange/40 transition-colors"
+                        >
+                          <span className={`text-sm ${selectedArea ? 'text-taqon-charcoal dark:text-white' : 'text-gray-400'}`}>
+                            {selectedArea || 'Select your area...'}
+                          </span>
+                          {areaDropdownOpen
+                            ? <CaretUp size={14} className="text-taqon-muted shrink-0" />
+                            : <CaretDown size={14} className="text-taqon-muted shrink-0" />
+                          }
+                        </div>
 
-                    {/* Navigation */}
-                    <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
-                      <button
-                        onClick={() => setStep(2)}
-                        className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
-                      >
-                        <ArrowLeft size={14} /> Back
-                      </button>
-                      <button
-                        onClick={handleRecommend}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
-                      >
-                        Get Recommendations <ArrowRight size={14} weight="bold" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Step 4: Analysis + Recommendations ── */}
-              {step === 4 && (
-                <motion.div key="step4" {...stepTransition}>
-                  {/* Casino-style slot cards during analysis */}
-                  {!analysisComplete && (
-                    <>
-                      <CalculationLog
-                        key={`log-mobile-${recommendRun}`}
-                        selections={selections}
-                        appliances={appliances}
-                        totals={totals}
-                        distanceKm={distanceKm}
-                        recommendation={recommendation}
-                        error={recommendError}
-                        onComplete={() => setAnalysisComplete(true)}
-                      />
-                      <RecommendationSlotCards settled={false} />
-                    </>
-                  )}
-
-                  {/* Recommendations */}
-                  {analysisComplete && recommendation && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      {/* Header */}
-                      <div className="text-center mb-8 sm:mb-10">
-                        <h2 className="text-2xl sm:text-3xl font-bold font-syne text-taqon-charcoal dark:text-white">
-                          Your <span className="text-gradient">Recommendations</span>
-                        </h2>
-                        <p className="mt-2 text-sm sm:text-base text-taqon-muted dark:text-white/50">
-                          Based on {totals.count} appliance{totals.count !== 1 ? 's' : ''} at {distanceKm}km from Harare
-                        </p>
-                      </div>
-
-                      {/* Tier cards */}
-                      {(() => {
-                        const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
-                        const cols = tierEntries.length === 1 ? 'max-w-lg mx-auto' : tierEntries.length === 2 ? 'grid grid-cols-1 md:grid-cols-2 md:items-start gap-4 sm:gap-6 max-w-3xl mx-auto' : 'grid grid-cols-1 md:grid-cols-3 md:items-start gap-4 sm:gap-6 max-w-5xl mx-auto';
-                        return (
-                          <div className={cols}>
-                            {tierEntries.map((tierKey) => (
-                              <RecommendationCard
-                                key={tierKey}
-                                tierKey={tierKey}
-                                tier={recommendation.tiers[tierKey]}
-                                isHighlighted={recommendation.tiers[tierKey].best_match || tierEntries.length === 1}
-                                distanceKm={distanceKm}
-                                clientDetails={clientDetails}
-                                detailsCollected={detailsCollected}
-                                clientFormRef={clientFormRef}
-                                preferences={preferences}
-                              />
-                            ))}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Client details form */}
-                      <div ref={clientFormRef} className="max-w-xl mx-auto mt-10 sm:mt-12">
-                        {!detailsCollected ? (
-                          <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm">
-                            <div className="flex items-center gap-2 mb-5">
-                              <FileText size={20} className="text-taqon-orange" />
-                              <h3 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white">
-                                Get Your Quotes
-                              </h3>
-                            </div>
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                if (!clientDetails.name.trim() || !clientDetails.phone.trim()) return;
-                                setDetailsCollected(true);
-                                toast.success('Details saved! You can now download quotes.');
-                              }}
-                              className="space-y-4"
+                        <AnimatePresence>
+                          {areaDropdownOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute z-[1000] mt-1.5 w-full bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden"
                             >
-                              <div>
-                                <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Full Name *</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={clientDetails.name}
-                                  onChange={(e) => setClientDetails(d => ({ ...d, name: e.target.value }))}
-                                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                  placeholder="John Doe"
-                                />
+                              {/* Search inside dropdown */}
+                              <div className="p-2 border-b border-gray-100 dark:border-white/10">
+                                <div className="relative">
+                                  <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted pointer-events-none" />
+                                  <input
+                                    type="text"
+                                    value={areaSearch}
+                                    onChange={(e) => setAreaSearch(e.target.value)}
+                                    placeholder="Search area..."
+                                    className="w-full pl-8 pr-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </div>
                               </div>
-                              <div>
-                                <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone *</label>
-                                <input
-                                  type="tel"
-                                  required
-                                  value={clientDetails.phone}
-                                  onChange={(e) => setClientDetails(d => ({ ...d, phone: e.target.value }))}
-                                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                  placeholder="+263 77 123 4567"
-                                />
+
+                              {/* Grouped area list */}
+                              <div className="max-h-60 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                                {(() => {
+                                  const q = areaSearch.toLowerCase();
+                                  const filtered = q
+                                    ? ZIMBABWE_AREAS.filter(a => a.name.toLowerCase().includes(q) || a.province.toLowerCase().includes(q))
+                                    : ZIMBABWE_AREAS;
+                                  const grouped = {};
+                                  filtered.forEach(a => {
+                                    if (!grouped[a.province]) grouped[a.province] = [];
+                                    grouped[a.province].push(a);
+                                  });
+                                  const provinces = Object.keys(grouped);
+                                  if (provinces.length === 0) {
+                                    return (
+                                      <div className="px-4 py-6 text-center text-sm text-taqon-muted dark:text-white/40">
+                                        No areas found
+                                      </div>
+                                    );
+                                  }
+                                  return provinces.map(prov => (
+                                    <div key={prov}>
+                                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-taqon-muted dark:text-white/30 bg-gray-50 dark:bg-white/5 sticky top-0">
+                                        {prov}
+                                      </div>
+                                      {grouped[prov].map(area => (
+                                        <button
+                                          key={area.name}
+                                          onClick={() => {
+                                            setSelectedArea(area.name);
+                                            setDistanceKm(getDistanceByArea(area.name));
+                                            setAreaDropdownOpen(false);
+                                            setAreaSearch('');
+                                          }}
+                                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-taqon-orange/5 dark:hover:bg-taqon-orange/10 transition-colors flex items-center justify-between ${
+                                            selectedArea === area.name ? 'bg-taqon-orange/10 text-taqon-orange font-medium' : 'text-taqon-charcoal dark:text-white/80'
+                                          }`}
+                                        >
+                                          <span>{area.name}</span>
+                                          <span className="text-xs text-taqon-muted dark:text-white/30 tabular-nums">{area.distance}km</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  ));
+                                })()}
                               </div>
-                              <div>
-                                <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email</label>
-                                <input
-                                  type="email"
-                                  value={clientDetails.email}
-                                  onChange={(e) => setClientDetails(d => ({ ...d, email: e.target.value }))}
-                                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                  placeholder="john@example.com"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
-                                <input
-                                  type="text"
-                                  value={clientDetails.area}
-                                  onChange={(e) => setClientDetails(d => ({ ...d, area: e.target.value }))}
-                                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                  placeholder="Borrowdale, Harare"
-                                />
-                              </div>
-                              <button
-                                type="submit"
-                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
-                              >
-                                <DownloadSimple size={16} weight="bold" /> Unlock Downloads
-                              </button>
-                            </form>
-                          </div>
-                        ) : (
-                          <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/10 p-5 sm:p-6 flex items-center gap-3">
-                            <CheckCircle size={24} className="text-emerald-500 shrink-0" weight="fill" />
-                            <div>
-                              <p className="font-semibold text-sm text-emerald-700 dark:text-emerald-300">Details saved</p>
-                              <p className="text-xs text-emerald-600 dark:text-emerald-400/70 mt-0.5">You can now download quotes for any package above.</p>
-                            </div>
-                          </div>
-                        )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
 
-                      {/* Download All Quotes button */}
-                      {detailsCollected && recommendation && (
-                        <div className="max-w-xl mx-auto mt-4">
-                          <button
-                            onClick={async () => {
-                              setDownloadingAll(true);
-                              const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
-                              try {
-                                for (let idx = 0; idx < tierEntries.length; idx++) {
-                                  const tierKey = tierEntries[idx];
-                                  const pkg = recommendation.tiers[tierKey].package;
-                                  const res = await solarConfigApi.getInstantQuote({
-                                    package_slug: pkg.slug,
-                                    distance_km: distanceKm,
-                                    customer_name: clientDetails.name,
-                                    customer_email: clientDetails.email,
-                                    customer_phone: clientDetails.phone,
-                                    customer_address: clientDetails.area,
-                                    tier_label: tierLabels[tierKey] || tierKey,
-                                  });
-                                  const contentType = res.headers['content-type'] || 'application/pdf';
-                                  const ext = contentType.includes('html') ? 'html' : 'pdf';
-                                  const blob = new Blob([res.data], { type: contentType });
-                                  const url = URL.createObjectURL(blob);
-                                  const a = document.createElement('a');
-                                  a.href = url;
-                                  a.download = `Taqon-${tierLabels[tierKey] || tierKey}-${pkg.family_name || pkg.name}.${ext}`;
-                                  document.body.appendChild(a);
-                                  a.click();
-                                  document.body.removeChild(a);
-                                  URL.revokeObjectURL(url);
-                                  if (idx < tierEntries.length - 1) await new Promise(r => setTimeout(r, 800));
-                                }
-                                toast.success(`${tierEntries.length} quotes downloaded!`);
-                              } catch (err) {
-                                toast.error(err.response?.data?.error || 'Failed to download all quotes');
-                              } finally {
-                                setDownloadingAll(false);
-                              }
-                            }}
-                            disabled={downloadingAll}
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-charcoal dark:bg-white/10 text-white font-semibold text-sm hover:bg-taqon-charcoal/90 dark:hover:bg-white/15 active:scale-[0.98] transition-all shadow-lg min-h-[44px] disabled:opacity-60"
-                          >
-                            {downloadingAll ? (
-                              <><SpinnerGap size={16} className="animate-spin" /> Downloading...</>
-                            ) : (
-                              <><DownloadSimple size={16} weight="bold" /> Download All Quotes</>
-                            )}
-                          </button>
+                      {/* Transport cost display */}
+                      {selectedArea && (
+                        <div className="mt-3 flex items-baseline justify-between">
+                          <span className="text-sm text-taqon-muted dark:text-white/50">
+                            Transport: {distanceKm}km × $0.65/km
+                          </span>
+                          <span className="text-lg font-bold text-taqon-orange tabular-nums">
+                            ${(distanceKm * 0.65).toFixed(0)}
+                          </span>
                         </div>
                       )}
 
-                      {/* Bottom actions */}
-                      <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
-                        <button
-                          onClick={() => { setStep(1); setAnalysisComplete(false); }}
-                          className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px]"
-                        >
-                          <ArrowLeft size={14} /> Modify Appliances
-                        </button>
-                        <button
-                          onClick={() => { setStep(2); setAnalysisComplete(false); }}
-                          className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px]"
-                        >
-                          <MapPin size={14} /> Change Distance
-                        </button>
-                        <Link
-                          to="/packages"
-                          className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-taqon-orange/10 text-taqon-orange font-semibold text-sm hover:bg-taqon-orange/20 active:scale-[0.98] transition-all min-h-[44px]"
-                        >
-                          Browse All Packages <ArrowRight size={14} weight="bold" />
-                        </Link>
+                      <div className="mt-4 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
+                        <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                          <Info size={14} className="mt-0.5 shrink-0" />
+                          <span>Transport is charged at $0.65/km. Harare-based installations are cheapest.</span>
+                        </p>
                       </div>
-                    </motion.div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
 
+                      {/* Distance Map */}
+                      <DistanceMap
+                        clientCoords={selectedArea ? getAreaCoords(selectedArea) : null}
+                        distanceKm={distanceKm}
+                        areaName={selectedArea}
+                      />
+                    </div>
+
+                    {/* Selection Summary */}
+                    <div className="p-4 rounded-xl bg-taqon-cream dark:bg-taqon-dark border border-gray-100 dark:border-white/10">
+                      <h4 className="text-sm font-semibold text-taqon-charcoal dark:text-white mb-3">
+                        Your Selection Summary
+                      </h4>
+                      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                        {[
+                          { value: totals.count, label: 'Appliances' },
+                          { value: totals.pp, label: 'Power Need' },
+                          { value: totals.ep, label: 'Battery Need' },
+                        ].map(({ value, label }) => (
+                          <div key={label} className="p-2.5 sm:p-3 rounded-xl bg-white dark:bg-white/5 text-center">
+                            <p className="text-xl sm:text-2xl font-bold text-taqon-orange tabular-nums">{value}</p>
+                            <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 mt-0.5">{label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="mt-6 sm:mt-8 flex gap-3">
+                    <button
+                      onClick={() => setStep(1)}
+                      className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
+                    >
+                      <ArrowLeft size={14} /> Back
+                    </button>
+                    <button
+                      onClick={() => setStep(3)}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
+                    >
+                      Continue
+                      <ArrowRight size={14} weight="bold" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ═══════════════════════════════════════════════
+                Step 3: Preferences
+                ═══════════════════════════════════════════════ */}
+            {step === 3 && (
+              <motion.div key="step3" {...stepTransition} className="max-w-2xl mx-auto">
+                <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm space-y-6">
+                  <h2 className="text-xl sm:text-2xl font-bold font-syne text-taqon-charcoal dark:text-white">
+                    What Are Your Preferences?
+                  </h2>
+
+                  {/* Q1: Priority */}
+                  <div>
+                    <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">What matters most to you?</label>
+                    <div className="grid sm:grid-cols-3 gap-2">
+                      {[
+                        { value: 'lowest_cost', label: 'Lowest Cost', desc: 'Most affordable workable system' },
+                        { value: 'balanced', label: 'Best Balance', desc: 'Cost and performance balanced' },
+                        { value: 'max_comfort', label: 'Max Comfort', desc: 'Maximum performance and comfort' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setPreferences(p => ({ ...p, priority: opt.value }))}
+                          className={`p-4 rounded-xl border-2 text-left transition-all ${preferences.priority === opt.value ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10' : 'border-gray-200 dark:border-white/10 hover:border-taqon-orange/30'}`}
+                        >
+                          <p className={`font-semibold text-sm ${preferences.priority === opt.value ? 'text-taqon-orange' : 'text-taqon-charcoal dark:text-white'}`}>{opt.label}</p>
+                          <p className="text-xs text-taqon-muted dark:text-white/40 mt-1">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Q2: Load management */}
+                  <div>
+                    <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">
+                      Are you comfortable switching off heavy appliances when battery is low?
+                    </label>
+                    <div className="flex gap-3">
+                      {[{ value: true, label: 'Yes, I can manage that' }, { value: false, label: 'No, I want full convenience' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          onClick={() => setPreferences(p => ({ ...p, willing_to_manage: opt.value }))}
+                          className={`flex-1 p-3 rounded-xl border-2 text-sm font-medium transition-all ${preferences.willing_to_manage === opt.value ? 'border-taqon-orange bg-taqon-orange/5 text-taqon-orange' : 'border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white hover:border-taqon-orange/30'}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Q3: Use style */}
+                  <div>
+                    <label className="block text-sm font-medium text-taqon-charcoal dark:text-white mb-3">How do you want the system to work?</label>
+                    <div className="space-y-2">
+                      {[
+                        { value: 'backup', label: 'Mainly for backup', desc: 'Keep the lights on during outages' },
+                        { value: 'backup_solar', label: 'Backup + solar savings', desc: 'Backup power plus daytime solar to reduce bills' },
+                        { value: 'independence', label: 'Maximum solar independence', desc: 'As little grid dependency as possible' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setPreferences(p => ({ ...p, use_style: opt.value }))}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${preferences.use_style === opt.value ? 'border-taqon-orange bg-taqon-orange/5 dark:bg-taqon-orange/10' : 'border-gray-200 dark:border-white/10 hover:border-taqon-orange/30'}`}
+                        >
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${preferences.use_style === opt.value ? 'border-taqon-orange' : 'border-gray-300 dark:border-white/20'}`}>
+                            {preferences.use_style === opt.value && <div className="w-2 h-2 rounded-full bg-taqon-orange" />}
+                          </div>
+                          <div>
+                            <p className={`font-semibold text-sm ${preferences.use_style === opt.value ? 'text-taqon-orange' : 'text-taqon-charcoal dark:text-white'}`}>{opt.label}</p>
+                            <p className="text-xs text-taqon-muted dark:text-white/40">{opt.desc}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
+                    <button
+                      onClick={() => setStep(2)}
+                      className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-sm min-h-[44px]"
+                    >
+                      <ArrowLeft size={14} /> Back
+                    </button>
+                    <button
+                      onClick={handleRecommend}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
+                    >
+                      Get Recommendations <ArrowRight size={14} weight="bold" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ═══════════════════════════════════════════════
+                Step 4: Analysis + Recommendations
+                ═══════════════════════════════════════════════ */}
+            {step === 4 && (
+              <motion.div key="step4" {...stepTransition}>
+                {/* Casino-style slot cards during analysis */}
+                {!analysisComplete && (
+                  <RecommendationSlotCards settled={false} />
+                )}
+
+                {/* Recommendations (appear after analysis completes) */}
+                {analysisComplete && recommendation && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    {/* Header */}
+                    <div className="text-center mb-8 sm:mb-10">
+                      <h2 className="text-2xl sm:text-3xl font-bold font-syne text-taqon-charcoal dark:text-white">
+                        Your <span className="text-gradient">Recommendations</span>
+                      </h2>
+                      <p className="mt-2 text-sm sm:text-base text-taqon-muted dark:text-white/50">
+                        Based on {totals.count} appliance{totals.count !== 1 ? 's' : ''} at {distanceKm}km from Harare
+                      </p>
+                    </div>
+
+                    {/* Tier cards — dynamic grid based on result count */}
+                    {(() => {
+                      const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
+                      const cols = tierEntries.length === 1 ? 'max-w-lg mx-auto' : tierEntries.length === 2 ? 'grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto' : 'grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto';
+                      return (
+                        <div className={cols}>
+                          {tierEntries.map((tierKey) => (
+                            <RecommendationCard
+                              key={tierKey}
+                              tierKey={tierKey}
+                              tier={recommendation.tiers[tierKey]}
+                              isHighlighted={recommendation.tiers[tierKey].best_match || tierEntries.length === 1}
+                              distanceKm={distanceKm}
+                              clientDetails={clientDetails}
+                              detailsCollected={detailsCollected}
+                              clientFormRef={clientFormRef}
+                              preferences={preferences}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Client details form */}
+                    <div ref={clientFormRef} className="max-w-xl mx-auto mt-10 sm:mt-12">
+                      {!detailsCollected ? (
+                        <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm">
+                          <div className="flex items-center gap-2 mb-5">
+                            <FileText size={20} className="text-taqon-orange" />
+                            <h3 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white">
+                              Get Your Quotes
+                            </h3>
+                          </div>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (!clientDetails.name.trim() || !clientDetails.phone.trim()) return;
+                              setDetailsCollected(true);
+                              toast.success('Details saved! You can now download quotes.');
+                            }}
+                            className="space-y-4"
+                          >
+                            <div>
+                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Full Name *</label>
+                              <input
+                                type="text"
+                                required
+                                value={clientDetails.name}
+                                onChange={(e) => setClientDetails(d => ({ ...d, name: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                placeholder="John Doe"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone *</label>
+                              <input
+                                type="tel"
+                                required
+                                value={clientDetails.phone}
+                                onChange={(e) => setClientDetails(d => ({ ...d, phone: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                placeholder="+263 77 123 4567"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email</label>
+                              <input
+                                type="email"
+                                value={clientDetails.email}
+                                onChange={(e) => setClientDetails(d => ({ ...d, email: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                placeholder="john@example.com"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
+                              <input
+                                type="text"
+                                value={clientDetails.area}
+                                onChange={(e) => setClientDetails(d => ({ ...d, area: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                placeholder="Borrowdale, Harare"
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
+                            >
+                              <DownloadSimple size={16} weight="bold" /> Unlock Downloads
+                            </button>
+                          </form>
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/10 p-5 sm:p-6 flex items-center gap-3">
+                          <CheckCircle size={24} className="text-emerald-500 shrink-0" weight="fill" />
+                          <div>
+                            <p className="font-semibold text-sm text-emerald-700 dark:text-emerald-300">Details saved</p>
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400/70 mt-0.5">You can now download quotes for any package above.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Download All Quotes button */}
+                    {detailsCollected && recommendation && (
+                      <div className="max-w-xl mx-auto mt-4">
+                        <button
+                          onClick={async () => {
+                            setDownloadingAll(true);
+                            const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
+                            try {
+                              for (let idx = 0; idx < tierEntries.length; idx++) {
+                                const tierKey = tierEntries[idx];
+                                const pkg = recommendation.tiers[tierKey].package;
+                                const res = await solarConfigApi.getInstantQuote({
+                                  package_slug: pkg.slug,
+                                  distance_km: distanceKm,
+                                  customer_name: clientDetails.name,
+                                  customer_email: clientDetails.email,
+                                  customer_phone: clientDetails.phone,
+                                  customer_address: clientDetails.area,
+                                  tier_label: tierLabels[tierKey] || tierKey,
+                                });
+                                const contentType = res.headers['content-type'] || 'application/pdf';
+                                const ext = contentType.includes('html') ? 'html' : 'pdf';
+                                const blob = new Blob([res.data], { type: contentType });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `Taqon-${tierLabels[tierKey] || tierKey}-${pkg.family_name || pkg.name}.${ext}`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                                // Delay between downloads so browser doesn't block them
+                                if (idx < tierEntries.length - 1) await new Promise(r => setTimeout(r, 800));
+                              }
+                              toast.success(`${tierEntries.length} quotes downloaded!`);
+                            } catch (err) {
+                              toast.error(err.response?.data?.error || 'Failed to download all quotes');
+                            } finally {
+                              setDownloadingAll(false);
+                            }
+                          }}
+                          disabled={downloadingAll}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-charcoal dark:bg-white/10 text-white font-semibold text-sm hover:bg-taqon-charcoal/90 dark:hover:bg-white/15 active:scale-[0.98] transition-all shadow-lg min-h-[44px] disabled:opacity-60"
+                        >
+                          {downloadingAll ? (
+                            <><SpinnerGap size={16} className="animate-spin" /> Downloading...</>
+                          ) : (
+                            <><DownloadSimple size={16} weight="bold" /> Download All Quotes</>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Bottom actions */}
+                    <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+                      <button
+                        onClick={() => { setStep(1); setAnalysisComplete(false); }}
+                        className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px]"
+                      >
+                        <ArrowLeft size={14} /> Modify Appliances
+                      </button>
+                      <button
+                        onClick={() => { setStep(2); setAnalysisComplete(false); }}
+                        className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px]"
+                      >
+                        <MapPin size={14} /> Change Distance
+                      </button>
+                      <Link
+                        to="/packages"
+                        className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-taqon-orange/10 text-taqon-orange font-semibold text-sm hover:bg-taqon-orange/20 active:scale-[0.98] transition-all min-h-[44px]"
+                      >
+                        Browse All Packages <ArrowRight size={14} weight="bold" />
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
     </>
