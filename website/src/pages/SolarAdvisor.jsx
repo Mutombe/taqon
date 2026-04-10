@@ -742,7 +742,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
   return (
     <AnimatedSection delay={tierKey === 'budget' ? 0 : tierKey === 'good_fit' ? 0.1 : 0.2}>
       <div
-        className={`gem-rec-card relative rounded-2xl sm:rounded-3xl border-2 h-full flex flex-col bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm ${tierGem.borderColor} ${
+        className={`gem-rec-card relative rounded-2xl sm:rounded-3xl border-2 flex flex-col bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm ${tierGem.borderColor} ${
           isHighlighted ? 'gem-rec-highlighted' : ''
         }`}
         style={{
@@ -1575,8 +1575,8 @@ export default function SolarAdvisor() {
       </section>
 
       {/* ─── Content ─── */}
-      <section className="py-6 lg:py-10 bg-taqon-cream dark:bg-taqon-dark min-h-[60vh]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="bg-taqon-cream dark:bg-taqon-dark" style={{ height: 'calc(100vh - 180px)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full overflow-y-auto py-4 lg:py-6">
           <AnimatePresence mode="wait">
 
             {/* ═══════════════════════════════════════════════
@@ -2053,7 +2053,7 @@ export default function SolarAdvisor() {
                     {/* Tier cards — dynamic grid based on result count */}
                     {(() => {
                       const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
-                      const cols = tierEntries.length === 1 ? 'max-w-lg mx-auto' : tierEntries.length === 2 ? 'grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto' : 'grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto';
+                      const cols = tierEntries.length === 1 ? 'max-w-lg mx-auto' : tierEntries.length === 2 ? 'grid grid-cols-1 md:grid-cols-2 md:items-start gap-4 sm:gap-6 max-w-3xl mx-auto' : 'grid grid-cols-1 md:grid-cols-3 md:items-start gap-4 sm:gap-6 max-w-5xl mx-auto';
                       return (
                         <div className={cols}>
                           {tierEntries.map((tierKey) => (
