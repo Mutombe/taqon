@@ -153,14 +153,13 @@ def _score_package(pkg, user_pp, user_ep, prefs):
         sl * SCORING_WEIGHTS['smart_load']
     )
 
-    # Right-sizing penalty: prefer packages where the user's PP lands
-    # in the upper portion of the range (well-utilized), not the lower
-    # portion (oversized). A 12kVA for PP=13 is oversized; 10kVA is right-sized.
+    # Right-sizing bonus: prefer packages where the user's PP/EP lands
+    # near the top of the range (well-utilized inverter). A package where
+    # PP sits at 95% of pp_max is better than one where PP sits at 70%.
     if pkg.pp_max > 0 and user_pp > 0:
-        utilization = user_pp / pkg.pp_max
-        if utilization < D('0.6'):
-            # Package is significantly oversized — apply small penalty
-            score *= (D('0.85') + utilization * D('0.25'))
+        pp_utilization = min(user_pp / pkg.pp_max, D('1.0'))
+        # Bonus up to 10% for high utilization, penalty for low
+        score *= (D('0.90') + pp_utilization * D('0.10'))
 
     return score, {'pp_fit': pp, 'ep_fit': ep, 'pv_recharge': pv, 'smart_load': sl}
 
@@ -230,12 +229,28 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     gf_by_score = sorted(goodfit_scored, key=lambda x: x[1], reverse=True)
     good_fit = gf_by_score[0]
 
-    # --- BUDGET: cheapest package that can actually carry the load (score >= threshold) ---
-    budget_workable = [(p, s, d, app, aep) for p, s, d, app, aep in budget_scored if s >= MIN_WORKABLE_SCORE]
-    if not budget_workable:
-        budget_workable = budget_scored  # fallback
-    budget_by_price = sorted(budget_workable, key=lambda x: x[0].price)
-    # Pick cheapest that's different from good_fit
+    # --- BUDGET: cheapest package that can ACTUALLY CARRY the load ---
+    # Package pp_max must be >= the budget adjusted PP (the package must handle the power)
+    budget_adj_pp = None
+    for p, s, d, app, aep in budget_scored:
+        budget_adj_pp = app  # all have same adjusted PP for budget tier
+        break
+
+    budget_capable = [
+        (p, s, d, app, aep) for p, s, d, app, aep in budget_scored
+        if p.pp_max >= app * D('0.85')  # package can handle at least 85% of adjusted PP
+        and s >= MIN_WORKABLE_SCORE
+    ]
+    if not budget_capable:
+        # Fallback: packages whose pp_max is at least close
+        budget_capable = [
+            (p, s, d, app, aep) for p, s, d, app, aep in budget_scored
+            if s >= D('0.3')
+        ]
+    if not budget_capable:
+        budget_capable = budget_scored
+
+    budget_by_price = sorted(budget_capable, key=lambda x: x[0].price)
     budget = None
     for entry in budget_by_price:
         if entry[0].id != good_fit[0].id:
