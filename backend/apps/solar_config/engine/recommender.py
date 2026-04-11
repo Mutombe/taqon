@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 D = Decimal
 
 # Minimum score threshold — package must score at least this to be "workable"
-MIN_WORKABLE_SCORE = D('0.25')
+# 0.45 ensures only packages that genuinely fit the load are considered
+MIN_WORKABLE_SCORE = D('0.45')
 
 
 def _compute_base_scores(appliance_selections):
@@ -151,6 +152,16 @@ def _score_package(pkg, user_pp, user_ep, prefs):
         pv * SCORING_WEIGHTS['pv_recharge'] +
         sl * SCORING_WEIGHTS['smart_load']
     )
+
+    # Right-sizing penalty: prefer packages where the user's PP lands
+    # in the upper portion of the range (well-utilized), not the lower
+    # portion (oversized). A 12kVA for PP=13 is oversized; 10kVA is right-sized.
+    if pkg.pp_max > 0 and user_pp > 0:
+        utilization = user_pp / pkg.pp_max
+        if utilization < D('0.6'):
+            # Package is significantly oversized — apply small penalty
+            score *= (D('0.85') + utilization * D('0.25'))
+
     return score, {'pp_fit': pp, 'ep_fit': ep, 'pv_recharge': pv, 'smart_load': sl}
 
 
