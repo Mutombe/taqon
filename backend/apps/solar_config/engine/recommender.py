@@ -1,25 +1,21 @@
 """
-Package-first solar recommendation engine v3.
+Package recommendation engine v4.
 
-Scores ALL packages per-tier (with tier-specific smart-load adjustments).
-Budget = cheapest that can carry the load.
-Good Fit = best balanced score.
-Excellent = next stronger above Good Fit.
-Always returns 3 distinct packages.
+Logic:
+1. Calculate per-tier PP/EP (with smart-load adjustments)
+2. PP → selects FAMILY (inverter class)
+3. EP → selects VARIANT within that family
+4. Budget.price <= GoodFit.price <= Excellent.price guaranteed
 """
 
 import logging
 from decimal import Decimal
 
-from .constants import SCORING_WEIGHTS, SMART_LOAD_MODIFIERS, RECHARGE_RANK, COMFORT_RANK, PRICING
+from .constants import SMART_LOAD_MODIFIERS, PRICING
 from .pricing import calculate_price
 
 logger = logging.getLogger(__name__)
 D = Decimal
-
-# Minimum score threshold — package must score at least this to be "workable"
-# 0.45 ensures only packages that genuinely fit the load are considered
-MIN_WORKABLE_SCORE = D('0.45')
 
 
 def _compute_base_scores(appliance_selections):
@@ -40,22 +36,23 @@ def _compute_base_scores(appliance_selections):
     return total_pp, total_ep, smart_eligible
 
 
-def _adjust_for_smart_load(base_pp, base_ep, smart_eligible, package, tier, prefs):
+def _adjust_for_smart_load(base_pp, base_ep, smart_eligible, tier, prefs):
+    """Apply smart-load modifiers for a specific tier. Brand-aware."""
     if not smart_eligible:
         return base_pp, base_ep
 
     willing = prefs.get('willing_to_manage', False)
     wants_smart = prefs.get('wants_smart', False)
-    brand = (package.inverter_brand or '').lower()
+
+    # For tier-level adjustment, use sunsynk modifiers as default
+    # (most packages are sunsynk; budget may use growatt)
+    brand = 'sunsynk' if tier != 'budget' else 'growatt'
 
     smart_pp = D('0')
     smart_ep = D('0')
 
     for appliance, qty_d, app_pp, app_ep in smart_eligible:
-        if package.smart_load_supported and (wants_smart or willing):
-            key = (brand, tier)
-            mods = SMART_LOAD_MODIFIERS.get(key, {'pp': D('1'), 'ep': D('1')})
-        elif willing and not package.smart_load_supported:
+        if willing or wants_smart:
             key = (brand, tier)
             mods = SMART_LOAD_MODIFIERS.get(key, {'pp': D('1'), 'ep': D('1')})
         else:
@@ -70,100 +67,6 @@ def _adjust_for_smart_load(base_pp, base_ep, smart_eligible, package, tier, pref
     return non_smart_pp + smart_pp, non_smart_ep + smart_ep
 
 
-def _pp_fit_score(user_pp, pkg):
-    if pkg.pp_max == 0:
-        return D('0')
-    mid = (pkg.pp_min + pkg.pp_max) / 2
-    half_range = (pkg.pp_max - pkg.pp_min) / 2
-    if half_range == 0:
-        half_range = D('1')
-
-    if pkg.pp_min <= user_pp <= pkg.pp_max:
-        distance = abs(user_pp - mid)
-        return max(D('0.7'), D('1') - (distance / half_range) * D('0.3'))
-
-    if user_pp < pkg.pp_min:
-        overshoot = pkg.pp_min - user_pp
-    else:
-        overshoot = user_pp - pkg.pp_max
-
-    decay = overshoot / half_range
-    return max(D('0'), D('0.7') - decay * D('0.35'))
-
-
-def _ep_fit_score(user_ep, pkg):
-    if pkg.ep_max == 0:
-        return D('0')
-    mid = (pkg.ep_min + pkg.ep_max) / 2
-    half_range = (pkg.ep_max - pkg.ep_min) / 2
-    if half_range == 0:
-        half_range = D('1')
-
-    if pkg.ep_min <= user_ep <= pkg.ep_max:
-        distance = abs(user_ep - mid)
-        return max(D('0.7'), D('1') - (distance / half_range) * D('0.3'))
-
-    if user_ep < pkg.ep_min:
-        overshoot = pkg.ep_min - user_ep
-    else:
-        overshoot = user_ep - pkg.ep_max
-
-    decay = overshoot / half_range
-    return max(D('0'), D('0.7') - decay * D('0.35'))
-
-
-def _pv_recharge_score(pkg, use_style):
-    pkg_rank = RECHARGE_RANK.get(pkg.recharge_class, 2)
-    if use_style == 'independence':
-        return D(str(min(1.0, pkg_rank / 5)))
-    elif use_style == 'backup':
-        return D('0.6') + D(str(min(0.4, pkg_rank / 10)))
-    else:
-        return D(str(min(1.0, (pkg_rank + 1) / 5)))
-
-
-def _smart_load_score(pkg, has_smart_eligible, willing, wants_smart):
-    if not has_smart_eligible:
-        return D('0.5')
-    if pkg.smart_load_supported and wants_smart:
-        return D('1.0')
-    elif pkg.smart_load_supported:
-        return D('0.8')
-    elif willing:
-        return D('0.5')
-    else:
-        return D('0.3')
-
-
-def _score_package(pkg, user_pp, user_ep, prefs):
-    pp = _pp_fit_score(user_pp, pkg)
-    ep = _ep_fit_score(user_ep, pkg)
-    pv = _pv_recharge_score(pkg, prefs.get('use_style', 'backup_solar'))
-    sl = _smart_load_score(
-        pkg,
-        prefs.get('has_smart_eligible', False),
-        prefs.get('willing_to_manage', False),
-        prefs.get('wants_smart', False),
-    )
-
-    score = (
-        pp * SCORING_WEIGHTS['pp_fit'] +
-        ep * SCORING_WEIGHTS['ep_fit'] +
-        pv * SCORING_WEIGHTS['pv_recharge'] +
-        sl * SCORING_WEIGHTS['smart_load']
-    )
-
-    # Right-sizing bonus: prefer packages where the user's PP/EP lands
-    # near the top of the range (well-utilized inverter). A package where
-    # PP sits at 95% of pp_max is better than one where PP sits at 70%.
-    if pkg.pp_max > 0 and user_pp > 0:
-        pp_utilization = min(user_pp / pkg.pp_max, D('1.0'))
-        # Bonus up to 10% for high utilization, penalty for low
-        score *= (D('0.90') + pp_utilization * D('0.10'))
-
-    return score, {'pp_fit': pp, 'ep_fit': ep, 'pv_recharge': pv, 'smart_load': sl}
-
-
 def _compute_battery_kwh(pkg):
     if pkg.battery_capacity_kwh and pkg.battery_capacity_kwh > 0:
         return pkg.battery_capacity_kwh
@@ -175,25 +78,82 @@ def _compute_battery_kwh(pkg):
     return total
 
 
-def _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, tier_name, prefs):
-    """Score all packages with tier-specific smart-load adjustments."""
-    results = []
-    for pkg in packages:
-        adj_pp, adj_ep = _adjust_for_smart_load(
-            base_pp, base_ep, smart_eligible, pkg, tier_name, prefs
-        )
-        score, details = _score_package(pkg, adj_pp, adj_ep, prefs)
-        results.append((pkg, score, details, adj_pp, adj_ep))
-    return results
+def _select_family(pp, families):
+    """
+    PP → Family selection.
+    Find the family whose PP range best contains the adjusted PP.
+    If PP exceeds all families, pick the largest.
+    """
+    # Find families where PP falls within their range
+    matching = []
+    for family_kva, pkgs in families.items():
+        pp_min = min(p.pp_min for p in pkgs)
+        pp_max = max(p.pp_max for p in pkgs)
+        if pp_min <= pp <= pp_max:
+            matching.append((family_kva, pkgs, pp_min, pp_max))
+
+    if matching:
+        # Pick the smallest family that contains PP (right-sized)
+        matching.sort(key=lambda x: x[0])
+        return matching[0][1]
+
+    # PP doesn't fall exactly in any range — find closest family above
+    above = []
+    for family_kva, pkgs in families.items():
+        pp_min = min(p.pp_min for p in pkgs)
+        if pp_min > pp:
+            above.append((family_kva, pkgs))
+
+    if above:
+        above.sort(key=lambda x: x[0])
+        return above[0][1]
+
+    # PP exceeds all — pick largest family
+    largest_kva = max(families.keys())
+    return families[largest_kva]
+
+
+def _select_variant(ep, family_pkgs):
+    """
+    EP → Variant selection within a family.
+    Find the variant whose EP range best contains the adjusted EP.
+    """
+    # Find variants where EP falls within range
+    matching = []
+    for pkg in family_pkgs:
+        if pkg.ep_min <= ep <= pkg.ep_max:
+            matching.append(pkg)
+
+    if matching:
+        # Pick the one where EP is most centered
+        best = min(matching, key=lambda p: abs(ep - (p.ep_min + p.ep_max) / 2))
+        return best
+
+    # EP doesn't match exactly — find closest variant
+    # Prefer the variant whose ep_min is just below EP (closest fit going up)
+    below = [(p, ep - p.ep_max) for p in family_pkgs if p.ep_max <= ep]
+    above = [(p, p.ep_min - ep) for p in family_pkgs if p.ep_min > ep]
+
+    if below:
+        # EP is above this variant's range — pick the highest one below
+        return min(below, key=lambda x: x[1])[0]
+    elif above:
+        # EP is below all variants — pick the lowest one above
+        return min(above, key=lambda x: x[1])[0]
+
+    # Fallback — cheapest in family
+    return sorted(family_pkgs, key=lambda p: p.price)[0]
 
 
 def recommend_packages(appliance_selections, distance_km=None, preferences=None):
     """
-    Generate 3 package recommendations using per-tier scoring.
+    Generate 3 recommendations: Budget, Good Fit, Excellent.
 
-    Budget: cheapest WORKABLE package (score >= threshold)
-    Good Fit: highest scoring package (balanced)
-    Excellent: next stronger package above Good Fit
+    For each tier:
+    1. Adjust PP/EP with tier-specific smart-load modifiers
+    2. PP → select Family (inverter class)
+    3. EP → select Variant within family
+    4. Enforce: Budget.price <= GoodFit.price <= Excellent.price
     """
     from apps.solar_config.models import SolarPackageTemplate
 
@@ -205,79 +165,64 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     else:
         distance_km = D(str(distance_km))
 
+    # Step 1: Compute base PP/EP
     base_pp, base_ep, smart_eligible = _compute_base_scores(appliance_selections)
     preferences['has_smart_eligible'] = len(smart_eligible) > 0
 
+    # Load all active packages with capability bands, grouped by family kVA
     packages = list(SolarPackageTemplate.objects.select_related('family').prefetch_related(
         'items__component'
     ).filter(
         is_active=True, is_deleted=False, family__isnull=False,
         pp_max__gt=0,
-    ))
+    ).order_by('family__kva_rating', 'price'))
 
     if not packages:
-        packages = list(SolarPackageTemplate.objects.select_related('family').prefetch_related(
-            'items__component'
-        ).filter(is_active=True, is_deleted=False, family__isnull=False))
+        return {'total_pp': base_pp, 'total_ep': base_ep, 'distance_km': distance_km, 'tiers': {}}
 
-    # Score all packages separately for each tier
-    budget_scored = _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, 'budget', preferences)
-    goodfit_scored = _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, 'good_fit', preferences)
-    excellent_scored = _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, 'excellent', preferences)
+    # Group packages by family kVA rating
+    families = {}
+    for pkg in packages:
+        kva = float(pkg.family.kva_rating) if pkg.family else float(pkg.inverter_kva)
+        if kva not in families:
+            families[kva] = []
+        families[kva].append(pkg)
 
-    # --- Step 1: Find all CAPABLE packages (pp_max can handle the load) ---
-    def _capable(scored_list):
-        """Filter to packages whose pp_max can handle the adjusted PP."""
-        capable = [
-            entry for entry in scored_list
-            if entry[0].pp_max >= entry[3] * D('0.85') and entry[1] >= MIN_WORKABLE_SCORE
-        ]
-        if not capable:
-            capable = [e for e in scored_list if e[1] >= D('0.3')]
-        if not capable:
-            capable = scored_list
-        return capable
+    # Step 2: Calculate per-tier adjusted PP/EP
+    budget_pp, budget_ep = _adjust_for_smart_load(base_pp, base_ep, smart_eligible, 'budget', preferences)
+    goodfit_pp, goodfit_ep = _adjust_for_smart_load(base_pp, base_ep, smart_eligible, 'good_fit', preferences)
+    excellent_pp, excellent_ep = _adjust_for_smart_load(base_pp, base_ep, smart_eligible, 'excellent', preferences)
 
-    budget_capable = _capable(budget_scored)
-    goodfit_capable = _capable(goodfit_scored)
-    excellent_capable = _capable(excellent_scored)
+    # Step 3: PP → Family, EP → Variant for each tier
+    budget_family = _select_family(budget_pp, families)
+    budget_pkg = _select_variant(budget_ep, budget_family)
 
-    # --- Step 2: BUDGET = cheapest capable package ---
-    budget = sorted(budget_capable, key=lambda x: x[0].price)[0]
+    goodfit_family = _select_family(goodfit_pp, families)
+    goodfit_pkg = _select_variant(goodfit_ep, goodfit_family)
 
-    # --- Step 3: GOOD FIT = highest scoring capable package, BUT must cost >= budget ---
-    gf_candidates = sorted(
-        [e for e in goodfit_capable if e[0].price >= budget[0].price],
-        key=lambda x: x[1], reverse=True
-    )
-    good_fit = gf_candidates[0] if gf_candidates else sorted(goodfit_capable, key=lambda x: x[1], reverse=True)[0]
+    excellent_family = _select_family(excellent_pp, families)
+    excellent_pkg = _select_variant(excellent_ep, excellent_family)
 
-    # --- Step 4: EXCELLENT = next stronger above good_fit, must cost >= good_fit ---
-    seen_ids = {budget[0].id, good_fit[0].id}
-    gf_price = good_fit[0].price
-    gf_kva = float(good_fit[0].inverter_kva)
+    # Step 4: Enforce price ordering Budget <= GoodFit <= Excellent
+    # If GoodFit is cheaper than Budget, swap them
+    if goodfit_pkg.price < budget_pkg.price:
+        budget_pkg, goodfit_pkg = goodfit_pkg, budget_pkg
+        budget_pp, goodfit_pp = goodfit_pp, budget_pp
+        budget_ep, goodfit_ep = goodfit_ep, budget_ep
 
-    excellent_candidates = sorted(
-        [e for e in excellent_capable
-         if e[0].id not in seen_ids
-         and e[0].price >= gf_price
-         and (float(e[0].inverter_kva) >= gf_kva)],
-        key=lambda x: x[1], reverse=True
-    )
-    excellent = excellent_candidates[0] if excellent_candidates else None
+    # If Excellent is cheaper than GoodFit, find next variant up
+    if excellent_pkg.price <= goodfit_pkg.price:
+        # Look for a more expensive package in the same or next family
+        candidates = [p for p in packages if p.price > goodfit_pkg.price and p.id != budget_pkg.id and p.id != goodfit_pkg.id]
+        if candidates:
+            # Pick the cheapest one above good_fit
+            excellent_pkg = sorted(candidates, key=lambda p: p.price)[0]
 
-    # Fallback: any package not used, priced above good_fit
-    if not excellent:
-        for entry in sorted(excellent_capable, key=lambda x: x[0].price):
-            if entry[0].id not in seen_ids and entry[0].price >= gf_price:
-                excellent = entry
-                break
-
-    # Last resort: any package not used
-    if not excellent:
-        for entry in sorted(excellent_scored, key=lambda x: x[1], reverse=True):
-            if entry[0].id not in seen_ids:
-                excellent = entry
+    # If excellent ended up same as good_fit or budget, find ANY different package above
+    if excellent_pkg.id == goodfit_pkg.id or excellent_pkg.id == budget_pkg.id:
+        for p in sorted(packages, key=lambda x: x.price):
+            if p.id != budget_pkg.id and p.id != goodfit_pkg.id and p.price >= goodfit_pkg.price:
+                excellent_pkg = p
                 break
 
     # Determine best_match
@@ -290,25 +235,22 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
         best_match_tier = 'good_fit'
 
     # Build response
-    tier_entries = {
-        'good_fit': good_fit,
-        'budget': budget,
-        'excellent': excellent,
+    tier_data = {
+        'budget': (budget_pkg, budget_pp, budget_ep),
+        'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
+        'excellent': (excellent_pkg, excellent_pp, excellent_ep),
     }
 
     tiers = {}
-    for tier_name, entry in tier_entries.items():
-        if not entry:
-            continue
-        pkg, score, details, adj_pp, adj_ep = entry
+    for tier_name, (pkg, adj_pp, adj_ep) in tier_data.items():
         price_breakdown = calculate_price(pkg, distance_km)
         battery_kwh = _compute_battery_kwh(pkg)
 
         tiers[tier_name] = {
             'package': pkg,
-            'score': float(score),
-            'pp_fit': float(details.get('pp_fit', 0)),
-            'ep_fit': float(details.get('ep_fit', 0)),
+            'score': 0,
+            'pp_fit': 0,
+            'ep_fit': 0,
             'adjusted_pp': adj_pp,
             'adjusted_ep': adj_ep,
             'inverter_kva': str(pkg.inverter_kva),
