@@ -1,8 +1,11 @@
 """
-Package-first solar recommendation engine v2.
+Package-first solar recommendation engine v3.
 
-Scores ALL packages against customer demand, always returns 3 distinct
-packages: Budget, Good Fit (Best Match), Excellent.
+Scores ALL packages per-tier (with tier-specific smart-load adjustments).
+Budget = cheapest that can carry the load.
+Good Fit = best balanced score.
+Excellent = next stronger above Good Fit.
+Always returns 3 distinct packages.
 """
 
 import logging
@@ -13,6 +16,9 @@ from .pricing import calculate_price
 
 logger = logging.getLogger(__name__)
 D = Decimal
+
+# Minimum score threshold — package must score at least this to be "workable"
+MIN_WORKABLE_SCORE = D('0.25')
 
 
 def _compute_base_scores(appliance_selections):
@@ -149,7 +155,6 @@ def _score_package(pkg, user_pp, user_ep, prefs):
 
 
 def _compute_battery_kwh(pkg):
-    """Compute battery kWh from components if stored value is 0."""
     if pkg.battery_capacity_kwh and pkg.battery_capacity_kwh > 0:
         return pkg.battery_capacity_kwh
     total = D('0')
@@ -160,74 +165,25 @@ def _compute_battery_kwh(pkg):
     return total
 
 
-def _select_tiers(scored_packages, prefs):
-    """
-    ALWAYS return 3 distinct packages: budget, good_fit, excellent.
-    Also marks which tier is the 'best_match' based on user preferences.
-    """
-    if not scored_packages:
-        return {}
-
-    # Sort by score descending
-    by_score = sorted(scored_packages, key=lambda x: x[1], reverse=True)
-    # Sort by price ascending
-    by_price = sorted(scored_packages, key=lambda x: x[0].price)
-
-    seen_ids = set()
-    tiers = {}
-
-    # 1. Good Fit = highest scoring package
-    good_fit = by_score[0]
-    tiers['good_fit'] = good_fit
-    seen_ids.add(good_fit[0].id)
-
-    # 2. Budget = cheapest package not already used
-    for pkg, score in by_price:
-        if pkg.id not in seen_ids:
-            tiers['budget'] = (pkg, score)
-            seen_ids.add(pkg.id)
-            break
-
-    # 3. Excellent = next stronger/more expensive package above good_fit, not already used
-    gf_price = good_fit[0].price
-    for pkg, score in by_score:
-        if pkg.id not in seen_ids and pkg.price > gf_price:
-            tiers['excellent'] = (pkg, score)
-            seen_ids.add(pkg.id)
-            break
-
-    # If still missing excellent, pick next best scored not used
-    if 'excellent' not in tiers:
-        for pkg, score in by_score:
-            if pkg.id not in seen_ids:
-                tiers['excellent'] = (pkg, score)
-                seen_ids.add(pkg.id)
-                break
-
-    # If still missing budget (all same package), pick next cheapest
-    if 'budget' not in tiers:
-        for pkg, score in by_price:
-            if pkg.id not in seen_ids:
-                tiers['budget'] = (pkg, score)
-                seen_ids.add(pkg.id)
-                break
-
-    # Determine best_match based on user priority
-    priority = prefs.get('priority', 'balanced')
-    if priority == 'lowest_cost' and 'budget' in tiers:
-        best_match_tier = 'budget'
-    elif priority == 'max_comfort' and 'excellent' in tiers:
-        best_match_tier = 'excellent'
-    else:
-        best_match_tier = 'good_fit'
-
-    return tiers, best_match_tier
+def _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, tier_name, prefs):
+    """Score all packages with tier-specific smart-load adjustments."""
+    results = []
+    for pkg in packages:
+        adj_pp, adj_ep = _adjust_for_smart_load(
+            base_pp, base_ep, smart_eligible, pkg, tier_name, prefs
+        )
+        score, details = _score_package(pkg, adj_pp, adj_ep, prefs)
+        results.append((pkg, score, details, adj_pp, adj_ep))
+    return results
 
 
 def recommend_packages(appliance_selections, distance_km=None, preferences=None):
     """
-    Generate 3 package recommendations using capability-band scoring.
-    Always returns 3 distinct packages with a best_match indicator.
+    Generate 3 package recommendations using per-tier scoring.
+
+    Budget: cheapest WORKABLE package (score >= threshold)
+    Good Fit: highest scoring package (balanced)
+    Excellent: next stronger package above Good Fit
     """
     from apps.solar_config.models import SolarPackageTemplate
 
@@ -254,33 +210,81 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
             'items__component'
         ).filter(is_active=True, is_deleted=False, family__isnull=False))
 
-    all_scored = []
-    for pkg in packages:
-        adj_pp, adj_ep = _adjust_for_smart_load(
-            base_pp, base_ep, smart_eligible, pkg, 'good_fit', preferences
-        )
-        score, details = _score_package(pkg, adj_pp, adj_ep, preferences)
-        all_scored.append((pkg, score, details, adj_pp, adj_ep))
+    # Score all packages separately for each tier
+    budget_scored = _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, 'budget', preferences)
+    goodfit_scored = _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, 'good_fit', preferences)
+    excellent_scored = _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, 'excellent', preferences)
 
-    tier_input = [(pkg, score) for pkg, score, _, _, _ in all_scored]
-    tiers_raw, best_match_tier = _select_tiers(tier_input, preferences)
+    # --- GOOD FIT: highest scoring package ---
+    gf_by_score = sorted(goodfit_scored, key=lambda x: x[1], reverse=True)
+    good_fit = gf_by_score[0]
+
+    # --- BUDGET: cheapest package that can actually carry the load (score >= threshold) ---
+    budget_workable = [(p, s, d, app, aep) for p, s, d, app, aep in budget_scored if s >= MIN_WORKABLE_SCORE]
+    if not budget_workable:
+        budget_workable = budget_scored  # fallback
+    budget_by_price = sorted(budget_workable, key=lambda x: x[0].price)
+    # Pick cheapest that's different from good_fit
+    budget = None
+    for entry in budget_by_price:
+        if entry[0].id != good_fit[0].id:
+            budget = entry
+            break
+    if not budget:
+        budget = budget_by_price[0]
+
+    # --- EXCELLENT: next stronger package above good_fit ---
+    gf_kva = float(good_fit[0].inverter_kva)
+    gf_price = good_fit[0].price
+    seen_ids = {good_fit[0].id, budget[0].id if budget else None}
+
+    # Prefer package with higher kVA or higher price, well-scored
+    excellent = None
+    excellent_candidates = sorted(
+        [(p, s, d, app, aep) for p, s, d, app, aep in excellent_scored
+         if p.id not in seen_ids and (float(p.inverter_kva) > gf_kva or p.price > gf_price)
+         and s >= MIN_WORKABLE_SCORE],
+        key=lambda x: x[1], reverse=True
+    )
+    if excellent_candidates:
+        excellent = excellent_candidates[0]
+
+    # Fallback: pick next best scored not already used
+    if not excellent:
+        for entry in sorted(excellent_scored, key=lambda x: x[1], reverse=True):
+            if entry[0].id not in seen_ids:
+                excellent = entry
+                break
+
+    # Determine best_match
+    priority = preferences.get('priority', 'balanced')
+    if priority == 'lowest_cost':
+        best_match_tier = 'budget'
+    elif priority == 'max_comfort':
+        best_match_tier = 'excellent'
+    else:
+        best_match_tier = 'good_fit'
+
+    # Build response
+    tier_entries = {
+        'good_fit': good_fit,
+        'budget': budget,
+        'excellent': excellent,
+    }
 
     tiers = {}
-    for tier_name, (pkg, score) in tiers_raw.items():
-        adj_pp, adj_ep = _adjust_for_smart_load(
-            base_pp, base_ep, smart_eligible, pkg, tier_name, preferences
-        )
+    for tier_name, entry in tier_entries.items():
+        if not entry:
+            continue
+        pkg, score, details, adj_pp, adj_ep = entry
         price_breakdown = calculate_price(pkg, distance_km)
-        detail = next((d for p, s, d, _, _ in all_scored if p.id == pkg.id), {})
-
-        # Compute battery kWh dynamically if stored value is 0
         battery_kwh = _compute_battery_kwh(pkg)
 
         tiers[tier_name] = {
             'package': pkg,
             'score': float(score),
-            'pp_fit': float(detail.get('pp_fit', 0)),
-            'ep_fit': float(detail.get('ep_fit', 0)),
+            'pp_fit': float(details.get('pp_fit', 0)),
+            'ep_fit': float(details.get('ep_fit', 0)),
             'adjusted_pp': adj_pp,
             'adjusted_ep': adj_ep,
             'inverter_kva': str(pkg.inverter_kva),
