@@ -100,6 +100,14 @@ def debug_api(request, path=''):
 
 urlpatterns = [
     path('health/', health_check),
+    path('pkg-bands/', lambda request: JsonResponse({
+        'packages': list(
+            __import__('apps.solar_config.models', fromlist=['SolarPackageTemplate'])
+            .SolarPackageTemplate.objects.filter(is_active=True, is_deleted=False, family__isnull=False)
+            .values('name', 'variant_code', 'inverter_kva', 'pp_min', 'pp_max', 'ep_min', 'ep_max', 'inverter_brand', 'smart_load_supported')
+            .order_by('family__kva_rating', 'price')
+        )
+    }, json_dumps_params={'default': str})),
     path('debug-login/', lambda request: _debug_login(request)),
     path('debug-api/<path:path>', debug_api),
     path('admin/', admin.site.urls),
