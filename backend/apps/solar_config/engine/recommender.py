@@ -225,57 +225,55 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     goodfit_scored = _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, 'good_fit', preferences)
     excellent_scored = _score_all_packages_for_tier(packages, base_pp, base_ep, smart_eligible, 'excellent', preferences)
 
-    # --- GOOD FIT: highest scoring package ---
-    gf_by_score = sorted(goodfit_scored, key=lambda x: x[1], reverse=True)
-    good_fit = gf_by_score[0]
-
-    # --- BUDGET: cheapest package that can ACTUALLY CARRY the load ---
-    # Package pp_max must be >= the budget adjusted PP (the package must handle the power)
-    budget_adj_pp = None
-    for p, s, d, app, aep in budget_scored:
-        budget_adj_pp = app  # all have same adjusted PP for budget tier
-        break
-
-    budget_capable = [
-        (p, s, d, app, aep) for p, s, d, app, aep in budget_scored
-        if p.pp_max >= app * D('0.85')  # package can handle at least 85% of adjusted PP
-        and s >= MIN_WORKABLE_SCORE
-    ]
-    if not budget_capable:
-        # Fallback: packages whose pp_max is at least close
-        budget_capable = [
-            (p, s, d, app, aep) for p, s, d, app, aep in budget_scored
-            if s >= D('0.3')
+    # --- Step 1: Find all CAPABLE packages (pp_max can handle the load) ---
+    def _capable(scored_list):
+        """Filter to packages whose pp_max can handle the adjusted PP."""
+        capable = [
+            entry for entry in scored_list
+            if entry[0].pp_max >= entry[3] * D('0.85') and entry[1] >= MIN_WORKABLE_SCORE
         ]
-    if not budget_capable:
-        budget_capable = budget_scored
+        if not capable:
+            capable = [e for e in scored_list if e[1] >= D('0.3')]
+        if not capable:
+            capable = scored_list
+        return capable
 
-    budget_by_price = sorted(budget_capable, key=lambda x: x[0].price)
-    budget = None
-    for entry in budget_by_price:
-        if entry[0].id != good_fit[0].id:
-            budget = entry
-            break
-    if not budget:
-        budget = budget_by_price[0]
+    budget_capable = _capable(budget_scored)
+    goodfit_capable = _capable(goodfit_scored)
+    excellent_capable = _capable(excellent_scored)
 
-    # --- EXCELLENT: next stronger package above good_fit ---
-    gf_kva = float(good_fit[0].inverter_kva)
-    gf_price = good_fit[0].price
-    seen_ids = {good_fit[0].id, budget[0].id if budget else None}
+    # --- Step 2: BUDGET = cheapest capable package ---
+    budget = sorted(budget_capable, key=lambda x: x[0].price)[0]
 
-    # Prefer package with higher kVA or higher price, well-scored
-    excellent = None
-    excellent_candidates = sorted(
-        [(p, s, d, app, aep) for p, s, d, app, aep in excellent_scored
-         if p.id not in seen_ids and (float(p.inverter_kva) > gf_kva or p.price > gf_price)
-         and s >= MIN_WORKABLE_SCORE],
+    # --- Step 3: GOOD FIT = highest scoring capable package, BUT must cost >= budget ---
+    gf_candidates = sorted(
+        [e for e in goodfit_capable if e[0].price >= budget[0].price],
         key=lambda x: x[1], reverse=True
     )
-    if excellent_candidates:
-        excellent = excellent_candidates[0]
+    good_fit = gf_candidates[0] if gf_candidates else sorted(goodfit_capable, key=lambda x: x[1], reverse=True)[0]
 
-    # Fallback: pick next best scored not already used
+    # --- Step 4: EXCELLENT = next stronger above good_fit, must cost >= good_fit ---
+    seen_ids = {budget[0].id, good_fit[0].id}
+    gf_price = good_fit[0].price
+    gf_kva = float(good_fit[0].inverter_kva)
+
+    excellent_candidates = sorted(
+        [e for e in excellent_capable
+         if e[0].id not in seen_ids
+         and e[0].price >= gf_price
+         and (float(e[0].inverter_kva) >= gf_kva)],
+        key=lambda x: x[1], reverse=True
+    )
+    excellent = excellent_candidates[0] if excellent_candidates else None
+
+    # Fallback: any package not used, priced above good_fit
+    if not excellent:
+        for entry in sorted(excellent_capable, key=lambda x: x[0].price):
+            if entry[0].id not in seen_ids and entry[0].price >= gf_price:
+                excellent = entry
+                break
+
+    # Last resort: any package not used
     if not excellent:
         for entry in sorted(excellent_scored, key=lambda x: x[1], reverse=True):
             if entry[0].id not in seen_ids:
