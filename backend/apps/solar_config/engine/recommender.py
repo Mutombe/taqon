@@ -17,6 +17,12 @@ from .pricing import calculate_price
 logger = logging.getLogger(__name__)
 D = Decimal
 
+# Zimbabwe market adjustment factors
+# Reflects grid support, customer load management, commercial competitiveness,
+# and inverter overload tolerance in the Harare residential market
+ZIM_PP_FACTOR = D('0.85')
+ZIM_EP_FACTOR = D('0.82')
+
 
 def _compute_base_scores(appliance_selections):
     total_pp = D('0')
@@ -32,6 +38,17 @@ def _compute_base_scores(appliance_selections):
 
         if appliance.smart_load_eligible:
             smart_eligible.append((appliance, qty_d, base_pp, base_ep))
+
+    # Apply Zimbabwe market adjustment
+    total_pp *= ZIM_PP_FACTOR
+    total_ep *= ZIM_EP_FACTOR
+
+    # Also adjust the smart-eligible base values so smart-load modifiers
+    # are applied on top of the market-adjusted values
+    smart_eligible = [
+        (a, q, pp * ZIM_PP_FACTOR, ep * ZIM_EP_FACTOR)
+        for a, q, pp, ep in smart_eligible
+    ]
 
     return total_pp, total_ep, smart_eligible
 

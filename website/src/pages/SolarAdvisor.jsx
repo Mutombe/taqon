@@ -1354,7 +1354,10 @@ export default function SolarAdvisor() {
     return filtered;
   }, [appliances, activeCategory, search]);
 
-  // Running totals
+  // Running totals — with Zimbabwe market adjustment factors
+  const ZIM_PP_FACTOR = 0.85;
+  const ZIM_EP_FACTOR = 0.82;
+
   const totals = useMemo(() => {
     let pp = 0;
     let ep = 0;
@@ -1367,6 +1370,9 @@ export default function SolarAdvisor() {
       ep += parseFloat(a.energy_points) * qty * parseFloat(a.night_use_factor);
       count += qty;
     }
+    // Apply Zimbabwe market factors
+    pp *= ZIM_PP_FACTOR;
+    ep *= ZIM_EP_FACTOR;
     return { pp: pp.toFixed(1), ep: ep.toFixed(1), count };
   }, [selections, appliances]);
 
