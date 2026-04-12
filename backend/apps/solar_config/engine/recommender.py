@@ -210,37 +210,32 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     goodfit_pp, goodfit_ep = _adjust_for_smart_load(base_pp, base_ep, smart_eligible, 'good_fit', preferences)
     excellent_pp, excellent_ep = _adjust_for_smart_load(base_pp, base_ep, smart_eligible, 'excellent', preferences)
 
-    # Step 3: PP → Family, EP → Variant for each tier
-    budget_family = _select_family(budget_pp, families)
-    budget_pkg = _select_variant(budget_ep, budget_family)
-
+    # Step 3: PP → Family, EP → Variant for GOOD FIT first (anchor)
     goodfit_family = _select_family(goodfit_pp, families)
     goodfit_pkg = _select_variant(goodfit_ep, goodfit_family)
 
-    excellent_family = _select_family(excellent_pp, families)
-    excellent_pkg = _select_variant(excellent_ep, excellent_family)
+    # Step 4: Budget = one step DOWN from good_fit (cheaper variant or cheaper family)
+    # Find the next cheaper package below good_fit
+    cheaper = [p for p in packages if p.price < goodfit_pkg.price]
+    if cheaper:
+        budget_pkg = sorted(cheaper, key=lambda p: p.price, reverse=True)[0]  # most expensive of the cheaper ones
+    else:
+        budget_pkg = goodfit_pkg  # good_fit IS the cheapest (edge case)
 
-    # Step 4: Enforce price ordering Budget <= GoodFit <= Excellent
-    # If GoodFit is cheaper than Budget, swap them
-    if goodfit_pkg.price < budget_pkg.price:
-        budget_pkg, goodfit_pkg = goodfit_pkg, budget_pkg
-        budget_pp, goodfit_pp = goodfit_pp, budget_pp
-        budget_ep, goodfit_ep = goodfit_ep, budget_ep
+    # Step 5: Excellent = one step UP from good_fit (more expensive variant or next family)
+    more_expensive = [p for p in packages if p.price > goodfit_pkg.price and p.id != budget_pkg.id]
+    if more_expensive:
+        excellent_pkg = sorted(more_expensive, key=lambda p: p.price)[0]  # cheapest of the more expensive ones
+    else:
+        excellent_pkg = goodfit_pkg  # good_fit IS the most expensive (edge case)
 
-    # If Excellent is cheaper than GoodFit, find next variant up
-    if excellent_pkg.price <= goodfit_pkg.price:
-        # Look for a more expensive package in the same or next family
-        candidates = [p for p in packages if p.price > goodfit_pkg.price and p.id != budget_pkg.id and p.id != goodfit_pkg.id]
-        if candidates:
-            # Pick the cheapest one above good_fit
-            excellent_pkg = sorted(candidates, key=lambda p: p.price)[0]
+    # Step 6: Handle edge cases — bottom and top of catalogue
+    sorted_all = sorted(packages, key=lambda p: p.price)
+    cheapest_pkg = sorted_all[0]
+    most_expensive_pkg = sorted_all[-1]
 
-    # If excellent ended up same as good_fit or budget, find ANY different package above
-    if excellent_pkg.id == goodfit_pkg.id or excellent_pkg.id == budget_pkg.id:
-        for p in sorted(packages, key=lambda x: x.price):
-            if p.id != budget_pkg.id and p.id != goodfit_pkg.id and p.price >= goodfit_pkg.price:
-                excellent_pkg = p
-                break
+    is_at_bottom = (goodfit_pkg.id == cheapest_pkg.id)  # HE-1 is best fit
+    is_at_top = (goodfit_pkg.id == most_expensive_pkg.id)  # MP-4 is best fit
 
     # Determine best_match
     priority = preferences.get('priority', 'balanced')
@@ -251,12 +246,48 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     else:
         best_match_tier = 'good_fit'
 
-    # Build response
-    tier_data = {
-        'budget': (budget_pkg, budget_pp, budget_ep),
-        'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
-        'excellent': (excellent_pkg, excellent_pp, excellent_ep),
-    }
+    # Build tier_data based on edge cases
+    if is_at_bottom:
+        # Good fit is the cheapest package — no budget, only 2 cards
+        tier_data = {
+            'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
+            'excellent': (excellent_pkg, excellent_pp, excellent_ep),
+        }
+        if best_match_tier == 'budget':
+            best_match_tier = 'good_fit'
+    elif is_at_top:
+        # Good fit is the most expensive — no excellent, only 2 cards
+        tier_data = {
+            'budget': (budget_pkg, budget_pp, budget_ep),
+            'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
+        }
+        if best_match_tier == 'excellent':
+            best_match_tier = 'good_fit'
+    elif budget_pkg.id == goodfit_pkg.id:
+        # Budget and good_fit ended up same — push budget one more step down
+        even_cheaper = [p for p in packages if p.price < budget_pkg.price]
+        if even_cheaper:
+            budget_pkg = sorted(even_cheaper, key=lambda p: p.price, reverse=True)[0]
+            tier_data = {
+                'budget': (budget_pkg, budget_pp, budget_ep),
+                'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
+                'excellent': (excellent_pkg, excellent_pp, excellent_ep),
+            }
+        else:
+            # Can't go lower — show only 2 cards
+            tier_data = {
+                'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
+                'excellent': (excellent_pkg, excellent_pp, excellent_ep),
+            }
+            if best_match_tier == 'budget':
+                best_match_tier = 'good_fit'
+    else:
+        # Normal case — 3 distinct packages
+        tier_data = {
+            'budget': (budget_pkg, budget_pp, budget_ep),
+            'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
+            'excellent': (excellent_pkg, excellent_pp, excellent_ep),
+        }
 
     tiers = {}
     for tier_name, (pkg, adj_pp, adj_ep) in tier_data.items():
