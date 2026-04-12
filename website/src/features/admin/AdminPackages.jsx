@@ -18,9 +18,13 @@ const TIER_CONFIG = {
 };
 
 const EMPTY_FORM = {
-  name: '', tier: 'starter', price: '', description: '',
+  name: '', tier: 'starter', price: '', description: '', short_description: '',
   features: [''],
-  system_size_kw: '', inverter_rating_va: '', battery_capacity_kwh: '',
+  system_size_kw: '', inverter_rating_va: '', inverter_kva: '', battery_capacity_kwh: '',
+  panel_count: '', phase: '1P',
+  variant_code: '', inverter_brand: '', smart_load_supported: false,
+  pp_min: '', pp_max: '', ep_min: '', ep_max: '',
+  recharge_class: 'moderate', comfort_class: 'balanced', management_tolerance: 'medium',
   is_active: true, is_popular: false,
 };
 
@@ -67,10 +71,24 @@ function PackageModal({ pkg, onClose, onSaved }) {
     tier: pkg.tier || 'starter',
     price: pkg.price || '',
     description: pkg.description || '',
+    short_description: pkg.short_description || '',
     features: Array.isArray(pkg.features) ? (pkg.features.length ? pkg.features : ['']) : [''],
-    system_size_kw: pkg.system_size_kw || pkg.specs?.system_size_kw || '',
-    inverter_rating_va: pkg.inverter_rating_va || pkg.specs?.inverter_rating_va || '',
-    battery_capacity_kwh: pkg.battery_capacity_kwh || pkg.specs?.battery_capacity_kwh || '',
+    system_size_kw: pkg.system_size_kw || '',
+    inverter_rating_va: pkg.inverter_rating_va || '',
+    inverter_kva: pkg.inverter_kva || '',
+    battery_capacity_kwh: pkg.battery_capacity_kwh || '',
+    panel_count: pkg.panel_count || '',
+    phase: pkg.phase || '1P',
+    variant_code: pkg.variant_code || '',
+    inverter_brand: pkg.inverter_brand || '',
+    smart_load_supported: pkg.smart_load_supported || false,
+    pp_min: pkg.pp_min || '',
+    pp_max: pkg.pp_max || '',
+    ep_min: pkg.ep_min || '',
+    ep_max: pkg.ep_max || '',
+    recharge_class: pkg.recharge_class || 'moderate',
+    comfort_class: pkg.comfort_class || 'balanced',
+    management_tolerance: pkg.management_tolerance || 'medium',
     is_active: pkg.is_active ?? true,
     is_popular: pkg.is_popular || false,
   } : EMPTY_FORM);
@@ -172,18 +190,101 @@ function PackageModal({ pkg, onClose, onSaved }) {
             {/* System Specs */}
             <div className="space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">System Specs</h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">System Size (kW)</label>
-                  <input type="number" step="0.1" className="auth-input w-full text-sm" value={form.system_size_kw} onChange={(e) => set('system_size_kw', e.target.value)} />
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Variant Code</label>
+                  <input className="auth-input w-full text-sm" placeholder="e.g. HE-1, HL-3" value={form.variant_code} onChange={(e) => set('variant_code', e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Inverter (VA)</label>
-                  <input type="number" className="auth-input w-full text-sm" value={form.inverter_rating_va} onChange={(e) => set('inverter_rating_va', e.target.value)} />
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Inverter Brand</label>
+                  <select className="auth-input w-full text-sm" value={form.inverter_brand} onChange={(e) => set('inverter_brand', e.target.value)}>
+                    <option value="">Select...</option>
+                    <option value="must">Must</option>
+                    <option value="growatt">Growatt</option>
+                    <option value="sunsynk">Sunsynk</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Inverter kVA</label>
+                  <input type="number" step="0.1" className="auth-input w-full text-sm" value={form.inverter_kva} onChange={(e) => set('inverter_kva', e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Battery (kWh)</label>
                   <input type="number" step="0.1" className="auth-input w-full text-sm" value={form.battery_capacity_kwh} onChange={(e) => set('battery_capacity_kwh', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Panels</label>
+                  <input type="number" className="auth-input w-full text-sm" value={form.panel_count} onChange={(e) => set('panel_count', e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Phase</label>
+                  <select className="auth-input w-full text-sm" value={form.phase} onChange={(e) => set('phase', e.target.value)}>
+                    <option value="1P">Single Phase</option>
+                    <option value="3P">Three Phase</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">System kW</label>
+                  <input type="number" step="0.1" className="auth-input w-full text-sm" value={form.system_size_kw} onChange={(e) => set('system_size_kw', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Inverter VA</label>
+                  <input type="number" className="auth-input w-full text-sm" value={form.inverter_rating_va} onChange={(e) => set('inverter_rating_va', e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            {/* Capability Bands */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Capability Bands (Recommendation Engine)</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">PP Min</label>
+                  <input type="number" step="0.1" className="auth-input w-full text-sm" value={form.pp_min} onChange={(e) => set('pp_min', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">PP Max</label>
+                  <input type="number" step="0.1" className="auth-input w-full text-sm" value={form.pp_max} onChange={(e) => set('pp_max', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">EP Min</label>
+                  <input type="number" step="0.1" className="auth-input w-full text-sm" value={form.ep_min} onChange={(e) => set('ep_min', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">EP Max</label>
+                  <input type="number" step="0.1" className="auth-input w-full text-sm" value={form.ep_max} onChange={(e) => set('ep_max', e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Recharge</label>
+                  <select className="auth-input w-full text-sm" value={form.recharge_class} onChange={(e) => set('recharge_class', e.target.value)}>
+                    <option value="basic">Basic</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="balanced">Balanced</option>
+                    <option value="strong">Strong</option>
+                    <option value="premium">Premium</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Comfort</label>
+                  <select className="auth-input w-full text-sm" value={form.comfort_class} onChange={(e) => set('comfort_class', e.target.value)}>
+                    <option value="budget">Budget</option>
+                    <option value="balanced">Balanced</option>
+                    <option value="premium">Premium</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Mgmt Tolerance</label>
+                  <select className="auth-input w-full text-sm" value={form.management_tolerance} onChange={(e) => set('management_tolerance', e.target.value)}>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -195,6 +296,7 @@ function PackageModal({ pkg, onClose, onSaved }) {
                 {[
                   { key: 'is_active', label: 'Active', desc: 'Visible on packages page' },
                   { key: 'is_popular', label: 'Mark as Popular', desc: 'Shows a "Most Popular" badge' },
+                  { key: 'smart_load_supported', label: 'Smart Load', desc: 'Inverter supports smart load scheduling' },
                 ].map(({ key, label, desc }) => (
                   <label key={key} className="flex items-center gap-3 cursor-pointer select-none">
                     <button

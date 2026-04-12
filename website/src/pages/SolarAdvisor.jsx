@@ -1641,11 +1641,8 @@ export default function SolarAdvisor() {
                                   {appliance.name}
                                 </h4>
 
-                                {/* Wattage chip + controls */}
+                                {/* Controls */}
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-taqon-muted dark:text-white/40 font-medium">
-                                    {appliance.typical_wattage}W
-                                  </span>
 
                                   {qty > 0 ? (
                                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>

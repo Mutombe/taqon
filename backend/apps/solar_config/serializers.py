@@ -138,6 +138,9 @@ class SolarPackageListSerializer(serializers.ModelSerializer):
             'material_cost', 'sundries_cost', 'labour_cost', 'transport_cost',
             'features', 'suitable_for', 'is_popular',
             'family', 'family_name', 'family_slug',
+            'variant_code', 'pp_min', 'pp_max', 'ep_min', 'ep_max',
+            'smart_load_supported', 'inverter_brand',
+            'recharge_class', 'comfort_class', 'management_tolerance',
         ]
         read_only_fields = fields
 
@@ -292,6 +295,10 @@ class AdminSolarPackageCreateUpdateSerializer(serializers.ModelSerializer):
             'material_cost', 'sundries_cost', 'labour_cost', 'transport_cost',
             'distance_km',
             'features', 'suitable_for', 'is_popular', 'is_active', 'sort_order',
+            # Capability bands
+            'variant_code', 'pp_min', 'pp_max', 'ep_min', 'ep_max',
+            'smart_load_supported', 'inverter_brand',
+            'recharge_class', 'comfort_class', 'management_tolerance',
         ]
 
     def validate_slug(self, value):
