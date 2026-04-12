@@ -20,8 +20,8 @@ D = Decimal
 # Zimbabwe market adjustment factors
 # Reflects grid support, customer load management, commercial competitiveness,
 # and inverter overload tolerance in the Harare residential market
-ZIM_PP_FACTOR = D('1.0')
-ZIM_EP_FACTOR = D('1.0')
+ZIM_PP_FACTOR = D('1.5')
+ZIM_EP_FACTOR = D('1.5')
 
 
 def _compute_base_scores(appliance_selections):
