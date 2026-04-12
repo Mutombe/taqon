@@ -1356,7 +1356,7 @@ export default function SolarAdvisor() {
 
   // Running totals — with Zimbabwe market adjustment factors
   const ZIM_PP_FACTOR = 1.0;
-  const ZIM_EP_FACTOR = 0.99;
+  const ZIM_EP_FACTOR = 1.0;
 
   const totals = useMemo(() => {
     let pp = 0;

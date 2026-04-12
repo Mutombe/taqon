@@ -21,7 +21,7 @@ D = Decimal
 # Reflects grid support, customer load management, commercial competitiveness,
 # and inverter overload tolerance in the Harare residential market
 ZIM_PP_FACTOR = D('1.0')
-ZIM_EP_FACTOR = D('0.99')
+ZIM_EP_FACTOR = D('1.0')
 
 
 def _compute_base_scores(appliance_selections):
