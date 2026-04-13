@@ -18,6 +18,8 @@ from .models import (
     ConfigurationItem,
     PackageFamily,
     Appliance,
+    InstantQuoteDownload,
+    RecommendationSession,
 )
 from .serializers import (
     SolarComponentSerializer,
@@ -41,6 +43,8 @@ from .serializers import (
     AdminApplianceCreateUpdateSerializer,
     AdminPackageFamilyCreateUpdateSerializer,
     AdminPackageItemSerializer,
+    InstantQuoteDownloadSerializer,
+    RecommendationSessionSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -194,6 +198,25 @@ class RecommendView(APIView):
         # Run recommendation engine
         from .engine.recommender import recommend_packages
         result = recommend_packages(selections, distance_km=distance_km, preferences=preferences)
+
+        # Track session
+        try:
+            from .models import RecommendationSession
+            tiers = result.get('tiers', {})
+            RecommendationSession.objects.create(
+                total_pp=result.get('total_pp', 0),
+                total_ep=result.get('total_ep', 0),
+                distance_km=distance_km,
+                appliance_count=len(selections),
+                budget_package=tiers.get('budget', {}).get('package', None) and tiers['budget']['package'].name or '',
+                good_fit_package=tiers.get('good_fit', {}).get('package', None) and tiers['good_fit']['package'].name or '',
+                excellent_package=tiers.get('excellent', {}).get('package', None) and tiers['excellent']['package'].name or '',
+                priority=preferences.get('priority', ''),
+                use_style=preferences.get('use_style', ''),
+                ip_address=request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip(),
+            )
+        except Exception:
+            pass  # Never fail the recommendation due to tracking
 
         # Serialize response
         response_data = {
@@ -368,6 +391,23 @@ class InstantQuoteView(APIView):
             'grand_total': f'{float(price["total"]):,.2f}',
             'distance_km': int(distance_km),
         }
+
+        # Track download
+        try:
+            from .models import InstantQuoteDownload
+            InstantQuoteDownload.objects.create(
+                package=package,
+                package_name=package.family.name if package.family else package.name,
+                tier_label=tier_label,
+                distance_km=distance_km,
+                total_price=price['total'],
+                customer_name=customer_name,
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                customer_address=customer_address,
+            )
+        except Exception:
+            pass  # Never fail the quote due to tracking
 
         html_string = render_to_string('pdfs/instant_quote.html', context)
 
@@ -1457,3 +1497,37 @@ class AdminPackageRecalculateView(APIView):
             'labour_cost': str(pkg.labour_cost),
             'transport_cost': str(pkg.transport_cost),
         })
+
+
+# ── Admin: Instant Quotes & Advisor Sessions ──
+
+class AdminInstantQuotesView(generics.ListAPIView):
+    """Admin: list all instant quote downloads."""
+    permission_classes = [IsAdmin]
+    serializer_class = InstantQuoteDownloadSerializer
+    pagination_class = StandardPagination
+
+    def get_queryset(self):
+        qs = InstantQuoteDownload.objects.all()
+        search = self.request.query_params.get('search')
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(customer_name__icontains=search) |
+                Q(customer_email__icontains=search) |
+                Q(package_name__icontains=search)
+            )
+        tier = self.request.query_params.get('tier')
+        if tier:
+            qs = qs.filter(tier_label__icontains=tier)
+        return qs
+
+
+class AdminAdvisorSessionsView(generics.ListAPIView):
+    """Admin: list all Solar Advisor recommendation sessions."""
+    permission_classes = [IsAdmin]
+    serializer_class = RecommendationSessionSerializer
+    pagination_class = StandardPagination
+
+    def get_queryset(self):
+        return RecommendationSession.objects.all()

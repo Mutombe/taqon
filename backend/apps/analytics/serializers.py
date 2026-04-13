@@ -47,6 +47,14 @@ class DashboardOverviewSerializer(serializers.Serializer):
     # Notifications
     unread_notifications = serializers.IntegerField()
 
+    # Solar Advisor
+    total_instant_quotes = serializers.IntegerField(default=0)
+    instant_quotes_today = serializers.IntegerField(default=0)
+    instant_quotes_month = serializers.IntegerField(default=0)
+    total_advisor_sessions = serializers.IntegerField(default=0)
+    advisor_sessions_today = serializers.IntegerField(default=0)
+    advisor_sessions_month = serializers.IntegerField(default=0)
+
 
 # ── Revenue Analytics ───────────────────────────────────────────
 

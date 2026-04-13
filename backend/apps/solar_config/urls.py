@@ -70,4 +70,8 @@ urlpatterns = [
     path('admin/families/create/', views.AdminFamilyCreateView.as_view(), name='admin-family-create'),
     path('admin/families/<slug:slug>/', views.AdminFamilyUpdateView.as_view(), name='admin-family-detail'),
     path('admin/families/<slug:slug>/delete/', views.AdminFamilyDeleteView.as_view(), name='admin-family-delete'),
+
+    # Admin — Tracking
+    path('admin/instant-quotes/', views.AdminInstantQuotesView.as_view(), name='admin-instant-quotes'),
+    path('admin/advisor-sessions/', views.AdminAdvisorSessionsView.as_view(), name='admin-advisor-sessions'),
 ]

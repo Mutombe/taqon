@@ -4,7 +4,7 @@ import {
   Users, ShoppingCart, CurrencyDollar, FileText, ChatsTeardrop,
   BookOpen, Wrench, TrendUp, ArrowUpRight, ArrowDownRight,
   WarningCircle, UserPlus, CreditCard, Pulse,
-  ChartBar, Clock, CaretRight,
+  ChartBar, Clock, CaretRight, DownloadSimple, Lightning,
 } from '@phosphor-icons/react';
 import SEO from '../../components/SEO';
 import { DashboardKPISkeleton, SkeletonBox } from '../../components/Skeletons';
@@ -15,10 +15,10 @@ const KPI_CARDS = [
   { key: 'revenue_this_month', label: 'This Month', icon: TrendUp, color: 'text-emerald-400 bg-emerald-500/10', prefix: '$', format: 'currency' },
   { key: 'total_orders', label: 'Total Orders', icon: ShoppingCart, color: 'text-blue-400 bg-blue-500/10' },
   { key: 'total_users', label: 'Total Users', icon: Users, color: 'text-purple-400 bg-purple-500/10' },
+  { key: 'total_instant_quotes', label: 'Instant Quotes', icon: DownloadSimple, color: 'text-indigo-400 bg-indigo-500/10', link: '/admin/quotations' },
+  { key: 'total_advisor_sessions', label: 'Advisor Sessions', icon: Lightning, color: 'text-pink-400 bg-pink-500/10', link: '/admin/quotations' },
   { key: 'pending_orders', label: 'Pending Orders', icon: Clock, color: 'text-yellow-400 bg-yellow-500/10' },
   { key: 'open_tickets', label: 'Open Tickets', icon: ChatsTeardrop, color: 'text-taqon-orange bg-taqon-orange/10' },
-  { key: 'total_quotations', label: 'Quotations', icon: FileText, color: 'text-indigo-400 bg-indigo-500/10' },
-  { key: 'active_enrollments', label: 'Active Learners', icon: BookOpen, color: 'text-cyan-400 bg-cyan-500/10' },
 ];
 
 const ACTIVITY_ICONS = {
@@ -125,30 +125,43 @@ export default function AdminDashboard() {
 
           {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-            {KPI_CARDS.map(({ key, label, icon: Icon, color, prefix, format }, i) => (
-              <motion.div
-                key={key}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-white dark:bg-taqon-charcoal/40 rounded-xl p-4 border border-warm-100 dark:border-white/5"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
-                    <Icon size={16} />
+            {KPI_CARDS.map(({ key, label, icon: Icon, color, prefix, format, link }, i) => {
+              const badge = key === 'total_instant_quotes' && dashboard?.instant_quotes_today > 0
+                ? `+${dashboard.instant_quotes_today} today`
+                : key === 'total_advisor_sessions' && dashboard?.advisor_sessions_today > 0
+                ? `+${dashboard.advisor_sessions_today} today`
+                : null;
+
+              const card = (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={`bg-white dark:bg-taqon-charcoal/40 rounded-xl p-4 border border-warm-100 dark:border-white/5 ${link ? 'hover:border-taqon-orange/30 transition-colors cursor-pointer' : ''}`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
+                      <Icon size={16} />
+                    </div>
+                    {badge && (
+                      <span className="flex items-center gap-0.5 text-[10px] text-green-400">
+                        <ArrowUpRight size={10} /> {badge}
+                      </span>
+                    )}
                   </div>
-                  {key === 'new_users_this_month' && dashboard?.new_users_this_month > 0 && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-green-400">
-                      <ArrowUpRight size={10} /> +{dashboard.new_users_this_month}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xl font-bold text-taqon-charcoal dark:text-white font-syne">
-                  {formatValue(dashboard?.[key], format, prefix)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{label}</p>
-              </motion.div>
-            ))}
+                  <p className="text-xl font-bold text-taqon-charcoal dark:text-white font-syne">
+                    {formatValue(dashboard?.[key], format, prefix)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{label}</p>
+                </motion.div>
+              );
+
+              return link ? (
+                <Link key={key} to={link}>{card}</Link>
+              ) : (
+                <div key={key}>{card}</div>
+              );
+            })}
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
@@ -206,35 +219,31 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Conversion Rate */}
-              <div className="bg-white dark:bg-taqon-charcoal/40 rounded-xl border border-warm-100 dark:border-white/5 p-5">
-                <h3 className="text-sm font-semibold text-taqon-charcoal dark:text-white mb-3">Quotation Conversion</h3>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-16 h-16">
-                    <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3"
-                      />
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none" stroke="#F26522" strokeWidth="3"
-                        strokeDasharray={`${dashboard?.conversion_rate || 0}, 100`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-taqon-charcoal dark:text-white">
-                      {dashboard?.conversion_rate || 0}%
-                    </span>
+              {/* Solar Advisor Activity */}
+              <Link to="/admin/quotations" className="block bg-white dark:bg-taqon-charcoal/40 rounded-xl border border-warm-100 dark:border-white/5 p-5 hover:border-taqon-orange/30 transition-colors">
+                <h3 className="text-sm font-semibold text-taqon-charcoal dark:text-white mb-3 flex items-center gap-2">
+                  <Lightning size={14} className="text-taqon-orange" />
+                  Solar Advisor
+                </h3>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Sessions (all-time)</span>
+                    <span className="text-sm font-bold text-taqon-charcoal dark:text-white tabular-nums">{dashboard?.total_advisor_sessions || 0}</span>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Accepted</p>
-                    <p className="text-sm font-bold text-taqon-charcoal dark:text-white">{dashboard?.accepted_quotations || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">Pending Requests</p>
-                    <p className="text-sm font-bold text-yellow-400">{dashboard?.pending_quotation_requests || 0}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Sessions this month</span>
+                    <span className="text-sm font-bold text-taqon-charcoal dark:text-white tabular-nums">{dashboard?.advisor_sessions_month || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-warm-100 dark:border-white/5">
+                    <span className="text-xs text-gray-400">Quotes downloaded</span>
+                    <span className="text-sm font-bold text-taqon-orange tabular-nums">{dashboard?.total_instant_quotes || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Quotes today</span>
+                    <span className="text-sm font-bold text-green-400 tabular-nums">{dashboard?.instant_quotes_today || 0}</span>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Technicians */}
               <div className="bg-white dark:bg-taqon-charcoal/40 rounded-xl border border-warm-100 dark:border-white/5 p-5">
@@ -292,10 +301,10 @@ export default function AdminDashboard() {
           {/* Quick Links */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
             {[
-              { label: 'Support Tickets', to: '/support/tickets', icon: ChatsTeardrop, badge: dashboard?.open_tickets },
-              { label: 'Quotation Requests', to: '/account/quotations', icon: FileText, badge: dashboard?.pending_quotation_requests },
-              { label: 'Unassigned Tickets', to: '/support/tickets', icon: WarningCircle, badge: dashboard?.unassigned_tickets },
-              { label: 'Pending Jobs', to: '/technician/jobs', icon: Wrench, badge: dashboard?.pending_jobs },
+              { label: 'Instant Quotes', to: '/admin/quotations', icon: DownloadSimple, badge: dashboard?.total_instant_quotes },
+              { label: 'Advisor Sessions', to: '/admin/quotations', icon: Lightning, badge: dashboard?.total_advisor_sessions },
+              { label: 'Manage Orders', to: '/admin/orders', icon: ShoppingCart, badge: dashboard?.pending_orders },
+              { label: 'Manage Users', to: '/admin/users', icon: Users, badge: null },
             ].map(({ label, to, icon: Icon, badge }) => (
               <Link
                 key={label}

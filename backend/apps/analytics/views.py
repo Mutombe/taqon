@@ -142,6 +142,16 @@ class DashboardOverviewView(APIView):
         # Notifications
         unread_notifications = _count(Notification, is_read=False)
 
+        # Solar Advisor metrics
+        InstantQuoteDownload = _safe_import('apps.solar_config.models', 'InstantQuoteDownload')
+        RecommendationSession = _safe_import('apps.solar_config.models', 'RecommendationSession')
+        total_instant_quotes = _count(InstantQuoteDownload)
+        instant_quotes_today = _count(InstantQuoteDownload, created_at__gte=today_start)
+        instant_quotes_month = _count(InstantQuoteDownload, created_at__gte=month_start)
+        total_advisor_sessions = _count(RecommendationSession)
+        advisor_sessions_today = _count(RecommendationSession, created_at__gte=today_start)
+        advisor_sessions_month = _count(RecommendationSession, created_at__gte=month_start)
+
         data = {
             'total_users': total_users,
             'new_users_today': new_users_today,
@@ -169,6 +179,13 @@ class DashboardOverviewView(APIView):
             'active_technicians': active_technicians,
             'pending_jobs': pending_jobs,
             'unread_notifications': unread_notifications,
+            # Solar Advisor
+            'total_instant_quotes': total_instant_quotes,
+            'instant_quotes_today': instant_quotes_today,
+            'instant_quotes_month': instant_quotes_month,
+            'total_advisor_sessions': total_advisor_sessions,
+            'advisor_sessions_today': advisor_sessions_today,
+            'advisor_sessions_month': advisor_sessions_month,
         }
         serializer = DashboardOverviewSerializer(data)
         return Response(serializer.data)

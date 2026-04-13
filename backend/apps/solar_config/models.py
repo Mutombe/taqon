@@ -424,3 +424,51 @@ class ConfigurationItem(TimeStampedModel):
     @property
     def line_total(self):
         return self.component.price * self.quantity
+
+
+class InstantQuoteDownload(TimeStampedModel):
+    """Tracks every instant quote PDF downloaded from the Solar Advisor."""
+
+    package = models.ForeignKey(
+        SolarPackageTemplate, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='quote_downloads',
+    )
+    package_name = models.CharField(max_length=200)
+    tier_label = models.CharField(max_length=50, blank=True)
+    distance_km = models.DecimalField(max_digits=8, decimal_places=1, default=10)
+    total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    customer_name = models.CharField(max_length=200, blank=True)
+    customer_email = models.EmailField(blank=True)
+    customer_phone = models.CharField(max_length=30, blank=True)
+    customer_address = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.customer_name} — {self.package_name} ({self.tier_label})'
+
+
+class RecommendationSession(TimeStampedModel):
+    """Tracks each Solar Advisor recommendation request."""
+
+    total_pp = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    total_ep = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    distance_km = models.DecimalField(max_digits=8, decimal_places=1, default=10)
+    appliance_count = models.PositiveIntegerField(default=0)
+
+    budget_package = models.CharField(max_length=200, blank=True)
+    good_fit_package = models.CharField(max_length=200, blank=True)
+    excellent_package = models.CharField(max_length=200, blank=True)
+
+    priority = models.CharField(max_length=30, blank=True)
+    use_style = models.CharField(max_length=30, blank=True)
+
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Session PP={self.total_pp} EP={self.total_ep} ({self.created_at:%Y-%m-%d %H:%M})'

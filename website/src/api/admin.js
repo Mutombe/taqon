@@ -55,6 +55,14 @@ export const adminApi = {
   getAdminComponents: (params) => api.get('/solar-config/admin/components/', { params }),
   getAdminFamilies: (params) => api.get('/solar-config/admin/families/', { params }),
 
+  // Instant quotes & Solar Advisor tracking
+  getInstantQuotes: (params) => api.get('/solar-config/admin/instant-quotes/', { params }),
+  getAdvisorSessions: (params) => api.get('/solar-config/admin/advisor-sessions/', { params }),
+
+  // Quotation Requests
+  getQuotationRequests: (params) => api.get('/quotations/admin/requests/', { params }),
+  getQuotationRequestDetail: (id) => api.get(`/quotations/admin/requests/${id}/`),
+
   // Media
   getMedia: (params) => api.get('/shop/admin/media/', { params }),
   uploadMedia: (formData) => api.post('/shop/admin/media/upload/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),

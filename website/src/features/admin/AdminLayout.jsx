@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   SquaresFour, ChartBar, Package, ShoppingCart, SolarPanel,
   Article, Image, Users, List, X, CaretRight, SignOut,
-  Bell, MoonStars, Sun,
+  Bell, MoonStars, Sun, FileText,
 } from '@phosphor-icons/react';
 import useAuthStore from '../../stores/authStore';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -23,6 +23,7 @@ const NAV_SECTIONS = [
       { to: '/admin/products', label: 'Products', icon: Package },
       { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
       { to: '/admin/packages', label: 'Packages', icon: SolarPanel },
+      { to: '/admin/quotations', label: 'Quotations', icon: FileText },
     ],
   },
   {

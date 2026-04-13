@@ -3,6 +3,7 @@ from .models import (
     SolarComponent, SolarPackageTemplate, PackageComponent,
     SolarConfiguration, ConfigurationItem,
     PackageFamily, Appliance,
+    InstantQuoteDownload, RecommendationSession,
 )
 
 
@@ -396,3 +397,27 @@ class AdminPackageFamilyCreateUpdateSerializer(serializers.ModelSerializer):
                 'A package family with this slug already exists.'
             )
         return value
+
+
+# ── Tracking Serializers ──
+
+class InstantQuoteDownloadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InstantQuoteDownload
+        fields = [
+            'id', 'package_name', 'tier_label', 'distance_km', 'total_price',
+            'customer_name', 'customer_email', 'customer_phone', 'customer_address',
+            'created_at',
+        ]
+        read_only_fields = fields
+
+
+class RecommendationSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecommendationSession
+        fields = [
+            'id', 'total_pp', 'total_ep', 'distance_km', 'appliance_count',
+            'budget_package', 'good_fit_package', 'excellent_package',
+            'priority', 'use_style', 'ip_address', 'created_at',
+        ]
+        read_only_fields = fields
