@@ -116,9 +116,14 @@ class SolarPackageTemplateSerializer(serializers.ModelSerializer):
             'price', 'compare_at_price', 'currency',
             'material_cost', 'sundries_cost', 'labour_cost', 'transport_cost',
             'distance_km',
-            'features', 'suitable_for', 'is_popular',
+            'features', 'suitable_for',
             'family', 'family_name', 'family_slug',
             'items', 'created_at',
+            # Status + capability bands (needed by admin dashboard)
+            'is_active', 'is_popular', 'sort_order',
+            'variant_code', 'pp_min', 'pp_max', 'ep_min', 'ep_max',
+            'smart_load_supported', 'inverter_brand',
+            'recharge_class', 'comfort_class', 'management_tolerance',
         ]
         read_only_fields = fields
 

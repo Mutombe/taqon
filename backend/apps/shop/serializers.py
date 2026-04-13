@@ -129,6 +129,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             'price', 'compare_at_price', 'is_on_sale', 'sale_percentage',
             'in_stock', 'category', 'brand', 'primary_image',
             'average_rating', 'total_reviews', 'is_featured',
+            'is_active', 'stock_quantity',
         ]
         read_only_fields = fields
 

@@ -265,6 +265,6 @@ class Command(BaseCommand):
                 'recharge_class', 'comfort_class', 'management_tolerance', 'updated_at',
             ])
             assigned += 1
-            self.stdout.write(f'  {code} → {pkg.name} (panels={pkg.panel_count}, phase={pkg.phase})')
+            self.stdout.write(f'  {code} -> {pkg.name} (panels={pkg.panel_count}, phase={pkg.phase})')
 
         self.stdout.write(self.style.SUCCESS(f'\nAssigned capability bands to {assigned}/28 packages'))
