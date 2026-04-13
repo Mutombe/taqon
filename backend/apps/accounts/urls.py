@@ -20,6 +20,7 @@ urlpatterns = [
     # Google OAuth
     path('google/', views.GoogleLoginView.as_view(), name='google-login'),
     path('google/callback/', views.GoogleCallbackView.as_view(), name='google-callback'),
+    path('google/exchange/', views.GoogleCodeExchangeView.as_view(), name='google-code-exchange'),
     path('google/token/', views.GoogleTokenLoginView.as_view(), name='google-token-login'),
 
     # Address book

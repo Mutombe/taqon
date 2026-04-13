@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { CircleNotch } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import useAuthStore from '../../../stores/authStore';
 import { authApi } from '../../../api/auth';
@@ -15,10 +14,11 @@ export default function GoogleCallbackHandler() {
     if (handled.current) return;
     handled.current = true;
 
+    const code = searchParams.get('code');
     const access = searchParams.get('access');
     const refresh = searchParams.get('refresh');
     const error = searchParams.get('error');
-    const next = searchParams.get('next') || '/';
+    const next = searchParams.get('next') || searchParams.get('state') || '/';
 
     if (error) {
       const messages = {
@@ -27,12 +27,34 @@ export default function GoogleCallbackHandler() {
         google_email_unverified: 'Your Google email is not verified.',
         google_failed: 'Google sign-in failed. Please try again.',
         account_disabled: 'This account has been deactivated.',
+        access_denied: 'Google sign-in was cancelled.',
       };
       toast.error(messages[error] || 'Google sign-in failed.');
       navigate('/', { replace: true });
       return;
     }
 
+    // New flow: Google redirected here with a code — exchange it via backend
+    if (code) {
+      const redirectUri = `${window.location.origin}/auth/google/callback`;
+      authApi.googleCodeExchange(code, redirectUri)
+        .then(({ data }) => {
+          const tokens = data.tokens;
+          const user = data.user;
+          localStorage.setItem('taqon-tokens', JSON.stringify(tokens));
+          setAuth(user, tokens);
+          toast.success('Signed in with Google!');
+          navigate(next, { replace: true });
+        })
+        .catch((err) => {
+          const msg = err.response?.data?.error || 'Google sign-in failed.';
+          toast.error(msg);
+          navigate('/', { replace: true });
+        });
+      return;
+    }
+
+    // Legacy flow: backend redirected here with tokens in URL params
     if (access && refresh) {
       const tokens = { access, refresh };
       localStorage.setItem('taqon-tokens', JSON.stringify(tokens));
@@ -50,15 +72,15 @@ export default function GoogleCallbackHandler() {
       return;
     }
 
-    // No tokens, no error — invalid state
+    // No code, no tokens, no error — invalid state
     navigate('/', { replace: true });
   }, [searchParams, setAuth, navigate]);
 
   return (
     <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark flex items-center justify-center">
-      <div className="text-center animate-pulse">
-        <div className="w-12 h-12 bg-gray-200 dark:bg-white/10 rounded-full mx-auto mb-4" />
-        <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-40 mx-auto" />
+      <div className="text-center">
+        <div className="w-10 h-10 border-3 border-taqon-orange border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-taqon-muted dark:text-white/50 text-sm">Signing you in...</p>
       </div>
     </div>
   );

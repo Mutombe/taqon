@@ -249,14 +249,17 @@ GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 
 @extend_schema(tags=['Auth'])
 class GoogleLoginView(APIView):
-    """Initiate Google OAuth — redirect user to Google consent screen."""
+    """Initiate Google OAuth — redirect user to Google consent screen.
+
+    The redirect_uri points to the FRONTEND (e.g. www.taqon.co.zw/auth/google/callback)
+    so Google's consent screen shows the customer-facing domain, not the API server.
+    """
     permission_classes = [AllowAny]
 
     def get(self, request):
         client_id = settings.GOOGLE_OAUTH_CLIENT_ID
         redirect_uri = settings.GOOGLE_OAUTH_REDIRECT_URI
         scope = 'openid email profile'
-        # Pass along ?next= from frontend for post-login redirect
         state = request.query_params.get('next', '/')
         url = (
             f'https://accounts.google.com/o/oauth2/v2/auth'
@@ -273,20 +276,19 @@ class GoogleLoginView(APIView):
 
 @extend_schema(tags=['Auth'])
 class GoogleCallbackView(APIView):
-    """Handle Google OAuth callback — exchange code for tokens, create/login user."""
+    """Legacy server-side callback — kept for backwards compatibility.
+    New flow uses GoogleCodeExchangeView (POST) instead."""
     permission_classes = [AllowAny]
 
     def get(self, request):
         code = request.query_params.get('code')
         error = request.query_params.get('error')
         state = request.query_params.get('state', '/')
-
         frontend_url = settings.FRONTEND_URL
 
         if error or not code:
             return redirect(f'{frontend_url}/auth/google/callback?error=google_denied')
 
-        # Exchange authorization code for tokens
         try:
             token_response = http_requests.post(GOOGLE_TOKEN_URL, data={
                 'code': code,
@@ -296,9 +298,67 @@ class GoogleCallbackView(APIView):
                 'grant_type': 'authorization_code',
             })
             token_data = token_response.json()
-
             if 'error' in token_data:
                 return redirect(f'{frontend_url}/auth/google/callback?error=google_token_failed')
+
+            id_info = id_token.verify_oauth2_token(
+                token_data['id_token'],
+                google_requests.Request(),
+                settings.GOOGLE_OAUTH_CLIENT_ID,
+            )
+            email = id_info.get('email', '').lower()
+            if not email or not id_info.get('email_verified'):
+                return redirect(f'{frontend_url}/auth/google/callback?error=google_email_unverified')
+
+            user = _find_or_create_google_user(id_info)
+            if not user.is_active:
+                return redirect(f'{frontend_url}/auth/google/callback?error=account_disabled')
+
+            refresh = RefreshToken.for_user(user)
+            return redirect(
+                f'{frontend_url}/auth/google/callback?'
+                f'access={str(refresh.access_token)}'
+                f'&refresh={str(refresh)}'
+                f'&next={state}'
+            )
+        except Exception:
+            return redirect(f'{frontend_url}/auth/google/callback?error=google_failed')
+
+
+@extend_schema(tags=['Auth'])
+class GoogleCodeExchangeView(APIView):
+    """Frontend-redirect flow: frontend receives the Google auth code, POSTs it here.
+
+    Google redirects to the frontend (e.g. www.taqon.co.zw/auth/google/callback?code=...),
+    frontend extracts the code and sends it to this endpoint for exchange + user creation.
+    Returns JWT tokens as JSON (no redirect).
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        code = request.data.get('code')
+        # The redirect_uri must match exactly what was sent to Google
+        redirect_uri = request.data.get('redirect_uri', settings.GOOGLE_OAUTH_REDIRECT_URI)
+
+        if not code:
+            return Response({'error': 'Authorization code is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Exchange code for Google tokens
+            token_response = http_requests.post(GOOGLE_TOKEN_URL, data={
+                'code': code,
+                'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
+                'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
+                'redirect_uri': redirect_uri,
+                'grant_type': 'authorization_code',
+            })
+            token_data = token_response.json()
+
+            if 'error' in token_data:
+                return Response(
+                    {'error': f'Google token exchange failed: {token_data.get("error_description", token_data["error"])}'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Verify the ID token
             id_info = id_token.verify_oauth2_token(
@@ -309,60 +369,64 @@ class GoogleCallbackView(APIView):
 
             email = id_info.get('email', '').lower()
             if not email or not id_info.get('email_verified'):
-                return redirect(f'{frontend_url}/auth/google/callback?error=google_email_unverified')
+                return Response({'error': 'Google email is not verified.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            first_name = id_info.get('given_name', '')
-            last_name = id_info.get('family_name', '')
-            picture = id_info.get('picture', '')
-
-            # Find or create user
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={
-                    'first_name': first_name,
-                    'last_name': last_name,
-                    'is_verified': True,
-                    'role': 'customer',
-                },
-            )
-
-            if created and picture:
-                # We don't download the avatar, but we could store the URL
-                pass
-
-            if not created:
-                # Update name if empty
-                updated = False
-                if not user.first_name and first_name:
-                    user.first_name = first_name
-                    updated = True
-                if not user.last_name and last_name:
-                    user.last_name = last_name
-                    updated = True
-                if not user.is_verified:
-                    user.is_verified = True
-                    updated = True
-                if updated:
-                    user.save()
+            user = _find_or_create_google_user(id_info)
 
             if not user.is_active:
-                return redirect(f'{frontend_url}/auth/google/callback?error=account_disabled')
+                return Response({'error': 'This account has been deactivated.'}, status=status.HTTP_403_FORBIDDEN)
 
-            # Generate JWT tokens
+            # Generate JWT
             refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
+            return Response({
+                'user': {
+                    'id': str(user.id),
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'role': user.role,
+                },
+                'tokens': {
+                    'access': str(refresh.access_token),
+                    'refresh': str(refresh),
+                },
+            })
 
-            # Redirect to frontend with tokens
-            return redirect(
-                f'{frontend_url}/auth/google/callback?'
-                f'access={access_token}'
-                f'&refresh={refresh_token}'
-                f'&next={state}'
-            )
+        except Exception as e:
+            return Response({'error': f'Google authentication failed: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
-        except Exception:
-            return redirect(f'{frontend_url}/auth/google/callback?error=google_failed')
+
+def _find_or_create_google_user(id_info):
+    """Shared helper: find or create a user from Google id_info."""
+    email = id_info.get('email', '').lower()
+    first_name = id_info.get('given_name', '')
+    last_name = id_info.get('family_name', '')
+
+    user, created = User.objects.get_or_create(
+        email=email,
+        defaults={
+            'first_name': first_name,
+            'last_name': last_name,
+            'is_verified': True,
+            'role': 'customer',
+        },
+    )
+
+    if not created:
+        updated = False
+        if not user.first_name and first_name:
+            user.first_name = first_name
+            updated = True
+        if not user.last_name and last_name:
+            user.last_name = last_name
+            updated = True
+        if not user.is_verified:
+            user.is_verified = True
+            updated = True
+        if updated:
+            user.save()
+
+    return user
 
 
 @extend_schema(tags=['Auth'])

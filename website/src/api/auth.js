@@ -30,6 +30,7 @@ export const authApi = {
 
   // Google OAuth
   googleLogin: () => api.get('/auth/google/'),
+  googleCodeExchange: (code, redirect_uri) => api.post('/auth/google/exchange/', { code, redirect_uri }),
   googleTokenLogin: (credential) => api.post('/auth/google/token/', { credential }),
 
   // Account summary
