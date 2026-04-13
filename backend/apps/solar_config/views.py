@@ -40,6 +40,7 @@ from .serializers import (
     PriceBreakdownSerializer,
     AdminApplianceCreateUpdateSerializer,
     AdminPackageFamilyCreateUpdateSerializer,
+    AdminPackageItemSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -1327,3 +1328,132 @@ class AdminFamilyDeleteView(APIView):
             )
         family.soft_delete(user=request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Admin Package Items (Components within a Package) ──
+
+class AdminPackageItemsView(APIView):
+    """Admin: list and add components to a package."""
+    permission_classes = [IsAdmin]
+
+    def _get_package(self, slug):
+        try:
+            return SolarPackageTemplate.objects.prefetch_related(
+                Prefetch('items', queryset=PackageComponent.objects.select_related('component'))
+            ).get(slug=slug, is_deleted=False)
+        except SolarPackageTemplate.DoesNotExist:
+            return None
+
+    def get(self, request, slug):
+        pkg = self._get_package(slug)
+        if not pkg:
+            return Response({'detail': 'Package not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(PackageComponentSerializer(pkg.items.all(), many=True).data)
+
+    def post(self, request, slug):
+        """Add a component to the package (or update quantity if it already exists)."""
+        pkg = self._get_package(slug)
+        if not pkg:
+            return Response({'detail': 'Package not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminPackageItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        component_id = serializer.validated_data['component_id']
+        quantity = serializer.validated_data['quantity']
+        notes = serializer.validated_data.get('notes', '')
+
+        try:
+            component = SolarComponent.objects.get(pk=component_id, is_deleted=False)
+        except SolarComponent.DoesNotExist:
+            return Response({'detail': 'Component not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        item, created = PackageComponent.objects.update_or_create(
+            package=pkg,
+            component=component,
+            defaults={'quantity': quantity, 'notes': notes},
+        )
+        pkg.recalculate_price()
+        return Response(
+            PackageComponentSerializer(item).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class AdminPackageItemDetailView(APIView):
+    """Admin: update or remove a specific component from a package."""
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, slug, item_id):
+        """Update quantity or swap component."""
+        try:
+            item = PackageComponent.objects.select_related('package', 'component').get(
+                pk=item_id,
+                package__slug=slug,
+                package__is_deleted=False,
+            )
+        except PackageComponent.DoesNotExist:
+            return Response({'detail': 'Item not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        quantity = request.data.get('quantity')
+        notes = request.data.get('notes')
+        new_component_id = request.data.get('component_id')
+
+        if quantity is not None:
+            if int(quantity) < 1:
+                return Response({'detail': 'Quantity must be at least 1.'}, status=status.HTTP_400_BAD_REQUEST)
+            item.quantity = int(quantity)
+
+        if notes is not None:
+            item.notes = notes
+
+        if new_component_id:
+            try:
+                new_component = SolarComponent.objects.get(pk=new_component_id, is_deleted=False)
+            except SolarComponent.DoesNotExist:
+                return Response({'detail': 'Component not found.'}, status=status.HTTP_404_NOT_FOUND)
+            # Check for duplicate
+            if PackageComponent.objects.filter(package=item.package, component=new_component).exclude(pk=item.pk).exists():
+                return Response({'detail': 'This component is already in the package.'}, status=status.HTTP_400_BAD_REQUEST)
+            item.component = new_component
+
+        item.save()
+        item.package.recalculate_price()
+        return Response(PackageComponentSerializer(item).data)
+
+    def delete(self, request, slug, item_id):
+        """Remove a component from the package."""
+        try:
+            item = PackageComponent.objects.select_related('package').get(
+                pk=item_id,
+                package__slug=slug,
+                package__is_deleted=False,
+            )
+        except PackageComponent.DoesNotExist:
+            return Response({'detail': 'Item not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        pkg = item.package
+        item.delete()
+        pkg.recalculate_price()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AdminPackageRecalculateView(APIView):
+    """Admin: force recalculate a package's price."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request, slug):
+        try:
+            pkg = SolarPackageTemplate.objects.get(slug=slug, is_deleted=False)
+        except SolarPackageTemplate.DoesNotExist:
+            return Response({'detail': 'Package not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        distance_km = request.data.get('distance_km')
+        pkg.recalculate_price(distance_km=distance_km)
+        return Response({
+            'price': str(pkg.price),
+            'material_cost': str(pkg.material_cost),
+            'sundries_cost': str(pkg.sundries_cost),
+            'labour_cost': str(pkg.labour_cost),
+            'transport_cost': str(pkg.transport_cost),
+        })

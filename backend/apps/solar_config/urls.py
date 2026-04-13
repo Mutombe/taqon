@@ -52,6 +52,9 @@ urlpatterns = [
     path('admin/packages/create/', views.AdminPackageCreateView.as_view(), name='admin-package-create'),
     path('admin/packages/<slug:slug>/', views.AdminPackageUpdateView.as_view(), name='admin-package-detail'),
     path('admin/packages/<slug:slug>/delete/', views.AdminPackageDeleteView.as_view(), name='admin-package-delete'),
+    path('admin/packages/<slug:slug>/items/', views.AdminPackageItemsView.as_view(), name='admin-package-items'),
+    path('admin/packages/<slug:slug>/items/<int:item_id>/', views.AdminPackageItemDetailView.as_view(), name='admin-package-item-detail'),
+    path('admin/packages/<slug:slug>/recalculate/', views.AdminPackageRecalculateView.as_view(), name='admin-package-recalculate'),
 
     # Admin — Configurations
     path('admin/configurations/', views.AdminConfigurationListView.as_view(), name='admin-config-list'),

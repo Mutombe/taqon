@@ -44,6 +44,17 @@ export const adminApi = {
   updatePackage: (slug, data) => api.patch(`/solar-config/admin/packages/${slug}/`, data),
   deletePackage: (slug) => api.delete(`/solar-config/admin/packages/${slug}/delete/`),
 
+  // Package items (components within a package)
+  getPackageItems: (slug) => api.get(`/solar-config/admin/packages/${slug}/items/`),
+  addPackageItem: (slug, data) => api.post(`/solar-config/admin/packages/${slug}/items/`, data),
+  updatePackageItem: (slug, itemId, data) => api.patch(`/solar-config/admin/packages/${slug}/items/${itemId}/`, data),
+  removePackageItem: (slug, itemId) => api.delete(`/solar-config/admin/packages/${slug}/items/${itemId}/`),
+  recalculatePackage: (slug, data) => api.post(`/solar-config/admin/packages/${slug}/recalculate/`, data),
+
+  // Solar components & families (for dropdowns)
+  getAdminComponents: (params) => api.get('/solar-config/admin/components/', { params }),
+  getAdminFamilies: (params) => api.get('/solar-config/admin/families/', { params }),
+
   // Media
   getMedia: (params) => api.get('/shop/admin/media/', { params }),
   uploadMedia: (formData) => api.post('/shop/admin/media/upload/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),

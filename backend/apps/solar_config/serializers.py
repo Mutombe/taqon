@@ -279,6 +279,15 @@ class UpdateConfigItemsSerializer(serializers.Serializer):
     items = ConfigurationItemCreateSerializer(many=True)
 
 
+# ── Admin Package Item Management ──
+
+class AdminPackageItemSerializer(serializers.Serializer):
+    """Add or update a component within a package."""
+    component_id = serializers.UUIDField()
+    quantity = serializers.IntegerField(min_value=1, default=1)
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
 # ── Admin Package Create/Update ──
 
 class AdminSolarPackageCreateUpdateSerializer(serializers.ModelSerializer):
