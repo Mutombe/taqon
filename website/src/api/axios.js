@@ -11,7 +11,6 @@ const api = axios.create({
   baseURL: `${API_URL}/api/v1`,
   headers: { 'Content-Type': 'application/json' },
   timeout: 30000,
-  withCredentials: true,
 });
 
 // Request interceptor — attach access token

@@ -110,7 +110,7 @@ export default function ProductDetail() {
     if (!product || stock <= 0) return;
     setAddingToCart(true);
     try {
-      await addItem(product.id, quantity);
+      await addItem(product.id, quantity, product);
     } finally {
       setAddingToCart(false);
     }

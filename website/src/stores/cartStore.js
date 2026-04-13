@@ -1,161 +1,218 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { shopApi } from '../api/shop';
 import { toast } from 'sonner';
 
-const useCartStore = create((set, get) => ({
-  items: [],
-  totalItems: 0,
-  subtotal: 0,
-  totalSavings: 0,
-  isLoading: false,
-  _hasFetched: false,
+// ── helpers ──
 
-  fetchCart: async () => {
-    try {
-      const { data } = await shopApi.getCart();
-      set({
-        items: data.items || [],
-        totalItems: data.total_items || 0,
-        subtotal: parseFloat(data.subtotal) || 0,
-        totalSavings: parseFloat(data.total_savings) || 0,
-        _hasFetched: true,
-      });
-    } catch {
-      // Cart may not exist yet for guests
-      set({ _hasFetched: true });
-    }
-  },
+function isAuthenticated() {
+  const tokens = JSON.parse(localStorage.getItem('taqon-tokens') || 'null');
+  return !!tokens?.access;
+}
 
-  addItem: async (productId, quantity = 1) => {
-    set({ isLoading: true });
-    try {
-      await shopApi.addToCart(productId, quantity);
-      await get().fetchCart();
-      toast.success('Added to cart');
-    } catch (error) {
-      const msg = error.response?.data?.detail || error.response?.data?.error || 'Failed to add to cart';
-      toast.error(msg);
-    } finally {
-      set({ isLoading: false });
-    }
-  },
+function recalcTotals(items) {
+  const totalItems = items.reduce((s, i) => s + i.quantity, 0);
+  const subtotal = items.reduce((s, i) => s + parseFloat(i.line_total || 0), 0);
+  return { items, totalItems, subtotal };
+}
 
-  // Optimistic quantity update: UI updates instantly, server syncs in background.
-  // On failure, rolls back to previous state.
-  updateQuantity: async (itemId, quantity) => {
-    const { items, totalItems, subtotal, totalSavings } = get();
+let _nextLocalId = Date.now();
 
-    // Compute optimistic state
-    const prevItems = items;
-    const prevTotalItems = totalItems;
-    const prevSubtotal = subtotal;
-    const prevSavings = totalSavings;
+const useCartStore = create(
+  persist(
+    (set, get) => ({
+      items: [],
+      totalItems: 0,
+      subtotal: 0,
+      totalSavings: 0,
+      isLoading: false,
+      _hasFetched: false,
 
-    const optimisticItems = items.map((item) => {
-      if (item.id !== itemId) return item;
-      const unitPrice = parseFloat(item.price_at_addition || item.product?.price || 0);
-      return {
-        ...item,
-        quantity,
-        line_total: String(unitPrice * quantity),
-      };
-    });
+      // ── Fetch cart ──
+      // Authenticated: from server. Guest: already in store via persist.
+      fetchCart: async () => {
+        if (!isAuthenticated()) {
+          set({ _hasFetched: true });
+          return;
+        }
+        try {
+          const { data } = await shopApi.getCart();
+          set({
+            items: data.items || [],
+            totalItems: data.total_items || 0,
+            subtotal: parseFloat(data.subtotal) || 0,
+            totalSavings: parseFloat(data.total_savings) || 0,
+            _hasFetched: true,
+          });
+        } catch {
+          set({ _hasFetched: true });
+        }
+      },
 
-    const newSubtotal = optimisticItems.reduce(
-      (sum, item) => sum + parseFloat(item.line_total || 0),
-      0,
-    );
-    const newTotalItems = optimisticItems.reduce((sum, item) => sum + item.quantity, 0);
+      // ── Add item ──
+      // `product` is the full product object from the listing/detail page.
+      addItem: async (productId, quantity = 1, product = null) => {
+        if (isAuthenticated()) {
+          set({ isLoading: true });
+          try {
+            await shopApi.addToCart(productId, quantity);
+            await get().fetchCart();
+            toast.success('Added to cart');
+          } catch (error) {
+            const msg = error.response?.data?.detail || error.response?.data?.error || 'Failed to add to cart';
+            toast.error(msg);
+          } finally {
+            set({ isLoading: false });
+          }
+          return;
+        }
 
-    // Apply optimistically
-    set({
-      items: optimisticItems,
-      totalItems: newTotalItems,
-      subtotal: newSubtotal,
-    });
+        // Guest: local cart
+        if (!product) {
+          toast.error('Could not add to cart — please try again.');
+          return;
+        }
 
-    try {
-      await shopApi.updateCartItem(itemId, quantity);
-      // Silently sync true server state in background
-      get().fetchCart();
-    } catch (error) {
-      // Rollback
-      set({
-        items: prevItems,
-        totalItems: prevTotalItems,
-        subtotal: prevSubtotal,
-        totalSavings: prevSavings,
-      });
-      const msg = error.response?.data?.error || 'Failed to update quantity';
-      toast.error(msg);
-    }
-  },
+        const { items } = get();
+        const existing = items.find((i) => (i.product?.id || i.product_id) === productId);
+        let updated;
 
-  // Optimistic remove: item disappears instantly.
-  removeItem: async (itemId) => {
-    const { items, totalItems, subtotal, totalSavings } = get();
-    const prevItems = items;
-    const prevTotalItems = totalItems;
-    const prevSubtotal = subtotal;
-    const prevSavings = totalSavings;
+        if (existing) {
+          const newQty = existing.quantity + quantity;
+          const unitPrice = parseFloat(existing.price_at_addition || product.price || 0);
+          updated = items.map((i) =>
+            i.id === existing.id
+              ? { ...i, quantity: newQty, line_total: String(unitPrice * newQty) }
+              : i,
+          );
+        } else {
+          const unitPrice = parseFloat(product.price || 0);
+          const newItem = {
+            id: `local-${_nextLocalId++}`,
+            product: {
+              id: product.id,
+              name: product.name,
+              slug: product.slug,
+              price: product.price,
+              primary_image: product.primary_image || null,
+              sku: product.sku || null,
+            },
+            product_id: productId,
+            price_at_addition: String(unitPrice),
+            quantity,
+            line_total: String(unitPrice * quantity),
+          };
+          updated = [...items, newItem];
+        }
 
-    // Optimistic removal
-    const optimisticItems = items.filter((item) => item.id !== itemId);
-    const newSubtotal = optimisticItems.reduce(
-      (sum, item) => sum + parseFloat(item.line_total || 0),
-      0,
-    );
-    const newTotalItems = optimisticItems.reduce((sum, item) => sum + item.quantity, 0);
+        set({ ...recalcTotals(updated), _hasFetched: true });
+        toast.success('Added to cart');
+      },
 
-    set({
-      items: optimisticItems,
-      totalItems: newTotalItems,
-      subtotal: newSubtotal,
-    });
+      // ── Update quantity ──
+      updateQuantity: async (itemId, quantity) => {
+        const { items } = get();
+        const prev = { items, totalItems: get().totalItems, subtotal: get().subtotal, totalSavings: get().totalSavings };
 
-    try {
-      await shopApi.removeCartItem(itemId);
-      toast.success('Removed from cart');
-      // Sync true state
-      get().fetchCart();
-    } catch {
-      // Rollback
-      set({
-        items: prevItems,
-        totalItems: prevTotalItems,
-        subtotal: prevSubtotal,
-        totalSavings: prevSavings,
-      });
-      toast.error('Failed to remove item');
-    }
-  },
+        // Optimistic update (works for both local and server items)
+        const optimistic = items.map((item) => {
+          if (item.id !== itemId) return item;
+          const unitPrice = parseFloat(item.price_at_addition || item.product?.price || 0);
+          return { ...item, quantity, line_total: String(unitPrice * quantity) };
+        });
+        set(recalcTotals(optimistic));
 
-  clearCart: async () => {
-    const prev = { ...get() };
-    // Optimistic clear
-    set({ items: [], totalItems: 0, subtotal: 0, totalSavings: 0 });
-    try {
-      await shopApi.clearCart();
-    } catch {
-      // Rollback
-      set({
-        items: prev.items,
-        totalItems: prev.totalItems,
-        subtotal: prev.subtotal,
-        totalSavings: prev.totalSavings,
-      });
-      toast.error('Failed to clear cart');
-    }
-  },
+        // If local item, we're done
+        if (String(itemId).startsWith('local-')) return;
 
-  mergeCart: async () => {
-    try {
-      await shopApi.mergeCart();
-      await get().fetchCart();
-    } catch {
-      // Merge failures are non-critical
-    }
-  },
-}));
+        // Server sync
+        if (isAuthenticated()) {
+          try {
+            await shopApi.updateCartItem(itemId, quantity);
+            get().fetchCart();
+          } catch {
+            set(prev);
+            toast.error('Failed to update quantity');
+          }
+        }
+      },
+
+      // ── Remove item ──
+      removeItem: async (itemId) => {
+        const { items } = get();
+        const prev = { items, totalItems: get().totalItems, subtotal: get().subtotal, totalSavings: get().totalSavings };
+
+        // Optimistic removal
+        const filtered = items.filter((i) => i.id !== itemId);
+        set(recalcTotals(filtered));
+
+        // If local item, we're done
+        if (String(itemId).startsWith('local-')) {
+          toast.success('Removed from cart');
+          return;
+        }
+
+        if (isAuthenticated()) {
+          try {
+            await shopApi.removeCartItem(itemId);
+            toast.success('Removed from cart');
+            get().fetchCart();
+          } catch {
+            set(prev);
+            toast.error('Failed to remove item');
+          }
+        }
+      },
+
+      // ── Clear cart ──
+      clearCart: async () => {
+        const prev = { items: get().items, totalItems: get().totalItems, subtotal: get().subtotal, totalSavings: get().totalSavings };
+        set({ items: [], totalItems: 0, subtotal: 0, totalSavings: 0 });
+
+        if (isAuthenticated()) {
+          try {
+            await shopApi.clearCart();
+          } catch {
+            set(prev);
+            toast.error('Failed to clear cart');
+          }
+        }
+      },
+
+      // ── Merge local cart to server on login ──
+      mergeLocalToServer: async () => {
+        const { items } = get();
+        const localItems = items.filter((i) => String(i.id).startsWith('local-'));
+
+        if (localItems.length === 0) {
+          await get().fetchCart();
+          return;
+        }
+
+        // Add each local item to the server cart
+        for (const item of localItems) {
+          try {
+            await shopApi.addToCart(item.product?.id || item.product_id, item.quantity);
+          } catch {
+            // Skip items that fail (e.g. out of stock)
+          }
+        }
+
+        // Fetch the authoritative server cart
+        await get().fetchCart();
+      },
+    }),
+    {
+      name: 'taqon-cart',
+      partialize: (state) => ({
+        // Only persist local guest items — server items are fetched fresh
+        items: state.items.filter((i) => String(i.id).startsWith('local-')),
+        totalItems: state.items.filter((i) => String(i.id).startsWith('local-')).reduce((s, i) => s + i.quantity, 0),
+        subtotal: state.items.filter((i) => String(i.id).startsWith('local-')).reduce((s, i) => s + parseFloat(i.line_total || 0), 0),
+        totalSavings: 0,
+      }),
+    },
+  ),
+);
 
 export default useCartStore;

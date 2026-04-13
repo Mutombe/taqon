@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { authApi } from '../api/auth';
+import useCartStore from './cartStore';
 
 const getStoredTokens = () => {
   try {
@@ -32,6 +33,8 @@ const useAuthStore = create((set, get) => ({
     localStorage.setItem('taqon-user', JSON.stringify(user));
     localStorage.setItem('taqon-tokens', JSON.stringify(tokens));
     set({ user, tokens, isAuthenticated: true, error: null });
+    // Merge any guest cart items to the server cart
+    useCartStore.getState().mergeLocalToServer();
   },
 
   clearAuth: () => {

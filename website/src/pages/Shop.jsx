@@ -159,12 +159,12 @@ export default function Shop() {
     setSearchParams({});
   };
 
-  const handleAddToCart = async (e, productId) => {
+  const handleAddToCart = async (e, product) => {
     e.preventDefault();
     e.stopPropagation();
-    setAddingToCartId(productId);
+    setAddingToCartId(product.id);
     try {
-      await addItem(productId, 1);
+      await addItem(product.id, 1, product);
     } finally {
       setAddingToCartId(null);
     }
@@ -619,7 +619,7 @@ export default function Shop() {
 
                           {/* Always-visible Add to Cart */}
                           <button
-                            onClick={(e) => handleAddToCart(e, product.id)}
+                            onClick={(e) => handleAddToCart(e, product)}
                             disabled={!product.in_stock || addingToCartId === product.id}
                             className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed bg-taqon-orange/10 text-taqon-orange hover:bg-taqon-orange hover:text-white"
                           >
