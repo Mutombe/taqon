@@ -446,7 +446,8 @@ export function useAdminBlogCategories() {
 export function useAdminPackages() {
   return useQuery({
     queryKey: ['adminPackages'],
-    queryFn: () => adminApi.getAdminPackages().then(r => r.data),
+    // Request up to 100 so all real packages fit on one page (no pagination UI needed)
+    queryFn: () => adminApi.getAdminPackages({ page_size: 100 }).then(r => r.data),
     ...SEMI,
   });
 }
