@@ -264,18 +264,20 @@ class SolarPackageTemplate(SoftDeleteModel):
 
     def recalculate_price(self, distance_km=None):
         """
-        Recalculate price with dynamic markup:
-        material + sundries(0.5%) + labour(8% of material+sundries) + transport($0.65/km)
+        Recalculate price AND spec aggregates from the current component items.
+        Price = material + sundries(0.5%) + labour(8%) + transport($0.65/km).
+        Specs (battery kWh, panel count, system kW) are also summed from
+        the actual component items so stored values never drift from reality.
         """
         from .engine.constants import PRICING
 
         if distance_km is not None:
             self.distance_km = Decimal(str(distance_km))
 
-        material = sum(
-            item.component.price * item.quantity
-            for item in self.items.select_related('component').all()
-        )
+        items = list(self.items.select_related('component').all())
+
+        # Pricing
+        material = sum((item.component.price * item.quantity for item in items), Decimal('0'))
         sundries = material * PRICING['sundries_rate']
         labour = (material + sundries) * PRICING['labour_rate']
         transport = self.distance_km * PRICING['transport_per_km']
@@ -284,11 +286,37 @@ class SolarPackageTemplate(SoftDeleteModel):
         self.sundries_cost = sundries
         self.labour_cost = labour
         self.transport_cost = transport
-        self.price = material + labour + transport  # sundries included in labour base
-        self.save(update_fields=[
+        self.price = material + labour + transport
+
+        # Spec aggregates from components
+        battery_kwh = sum(
+            ((item.component.capacity_kwh or Decimal('0')) * item.quantity for item in items if item.component.category == 'battery'),
+            Decimal('0'),
+        )
+        panel_count = sum(
+            (item.quantity for item in items if item.component.category == 'panel'),
+            0,
+        )
+        panel_watts = sum(
+            ((item.component.wattage or 0) * item.quantity for item in items if item.component.category == 'panel'),
+            0,
+        )
+
+        self.battery_capacity_kwh = battery_kwh
+        self.panel_count = panel_count
+        # Only overwrite system_size_kw if we have real panel wattage data
+        if panel_watts > 0:
+            self.system_size_kw = Decimal(str(panel_watts)) / Decimal('1000')
+
+        update_fields = [
             'material_cost', 'sundries_cost', 'labour_cost',
-            'transport_cost', 'distance_km', 'price', 'updated_at',
-        ])
+            'transport_cost', 'distance_km', 'price',
+            'battery_capacity_kwh', 'panel_count', 'updated_at',
+        ]
+        if panel_watts > 0:
+            update_fields.append('system_size_kw')
+
+        self.save(update_fields=update_fields)
 
 
 class PackageComponent(TimeStampedModel):
