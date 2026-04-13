@@ -597,9 +597,9 @@ function PackageModal({ pkg, onClose, onSaved }) {
                   <button
                     type="button"
                     onClick={() => set(key, !form[key])}
-                    className={`w-10 h-5.5 rounded-full relative transition-colors flex-shrink-0 ${form[key] ? 'bg-taqon-orange' : 'bg-[var(--input-border)]'}`}
+                    className={`w-11 h-6 rounded-full relative transition-all duration-200 flex-shrink-0 ${form[key] ? 'bg-taqon-orange shadow-sm shadow-taqon-orange/30' : 'bg-gray-300 dark:bg-white/15'}`}
                   >
-                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form[key] ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${form[key] ? 'translate-x-5' : 'translate-x-0'}`} />
                   </button>
                   <div>
                     <span className="text-sm font-medium text-[var(--text-primary)]">{label}</span>

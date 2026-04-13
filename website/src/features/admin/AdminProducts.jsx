@@ -322,9 +322,9 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
                   <button
                     type="button"
                     onClick={() => set('is_on_sale', !form.is_on_sale)}
-                    className={`w-10 h-5.5 rounded-full relative transition-colors ${form.is_on_sale ? 'bg-taqon-orange' : 'bg-[var(--input-border)]'}`}
+                    className={`w-11 h-6 rounded-full relative transition-all duration-200 ${form.is_on_sale ? 'bg-taqon-orange shadow-sm shadow-taqon-orange/30' : 'bg-gray-300 dark:bg-white/15'}`}
                   >
-                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_on_sale ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${form.is_on_sale ? 'translate-x-5' : 'translate-x-0'}`} />
                   </button>
                   <span className="text-sm text-[var(--text-secondary)]">On Sale</span>
                 </label>
@@ -362,9 +362,9 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
                     <button
                       type="button"
                       onClick={() => set(key, !form[key])}
-                      className={`w-10 h-5.5 rounded-full relative transition-colors flex-shrink-0 ${form[key] ? 'bg-taqon-orange' : 'bg-[var(--input-border)]'}`}
+                      className={`w-11 h-6 rounded-full relative transition-all duration-200 flex-shrink-0 ${form[key] ? 'bg-taqon-orange shadow-sm shadow-taqon-orange/30' : 'bg-gray-300 dark:bg-white/15'}`}
                     >
-                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form[key] ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${form[key] ? 'translate-x-5' : 'translate-x-0'}`} />
                     </button>
                     <span className="text-sm text-[var(--text-secondary)]">{label}</span>
                   </label>

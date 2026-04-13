@@ -319,9 +319,9 @@ function EditUserModal({ user, saving, onSave, onClose }) {
             <button
               type="button"
               onClick={() => setIsActive(!isActive)}
-              className={`w-10 h-5 rounded-full transition-colors relative ${isActive ? 'bg-green-500' : 'bg-gray-100 dark:bg-white/10'}`}
+              className={`w-11 h-6 rounded-full transition-all duration-200 relative ${isActive ? 'bg-green-500 shadow-sm shadow-green-500/30' : 'bg-gray-300 dark:bg-white/15'}`}
             >
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              <span className={`absolute top-[2px] left-[2px] w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${isActive ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
 
@@ -330,9 +330,9 @@ function EditUserModal({ user, saving, onSave, onClose }) {
             <button
               type="button"
               onClick={() => setIsVerified(!isVerified)}
-              className={`w-10 h-5 rounded-full transition-colors relative ${isVerified ? 'bg-green-500' : 'bg-gray-100 dark:bg-white/10'}`}
+              className={`w-11 h-6 rounded-full transition-all duration-200 relative ${isVerified ? 'bg-green-500 shadow-sm shadow-green-500/30' : 'bg-gray-300 dark:bg-white/15'}`}
             >
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isVerified ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              <span className={`absolute top-[2px] left-[2px] w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${isVerified ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
 
