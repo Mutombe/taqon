@@ -146,11 +146,17 @@ export default function CartPage() {
                           {/* Product info */}
                           <div className="md:col-span-6 flex items-center gap-4">
                             <div className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 dark:bg-white/5 border border-warm-100 dark:border-white/5">
-                              <img
-                                src={product.primary_image?.image_url || product.primary_image?.image || ''}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                              />
+                              {(product.primary_image?.image_url || product.primary_image?.image) ? (
+                                <img
+                                  src={product.primary_image?.image_url || product.primary_image?.image}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <img src="/fav.png" alt="Taqon" className="w-8 h-8 opacity-30" />
+                                </div>
+                              )}
                             </div>
                             <div className="min-w-0">
                               <Link

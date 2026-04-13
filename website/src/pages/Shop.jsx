@@ -25,8 +25,8 @@ function ProductImagePlaceholder({ name }) {
   return (
     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-50 dark:from-taqon-gray dark:to-taqon-dark flex items-center justify-center">
       <div className="text-center px-4">
-        <Bag size={40} className="text-taqon-orange/30 mx-auto mb-2" />
-        <span className="text-xs text-gray-400 dark:text-white/30 line-clamp-2">{name}</span>
+        <img src="/fav.png" alt="Taqon Electrico" className="w-12 h-12 mx-auto mb-2 opacity-30" />
+        <span className="text-[10px] text-gray-400 dark:text-white/30 line-clamp-2 leading-tight">{name}</span>
       </div>
     </div>
   );
