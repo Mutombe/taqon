@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -49,20 +49,17 @@ function RouteLayer({ from, to }) {
   useEffect(() => {
     if (!from || !to) { setRoute(null); return; }
 
-    // OSRM free routing API — returns actual road geometry
     const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
 
     fetch(url)
       .then(r => r.json())
       .then(data => {
         if (data.routes?.[0]?.geometry?.coordinates) {
-          // OSRM returns [lng, lat], Leaflet needs [lat, lng]
           const coords = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
           setRoute(coords);
         }
       })
       .catch(() => {
-        // Fallback: straight line if OSRM fails
         setRoute([from, to]);
       });
   }, [from, to]);
@@ -83,17 +80,32 @@ function RouteLayer({ from, to }) {
   );
 }
 
-export default function DistanceMap({ clientCoords, distanceKm, areaName }) {
+/** Listens for map clicks and fires callback with [lat, lng] */
+function ClickHandler({ onMapClick }) {
+  useMapEvents({
+    click(e) {
+      if (onMapClick) {
+        onMapClick([e.latlng.lat, e.latlng.lng]);
+      }
+    },
+  });
+  return null;
+}
+
+export default function DistanceMap({ clientCoords, distanceKm, areaName, onMapClick }) {
   return (
     <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 mt-4 relative z-0" style={{ height: 240 }}>
       <MapContainer
         center={HQ_COORDS}
         zoom={11}
-        style={{ height: '100%', width: '100%' }}
+        style={{ height: '100%', width: '100%', cursor: onMapClick ? 'crosshair' : 'grab' }}
         zoomControl={false}
         attributionControl={false}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+        {/* Click handler — only active if onMapClick provided */}
+        {onMapClick && <ClickHandler onMapClick={onMapClick} />}
 
         {/* HQ Marker */}
         <Marker position={HQ_COORDS} icon={hqIcon}>
@@ -103,15 +115,23 @@ export default function DistanceMap({ clientCoords, distanceKm, areaName }) {
         {/* Client Marker */}
         {clientCoords && (
           <Marker position={clientCoords} icon={clientIcon}>
-            <Popup><strong>{areaName}</strong><br />{distanceKm}km from HQ</Popup>
+            <Popup><strong>{areaName || 'Selected location'}</strong><br />{distanceKm}km from HQ</Popup>
           </Marker>
         )}
 
-        {/* Real road route via OSRM */}
         <RouteLayer from={HQ_COORDS} to={clientCoords} />
-
         <FitBounds hq={HQ_COORDS} client={clientCoords} />
       </MapContainer>
+
+      {/* Hint overlay — only when clickable */}
+      {onMapClick && !clientCoords && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none">
+          <div className="px-3 py-1.5 rounded-full bg-taqon-orange text-white text-xs font-semibold shadow-lg flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            Tap anywhere on the map to set your location
+          </div>
+        </div>
+      )}
     </div>
   );
 }

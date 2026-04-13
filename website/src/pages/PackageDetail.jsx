@@ -121,36 +121,74 @@ function buildIncludesFromItems(items) {
     groups[cat].push(item);
   }
 
+  // Categories shown with full component details (brand, quantity, each spec visible)
+  const DETAIL_CATS = new Set(['inverter', 'battery', 'panel']);
+
+  // Categories rolled up into "Installation & Mounting" bucket
+  const INSTALL_CATS = new Set(['mounting', 'cable', 'charger']);
+
+  // Everything else (accessory) is "Accessories" bucket
+
   const iconMap = {
     panel: 'SolarPanel',
     inverter: 'Lightning',
     battery: 'Battery',
-    charger: 'Lightning',
-    mounting: 'Wrench',
-    cable: 'Wrench',
-    accessory: 'BookOpen',
   };
 
   const labelMap = {
     panel: 'Solar Panels',
     inverter: 'Inverter',
     battery: 'Battery Storage',
-    charger: 'Charge Controller',
-    mounting: 'Mounting & Installation',
-    cable: 'Cabling',
-    accessory: 'Accessories',
   };
 
-  return Object.entries(groups).map(([cat, catItems]) => {
+  const descMap = {
+    installation: 'Mounting rails, rooftop brackets, solar cables, and charge controllers — everything needed to safely install and interconnect your system.',
+    accessories: 'Distribution boards, breakers, fuses, isolators, surge protectors, lugs, and finishing materials that complete your installation.',
+  };
+
+  const result = [];
+
+  // 1. Detailed cards for inverter / battery / panel
+  for (const cat of ['inverter', 'battery', 'panel']) {
+    if (!groups[cat]) continue;
+    const catItems = groups[cat];
     const names = catItems.map((i) => `${i.component.name} x${i.quantity}`).join(', ');
     const totalValue = catItems.reduce((sum, i) => sum + parseFloat(i.line_total || 0), 0);
-    return {
-      name: labelMap[cat] || cat,
+    result.push({
+      name: labelMap[cat],
       description: names,
       warranty: totalValue > 0 ? `$${totalValue.toLocaleString()}` : 'Included',
-      icon: iconMap[cat] || 'BookOpen',
-    };
-  }).slice(0, 5);
+      icon: iconMap[cat],
+    });
+  }
+
+  // 2. Rolled-up "Installation & Mounting" — combines mounting + cable + charger
+  const installItems = [];
+  for (const cat of INSTALL_CATS) {
+    if (groups[cat]) installItems.push(...groups[cat]);
+  }
+  if (installItems.length > 0) {
+    const installTotal = installItems.reduce((sum, i) => sum + parseFloat(i.line_total || 0), 0);
+    result.push({
+      name: 'Installation & Mounting',
+      description: descMap.installation,
+      warranty: `$${installTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+      icon: 'Wrench',
+    });
+  }
+
+  // 3. Rolled-up "Accessories"
+  if (groups.accessory) {
+    const accessoryTotal = groups.accessory.reduce((sum, i) => sum + parseFloat(i.line_total || 0), 0);
+    result.push({
+      name: 'Accessories',
+      description: descMap.accessories,
+      warranty: `$${accessoryTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+      icon: 'BookOpen',
+    });
+  }
+
+  return result;
 }
 
 function buildRelatedFromSiblings(siblings, currentSlug) {

@@ -97,3 +97,41 @@ export function getAreaCoords(areaName) {
   const area = ZIMBABWE_AREAS.find(a => a.name === areaName);
   return area ? [area.lat, area.lng] : null;
 }
+
+/**
+ * Haversine distance in km between two [lat, lng] points.
+ * Used for map-clicks when we need a distance from HQ without
+ * a matching named area.
+ */
+export function haversineKm(from, to) {
+  const [lat1, lng1] = from;
+  const [lat2, lng2] = to;
+  const R = 6371; // Earth radius in km
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Find the nearest known Zimbabwe area to a [lat, lng] point.
+ * Returns { area, km } where `area` is the matched entry and `km` is
+ * haversine distance to it. If the nearest area is within `snapKm` (default 3km),
+ * we treat it as a match and use its name + stored driving distance. Otherwise
+ * the caller should use "Custom location" with computed km from HQ.
+ */
+export function findNearestArea(coords, snapKm = 3) {
+  let nearest = null;
+  let nearestKm = Infinity;
+  for (const area of ZIMBABWE_AREAS) {
+    const d = haversineKm(coords, [area.lat, area.lng]);
+    if (d < nearestKm) {
+      nearestKm = d;
+      nearest = area;
+    }
+  }
+  return { area: nearest, km: nearestKm, snapped: nearestKm <= snapKm };
+}

@@ -9,6 +9,7 @@ import {
   CaretDown, CaretUp, Info, X, CaretLeft, CaretRight,
   Terminal, BatteryCharging, Cpu, CurrencyDollar,
   CheckCircle, GearSix, Funnel, FileText, DownloadSimple,
+  Sparkle, SquaresFour,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import AnimatedSection from '../components/AnimatedSection';
@@ -35,7 +36,7 @@ const categoryIcons = {
 };
 
 import { getGemFamily, TIER_GEMS } from '../data/gemFamilies';
-import { ZIMBABWE_AREAS, getDistanceByArea, getAreaCoords } from '../data/zimbabweAreas';
+import { ZIMBABWE_AREAS, getDistanceByArea, getAreaCoords, findNearestArea, haversineKm, HQ_COORDS } from '../data/zimbabweAreas';
 import DistanceMap from '../components/DistanceMap';
 
 const tierLabels = { budget: 'Budget', good_fit: 'Recommended', excellent: 'Excellent' };
@@ -53,7 +54,7 @@ const stepTransition = {
 };
 
 
-/* ─── Category Tabs with arrow scroll buttons ─── */
+/* ─── Category Tabs with edge-fade scroll & "All" meta-pill ─── */
 
 function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
   const scrollRef = useRef(null);
@@ -80,28 +81,78 @@ function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
 
   const scroll = (dir) => {
     const el = scrollRef.current;
-    if (el) el.scrollBy({ left: dir * 200, behavior: 'smooth' });
+    if (el) el.scrollBy({ left: dir * 240, behavior: 'smooth' });
   };
 
-  return (
-    <div className="relative mb-4 sm:mb-6">
-      {/* Left arrow — always visible when scrollable */}
-      {canScrollLeft && (
-        <button
-          onClick={() => scroll(-1)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-taqon-charcoal shadow-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:text-taqon-orange hover:border-taqon-orange/30 transition-all"
-          aria-label="Scroll categories left"
-        >
-          <CaretLeft size={16} weight="bold" />
-        </button>
-      )}
+  const totalCount = categories.reduce((sum, c) => sum + (c.count || 0), 0);
+  const isAllActive = activeCategory === null || activeCategory === 'all';
 
-      {/* Scrollable row */}
+  // Dynamic mask: fade only on sides that have overflow content
+  const maskLeft = canScrollLeft ? 'transparent' : 'black';
+  const maskRight = canScrollRight ? 'transparent' : 'black';
+  const maskImage = `linear-gradient(to right, ${maskLeft} 0%, black 48px, black calc(100% - 48px), ${maskRight} 100%)`;
+
+  return (
+    <div className="relative mb-4 sm:mb-6 -mx-1 sm:mx-0">
+      {/* Left arrow — overlays the fade zone */}
+      <AnimatePresence>
+        {canScrollLeft && (
+          <motion.button
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -4 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => scroll(-1)}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/95 dark:bg-taqon-charcoal/95 backdrop-blur-sm shadow-[0_4px_14px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_14px_rgba(0,0,0,0.4)] border border-gray-200/80 dark:border-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:text-taqon-orange hover:border-taqon-orange/40 hover:shadow-[0_4px_18px_rgba(242,101,34,0.18)] transition-all duration-200"
+            aria-label="Scroll categories left"
+          >
+            <CaretLeft size={15} weight="bold" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Scrollable row — no horizontal padding, masked edges */}
       <div
         ref={scrollRef}
-        className="flex gap-1.5 sm:gap-2 overflow-x-auto px-10"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="flex gap-2 overflow-x-auto px-1 sm:px-0 py-1"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitMaskImage: maskImage,
+          maskImage: maskImage,
+          transition: 'mask-image 0.25s ease, -webkit-mask-image 0.25s ease',
+        }}
       >
+        {/* "All Categories" meta-pill — first, always */}
+        <button
+          onClick={() => { onSelect(null); onClearSearch(); }}
+          className={`group relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all shrink-0 min-h-[44px] overflow-hidden ${
+            isAllActive
+              ? 'bg-gradient-to-br from-taqon-orange to-[#E0541A] text-white shadow-[0_6px_20px_-4px_rgba(242,101,34,0.55)] ring-1 ring-taqon-orange/40'
+              : 'bg-gradient-to-br from-white to-gray-50 dark:from-taqon-charcoal dark:to-taqon-charcoal/60 text-taqon-charcoal dark:text-white border border-taqon-orange/25 dark:border-taqon-orange/30 hover:border-taqon-orange/50 hover:shadow-[0_4px_14px_-4px_rgba(242,101,34,0.25)]'
+          }`}
+        >
+          {isAllActive && (
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+          )}
+          <Sparkle
+            size={15}
+            weight={isAllActive ? 'fill' : 'duotone'}
+            className={isAllActive ? 'text-white' : 'text-taqon-orange'}
+          />
+          <span className="relative">All Categories</span>
+          <span className={`relative text-[10px] ml-0.5 px-1.5 py-0.5 rounded-md tabular-nums ${
+            isAllActive
+              ? 'bg-white/20 text-white'
+              : 'bg-taqon-orange/10 text-taqon-orange dark:bg-taqon-orange/15'
+          }`}>
+            {totalCount}
+          </span>
+        </button>
+
+        {/* Slim divider between meta and regular */}
+        <div className="shrink-0 w-px self-stretch my-2 bg-gray-200 dark:bg-white/10" aria-hidden="true" />
+
         {categories.map((cat) => {
           const Icon = categoryIcons[cat.value] || DotsThree;
           const isActive = activeCategory === cat.value;
@@ -111,28 +162,39 @@ function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
               onClick={() => { onSelect(cat.value); onClearSearch(); }}
               className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all shrink-0 min-h-[44px] ${
                 isActive
-                  ? 'bg-taqon-orange text-white shadow-lg shadow-taqon-orange/25'
-                  : 'bg-white dark:bg-taqon-charcoal text-taqon-muted dark:text-white/50 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10'
+                  ? 'bg-taqon-orange text-white shadow-[0_6px_18px_-4px_rgba(242,101,34,0.5)] ring-1 ring-taqon-orange/30'
+                  : 'bg-white dark:bg-taqon-charcoal text-taqon-muted dark:text-white/60 hover:text-taqon-charcoal dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/[0.06] border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20'
               }`}
             >
-              <Icon size={16} />
+              <Icon size={16} weight={isActive ? 'fill' : 'regular'} />
               {cat.label}
-              <span className={`text-[10px] ml-0.5 ${isActive ? 'text-white/70' : 'opacity-50'}`}>{cat.count}</span>
+              <span className={`text-[10px] ml-0.5 tabular-nums ${isActive ? 'text-white/75' : 'opacity-50'}`}>
+                {cat.count}
+              </span>
             </button>
           );
         })}
+
+        {/* Trailing spacer so last pill clears the right fade/arrow cleanly */}
+        <div className="shrink-0 w-2" aria-hidden="true" />
       </div>
 
-      {/* Right arrow — always visible when scrollable */}
-      {canScrollRight && (
-        <button
-          onClick={() => scroll(1)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-taqon-charcoal shadow-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:text-taqon-orange hover:border-taqon-orange/30 transition-all"
-          aria-label="Scroll categories right"
-        >
-          <CaretRight size={16} weight="bold" />
-        </button>
-      )}
+      {/* Right arrow — overlays the fade zone */}
+      <AnimatePresence>
+        {canScrollRight && (
+          <motion.button
+            initial={{ opacity: 0, x: 4 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 4 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => scroll(1)}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/95 dark:bg-taqon-charcoal/95 backdrop-blur-sm shadow-[0_4px_14px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_14px_rgba(0,0,0,0.4)] border border-gray-200/80 dark:border-white/10 flex items-center justify-center text-taqon-charcoal dark:text-white hover:text-taqon-orange hover:border-taqon-orange/40 hover:shadow-[0_4px_18px_rgba(242,101,34,0.18)] transition-all duration-200"
+            aria-label="Scroll categories right"
+          >
+            <CaretRight size={15} weight="bold" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1491,17 +1553,35 @@ export default function SolarAdvisor() {
     wants_smart: false,
   });
   const [selectedArea, setSelectedArea] = useState(draft.current?.selectedArea || '');
+  // customCoords is used when user clicks the map somewhere that isn't a known area
+  const [customCoords, setCustomCoords] = useState(draft.current?.customCoords || null);
   const [clientDetails, setClientDetails] = useState(draft.current?.clientDetails || { name: '', phone: '', email: '', area: '' });
   const [detailsCollected, setDetailsCollected] = useState(false);
   const [areaSearch, setAreaSearch] = useState('');
   const [areaDropdownOpen, setAreaDropdownOpen] = useState(false);
+
+  // Handle map clicks — snap to nearest known area if close, else use custom coords
+  const handleMapClick = useCallback((coords) => {
+    const { area, snapped } = findNearestArea(coords, 3);
+    if (snapped && area) {
+      setSelectedArea(area.name);
+      setCustomCoords(null);
+      setDistanceKm(area.distance);
+    } else {
+      // Unknown location — use raw click coords, compute great-circle km to HQ
+      setSelectedArea('Custom location');
+      setCustomCoords(coords);
+      const km = Math.max(1, Math.round(haversineKm(HQ_COORDS, coords)));
+      setDistanceKm(km);
+    }
+  }, []);
   const clientFormRef = useRef(null);
   const [downloadingAll, setDownloadingAll] = useState(false);
 
   // ── Persist draft to sessionStorage ──
   useEffect(() => {
-    saveDraft({ step, selections, distanceKm, preferences, selectedArea, clientDetails });
-  }, [step, selections, distanceKm, preferences, selectedArea, clientDetails]);
+    saveDraft({ step, selections, distanceKm, preferences, selectedArea, customCoords, clientDetails });
+  }, [step, selections, distanceKm, preferences, selectedArea, customCoords, clientDetails]);
 
   // ── Browser back/forward support ──
   const setStep = useCallback((newStep) => {
@@ -1536,9 +1616,7 @@ export default function SolarAdvisor() {
         ]);
         setAppliances(appRes.data);
         setCategories(catRes.data);
-        if (catRes.data.length > 0) {
-          setActiveCategory(catRes.data[0].value);
-        }
+        // Default to "All Categories" (activeCategory stays null)
       } catch (err) {
         console.error('Failed to load appliances:', err);
       } finally {
@@ -1986,6 +2064,7 @@ export default function SolarAdvisor() {
                                           key={area.name}
                                           onClick={() => {
                                             setSelectedArea(area.name);
+                                            setCustomCoords(null);
                                             setDistanceKm(getDistanceByArea(area.name));
                                             setAreaDropdownOpen(false);
                                             setAreaSearch('');
@@ -2026,11 +2105,12 @@ export default function SolarAdvisor() {
                         </p>
                       </div>
 
-                      {/* Distance Map */}
+                      {/* Distance Map — click to pick location */}
                       <DistanceMap
-                        clientCoords={selectedArea ? getAreaCoords(selectedArea) : null}
+                        clientCoords={customCoords || (selectedArea ? getAreaCoords(selectedArea) : null)}
                         distanceKm={distanceKm}
                         areaName={selectedArea}
+                        onMapClick={handleMapClick}
                       />
                     </div>
 
