@@ -5,7 +5,7 @@ from packages draft.xlsx.
 Safe to run multiple times — idempotent.
 """
 from django.core.management.base import BaseCommand
-from apps.solar_config.models import SolarPackageTemplate
+from apps.solar_config.models import SolarPackageTemplate, PackageComponent
 
 
 # The 28 canonical package names from packages draft.xlsx
@@ -50,15 +50,25 @@ class Command(BaseCommand):
             if p.name not in REAL_PACKAGES
         ]
 
-        if not ghosts:
-            self.stdout.write(self.style.SUCCESS('No ghost packages — clean already.'))
-            return
-
         for g in ghosts:
             self.stdout.write(f'  Soft-deleting: {g.name} (${g.price})')
             g.soft_delete()
 
+        # Hard-delete PackageComponent rows pointing to soft-deleted packages
+        # (soft-deleted packages are invisible but their child rows linger and
+        # break joins in engine queries).
+        orphans = [
+            pc for pc in PackageComponent.objects.select_related('package').all()
+            if pc.package.is_deleted
+        ]
+        for o in orphans:
+            o.delete()
+
         remaining = SolarPackageTemplate.objects.filter(is_deleted=False).count()
-        self.stdout.write(self.style.SUCCESS(
-            f'\nDeleted {len(ghosts)} ghost packages. {remaining} packages remaining.'
-        ))
+        if ghosts or orphans:
+            self.stdout.write(self.style.SUCCESS(
+                f'\nDeleted {len(ghosts)} ghost packages and {len(orphans)} orphaned item rows. '
+                f'{remaining} real packages remaining.'
+            ))
+        else:
+            self.stdout.write(self.style.SUCCESS('Database is clean — nothing to do.'))
