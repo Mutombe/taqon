@@ -272,8 +272,43 @@ export default function ProductDetail() {
         />
       )}
 
-      <section className="pt-28 pb-16 lg:pt-36 lg:pb-24">
-        <div className="max-w-7xl mx-auto px-4">
+      {/* Dark hero strip — gives nav links contrast on light theme */}
+      <div className="relative bg-taqon-dark overflow-hidden">
+        <div className="absolute inset-0 dark-mesh" />
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1559302504-64aae6ca6b6d?w=1920&q=80"
+            alt=""
+            className="w-full h-full object-cover opacity-20"
+            loading="eager"
+          />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-28 pb-6 lg:pt-36 lg:pb-8">
+          {loading ? (
+            <div className="h-4 bg-white/10 rounded w-64 animate-pulse" />
+          ) : product ? (
+            <nav className="flex items-center gap-2 text-sm text-white/50 flex-wrap">
+              <Link to="/shop" className="hover:text-taqon-orange transition-colors">Shop</Link>
+              <CaretRight size={14} />
+              {product.category && (
+                <>
+                  <Link
+                    to={`/shop?category=${product.category.slug}`}
+                    className="hover:text-taqon-orange transition-colors"
+                  >
+                    {product.category.name}
+                  </Link>
+                  <CaretRight size={14} />
+                </>
+              )}
+              <span className="text-white/80">{product.name}</span>
+            </nav>
+          ) : null}
+        </div>
+      </div>
+
+      <section className="pb-16 lg:pb-24">
+        <div className="max-w-7xl mx-auto px-4 pt-8 lg:pt-12">
           {loading ? (
             <ProductSkeleton />
           ) : !product ? (
@@ -290,23 +325,6 @@ export default function ProductDetail() {
             </div>
           ) : (
             <>
-              {/* Breadcrumb */}
-              <nav className="flex items-center gap-2 text-sm text-gray-400 dark:text-white/40 mb-8 flex-wrap">
-                <Link to="/shop" className="hover:text-taqon-orange transition-colors">Shop</Link>
-                <CaretRight size={14} />
-                {product.category && (
-                  <>
-                    <Link
-                      to={`/shop?category=${product.category.slug}`}
-                      className="hover:text-taqon-orange transition-colors"
-                    >
-                      {product.category.name}
-                    </Link>
-                    <CaretRight size={14} />
-                  </>
-                )}
-                <span className="text-gray-700 dark:text-white/70">{product.name}</span>
-              </nav>
 
               {/* Product Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
