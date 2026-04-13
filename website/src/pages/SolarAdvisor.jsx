@@ -384,78 +384,111 @@ function SlotNumber({ finalValue, settled, prefix = '', suffix = '' }) {
 
 function RecommendationSlotCards({ settled }) {
   const tiers = [
-    { key: 'budget', label: 'Budget', color: 'border-blue-300 dark:border-blue-500/30' },
-    { key: 'good_fit', label: 'Good Fit', color: 'border-taqon-orange ring-2 ring-taqon-orange/20' },
-    { key: 'excellent', label: 'Excellent', color: 'border-emerald-300 dark:border-emerald-500/30' },
+    { key: 'budget', label: 'Budget', color: 'border-blue-300 dark:border-blue-500/30', badgeBg: 'bg-blue-100 dark:bg-blue-500/20', badgeText: 'text-blue-700 dark:text-blue-300' },
+    { key: 'good_fit', label: 'Good Fit', color: 'border-taqon-orange ring-2 ring-taqon-orange/20', badgeBg: 'bg-taqon-orange/10', badgeText: 'text-taqon-orange' },
+    { key: 'excellent', label: 'Excellent', color: 'border-emerald-300 dark:border-emerald-500/30', badgeBg: 'bg-emerald-100 dark:bg-emerald-500/20', badgeText: 'text-emerald-700 dark:text-emerald-300' },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto mt-6">
-      {tiers.map(({ key, label, color }, i) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 max-w-5xl mx-auto mt-6">
+      {tiers.map(({ key, label, color, badgeBg, badgeText }, i) => (
         <motion.div
           key={key}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
-          className={`relative overflow-visible rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 bg-white dark:bg-taqon-charcoal/50 ${color} ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02] pt-10 sm:pt-10' : ''}`}
+          className={`relative overflow-visible border-2 bg-white dark:bg-taqon-charcoal/50 ${color}
+            rounded-xl md:rounded-3xl p-3 md:p-6
+            ${key === 'good_fit' ? 'shadow-xl md:scale-[1.02] pt-8 md:pt-10' : ''}`}
         >
           {key === 'good_fit' && (
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-sm font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-taqon-orange/30 whitespace-nowrap z-10">
-              <Star size={14} weight="fill" /> Recommended
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-taqon-orange text-white text-[11px] md:text-sm font-bold px-4 md:px-6 py-1 md:py-2 rounded-full flex items-center gap-1.5 shadow-lg shadow-taqon-orange/30 whitespace-nowrap z-10">
+              <Star size={12} weight="fill" /> Recommended
             </div>
           )}
 
-          {/* Tier badge */}
-          <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold mb-3 ${
-            key === 'budget' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300' :
-            key === 'good_fit' ? 'bg-taqon-orange/10 text-taqon-orange' :
-            'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
-          }`}>
-            {key === 'good_fit' ? 'Best Fit' : label}
+          {/* Mobile: compact horizontal layout */}
+          <div className="md:hidden">
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeBg} ${badgeText}`}>
+                {key === 'good_fit' ? 'Best Fit' : label}
+              </span>
+              <div className={`h-3.5 rounded w-20 ${settled ? 'bg-transparent' : 'bg-gray-200 dark:bg-white/10 animate-pulse'}`} />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-1.5 text-center">
+                  <div className="px-2 py-1 rounded-lg bg-gray-50 dark:bg-white/5">
+                    <p className="text-sm font-bold font-syne leading-tight">
+                      <SlotNumber finalValue={key === 'budget' ? 3 : key === 'good_fit' ? 5 : 8} settled={settled} />
+                    </p>
+                    <p className="text-[8px] text-taqon-muted dark:text-white/40 font-medium">kVA</p>
+                  </div>
+                  <div className="px-2 py-1 rounded-lg bg-gray-50 dark:bg-white/5">
+                    <p className="text-sm font-bold font-syne leading-tight">
+                      <SlotNumber finalValue={key === 'budget' ? 5 : key === 'good_fit' ? 10 : 15} settled={settled} />
+                    </p>
+                    <p className="text-[8px] text-taqon-muted dark:text-white/40 font-medium">kWh</p>
+                  </div>
+                  <div className="px-2 py-1 rounded-lg bg-gray-50 dark:bg-white/5">
+                    <p className="text-sm font-bold font-syne leading-tight">
+                      <SlotNumber finalValue={key === 'budget' ? 4 : key === 'good_fit' ? 8 : 12} settled={settled} />
+                    </p>
+                    <p className="text-[8px] text-taqon-muted dark:text-white/40 font-medium">Panels</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-lg font-bold font-syne shrink-0">
+                <SlotNumber
+                  finalValue={key === 'budget' ? 1800 : key === 'good_fit' ? 3200 : 5500}
+                  settled={settled}
+                  prefix="$"
+                />
+              </p>
+            </div>
           </div>
 
-          {/* Package name skeleton */}
-          <div className={`h-6 rounded-lg w-3/4 mb-1 ${settled ? 'bg-transparent' : 'bg-gray-200 dark:bg-white/10 animate-pulse'}`} />
-          <div className={`h-3 rounded w-1/2 mb-4 ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
-
-          {/* Specs with casino numbers */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
-              <p className="text-lg sm:text-xl font-bold font-syne">
-                <SlotNumber finalValue={key === 'budget' ? 3 : key === 'good_fit' ? 5 : 8} settled={settled} />
-              </p>
-              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kVA</p>
+          {/* Desktop: full vertical layout */}
+          <div className="hidden md:block">
+            <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold mb-3 ${badgeBg} ${badgeText}`}>
+              {key === 'good_fit' ? 'Best Fit' : label}
             </div>
-            <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
-              <p className="text-lg sm:text-xl font-bold font-syne">
-                <SlotNumber finalValue={key === 'budget' ? 5 : key === 'good_fit' ? 10 : 15} settled={settled} suffix="" />
-              </p>
-              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kWh</p>
+            <div className={`h-6 rounded-lg w-3/4 mb-1 ${settled ? 'bg-transparent' : 'bg-gray-200 dark:bg-white/10 animate-pulse'}`} />
+            <div className={`h-3 rounded w-1/2 mb-4 ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
+            <div className="grid grid-cols-3 gap-2">
+              <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
+                <p className="text-xl font-bold font-syne">
+                  <SlotNumber finalValue={key === 'budget' ? 3 : key === 'good_fit' ? 5 : 8} settled={settled} />
+                </p>
+                <p className="text-xs text-taqon-muted dark:text-white/40 font-medium">kVA</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
+                <p className="text-xl font-bold font-syne">
+                  <SlotNumber finalValue={key === 'budget' ? 5 : key === 'good_fit' ? 10 : 15} settled={settled} />
+                </p>
+                <p className="text-xs text-taqon-muted dark:text-white/40 font-medium">kWh</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
+                <p className="text-xl font-bold font-syne">
+                  <SlotNumber finalValue={key === 'budget' ? 4 : key === 'good_fit' ? 8 : 12} settled={settled} />
+                </p>
+                <p className="text-xs text-taqon-muted dark:text-white/40 font-medium">Panels</p>
+              </div>
             </div>
-            <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
-              <p className="text-lg sm:text-xl font-bold font-syne">
-                <SlotNumber finalValue={key === 'budget' ? 4 : key === 'good_fit' ? 8 : 12} settled={settled} />
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10">
+              <div className={`h-4 rounded w-1/3 mb-2 ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
+              <p className="text-2xl font-bold font-syne">
+                <SlotNumber
+                  finalValue={key === 'budget' ? 1800 : key === 'good_fit' ? 3200 : 5500}
+                  settled={settled}
+                  prefix="$"
+                />
               </p>
-              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">Panels</p>
             </div>
-          </div>
-
-          {/* Price with casino effect */}
-          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10">
-            <div className={`h-4 rounded w-1/3 mb-2 ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
-            <p className="text-2xl font-bold font-syne">
-              <SlotNumber
-                finalValue={key === 'budget' ? 1800 : key === 'good_fit' ? 3200 : 5500}
-                settled={settled}
-                prefix="$"
-              />
-            </p>
-          </div>
-
-          {/* CTA skeletons */}
-          <div className="mt-5 space-y-2">
-            <div className={`h-11 rounded-xl ${settled ? 'bg-transparent' : key === 'good_fit' ? 'bg-taqon-orange/20 animate-pulse' : 'bg-gray-200 dark:bg-white/10 animate-pulse'}`} />
-            <div className={`h-11 rounded-xl ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
+            <div className="mt-5 space-y-2">
+              <div className={`h-11 rounded-xl ${settled ? 'bg-transparent' : key === 'good_fit' ? 'bg-taqon-orange/20 animate-pulse' : 'bg-gray-200 dark:bg-white/10 animate-pulse'}`} />
+              <div className={`h-11 rounded-xl ${settled ? 'bg-transparent' : 'bg-gray-100 dark:bg-white/5 animate-pulse'}`} />
+            </div>
           </div>
         </motion.div>
       ))}
@@ -672,7 +705,6 @@ function getWhyThisMatchesYou(preferences) {
 /* ─── Recommendation Card (Step 3) — Gem-styled ─── */
 
 function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, clientFormRef, preferences }) {
-  const [showBreakdown, setShowBreakdown] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [downloadingQuote, setDownloadingQuote] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -681,11 +713,12 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
   const matchReason = isHighlighted && preferences ? getWhyThisMatchesYou(preferences) : null;
   const tierGem = TIER_GEMS[tierKey];
   const familyGem = getGemFamily(pkg.family_slug || pkg.slug);
+  const totalPrice = tier.price_breakdown ? parseFloat(tier.price_breakdown.total).toLocaleString(undefined, { maximumFractionDigits: 0 }) : null;
 
   return (
     <AnimatedSection delay={tierKey === 'budget' ? 0 : tierKey === 'good_fit' ? 0.1 : 0.2}>
       <div
-        className={`gem-rec-card relative rounded-2xl sm:rounded-3xl border-2 flex flex-col bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm ${tierGem.borderColor} ${
+        className={`gem-rec-card relative rounded-xl md:rounded-3xl border-2 flex flex-col bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm ${tierGem.borderColor} ${
           isHighlighted ? 'gem-rec-highlighted' : ''
         }`}
         style={{
@@ -694,8 +727,6 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
           '--gem-shimmer': tierGem.shimmerColor,
         }}
       >
-        {/* Inner clip — contains gradient & shimmer so they respect border-radius
-            while the outer card keeps overflow:visible for the badge */}
         <div className="gem-rec-inner">
           <div className={`absolute inset-0 bg-gradient-to-br ${tierGem.gradient} pointer-events-none`} />
           <div className="gem-shimmer" />
@@ -704,17 +735,214 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
         {/* Highlighted badge */}
         {isHighlighted && (
           <div
-            className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-lg whitespace-nowrap"
+            className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-white text-[10px] md:text-xs font-bold px-3 md:px-4 py-0.5 md:py-1 rounded-full flex items-center gap-1 shadow-lg whitespace-nowrap"
             style={{
               backgroundColor: tierGem.accent,
               boxShadow: `0 4px 14px -2px ${tierGem.glowColor}`,
             }}
           >
-            <Star size={12} weight="fill" /> Based on Your Preferences
+            <Star size={10} weight="fill" /> Best Match
           </div>
         )}
 
-        <div className="relative z-10 p-5 sm:p-6 flex flex-col flex-1">
+        {/* ── Mobile layout ── */}
+        <div className="md:hidden relative z-10">
+          {/* Tappable header row */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`w-full text-left p-3 ${isHighlighted ? 'pt-5' : ''}`}
+          >
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <span className={`gem-badge !text-[10px] !px-1.5 !py-0 ${tierGem.badgeBg} ${tierGem.badgeText}`}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tierGem.accent }} />
+                {tierGem.label}
+              </span>
+              <span className={`gem-badge !text-[10px] !px-1.5 !py-0 ${familyGem.badgeBg} ${familyGem.badgeText}`}>
+                {familyGem.gem}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold font-syne text-taqon-charcoal dark:text-white leading-tight truncate">
+                  {pkg.family_name || pkg.name}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] text-taqon-muted dark:text-white/40">
+                    {pkg.inverter_kva || tier.inverter_kva} kVA
+                  </span>
+                  <span className="text-[10px] text-taqon-muted dark:text-white/30">|</span>
+                  <span className="text-[10px] text-taqon-muted dark:text-white/40">
+                    {tier.battery_kwh && tier.battery_kwh !== '0.00' ? tier.battery_kwh : (pkg.battery_capacity_kwh || '—')} kWh
+                  </span>
+                  {pkg.panel_count > 0 && (
+                    <>
+                      <span className="text-[10px] text-taqon-muted dark:text-white/30">|</span>
+                      <span className="text-[10px] text-taqon-muted dark:text-white/40">{pkg.panel_count} panels</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {totalPrice && (
+                  <span className="text-base font-bold tabular-nums font-syne" style={{ color: tierGem.accent }}>
+                    ${totalPrice}
+                  </span>
+                )}
+                <span className="text-taqon-muted dark:text-white/40">
+                  {expanded ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
+                </span>
+              </div>
+            </div>
+          </button>
+
+          {/* Accordion content */}
+          <AnimatePresence>
+            {expanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="px-3 pb-3 space-y-3">
+                  {/* Specs grid */}
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <div className={`gem-spec ${tierGem.specBg} !p-2`}>
+                      <p className="text-base font-bold text-taqon-charcoal dark:text-white tabular-nums">
+                        {pkg.inverter_kva || tier.inverter_kva}
+                      </p>
+                      <p className="text-[9px] text-taqon-muted dark:text-white/40 font-medium">kVA</p>
+                    </div>
+                    <div className={`gem-spec ${tierGem.specBg} !p-2`}>
+                      <p className="text-base font-bold text-taqon-charcoal dark:text-white tabular-nums">
+                        {tier.battery_kwh && tier.battery_kwh !== '0.00' ? tier.battery_kwh : (pkg.battery_capacity_kwh || '—')}
+                      </p>
+                      <p className="text-[9px] text-taqon-muted dark:text-white/40 font-medium">kWh</p>
+                    </div>
+                    {pkg.panel_count > 0 && (
+                      <div className={`gem-spec ${tierGem.specBg} !p-2`}>
+                        <p className="text-base font-bold text-taqon-charcoal dark:text-white tabular-nums">
+                          {pkg.panel_count}
+                        </p>
+                        <p className="text-[9px] text-taqon-muted dark:text-white/40 font-medium">Panels</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price breakdown */}
+                  {tier.price_breakdown && (
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[11px] text-taqon-muted dark:text-white/40">
+                        <span>Materials</span>
+                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-[11px] text-taqon-muted dark:text-white/40">
+                        <span>Labour (8%)</span>
+                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-[11px] text-taqon-muted dark:text-white/40">
+                        <span>Transport ({distanceKm}km)</span>
+                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
+                      </div>
+                      <div
+                        className="pt-2 mt-1.5 flex justify-between items-baseline"
+                        style={{ borderTop: `1px solid color-mix(in srgb, ${tierGem.accent} 20%, transparent)` }}
+                      >
+                        <span className="font-semibold text-xs text-taqon-charcoal dark:text-white">Total</span>
+                        <span className="text-lg font-bold tabular-nums font-syne" style={{ color: tierGem.accent }}>
+                          ${totalPrice}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Explanation */}
+                  <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-white/5 space-y-1">
+                    <p className="text-[11px] text-taqon-charcoal dark:text-white/70">
+                      <span className="font-semibold">Best for:</span> {explanation.bestFor}
+                    </p>
+                    <p className="text-[11px] text-taqon-muted dark:text-white/50">
+                      <span className="font-semibold text-taqon-charcoal dark:text-white/70">How it works:</span> {explanation.howItWorks}
+                    </p>
+                  </div>
+
+                  {/* Why this matches you */}
+                  {matchReason && (
+                    <div className="p-2.5 rounded-lg border border-taqon-orange/20 bg-taqon-orange/5 dark:bg-taqon-orange/10 space-y-1">
+                      <p className="text-[11px] font-bold text-taqon-orange flex items-center gap-1">
+                        <Star size={10} weight="fill" /> Why this matches you
+                      </p>
+                      <p className="text-[11px] text-taqon-charcoal dark:text-white/80">{matchReason.priority}</p>
+                    </div>
+                  )}
+
+                  {/* CTAs */}
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/packages/${pkg.slug}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-xs text-white active:scale-[0.98] transition-all"
+                      style={{
+                        backgroundColor: tierGem.accent,
+                        boxShadow: `0 4px 14px -2px ${tierGem.glowColorSubtle}`,
+                      }}
+                    >
+                      View Details <ArrowRight size={12} weight="bold" />
+                    </Link>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!detailsCollected) {
+                          clientFormRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          return;
+                        }
+                        setDownloadingQuote(true);
+                        try {
+                          const res = await solarConfigApi.getInstantQuote({
+                            package_slug: pkg.slug,
+                            distance_km: distanceKm,
+                            customer_name: clientDetails.name,
+                            customer_email: clientDetails.email,
+                            customer_phone: clientDetails.phone,
+                            customer_address: clientDetails.area,
+                            tier_label: tierLabels[tierKey] || tierKey,
+                          });
+                          const contentType = res.headers['content-type'] || 'application/pdf';
+                          const ext = contentType.includes('html') ? 'html' : 'pdf';
+                          const blob = new Blob([res.data], { type: contentType });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `Taqon-Quote-${pkg.family_name || pkg.name}.${ext}`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                          toast.success('Quote downloaded!');
+                        } catch (err) {
+                          toast.error(err.response?.data?.error || 'Failed to generate quote');
+                        } finally {
+                          setDownloadingQuote(false);
+                        }
+                      }}
+                      disabled={downloadingQuote}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-xs active:scale-[0.98] transition-all disabled:opacity-60"
+                    >
+                      {downloadingQuote ? (
+                        <SpinnerGap size={14} className="animate-spin" />
+                      ) : (
+                        <><DownloadSimple size={12} /> {detailsCollected ? 'Quote' : 'Get Quote'}</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ── Desktop layout ── */}
+        <div className="hidden md:flex md:flex-col md:flex-1 relative z-10 p-6">
           {/* Tier + Gem badges */}
           <div className="flex items-center gap-2 flex-wrap mb-3">
             <span className={`gem-badge ${tierGem.badgeBg} ${tierGem.badgeText}`}>
@@ -730,7 +958,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
           </div>
 
           {/* Package name */}
-          <h3 className="text-lg sm:text-xl font-bold font-syne text-taqon-charcoal dark:text-white leading-tight">
+          <h3 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white leading-tight">
             {pkg.family_name || pkg.name}
           </h3>
           {pkg.variant_name && (
@@ -740,47 +968,26 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
           {/* Specs grid */}
           <div className="mt-3 grid grid-cols-3 gap-2">
             <div className={`gem-spec ${tierGem.specBg}`}>
-              <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
+              <p className="text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
                 {pkg.inverter_kva || tier.inverter_kva}
               </p>
-              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kVA</p>
+              <p className="text-xs text-taqon-muted dark:text-white/40 font-medium">kVA</p>
             </div>
             <div className={`gem-spec ${tierGem.specBg}`}>
-              <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
+              <p className="text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
                 {tier.battery_kwh && tier.battery_kwh !== '0.00' ? tier.battery_kwh : (pkg.battery_capacity_kwh || '—')}
               </p>
-              <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">kWh</p>
+              <p className="text-xs text-taqon-muted dark:text-white/40 font-medium">kWh</p>
             </div>
             {pkg.panel_count > 0 && (
               <div className={`gem-spec ${tierGem.specBg}`}>
-                <p className="text-lg sm:text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
+                <p className="text-xl font-bold text-taqon-charcoal dark:text-white tabular-nums">
                   {pkg.panel_count}
                 </p>
-                <p className="text-[10px] sm:text-xs text-taqon-muted dark:text-white/40 font-medium">Panels</p>
+                <p className="text-xs text-taqon-muted dark:text-white/40 font-medium">Panels</p>
               </div>
             )}
           </div>
-
-          {/* Mobile: Total price + expand toggle */}
-          {tier.price_breakdown && (
-            <div className="mt-3 md:hidden">
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className="w-full flex items-center justify-between py-2"
-              >
-                <span className="text-xl font-bold tabular-nums font-syne" style={{ color: tierGem.accent }}>
-                  ${parseFloat(tier.price_breakdown.total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </span>
-                <span className="flex items-center gap-1 text-xs text-taqon-muted font-medium">
-                  {expanded ? 'Less' : 'More details'}
-                  {expanded ? <CaretUp size={12} weight="bold" /> : <CaretDown size={12} weight="bold" />}
-                </span>
-              </button>
-            </div>
-          )}
-
-          {/* Expandable details on mobile, always visible on desktop */}
-          <div className={`${expanded ? 'block' : 'hidden'} md:block`}>
 
           {/* Price breakdown */}
           {tier.price_breakdown && (
@@ -803,13 +1010,13 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
               >
                 <span className="font-semibold text-sm text-taqon-charcoal dark:text-white">Total</span>
                 <span className="text-2xl font-bold tabular-nums font-syne" style={{ color: tierGem.accent }}>
-                  ${parseFloat(tier.price_breakdown.total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  ${totalPrice}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Fixed package explanation (same for every client) */}
+          {/* Package explanation */}
           <div className="mt-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 space-y-1.5">
             <p className="text-xs text-taqon-charcoal dark:text-white/70">
               <span className="font-semibold">Best for:</span> {explanation.bestFor}
@@ -824,7 +1031,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             )}
           </div>
 
-          {/* Dynamic "Why this matches you" — highlighted card only */}
+          {/* Why this matches you */}
           {matchReason && (
             <div className="mt-3 p-3 rounded-xl border border-taqon-orange/20 bg-taqon-orange/5 dark:bg-taqon-orange/10 space-y-2">
               <p className="text-xs font-bold text-taqon-orange flex items-center gap-1.5">
@@ -882,7 +1089,9 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                   const a = document.createElement('a');
                   a.href = url;
                   a.download = `Taqon-Quote-${pkg.family_name || pkg.name}.${ext}`;
+                  document.body.appendChild(a);
                   a.click();
+                  document.body.removeChild(a);
                   URL.revokeObjectURL(url);
                   toast.success('Quote downloaded!');
                 } catch (err) {
@@ -901,13 +1110,11 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
               )}
             </button>
           </div>
-
-          </div>{/* end expandable wrapper */}
         </div>
 
         {/* Bottom accent bar */}
         <div
-          className="h-[2px] rounded-b-2xl sm:rounded-b-3xl"
+          className="h-[2px] rounded-b-xl md:rounded-b-3xl"
           style={{
             background: `linear-gradient(90deg, transparent, ${tierGem.accent}, transparent)`,
             opacity: isHighlighted ? 0.6 : 0.25,
@@ -1979,11 +2186,11 @@ export default function SolarAdvisor() {
                     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   >
                     {/* Header */}
-                    <div className="text-center mb-8 sm:mb-10">
-                      <h2 className="text-2xl sm:text-3xl font-bold font-syne text-taqon-charcoal dark:text-white">
+                    <div className="text-center mb-4 md:mb-10">
+                      <h2 className="text-xl md:text-3xl font-bold font-syne text-taqon-charcoal dark:text-white">
                         Your <span className="text-gradient">Recommendations</span>
                       </h2>
-                      <p className="mt-2 text-sm sm:text-base text-taqon-muted dark:text-white/50">
+                      <p className="mt-1 md:mt-2 text-xs md:text-base text-taqon-muted dark:text-white/50">
                         Based on {totals.count} appliance{totals.count !== 1 ? 's' : ''} at {distanceKm}km from Harare
                       </p>
                     </div>
@@ -1991,7 +2198,7 @@ export default function SolarAdvisor() {
                     {/* Tier cards — dynamic grid based on result count */}
                     {(() => {
                       const tierEntries = ['budget', 'good_fit', 'excellent'].filter(k => recommendation.tiers[k]?.package);
-                      const cols = tierEntries.length === 1 ? 'max-w-lg mx-auto' : tierEntries.length === 2 ? 'grid grid-cols-1 md:grid-cols-2 md:items-start gap-4 sm:gap-6 max-w-3xl mx-auto' : 'grid grid-cols-1 md:grid-cols-3 md:items-start gap-4 sm:gap-6 max-w-5xl mx-auto';
+                      const cols = tierEntries.length === 1 ? 'max-w-lg mx-auto' : tierEntries.length === 2 ? 'grid grid-cols-1 md:grid-cols-2 md:items-start gap-2.5 md:gap-6 max-w-3xl mx-auto' : 'grid grid-cols-1 md:grid-cols-3 md:items-start gap-2.5 md:gap-6 max-w-5xl mx-auto';
                       return (
                         <div className={cols}>
                           {tierEntries.map((tierKey) => (

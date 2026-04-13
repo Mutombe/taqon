@@ -11,7 +11,6 @@ import { ScrollProgress, BackToTop } from './components/ScrollElements';
 import { PrivacyModal, CookieModal, CookieConsent } from './components/Modals';
 import AuthModal from './features/auth/components/AuthModal';
 import PageLoader from './components/PageLoader';
-import ChatWidget from './components/ChatWidget';
 import useAuthStore from './stores/authStore';
 import { setAuthFailureHandler } from './api/axios';
 import { prefetchRoute } from './lib/routePrefetch';
@@ -319,7 +318,6 @@ function AppContent() {
         />
       )}
 
-      {!isAdminRoute && !isSolarAdvisor && <ChatWidget />}
       {!isAdminRoute && !isSolarAdvisor && <BackToTop />}
       <CookieConsent onOpenCookies={() => setCookiesOpen(true)} />
       <AuthModal />
