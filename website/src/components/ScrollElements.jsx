@@ -44,7 +44,7 @@ export function BackToTop() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-[60] w-12 h-12 rounded-full bg-taqon-orange text-white shadow-lg shadow-taqon-orange/30 flex items-center justify-center hover:bg-taqon-orange/90 transition-all active:scale-90"
+          className="fixed bottom-24 right-6 z-[60] w-11 h-11 rounded-full bg-taqon-orange text-white shadow-lg shadow-taqon-orange/30 flex items-center justify-center hover:bg-taqon-orange/90 transition-all active:scale-90"
           whileHover={{ y: -3 }}
         >
           <ArrowUp size={20} />

@@ -165,6 +165,18 @@ function AppContent() {
   const isAdminRoute = pathname.startsWith('/admin');
   const isSolarAdvisor = pathname.startsWith('/solar-advisor');
 
+  // Hide Tidio chatbot on Solar Advisor and admin pages
+  useEffect(() => {
+    const hideTidio = isAdminRoute || isSolarAdvisor;
+    if (window.tidioChatApi) {
+      hideTidio ? window.tidioChatApi.hide() : window.tidioChatApi.show();
+    } else {
+      document.addEventListener('tidioChat-ready', () => {
+        if (hideTidio) window.tidioChatApi.hide();
+      }, { once: true });
+    }
+  }, [isAdminRoute, isSolarAdvisor]);
+
   // Wire axios auth failure handler
   useEffect(() => {
     setAuthFailureHandler(() => {
