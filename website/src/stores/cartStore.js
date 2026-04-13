@@ -33,7 +33,7 @@ const useCartStore = create((set, get) => ({
       await get().fetchCart();
       toast.success('Added to cart');
     } catch (error) {
-      const msg = error.response?.data?.error || 'Failed to add to cart';
+      const msg = error.response?.data?.detail || error.response?.data?.error || 'Failed to add to cart';
       toast.error(msg);
     } finally {
       set({ isLoading: false });

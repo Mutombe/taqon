@@ -74,7 +74,13 @@ export default function Saves() {
                   <motion.div key={product.slug} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                     <Link to={`/shop/${product.slug}`} className="group block bg-white dark:bg-taqon-charcoal rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 hover:border-taqon-orange/20 hover:shadow-xl transition-all h-full">
                       <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-taqon-dark">
-                        <img src={product.images?.[0]?.image || product.image_url || ''} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        {(product.primary_image?.image_url || product.primary_image?.image || product.image_url) ? (
+                          <img src={product.primary_image?.image_url || product.primary_image?.image || product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-taqon-charcoal">
+                            <ShoppingCart size={32} className="text-gray-300 dark:text-white/15" />
+                          </div>
+                        )}
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProduct(product.slug); }}
                           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
