@@ -297,7 +297,7 @@ function Field({ label, children, hint, span = 1 }) {
 }
 
 /* ─── Package Edit Modal ─── */
-function PackageModal({ pkg, onClose, onSaved }) {
+function PackageModal({ pkg, onClose, onSaved, onCascadeChange }) {
   const [form, setForm] = useState(() => {
     if (!pkg) return EMPTY_FORM;
     return {
@@ -354,6 +354,8 @@ function PackageModal({ pkg, onClose, onSaved }) {
     try {
       const { data } = await adminApi.recalculatePackage(pkg.slug, { distance_km: form.distance_km || 10 });
       setPriceInfo(data);
+      // Invalidate all dependent caches (public & admin)
+      onCascadeChange?.();
       toast.success('Price recalculated');
     } catch {
       toast.error('Failed to recalculate');
@@ -777,7 +779,16 @@ export default function AdminPackages() {
   const { data: packagesRaw, isLoading: loading } = useAdminPackages();
   const packages = packagesRaw?.results || packagesRaw || [];
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['adminPackages'] });
+  const invalidate = () => {
+    // Invalidate both admin and public-facing caches so changes reflect
+    // immediately on the packages page, family pages, and Solar Advisor.
+    queryClient.invalidateQueries({ queryKey: ['adminPackages'] });
+    queryClient.invalidateQueries({ queryKey: ['packages'] });
+    queryClient.invalidateQueries({ queryKey: ['package'] });
+    queryClient.invalidateQueries({ queryKey: ['packagePrice'] });
+    queryClient.invalidateQueries({ queryKey: ['families'] });
+    queryClient.invalidateQueries({ queryKey: ['family'] });
+  };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -867,6 +878,7 @@ export default function AdminPackages() {
             pkg={modalPkg || null}
             onClose={() => setModalPkg(null)}
             onSaved={invalidate}
+            onCascadeChange={invalidate}
           />
         )}
         {deleteTarget && (

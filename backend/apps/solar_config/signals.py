@@ -51,11 +51,30 @@ def sync_component_price_on_product_save(sender, instance, **kwargs):
 @receiver(post_save, sender='solar_config.SolarComponent')
 def recalculate_packages_on_component_save(sender, instance, **kwargs):
     """
-    When a SolarComponent price changes directly (not via Product),
-    recalculate all packages that use it.
+    When a SolarComponent is saved:
+      - If price changed (or update_fields is not set), recalculate all packages using it.
+      - If the linked `product` changed, sync the component price to the new product's price.
     """
-    # Check if price field was updated
     update_fields = kwargs.get('update_fields')
+
+    # When `product` was just re-linked, align the component price with the new product.
+    if (not update_fields or 'product' in update_fields) and instance.product_id:
+        from apps.shop.models import Product
+        try:
+            product = Product.objects.only('price').get(pk=instance.product_id)
+        except Product.DoesNotExist:
+            product = None
+        if product and product.price != instance.price:
+            logger.info(
+                f'Component "{instance.name}" re-linked — syncing price '
+                f'${instance.price} -> ${product.price}'
+            )
+            instance.price = product.price
+            instance.save(update_fields=['price', 'updated_at'])
+            # Recursive save will re-fire this signal and cascade to packages
+            return
+
+    # Skip cascade if update_fields is set and price wasn't in it
     if update_fields and 'price' not in update_fields:
         return
 

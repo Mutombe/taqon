@@ -474,7 +474,19 @@ export default function AdminProducts() {
   const { data: categories = [] } = useCategories();
   const { data: brands = [] } = useBrands();
 
-  const invalidateProducts = () => queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+  const invalidateProducts = () => {
+    // Product price changes cascade to SolarComponent then to packages,
+    // so refresh all dependent caches too.
+    queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    queryClient.invalidateQueries({ queryKey: ['product'] });
+    queryClient.invalidateQueries({ queryKey: ['adminPackages'] });
+    queryClient.invalidateQueries({ queryKey: ['packages'] });
+    queryClient.invalidateQueries({ queryKey: ['package'] });
+    queryClient.invalidateQueries({ queryKey: ['packagePrice'] });
+    queryClient.invalidateQueries({ queryKey: ['families'] });
+    queryClient.invalidateQueries({ queryKey: ['family'] });
+  };
 
   const handleSaved = () => { invalidateProducts(); };
 
