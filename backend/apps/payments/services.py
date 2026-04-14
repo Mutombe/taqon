@@ -8,12 +8,17 @@ from .gateways import PaynowGateway, StripeGateway
 logger = logging.getLogger(__name__)
 
 # Gateway method routing
+# All Paynow-supported methods go through Paynow (including card/ZimSwitch —
+# Paynow handles Visa, Mastercard and ZimSwitch via its hosted checkout).
+# Stripe is kept available for a fallback international card flow but not
+# routed by default.
 GATEWAY_FOR_METHOD = {
     'ecocash': 'paynow',
     'onemoney': 'paynow',
     'innbucks': 'paynow',
     'bank_transfer': 'paynow',
-    'card': 'stripe',
+    'zimswitch': 'paynow',
+    'card': 'paynow',
     'cash': 'cash',
 }
 

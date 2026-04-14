@@ -34,6 +34,7 @@ class Payment(TimeStampedModel):
         ('onemoney', 'OneMoney'),
         ('innbucks', 'InnBucks'),
         ('bank_transfer', 'Bank Transfer'),
+        ('zimswitch', 'ZimSwitch'),
         ('card', 'Card'),
         ('cash', 'Cash'),
     ]

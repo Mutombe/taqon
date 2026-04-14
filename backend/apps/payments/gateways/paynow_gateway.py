@@ -4,12 +4,19 @@ from .base import BasePaymentGateway, PaymentResult
 
 logger = logging.getLogger(__name__)
 
-# Mobile money method mapping for Paynow
+# Mobile money methods — push STK/USSD prompt directly to the customer's phone
+# via Paynow Express Checkout. SDK docstring confirms ecocash + onemoney are
+# the canonical methods; Paynow's API also accepts innbucks today.
 PAYNOW_MOBILE_METHODS = {
     'ecocash': 'ecocash',
     'onemoney': 'onemoney',
     'innbucks': 'innbucks',
 }
+
+# Web-redirect methods — user is sent to Paynow's hosted checkout page where
+# they pick the actual instrument (Visa, Mastercard, ZimSwitch, InnBucks web,
+# EcoCash web, bank transfer, etc., whatever the merchant has enabled).
+PAYNOW_WEB_METHODS = {'card', 'bank_transfer', 'zimswitch'}
 
 
 class PaynowGateway(BasePaymentGateway):
@@ -17,9 +24,9 @@ class PaynowGateway(BasePaymentGateway):
     Paynow Zimbabwe payment gateway.
 
     Supports:
-    - EcoCash (mobile money)
-    - OneMoney (mobile money)
-    - InnBucks (mobile money)
+    - EcoCash / OneMoney / InnBucks (mobile money push via Express Checkout)
+    - Card (Visa / Mastercard — web redirect)
+    - ZimSwitch (web redirect)
     - Bank transfer (web redirect)
     """
 
@@ -68,7 +75,8 @@ class PaynowGateway(BasePaymentGateway):
             payment = self.client.create_payment(reference, self.merchant_email)
             payment.add(description or f'Payment {reference}', float(amount))
 
-            # Mobile money methods require phone number
+            # Mobile money methods require phone number — Express Checkout
+            # pushes a USSD/STK prompt directly to the customer's device.
             if method in PAYNOW_MOBILE_METHODS:
                 if not phone:
                     return PaymentResult(
@@ -77,9 +85,18 @@ class PaynowGateway(BasePaymentGateway):
                         failure_reason='Phone number is required for mobile money payments.',
                     )
                 response = self.client.send_mobile(payment, phone, PAYNOW_MOBILE_METHODS[method])
-            else:
-                # Bank transfer / web checkout
+            elif method in PAYNOW_WEB_METHODS:
+                # Web checkout — user is redirected to Paynow's hosted page to
+                # pick Visa / Mastercard / ZimSwitch / bank transfer. Paynow
+                # shows whichever instruments are enabled on the merchant
+                # account, so `method` here is just our internal label.
                 response = self.client.send(payment)
+            else:
+                return PaymentResult(
+                    success=False,
+                    status='failed',
+                    failure_reason=f'Unsupported Paynow method: {method}',
+                )
 
             if response.success:
                 # The Paynow SDK's default for missing fields is often the

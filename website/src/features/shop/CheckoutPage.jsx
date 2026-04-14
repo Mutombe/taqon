@@ -32,11 +32,12 @@ const STEPS = [
 ];
 
 const PAYMENT_METHODS = [
-  { key: 'ecocash', label: 'EcoCash', icon: DeviceMobile, description: 'Pay with EcoCash mobile money', requiresPhone: true },
-  { key: 'onemoney', label: 'OneMoney', icon: DeviceMobile, description: 'Pay with OneMoney mobile money', requiresPhone: true },
-  { key: 'innbucks', label: 'InnBucks', icon: DeviceMobile, description: 'Pay with InnBucks wallet', requiresPhone: true },
+  { key: 'ecocash', label: 'EcoCash', icon: DeviceMobile, description: 'STK prompt to your EcoCash number', requiresPhone: true },
+  { key: 'onemoney', label: 'OneMoney', icon: DeviceMobile, description: 'STK prompt to your OneMoney number', requiresPhone: true },
+  { key: 'innbucks', label: 'InnBucks', icon: DeviceMobile, description: 'Pay with your InnBucks wallet', requiresPhone: true },
+  { key: 'card', label: 'Card Payment', icon: CreditCard, description: 'Visa or Mastercard via Paynow' },
+  { key: 'zimswitch', label: 'ZimSwitch', icon: CreditCard, description: 'Local ZimSwitch card via Paynow' },
   { key: 'bank_transfer', label: 'Bank Transfer', icon: Bank, description: 'Direct bank transfer via Paynow' },
-  { key: 'card', label: 'Card Payment', icon: CreditCard, description: 'Visa or Mastercard (Stripe)' },
   { key: 'cash', label: 'Cash on Delivery', icon: Money, description: 'Pay when your order arrives' },
 ];
 
