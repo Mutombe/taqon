@@ -17,10 +17,18 @@ import {
   Check,
   X,
   Star,
+  FileText,
+  DownloadSimple,
+  SpinnerGap,
+  User,
+  EnvelopeSimple,
 } from '@phosphor-icons/react';
+import { toast } from 'sonner';
 import AnimatedSection from './AnimatedSection';
 import { autoLink, confirmExternalNavigation } from './ContentLink';
 import { getGemFamily, getGemByKva } from '../data/gemFamilies';
+import { solarConfigApi } from '../api/solarConfig';
+import { quotationsApi } from '../api/quotations';
 
 // Icon map for the includes section
 const iconMap = {
@@ -31,7 +39,218 @@ const iconMap = {
   BookOpen: BookOpen,
 };
 
+/* ─── Quote Modal ─── */
+
+function QuoteModal({ pkg, gem, onClose }) {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
+  const [generating, setGenerating] = useState(false);
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const pkgSlug = pkg._apiData?.slug || pkg.slug;
+  const pkgName = pkg._apiData?.family?.name || pkg._apiData?.name || pkg.name;
+  const distanceKm = parseFloat(pkg._apiData?.distance_km || 10);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim()) {
+      toast.error('Name and email are required');
+      return;
+    }
+    setGenerating(true);
+    try {
+      const res = await solarConfigApi.getInstantQuote({
+        package_slug: pkgSlug,
+        distance_km: distanceKm,
+        customer_name: form.name,
+        customer_email: form.email,
+        customer_phone: form.phone,
+        customer_address: form.address,
+        tier_label: pkg._apiData?.tier || pkg.tier || 'Standard',
+      });
+      const contentType = res.headers['content-type'] || 'application/pdf';
+      const ext = contentType.includes('html') ? 'html' : 'pdf';
+      const blob = new Blob([res.data], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Taqon-Quote-${pkgName}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Quote downloaded!');
+
+      // Background: submit QuotationRequest so admin has a record
+      quotationsApi.submitRequest({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        message: `Instant quote requested from package detail page for ${pkgName}. Address: ${form.address || 'N/A'}`,
+        property_type: 'residential',
+        roof_type: 'pitched',
+        monthly_bill: 0,
+        budget_range: '$1000-$3000',
+        appliances: [],
+      }).catch(() => {}); // silent
+
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to generate quote');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        transition={{ duration: 0.2 }}
+        className="relative bg-white dark:bg-taqon-charcoal rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-white/10 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header with gem accent */}
+        <div className="relative p-6 border-b border-gray-100 dark:border-white/10">
+          <div
+            className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl"
+            style={{ background: `linear-gradient(90deg, transparent, ${gem.accent}, transparent)` }}
+          />
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 hover:text-taqon-charcoal dark:hover:text-white transition-colors"
+          >
+            <X size={14} weight="bold" />
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: `color-mix(in srgb, ${gem.accent} 15%, transparent)` }}
+            >
+              <FileText size={20} style={{ color: gem.accent }} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white">
+                Get Your Quote
+              </h3>
+              <p className="text-xs text-taqon-muted dark:text-white/50 mt-0.5">
+                {pkgName} &middot; {pkg.price}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-taqon-muted dark:text-white/60 uppercase tracking-wider mb-1.5">
+              Full Name *
+            </label>
+            <div className="relative">
+              <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted" />
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => set('name', e.target.value)}
+                placeholder="John Doe"
+                required
+                className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-taqon-muted dark:text-white/60 uppercase tracking-wider mb-1.5">
+              Email *
+            </label>
+            <div className="relative">
+              <EnvelopeSimple size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted" />
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => set('email', e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-taqon-muted dark:text-white/60 uppercase tracking-wider mb-1.5">
+                Phone
+              </label>
+              <div className="relative">
+                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted" />
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => set('phone', e.target.value)}
+                  placeholder="+263..."
+                  className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-taqon-muted dark:text-white/60 uppercase tracking-wider mb-1.5">
+                Area
+              </label>
+              <div className="relative">
+                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted" />
+                <input
+                  type="text"
+                  value={form.address}
+                  onChange={(e) => set('address', e.target.value)}
+                  placeholder="Harare"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={generating}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-white transition-all shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ backgroundColor: gem.accent, boxShadow: `0 4px 14px -2px ${gem.glowColorSubtle}` }}
+            >
+              {generating ? (
+                <><SpinnerGap size={14} className="animate-spin" /> Generating...</>
+              ) : (
+                <><DownloadSimple size={14} weight="bold" /> Download Quote</>
+              )}
+            </button>
+          </div>
+
+          <p className="text-[10px] text-taqon-muted dark:text-white/40 text-center pt-1">
+            Your quote includes all components, labour, and transport to your area.
+          </p>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function PackageDetailTemplate({ package: pkg, allPackages }) {
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
 
@@ -180,13 +399,13 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 transition={{ delay: 0.35 }}
                 className="mt-6 flex flex-wrap gap-3"
               >
-                <Link
-                  to="/solar-advisor"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 text-white font-semibold rounded-xl transition-all shadow-lg"
+                <button
+                  onClick={() => setQuoteModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 text-white font-semibold rounded-xl transition-all shadow-lg hover:brightness-110 active:scale-[0.98]"
                   style={{ backgroundColor: gem.accent, boxShadow: `0 4px 14px -2px ${gem.glowColorSubtle}` }}
                 >
-                  Get a Quote <ArrowRight size={16} />
-                </Link>
+                  <DownloadSimple size={16} weight="bold" /> Get a Quote
+                </button>
                 <a
                   href="tel:+263242304860"
                   className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium"
@@ -521,13 +740,13 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
               . Our team will design a system perfectly tailored to your property.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                to="/solar-advisor"
-                className="inline-flex items-center gap-2 px-10 py-4 text-white font-bold rounded-xl transition-all shadow-lg text-lg"
+              <button
+                onClick={() => setQuoteModalOpen(true)}
+                className="inline-flex items-center gap-2 px-10 py-4 text-white font-bold rounded-xl transition-all shadow-lg text-lg hover:brightness-110 active:scale-[0.98]"
                 style={{ backgroundColor: gem.accent, boxShadow: `0 4px 14px -2px ${gem.glowColorSubtle}` }}
               >
-                Get Your Quote <ArrowRight size={18} />
-              </Link>
+                <DownloadSimple size={18} weight="bold" /> Get Your Quote
+              </button>
               <a
                 href="https://wa.me/263772771036"
                 onClick={(e) => confirmExternalNavigation('https://wa.me/263772771036', e)}
@@ -585,15 +804,26 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 <p className="text-sm font-bold text-taqon-charcoal dark:text-white font-syne">{pkg.price}</p>
                 <p className="text-xs text-taqon-muted dark:text-white/50">{pkg.name}</p>
               </div>
-              <Link
-                to="/solar-advisor"
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-white font-semibold rounded-xl transition-all shadow-lg text-sm"
+              <button
+                onClick={() => setQuoteModalOpen(true)}
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-white font-semibold rounded-xl transition-all shadow-lg text-sm hover:brightness-110 active:scale-[0.98]"
                 style={{ backgroundColor: gem.accent, boxShadow: `0 4px 14px -2px ${gem.glowColorSubtle}` }}
               >
-                Get Quote <ArrowRight size={14} />
-              </Link>
+                <DownloadSimple size={14} weight="bold" /> Get Quote
+              </button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Quote Modal ── */}
+      <AnimatePresence>
+        {quoteModalOpen && (
+          <QuoteModal
+            pkg={pkg}
+            gem={gem}
+            onClose={() => setQuoteModalOpen(false)}
+          />
         )}
       </AnimatePresence>
     </>
