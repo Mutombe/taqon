@@ -251,27 +251,73 @@ GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 class GoogleLoginView(APIView):
     """Initiate Google OAuth — redirect user to Google consent screen.
 
-    The redirect_uri points to the FRONTEND (e.g. www.taqon.co.zw/auth/google/callback)
-    so Google's consent screen shows the customer-facing domain, not the API server.
+    The redirect_uri is derived from the frontend's origin when possible
+    (so taqon.co.zw, www.taqon.co.zw and taqon.onrender.com each land back
+    on their own domain). The computed URI must exactly match one of the
+    Authorized Redirect URIs registered in Google Cloud Console — otherwise
+    Google responds with 'Error 400: redirect_uri_mismatch'.
     """
     permission_classes = [AllowAny]
 
+    # Domains that are allowed to serve as the Google callback host. Must
+    # mirror the Authorized Redirect URIs registered in Google Cloud Console.
+    ALLOWED_CALLBACK_HOSTS = {
+        'taqon.co.zw',
+        'www.taqon.co.zw',
+        'taqon.onrender.com',
+        'localhost:5173',
+        'localhost:5174',
+        '127.0.0.1:5173',
+    }
+
+    def _pick_redirect_uri(self, request):
+        """
+        Prefer an explicit redirect_uri from the frontend, then the Origin /
+        Referer header, then the FRONTEND_URL setting. Fall back to the
+        legacy GOOGLE_OAUTH_REDIRECT_URI env var as a last resort.
+        """
+        from urllib.parse import urlparse
+
+        explicit = request.query_params.get('redirect_uri')
+        if explicit:
+            parsed = urlparse(explicit)
+            if parsed.netloc in self.ALLOWED_CALLBACK_HOSTS:
+                return explicit
+
+        # Derive from Origin header
+        origin = request.headers.get('Origin') or request.headers.get('Referer', '')
+        if origin:
+            parsed = urlparse(origin)
+            if parsed.netloc in self.ALLOWED_CALLBACK_HOSTS:
+                return f'{parsed.scheme}://{parsed.netloc}/auth/google/callback'
+
+        # Fallback to FRONTEND_URL setting
+        frontend = getattr(settings, 'FRONTEND_URL', '')
+        if frontend:
+            parsed = urlparse(frontend)
+            if parsed.netloc in self.ALLOWED_CALLBACK_HOSTS:
+                return f'{parsed.scheme}://{parsed.netloc}/auth/google/callback'
+
+        return settings.GOOGLE_OAUTH_REDIRECT_URI
+
     def get(self, request):
+        from urllib.parse import quote
+
         client_id = settings.GOOGLE_OAUTH_CLIENT_ID
-        redirect_uri = settings.GOOGLE_OAUTH_REDIRECT_URI
+        redirect_uri = self._pick_redirect_uri(request)
         scope = 'openid email profile'
         state = request.query_params.get('next', '/')
         url = (
             f'https://accounts.google.com/o/oauth2/v2/auth'
             f'?client_id={client_id}'
-            f'&redirect_uri={redirect_uri}'
+            f'&redirect_uri={quote(redirect_uri, safe="")}'
             f'&response_type=code'
-            f'&scope={scope}'
+            f'&scope={quote(scope)}'
             f'&access_type=offline'
             f'&prompt=consent'
-            f'&state={state}'
+            f'&state={quote(state)}'
         )
-        return Response({'url': url})
+        return Response({'url': url, 'redirect_uri': redirect_uri})
 
 
 @extend_schema(tags=['Auth'])

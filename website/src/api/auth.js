@@ -29,7 +29,20 @@ export const authApi = {
   deleteAccount: () => api.delete('/auth/me/delete/'),
 
   // Google OAuth
-  googleLogin: (next) => api.get('/auth/google/', { params: next ? { next } : undefined }),
+  googleLogin: (next) => {
+    // Pass the caller's origin as redirect_uri so the backend builds a Google
+    // URL that actually matches the domain the user is on (taqon.co.zw vs
+    // taqon.onrender.com). That domain must ALSO be registered in Google
+    // Cloud Console under Authorized Redirect URIs or Google will return
+    // "Error 400: redirect_uri_mismatch".
+    const redirect_uri = typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/google/callback`
+      : undefined;
+    const params = {};
+    if (next) params.next = next;
+    if (redirect_uri) params.redirect_uri = redirect_uri;
+    return api.get('/auth/google/', { params });
+  },
   googleCodeExchange: (code, redirect_uri) => api.post('/auth/google/exchange/', { code, redirect_uri }),
   googleTokenLogin: (credential) => api.post('/auth/google/token/', { credential }),
 

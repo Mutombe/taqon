@@ -6,7 +6,7 @@
  * variants under one gem-like section divider.
  */
 
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Heart, Lightning } from '@phosphor-icons/react';
 import { getGemFamily } from '../data/gemFamilies';
@@ -19,11 +19,25 @@ export default function GemFamilySection({
   onToggleLike,
 }) {
   const gem = getGemFamily(family.slug);
+  const navigate = useNavigate();
+  const targetPath = `/families/${family.slug}`;
+
+  const handleCardClick = () => navigate(targetPath);
+  const handleCardKey = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(targetPath);
+    }
+  };
 
   return (
     <AnimatedSection delay={index * 0.08}>
       <div
-        className="gem-family-header border bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm"
+        role="link"
+        tabIndex={0}
+        onClick={handleCardClick}
+        onKeyDown={handleCardKey}
+        className="gem-family-header border bg-white dark:bg-taqon-charcoal/80 backdrop-blur-sm cursor-pointer hover:shadow-lg transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-taqon-orange/40"
         style={{
           borderColor: `color-mix(in srgb, ${gem.accent} 25%, transparent)`,
           '--gem-family-accent': gem.accent,
@@ -97,7 +111,10 @@ export default function GemFamilySection({
               {onToggleLike && (
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => onToggleLike(family.slug)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleLike(family.slug);
+                  }}
                   className="w-10 h-10 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
                   aria-label="Save package family"
                 >
@@ -108,16 +125,15 @@ export default function GemFamilySection({
                   />
                 </motion.button>
               )}
-              <Link
-                to={`/families/${family.slug}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+              <span
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all shadow-lg group-hover:shadow-xl"
                 style={{
                   backgroundColor: gem.accent,
                   boxShadow: `0 4px 14px -2px ${gem.glowColorSubtle}`,
                 }}
               >
                 Explore Variants <ArrowRight size={14} weight="bold" />
-              </Link>
+              </span>
             </div>
           </div>
 
