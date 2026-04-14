@@ -1,16 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X,
-  Shield,
-  CreditCard,
-  Bank,
-  DeviceMobile,
-  SpinnerGap,
-  CheckCircle,
-  WarningCircle,
-  CaretDown,
-  CaretUp,
+  X, SpinnerGap, WarningCircle, CreditCard, Bank, DeviceMobile,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { paymentsApi } from '../api/payments';
@@ -24,48 +15,41 @@ import {
 const DEPOSIT_PERCENT = 20;
 
 const PAYMENT_METHODS = [
-  { key: 'ecocash', label: 'EcoCash', icon: DeviceMobile, desc: 'STK prompt to your phone', requiresPhone: true },
-  { key: 'onemoney', label: 'OneMoney', icon: DeviceMobile, desc: 'STK prompt to your phone', requiresPhone: true },
-  { key: 'innbucks', label: 'InnBucks', icon: DeviceMobile, desc: 'Pay from InnBucks wallet', requiresPhone: true },
-  { key: 'card', label: 'Card Payment', icon: CreditCard, desc: 'Visa or Mastercard via Paynow' },
-  { key: 'zimswitch', label: 'ZimSwitch', icon: CreditCard, desc: 'Local card via Paynow' },
-  { key: 'bank_transfer', label: 'Bank Transfer', icon: Bank, desc: 'Direct transfer via Paynow' },
+  { key: 'ecocash',       label: 'EcoCash',        icon: DeviceMobile, requiresPhone: true },
+  { key: 'onemoney',      label: 'OneMoney',       icon: DeviceMobile, requiresPhone: true },
+  { key: 'innbucks',      label: 'InnBucks',       icon: DeviceMobile, requiresPhone: true },
+  { key: 'card',          label: 'Card',           icon: CreditCard },
+  { key: 'zimswitch',     label: 'ZimSwitch',      icon: CreditCard },
+  { key: 'bank_transfer', label: 'Bank Transfer',  icon: Bank },
 ];
 
 const toneClasses = {
   success: 'text-emerald-600 dark:text-emerald-400',
   warning: 'text-amber-600 dark:text-amber-400',
-  danger: 'text-red-600 dark:text-red-400',
+  danger:  'text-red-600 dark:text-red-400',
 };
 
 /**
- * Two-step modal: read T&C → submit payment.
+ * Deposit confirmation modal — "Step 2 of 3: Secure your installation".
+ * Short, calm, professional. Collects the one thing we don't already have
+ * (payment method + mobile phone if applicable), shows what happens next,
+ * surfaces the cancellation refund policy, requires T&C acceptance.
  *
  * Props:
- *   pkg: { slug, name, inverter_kva, battery_kwh, ... }
- *   tierLabel?: string (e.g. 'Good Fit', 'Budget')
- *   packageTotal: number (quoted total for this package at distance)
+ *   pkg: { slug, name, family_name?, inverter_kva?, battery_kwh? }
+ *   tierLabel?: string
+ *   packageTotal: number
  *   distanceKm: number
  *   onClose(): void
  */
 export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm, onClose }) {
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
 
-  const [step, setStep] = useState(1); // 1 = T&C, 2 = payment
+  const [method, setMethod] = useState('');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [address, setAddress] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [expandedSection, setExpandedSection] = useState(0); // first section open by default
-
-  const [form, setForm] = useState(() => {
-    const name = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
-    return {
-      customer_name: name || '',
-      customer_email: user?.email || '',
-      customer_phone: user?.phone || '',
-      customer_address: '',
-      method: '',
-      phone: user?.phone || '',
-    };
-  });
+  const [showFullTerms, setShowFullTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const depositAmount = useMemo(() => {
@@ -73,36 +57,26 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
     return total > 0 ? (total * DEPOSIT_PERCENT / 100) : 0;
   }, [packageTotal]);
 
-  const selectedMethod = PAYMENT_METHODS.find((m) => m.key === form.method);
+  const selectedMethod = PAYMENT_METHODS.find((m) => m.key === method);
+  const customerName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim() || user?.email || '';
 
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const fmtUSD = (n) => `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const handleSubmit = async (e) => {
-    e?.preventDefault?.();
-
+  const handleSubmit = async () => {
     if (!isAuthenticated) {
       toast.error('Please sign in to pay a deposit.');
       openAuthModal?.('login');
       return;
     }
-
     if (!termsAccepted) {
-      toast.error('Please accept the terms and conditions.');
-      setStep(1);
+      toast.error('Please accept the terms to continue.');
       return;
     }
-
-    if (!form.customer_name.trim() || !form.customer_email.trim()) {
-      toast.error('Name and email are required.');
+    if (!method) {
+      toast.error('Select a payment method.');
       return;
     }
-
-    if (!form.method) {
-      toast.error('Please select a payment method.');
-      return;
-    }
-
-    if (selectedMethod?.requiresPhone && !form.phone.trim()) {
+    if (selectedMethod?.requiresPhone && !phone.trim()) {
       toast.error('Phone number is required for mobile money.');
       return;
     }
@@ -113,26 +87,24 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
         package_slug: pkg.slug,
         tier_label: tierLabel || pkg.tier || '',
         distance_km: distanceKm || 10,
-        customer_name: form.customer_name.trim(),
-        customer_email: form.customer_email.trim(),
-        customer_phone: form.customer_phone.trim(),
-        customer_address: form.customer_address.trim(),
-        method: form.method,
-        phone: selectedMethod?.requiresPhone ? form.phone.trim() : '',
+        customer_name: customerName,
+        customer_email: user?.email || '',
+        customer_phone: phone.trim() || user?.phone || '',
+        customer_address: address.trim(),
+        method,
+        phone: selectedMethod?.requiresPhone ? phone.trim() : '',
         terms_accepted: true,
       });
 
       const payment = data.payment;
       const deposit = data.deposit;
 
-      // Web redirect (card, zimswitch, bank_transfer) — forward to Paynow
       if (payment?.gateway_redirect_url) {
         toast.success('Redirecting to Paynow...');
         window.location.href = payment.gateway_redirect_url;
         return;
       }
 
-      // Mobile money — customer gets STK push on their phone
       toast.success('Check your phone to authorise the payment.');
       window.location.href = `/account/deposits/${deposit.id}`;
     } catch (err) {
@@ -152,286 +124,288 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] flex items-center justify-center px-4"
+      className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <motion.div
-        initial={{ scale: 0.96, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.96, opacity: 0 }}
+        initial={{ scale: 0.96, opacity: 0, y: 10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.96, opacity: 0, y: 10 }}
         transition={{ duration: 0.2 }}
-        className="relative bg-white dark:bg-taqon-charcoal rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 dark:border-white/10 max-h-[92vh] flex flex-col overflow-hidden"
+        className="relative bg-white dark:bg-taqon-charcoal rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-white/10 max-h-[92vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 p-5 sm:p-6 border-b border-gray-100 dark:border-white/10 shrink-0">
+        <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 shrink-0">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Shield size={18} className="text-taqon-orange shrink-0" weight="fill" />
-              <span className="text-[11px] font-semibold text-taqon-orange uppercase tracking-wider">
-                Reservation Deposit
-              </span>
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold font-syne text-taqon-charcoal dark:text-white truncate">
-              {pkg.family_name || pkg.name}
-            </h3>
-            <p className="text-xs text-taqon-muted dark:text-white/50 mt-0.5">
-              {tierLabel ? `${tierLabel} tier · ` : ''}Pay {DEPOSIT_PERCENT}% to secure your installation
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400 dark:text-white/40 mb-1">
+              Step 2 of 3
             </p>
+            <h2 className="text-[17px] font-semibold text-taqon-charcoal dark:text-white">
+              Secure your installation
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 hover:text-taqon-charcoal dark:hover:text-white transition-colors shrink-0"
+            aria-label="Close"
+            className="text-gray-400 dark:text-white/40 hover:text-taqon-charcoal dark:hover:text-white transition-colors leading-none text-xl mt-0.5"
           >
-            <X size={16} weight="bold" />
+            ✕
           </button>
         </div>
 
-        {/* Amount summary */}
-        <div className="px-5 sm:px-6 py-4 bg-taqon-orange/5 border-b border-taqon-orange/10 shrink-0">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-semibold text-taqon-muted dark:text-white/50 uppercase tracking-wider">
-                Deposit amount ({DEPOSIT_PERCENT}% of USD {Number(packageTotal || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })})
-              </p>
-              <p className="text-2xl sm:text-3xl font-bold font-syne text-taqon-charcoal dark:text-white mt-0.5">
-                USD {depositAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 pb-2">
+          {/* Package summary */}
+          <div className="rounded-xl bg-gray-50 dark:bg-white/5 p-4 mb-5">
+            <p className="text-[13px] text-gray-500 dark:text-white/50 mb-2">Selected package</p>
+            <p className="text-[15px] font-medium text-taqon-charcoal dark:text-white mb-3 truncate">
+              {pkg.family_name || pkg.name}{tierLabel ? ` · ${tierLabel}` : ''}
+            </p>
+            <div className="flex justify-between text-[13px] mb-1.5">
+              <span className="text-gray-500 dark:text-white/50">Estimated total</span>
+              <span className="text-taqon-charcoal dark:text-white tabular-nums">{fmtUSD(packageTotal)}</span>
             </div>
-            <div className="text-right text-[11px] text-taqon-muted dark:text-white/50">
-              <p>Step {step} of 2</p>
-              <p className="mt-0.5">{step === 1 ? 'Terms' : 'Payment'}</p>
+            <div className="flex justify-between text-[13px] pt-2 border-t border-gray-200 dark:border-white/10">
+              <span className="text-gray-500 dark:text-white/50">Deposit required ({DEPOSIT_PERCENT}%)</span>
+              <span className="font-semibold text-taqon-charcoal dark:text-white tabular-nums">{fmtUSD(depositAmount)}</span>
             </div>
           </div>
-        </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto">
-          {step === 1 && (
-            <div className="p-5 sm:p-6 space-y-5">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-[11px] font-semibold text-taqon-muted dark:text-white/50 uppercase tracking-wider">
-                  Terms &amp; Conditions
-                </p>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50">
-                  {DEPOSIT_TERMS_VERSION} · {DEPOSIT_TERMS_LAST_UPDATED}
-                </span>
-              </div>
-              <div className="rounded-xl bg-blue-50 dark:bg-blue-500/5 border-l-2 border-blue-400 dark:border-blue-500/40 px-4 py-3">
-                <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-200">
-                  By accepting these terms and paying the deposit, you agree to the reservation, site assessment and refund terms below. Please read them carefully before proceeding.
-                </p>
-              </div>
+          {/* What happens next */}
+          <p className="text-[13px] font-medium text-taqon-charcoal dark:text-white mb-2.5">
+            What happens next
+          </p>
+          <div className="space-y-2.5 mb-5">
+            <StepRow num={1} tone="success">
+              We schedule a <strong className="font-medium text-taqon-charcoal dark:text-white">site assessment</strong> within 5 business days to verify roof orientation, shading, and structural requirements.
+            </StepRow>
+            <StepRow num={2} tone="info">
+              We confirm your <strong className="font-medium text-taqon-charcoal dark:text-white">final system design and price</strong> within 3 days of the assessment.
+            </StepRow>
+            <StepRow num={3} tone="neutral">
+              Your deposit is <strong className="font-medium text-taqon-charcoal dark:text-white">fully credited</strong> toward your final invoice once installation is confirmed.
+            </StepRow>
+          </div>
 
-              <div className="space-y-2">
-                {DEPOSIT_TERMS_SECTIONS.map((section, i) => {
-                  const open = expandedSection === i;
-                  return (
-                    <div key={section.title} className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
-                      <button
-                        onClick={() => setExpandedSection(open ? -1 : i)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
-                      >
-                        <span className="text-sm font-semibold text-taqon-charcoal dark:text-white">
-                          {section.title}
-                        </span>
-                        {open ? <CaretUp size={14} className="text-gray-400" /> : <CaretDown size={14} className="text-gray-400" />}
-                      </button>
-                      {open && (
-                        <div className="px-4 py-3 space-y-3">
-                          {section.clauses.map((c) => (
-                            <p key={c.label} className="text-xs sm:text-sm leading-relaxed text-gray-600 dark:text-white/60">
-                              <strong className="text-taqon-charcoal dark:text-white/90 font-semibold">{c.label}. </strong>
-                              {c.body}
-                            </p>
-                          ))}
-                          {section.refundTable && (
-                            <div className="mt-2 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden text-xs">
-                              <div className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 bg-gray-50 dark:bg-white/5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/50">
-                                <span>Cancellation stage</span>
-                                <span>Refund</span>
-                              </div>
-                              {section.refundTable.map((row) => (
-                                <div key={row.stage} className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 border-t border-gray-100 dark:border-white/5 text-gray-600 dark:text-white/60">
-                                  <span>{row.stage}</span>
-                                  <span className={`font-medium ${toneClasses[row.tone] || ''}`}>{row.refund}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {section.footer && (
-                            <p className="text-[11px] text-gray-400 dark:text-white/40 italic pt-1">{section.footer}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+          {/* Cancellation note */}
+          <div className="rounded-r-xl bg-amber-50 dark:bg-amber-500/5 border-l-2 border-amber-400 dark:border-amber-500/40 px-3 py-2.5 mb-5">
+            <p className="text-[12px] font-medium text-amber-700 dark:text-amber-300 mb-1">
+              Note on cancellation after site visit
+            </p>
+            <p className="text-[12px] text-amber-700 dark:text-amber-300/90 leading-[1.55]">
+              If you choose not to proceed after the site assessment, or if the installation is found not feasible, a <strong className="font-semibold">transport &amp; travel fee</strong> will be deducted from your deposit before any refund is issued. The remainder is returned within 7 business days.
+            </p>
+          </div>
 
-              <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-gray-200 dark:border-white/10 cursor-pointer hover:border-taqon-orange/40 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded text-taqon-orange focus:ring-taqon-orange"
-                />
-                <span className="text-sm text-taqon-charcoal dark:text-white/90">
-                  I have read and accept the Terms &amp; Conditions above. I understand that the deposit is refundable subject to the cancellation schedule, and that transport/travel costs are deducted after a site visit.
-                </span>
+          {/* Address (only if not yet captured in session) */}
+          <div className="mb-4">
+            <label className="block text-[12px] text-gray-500 dark:text-white/50 mb-1.5">
+              Installation address
+            </label>
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="e.g. 12 Baines Ave, Borrowdale"
+              className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[13px] text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+            />
+          </div>
+
+          {/* Payment method — compact grid */}
+          <div className="mb-4">
+            <label className="block text-[12px] text-gray-500 dark:text-white/50 mb-1.5">
+              Payment method
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {PAYMENT_METHODS.map((m) => {
+                const Icon = m.icon;
+                const selected = method === m.key;
+                return (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setMethod(m.key)}
+                    className={`flex flex-col items-center gap-1 py-2.5 rounded-lg border text-[11px] font-medium transition-all ${
+                      selected
+                        ? 'border-taqon-orange bg-taqon-orange/5 text-taqon-orange'
+                        : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/60 hover:border-gray-300 dark:hover:border-white/20'
+                    }`}
+                  >
+                    <Icon size={14} weight={selected ? 'fill' : 'regular'} />
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mobile money phone */}
+          {selectedMethod?.requiresPhone && (
+            <div className="mb-4">
+              <label className="block text-[12px] text-gray-500 dark:text-white/50 mb-1.5">
+                Mobile money number
               </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+263 77 123 4567"
+                className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[13px] text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+              />
             </div>
           )}
 
-          {step === 2 && (
-            <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
-              {!isAuthenticated && (
-                <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30">
-                  <WarningCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700 dark:text-amber-200">
-                    You need an account to pay a deposit. <button type="button" onClick={() => openAuthModal?.('login')} className="underline font-semibold">Sign in</button> or create one to continue.
-                  </p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={form.customer_name}
-                    onChange={(e) => set('customer_name', e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email *</label>
-                  <input
-                    type="email"
-                    required
-                    value={form.customer_email}
-                    onChange={(e) => set('customer_email', e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                    placeholder="john@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    value={form.customer_phone}
-                    onChange={(e) => set('customer_phone', e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                    placeholder="+263 77 123 4567"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Address</label>
-                  <input
-                    type="text"
-                    value={form.customer_address}
-                    onChange={(e) => set('customer_address', e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                    placeholder="Borrowdale, Harare"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-2">Payment Method *</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {PAYMENT_METHODS.map((m) => {
-                    const Icon = m.icon;
-                    const selected = form.method === m.key;
-                    return (
-                      <button
-                        type="button"
-                        key={m.key}
-                        onClick={() => set('method', m.key)}
-                        className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
-                          selected
-                            ? 'border-taqon-orange bg-taqon-orange/5'
-                            : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20'
-                        }`}
-                      >
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                          selected ? 'bg-taqon-orange text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-400'
-                        }`}>
-                          <Icon size={16} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-taqon-charcoal dark:text-white truncate">{m.label}</p>
-                          <p className="text-[11px] text-gray-400 dark:text-white/40 truncate">{m.desc}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {selectedMethod?.requiresPhone && (
-                <div>
-                  <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">
-                    Mobile Money Number *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={form.phone}
-                    onChange={(e) => set('phone', e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                    placeholder="+263 77 123 4567"
-                  />
-                </div>
-              )}
-            </form>
+          {!isAuthenticated && (
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 mb-4">
+              <WarningCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-[12px] text-amber-700 dark:text-amber-200">
+                You need an account to pay a deposit.{' '}
+                <button type="button" onClick={() => openAuthModal?.('login')} className="underline font-semibold">
+                  Sign in
+                </button>{' '}
+                to continue.
+              </p>
+            </div>
           )}
+
+          {/* T&C checkbox */}
+          <label className="flex gap-2.5 items-start mb-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-0.5 shrink-0 w-4 h-4 rounded text-taqon-orange focus:ring-taqon-orange"
+            />
+            <span className="text-[12px] text-gray-500 dark:text-white/60 leading-[1.5]">
+              I have read and agree to the{' '}
+              <button
+                type="button"
+                onClick={() => setShowFullTerms(true)}
+                className="text-taqon-orange underline hover:no-underline"
+              >
+                Quotation Terms &amp; Conditions
+              </button>
+              , including the transport cost deduction policy on cancellation after site assessment.
+            </span>
+          </label>
         </div>
 
         {/* Footer actions */}
-        <div className="p-4 sm:p-5 border-t border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-taqon-dark/50 shrink-0">
-          {step === 1 ? (
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setStep(2)}
-                disabled={!termsAccepted}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <CheckCircle size={16} weight="bold" /> Continue to Payment
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-3">
-              <button
-                onClick={() => setStep(1)}
-                disabled={submitting}
-                className="px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-100 dark:hover:bg-white/5 transition-all disabled:opacity-50"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={submitting || !isAuthenticated}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {submitting ? (
-                  <><SpinnerGap size={16} className="animate-spin" /> Processing...</>
-                ) : (
-                  <>Pay USD {depositAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
+        <div className="flex gap-2.5 px-6 py-4 border-t border-gray-100 dark:border-white/10 shrink-0 bg-white dark:bg-taqon-charcoal">
+          <button
+            onClick={onClose}
+            disabled={submitting}
+            className="flex-1 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 text-[13px] font-medium text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/5 transition-all disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !isAuthenticated || !termsAccepted || !method}
+            className="flex-[2] flex items-center justify-center gap-2 py-2.5 rounded-lg bg-taqon-charcoal dark:bg-taqon-orange text-white text-[13px] font-semibold hover:bg-taqon-charcoal/90 dark:hover:bg-taqon-orange/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? (
+              <><SpinnerGap size={14} className="animate-spin" /> Processing...</>
+            ) : (
+              <>Pay {fmtUSD(depositAmount)} deposit</>
+            )}
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Full T&C overlay */}
+      <AnimatePresence>
+        {showFullTerms && (
+          <FullTermsOverlay onClose={() => setShowFullTerms(false)} />
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+/* ─── Helpers ─── */
+
+function StepRow({ num, tone = 'neutral', children }) {
+  const toneStyle = {
+    success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    info:    'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    neutral: 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50 border border-gray-200 dark:border-white/10',
+  }[tone];
+  return (
+    <div className="flex gap-2.5 items-start">
+      <div className={`w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-[10px] font-medium mt-[2px] ${toneStyle}`}>
+        {num}
+      </div>
+      <p className="text-[13px] text-gray-600 dark:text-white/60 leading-[1.55] m-0">
+        {children}
+      </p>
+    </div>
+  );
+}
+
+function FullTermsOverlay({ onClose }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[80] flex items-center justify-center px-4 py-6"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/70" />
+      <motion.div
+        initial={{ y: 12, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 12, opacity: 0 }}
+        className="relative bg-white dark:bg-taqon-charcoal rounded-2xl w-full max-w-xl shadow-2xl border border-gray-200 dark:border-white/10 max-h-[90vh] flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 shrink-0">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400 dark:text-white/40">Legal · {DEPOSIT_TERMS_VERSION} · {DEPOSIT_TERMS_LAST_UPDATED}</p>
+            <h3 className="text-[15px] font-semibold text-taqon-charcoal dark:text-white">Quotation Terms &amp; Conditions</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-taqon-charcoal dark:hover:text-white text-xl leading-none">✕</button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          {DEPOSIT_TERMS_SECTIONS.map((s) => (
+            <section key={s.title}>
+              <h4 className="text-[13px] font-medium text-taqon-charcoal dark:text-white pb-2 mb-2 border-b border-gray-100 dark:border-white/5">{s.title}</h4>
+              <div className="space-y-2">
+                {s.clauses.map((c) => (
+                  <p key={c.label} className="text-[12.5px] text-gray-600 dark:text-white/60 leading-[1.65]">
+                    <strong className="font-medium text-taqon-charcoal dark:text-white/90">{c.label}. </strong>{c.body}
+                  </p>
+                ))}
+                {s.refundTable && (
+                  <div className="mt-1.5 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden text-[12px]">
+                    <div className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 bg-gray-50 dark:bg-white/5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/50">
+                      <span>Cancellation stage</span>
+                      <span>Refund</span>
+                    </div>
+                    {s.refundTable.map((row) => (
+                      <div key={row.stage} className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 border-t border-gray-100 dark:border-white/5 text-gray-600 dark:text-white/60">
+                        <span>{row.stage}</span>
+                        <span className={`font-medium ${toneClasses[row.tone] || ''}`}>{row.refund}</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </button>
-            </div>
-          )}
+                {s.footer && <p className="text-[11px] text-gray-400 dark:text-white/40 italic pt-1">{s.footer}</p>}
+              </div>
+            </section>
+          ))}
+        </div>
+        <div className="px-6 py-3 border-t border-gray-100 dark:border-white/10 shrink-0 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-taqon-charcoal dark:bg-taqon-orange text-white text-[13px] font-medium hover:opacity-90 transition-all"
+          >
+            Close
+          </button>
         </div>
       </motion.div>
     </motion.div>
