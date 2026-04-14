@@ -265,11 +265,14 @@ class SolarPackageTemplate(SoftDeleteModel):
     def recalculate_price(self, distance_km=None):
         """
         Recalculate price AND spec aggregates from the current component items.
-        Price = material + sundries(0.5%) + labour(8%) + transport($0.65/km).
+        Price = material + sundries(0.5%) + labour(8%) + transport (tiered).
+        Transport uses the two-zone formula from engine.pricing, scaled by a
+        Job Size Multiplier anchored at a $5k installation baseline.
         Specs (battery kWh, panel count, system kW) are also summed from
         the actual component items so stored values never drift from reality.
         """
         from .engine.constants import PRICING
+        from .engine.pricing import _transport_cost
 
         if distance_km is not None:
             self.distance_km = Decimal(str(distance_km))
@@ -280,13 +283,14 @@ class SolarPackageTemplate(SoftDeleteModel):
         material = sum((item.component.price * item.quantity for item in items), Decimal('0'))
         sundries = material * PRICING['sundries_rate']
         labour = (material + sundries) * PRICING['labour_rate']
-        transport = self.distance_km * PRICING['transport_per_km']
+        installation_cost = material + sundries + labour
+        transport = _transport_cost(self.distance_km, installation_cost)
 
         self.material_cost = material
         self.sundries_cost = sundries
         self.labour_cost = labour
         self.transport_cost = transport
-        self.price = material + labour + transport
+        self.price = installation_cost + transport
 
         # Spec aggregates from components
         battery_kwh = sum(

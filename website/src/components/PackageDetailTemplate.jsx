@@ -398,8 +398,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 {priceBreakdown && (
                   <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/40">
                     <span>Materials: <span className="text-white/60 tabular-nums">${parseFloat(priceBreakdown.material).toLocaleString()}</span></span>
-                    <span>Labour: <span className="text-white/60 tabular-nums">${parseFloat(priceBreakdown.labour).toLocaleString()}</span></span>
-                    <span>Transport: <span className="text-white/60 tabular-nums">${parseFloat(priceBreakdown.transport).toLocaleString()}</span></span>
+                    <span>Labour &amp; Transport: <span className="text-white/60 tabular-nums">${(parseFloat(priceBreakdown.labour) + parseFloat(priceBreakdown.transport)).toLocaleString()}</span></span>
                   </div>
                 )}
               </motion.div>

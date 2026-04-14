@@ -2196,14 +2196,14 @@ export default function SolarAdvisor() {
                         </AnimatePresence>
                       </div>
 
-                      {/* Transport cost display */}
+                      {/* Subtle reassurance — no per-km math exposed */}
                       {selectedArea && (
-                        <div className="mt-3 flex items-baseline justify-between">
-                          <span className="text-sm text-taqon-muted dark:text-white/50">
-                            Transport: {distanceKm}km × $0.65/km
+                        <div className="mt-3 flex items-center justify-between text-sm">
+                          <span className="text-taqon-muted dark:text-white/50">
+                            Installation distance
                           </span>
-                          <span className="text-lg font-bold text-taqon-orange tabular-nums">
-                            ${(distanceKm * 0.65).toFixed(0)}
+                          <span className="font-semibold text-taqon-charcoal dark:text-white tabular-nums">
+                            {distanceKm} km from Harare
                           </span>
                         </div>
                       )}
@@ -2211,7 +2211,7 @@ export default function SolarAdvisor() {
                       <div className="mt-4 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
                         <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
                           <Info size={14} className="mt-0.5 shrink-0" />
-                          <span>Transport is charged at $0.65/km. Harare-based installations are cheapest.</span>
+                          <span>Transport is included in the package total. Harare-based installations have the lowest transport cost.</span>
                         </p>
                       </div>
 
