@@ -48,9 +48,13 @@
 <table class="header-table" cellpadding="0" cellspacing="0">
   <tr>
     <td style="width: 55%; vertical-align: top;">
-      <div class="company-name">TAQON ELECTRICO</div>
+      {% if logo_data_uri %}
+        <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 42px; width: auto; margin-bottom: 6px;"/>
+      {% else %}
+        <div class="company-name">TAQON ELECTRICO</div>
+      {% endif %}
       <div class="company-tagline">Solar &amp; Electrical Solutions</div>
-      <div class="company-details">Harare, Zimbabwe<br/>+263 77 277 1036<br/>info@taqon.co.zw &bull; www.taqon.co.zw</div>
+      <div class="company-details">876 Ringwood Drive, Strathaven, Harare<br/>+263 77 277 1036<br/>info@taqon.co.zw &bull; www.taqon.co.zw</div>
     </td>
     <td style="width: 45%; vertical-align: top;">
       <div class="doc-title">Invoice</div>
@@ -108,10 +112,25 @@
 </table>
 
 <div class="payment-box">
-  <div class="payment-title">Payment Methods</div>
-  <strong>EcoCash:</strong> 0772 771 036 (Taqon Electrico)<br/>
-  <strong>Bank Transfer:</strong> CBZ Bank &bull; Acc: 12345678 &bull; Branch: Harare<br/>
-  <strong>Reference:</strong> {{ invoice.invoice_number }}
+  <div class="payment-title">Bank Transfer Details</div>
+  <table cellpadding="0" cellspacing="0" style="width: 100%; font-size: 8.5pt; line-height: 1.6;">
+    <tr>
+      <td style="width: 50%; vertical-align: top; padding-right: 10px;">
+        <strong>Bank:</strong> FBC<br/>
+        <strong>Branch:</strong> Southerton<br/>
+        <strong>Branch Code:</strong> 8103<br/>
+        <strong>Account Name:</strong> Taqon Electrico<br/>
+        <strong>Account Number:</strong> 6832967310002
+      </td>
+      <td style="width: 50%; vertical-align: top;">
+        <strong>Swift Code:</strong> FBCPZWHA<br/>
+        <strong>Correspondent Bank:</strong><br/>
+        Standard Chartered Bank, New York<br/>
+        <br/>
+        <strong>Payment Reference:</strong> {{ invoice.invoice_number }}
+      </td>
+    </tr>
+  </table>
 </div>
 
 {% if invoice.notes %}

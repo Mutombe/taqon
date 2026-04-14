@@ -1,8 +1,23 @@
 import io
+import base64
 import logging
+import os
 from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
+
+# Embed company logo as data URI — portable across xhtml2pdf/WeasyPrint
+_LOGO_PATH = os.path.join(
+    os.path.dirname(__file__), 'static', 'pdf_assets', 'taqon-electrico-logo.jpg',
+)
+
+
+def _logo_data_uri():
+    try:
+        with open(_LOGO_PATH, 'rb') as f:
+            return 'data:image/jpeg;base64,' + base64.b64encode(f.read()).decode('ascii')
+    except Exception:
+        return ''
 
 
 def _render_pdf(html_string):
@@ -38,6 +53,7 @@ def generate_quotation_pdf(quotation):
     html_string = render_to_string('pdfs/quotation.html', {
         'quotation': quotation,
         'items': items,
+        'logo_data_uri': _logo_data_uri(),
     })
     return _render_pdf(html_string)
 
@@ -48,5 +64,6 @@ def generate_invoice_pdf(invoice):
     html_string = render_to_string('pdfs/invoice.html', {
         'invoice': invoice,
         'items': items,
+        'logo_data_uri': _logo_data_uri(),
     })
     return _render_pdf(html_string)

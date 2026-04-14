@@ -392,7 +392,23 @@ class InstantQuoteView(APIView):
 
         ref_number = f'TQ-{timezone.now().strftime("%Y%m%d")}-{uuid.uuid4().hex[:6].upper()}'
 
+        # Embed the company logo as base64 data URI — most portable way
+        # to include images in xhtml2pdf output regardless of server paths.
+        import base64
+        import os
+        logo_data_uri = ''
+        try:
+            logo_path = os.path.join(
+                os.path.dirname(__file__), '..', 'quotations', 'static',
+                'pdf_assets', 'taqon-electrico-logo.jpg',
+            )
+            with open(logo_path, 'rb') as f:
+                logo_data_uri = 'data:image/jpeg;base64,' + base64.b64encode(f.read()).decode('ascii')
+        except Exception:
+            pass  # Logo missing — template will show text fallback
+
         context = {
+            'logo_data_uri': logo_data_uri,
             'package_name': package.family.name if package.family else package.name,
             'date': timezone.now().strftime('%d %B %Y'),
             'ref_number': ref_number,
