@@ -29,9 +29,10 @@ export function ScrollProgress() {
 }
 
 /**
- * Floating WhatsApp button — always visible, sits directly above the
- * Tidio chat bubble. Replaces the previous BackToTop button; users
- * prefer a direct line to WhatsApp for quick enquiries.
+ * Floating WhatsApp button — sits directly above the Tidio chat bubble,
+ * vertically aligned on the same right edge. Tidio's default bubble is
+ * ~64px tall at bottom:20px, so we anchor WhatsApp at bottom:100px to
+ * leave a clean 16px gap between the two buttons.
  */
 export function BackToTop() {
   return (
@@ -45,13 +46,12 @@ export function BackToTop() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
-        whileHover={{ y: -3, scale: 1.05 }}
+        whileHover={{ y: -2, scale: 1.05 }}
         whileTap={{ scale: 0.92 }}
-        className="fixed bottom-[90px] right-[18px] z-[60] w-12 h-12 rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 flex items-center justify-center hover:bg-[#1ebe58] transition-colors group"
+        style={{ bottom: '100px', right: '20px' }}
+        className="fixed z-[60] w-[56px] h-[56px] rounded-full bg-[#25D366] text-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center hover:bg-[#1ebe58] transition-colors"
       >
-        {/* Pulsing ring for a bit of attention */}
-        <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-75 animate-ping" style={{ animationDuration: '2.2s' }} />
-        <WhatsappLogo size={26} weight="fill" className="relative z-10" />
+        <WhatsappLogo size={28} weight="fill" />
       </motion.a>
     </AnimatePresence>
   );
