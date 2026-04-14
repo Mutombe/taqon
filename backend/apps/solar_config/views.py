@@ -82,8 +82,11 @@ class ApplianceCategoriesView(APIView):
     """Return available appliance categories with counts."""
     permission_classes = [AllowAny]
 
-    # Customer-facing category order (how sales reps ask questions)
-    CATEGORY_ORDER = ['lounge', 'kitchen', 'bedroom', 'bathroom', 'laundry', 'office', 'garage', 'outdoor', 'security', 'other']
+    # Room order by actual daily usage frequency:
+    # Kitchen first (24/7 fridge + daily cooking), Lounge (daily evenings/weekends),
+    # Bedroom (nightly sleep + AC/fans), Bathroom (daily geyser + 2-3 uses/day),
+    # then weekly/occasional rooms.
+    CATEGORY_ORDER = ['kitchen', 'lounge', 'bedroom', 'bathroom', 'laundry', 'office', 'outdoor', 'security', 'garage', 'other']
 
     def get(self, request):
         categories = (
