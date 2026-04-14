@@ -21,7 +21,7 @@ import {
   DEPOSIT_TERMS_LAST_UPDATED,
 } from '../data/depositTerms';
 
-const DEPOSIT_PERCENT = 10;
+const DEPOSIT_PERCENT = 20;
 
 const PAYMENT_METHODS = [
   { key: 'ecocash', label: 'EcoCash', icon: DeviceMobile, desc: 'STK prompt to your phone', requiresPhone: true },

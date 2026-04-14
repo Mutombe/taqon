@@ -423,7 +423,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                     onClick={() => setDepositModalOpen(true)}
                     className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-taqon-charcoal font-semibold rounded-xl transition-all shadow-lg hover:bg-white/90 active:scale-[0.98]"
                   >
-                    Pay 10% Deposit · USD {(parseFloat(priceBreakdown.total) * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    Pay 20% Deposit · USD {(parseFloat(priceBreakdown.total) * 0.2).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </button>
                 )}
                 <a

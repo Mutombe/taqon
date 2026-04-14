@@ -323,7 +323,7 @@ class InitiateDepositView(APIView):
         if package_total <= 0:
             return Response({'error': 'Unable to compute package total.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        deposit_percent = Decimal('10.00')
+        deposit_percent = Decimal('20.00')
         deposit_amount = (package_total * deposit_percent / Decimal('100')).quantize(Decimal('0.01'))
 
         deposit = PackageDeposit.objects.create(

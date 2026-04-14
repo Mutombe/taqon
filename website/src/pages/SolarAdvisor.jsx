@@ -1020,7 +1020,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                       onClick={(e) => { e.stopPropagation(); setShowDepositModal(true); }}
                       className="w-full mt-2 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-taqon-charcoal dark:bg-white/10 text-white font-semibold text-xs hover:bg-taqon-charcoal/90 dark:hover:bg-white/15 active:scale-[0.98] transition-all"
                     >
-                      <CurrencyDollar size={12} weight="bold" /> Pay 10% Deposit · USD {(totalForDeposit * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      <CurrencyDollar size={12} weight="bold" /> Pay 20% Deposit · USD {(totalForDeposit * 0.2).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </button>
                   )}
                 </div>
@@ -1204,7 +1204,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-charcoal dark:bg-white/10 text-white font-semibold text-sm hover:bg-taqon-charcoal/90 dark:hover:bg-white/15 active:scale-[0.98] transition-all min-h-[44px] shadow-lg"
               >
                 <CurrencyDollar size={14} weight="bold" />
-                Pay 10% Deposit · USD {(totalForDeposit * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                Pay 20% Deposit · USD {(totalForDeposit * 0.2).toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </button>
             )}
           </div>

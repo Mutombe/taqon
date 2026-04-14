@@ -135,7 +135,7 @@ class PackageDeposit(TimeStampedModel):
 
     # Financials
     package_total = models.DecimalField(max_digits=12, decimal_places=2)
-    deposit_percent = models.DecimalField(max_digits=5, decimal_places=2, default=10)
+    deposit_percent = models.DecimalField(max_digits=5, decimal_places=2, default=20)
     deposit_amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, default='USD')
 

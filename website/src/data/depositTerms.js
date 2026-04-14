@@ -19,9 +19,9 @@ export const DEPOSIT_TERMS_SECTIONS = [
   {
     title: '2. Deposit & Payment',
     clauses: [
-      { label: '2.1 Reservation deposit', body: 'A deposit of 10% of the quoted amount is required to secure your installation slot and initiate the site assessment. The deposit constitutes your formal commitment to proceed, subject to site verification.' },
+      { label: '2.1 Reservation deposit', body: 'A deposit of 20% of the quoted amount is required to secure your installation slot and initiate the site assessment. The deposit constitutes your formal commitment to proceed, subject to site verification.' },
       { label: '2.2 Credit toward final invoice', body: 'Where the project proceeds to installation, the deposit will be credited in full toward the final invoice.' },
-      { label: '2.3 Payment schedule', body: 'The remaining balance is structured as follows: 60% milestone payment upon delivery of materials to site, and the remaining 30% upon successful installation and commissioning.' },
+      { label: '2.3 Payment schedule', body: 'The remaining balance is structured as follows: 50% milestone payment upon delivery of materials to site, and the remaining 30% upon successful installation and commissioning.' },
       { label: '2.4 Late payments', body: 'Payments not received within 7 days of the due date may result in suspension of works. We reserve the right to charge interest on overdue amounts.' },
     ],
   },
