@@ -249,6 +249,9 @@ PAYNOW_INTEGRATION_ID = env('PAYNOW_INTEGRATION_ID', default='')
 PAYNOW_INTEGRATION_KEY = env('PAYNOW_INTEGRATION_KEY', default='')
 PAYNOW_RETURN_URL = env('PAYNOW_RETURN_URL', default='http://localhost:5173/payment/return')
 PAYNOW_RESULT_URL = env('PAYNOW_RESULT_URL', default='http://localhost:8000/api/v1/payments/webhook/paynow/')
+# While the merchant account is in test mode, Paynow requires auth_email
+# to match the registered merchant email.
+PAYNOW_MERCHANT_EMAIL = env('PAYNOW_MERCHANT_EMAIL', default='info@taqon.co.zw')
 
 # Stripe
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY', default='')

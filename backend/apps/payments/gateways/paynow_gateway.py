@@ -33,6 +33,11 @@ class PaynowGateway(BasePaymentGateway):
         self.integration_key = getattr(settings, 'PAYNOW_INTEGRATION_KEY', '')
         self.return_url = getattr(settings, 'PAYNOW_RETURN_URL', '')
         self.result_url = getattr(settings, 'PAYNOW_RESULT_URL', '')
+        # Paynow auth_email — must match the merchant's registered email
+        # while the integration is in test mode. Keeping this constant in
+        # production is also fine; customer receipts still go through our
+        # own email flow, not Paynow's.
+        self.merchant_email = getattr(settings, 'PAYNOW_MERCHANT_EMAIL', 'info@taqon.co.zw')
 
         if not self.integration_id or not self.integration_key:
             logger.warning('Paynow credentials not configured — payments will use sandbox mode.')
@@ -57,7 +62,10 @@ class PaynowGateway(BasePaymentGateway):
         metadata=None,
     ):
         try:
-            payment = self.client.create_payment(reference, email or 'customer@taqon.co.zw')
+            # auth_email MUST match the merchant's registered email while
+            # the account is in test mode. The customer's actual email is
+            # stored separately on our Payment model for receipts.
+            payment = self.client.create_payment(reference, self.merchant_email)
             payment.add(description or f'Payment {reference}', float(amount))
 
             # Mobile money methods require phone number
@@ -83,12 +91,42 @@ class PaynowGateway(BasePaymentGateway):
                     raw_response={'instructions': getattr(response, 'instructions', '')},
                 )
             else:
-                error_msg = getattr(response, 'error', 'Payment initiation failed')
-                logger.error('Paynow initiation failed for %s: %s', reference, error_msg)
+                # The Paynow SDK nests the real error message in response.data.error
+                # while response.error is often a type reference that stringifies to
+                # "<class 'str'>". Dig in for the actual message.
+                friendly = None
+                try:
+                    data = getattr(response, 'data', None) or {}
+                    if isinstance(data, dict):
+                        friendly = data.get('error')
+                except Exception:
+                    pass
+
+                if not friendly or isinstance(friendly, type):
+                    # Fall back to response.error if data.error wasn't useful
+                    raw_error = getattr(response, 'error', None)
+                    if raw_error and not isinstance(raw_error, type):
+                        friendly = str(raw_error)
+
+                if not friendly or isinstance(friendly, type):
+                    if method in PAYNOW_MOBILE_METHODS:
+                        friendly = (
+                            f'Could not initiate {method.capitalize()} payment. '
+                            f'Check that the phone number is valid and that '
+                            f'{method.capitalize()} is enabled on the merchant account.'
+                        )
+                    else:
+                        friendly = 'Payment initiation failed. Please try again or contact support.'
+
+                logger.error(
+                    'Paynow initiation failed for %s (method=%s): %s (response=%r)',
+                    reference, method, friendly,
+                    response.__dict__ if hasattr(response, '__dict__') else response,
+                )
                 return PaymentResult(
                     success=False,
                     status='failed',
-                    failure_reason=str(error_msg),
+                    failure_reason=str(friendly),
                 )
 
         except Exception as e:
