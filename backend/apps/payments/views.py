@@ -166,6 +166,39 @@ class PaymentDetailView(APIView):
 
 
 @extend_schema(tags=['Payments'])
+class PaymentReceiptView(APIView):
+    """
+    Download the receipt PDF for a paid payment. Only the payment's owner
+    can download. Returns 403 if payment is not yet paid.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, reference):
+        from django.http import HttpResponse
+        from .receipts import generate_receipt_pdf
+
+        try:
+            payment = Payment.objects.get(reference=reference, user=request.user)
+        except Payment.DoesNotExist:
+            return Response({'error': 'Payment not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if payment.status != 'paid':
+            return Response(
+                {'error': f'Receipt is only available for paid payments (current status: {payment.status}).'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pdf_bytes, is_pdf = generate_receipt_pdf(payment)
+        content_type = 'application/pdf' if is_pdf else 'text/html'
+        ext = 'pdf' if is_pdf else 'html'
+        filename = f'Taqon-Receipt-{payment.reference}.{ext}'
+
+        resp = HttpResponse(pdf_bytes, content_type=content_type)
+        resp['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return resp
+
+
+@extend_schema(tags=['Payments'])
 class PaymentHistoryView(APIView):
     """List all payments for the authenticated user."""
 

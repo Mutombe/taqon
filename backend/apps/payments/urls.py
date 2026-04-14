@@ -17,6 +17,7 @@ urlpatterns = [
     path('admin/deposits/<uuid:deposit_id>/', views.AdminDepositDetailView.as_view(), name='admin-deposit-detail'),
 
     path('<str:reference>/', views.PaymentDetailView.as_view(), name='payment-detail'),
+    path('<str:reference>/receipt/', views.PaymentReceiptView.as_view(), name='payment-receipt'),
     path('order/<str:order_number>/', views.OrderPaymentsView.as_view(), name='order-payments'),
 
     # Webhooks (unauthenticated)

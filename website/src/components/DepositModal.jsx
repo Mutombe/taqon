@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, SpinnerGap, WarningCircle, CreditCard, Bank, DeviceMobile,
+  X, SpinnerGap, WarningCircle, Bank, Check,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { paymentsApi } from '../api/payments';
@@ -11,16 +11,17 @@ import {
   DEPOSIT_TERMS_VERSION,
   DEPOSIT_TERMS_LAST_UPDATED,
 } from '../data/depositTerms';
+import { PAYMENT_BRAND_LOGOS, PAYMENT_BRAND_LABELS } from '../data/paymentBrands';
 
 const DEPOSIT_PERCENT = 20;
 
 const PAYMENT_METHODS = [
-  { key: 'ecocash',       label: 'EcoCash',        icon: DeviceMobile, type: 'mobile' },
-  { key: 'onemoney',      label: 'OneMoney',       icon: DeviceMobile, type: 'mobile' },
-  { key: 'innbucks',      label: 'InnBucks',       icon: DeviceMobile, type: 'web' },
-  { key: 'card',          label: 'Card',           icon: CreditCard,   type: 'web' },
-  { key: 'zimswitch',     label: 'ZimSwitch',      icon: CreditCard,   type: 'web' },
-  { key: 'bank_transfer', label: 'Bank Transfer',  icon: Bank,         type: 'web' },
+  { key: 'ecocash',       type: 'mobile' },
+  { key: 'onemoney',      type: 'mobile' },
+  { key: 'innbucks',      type: 'web' },
+  { key: 'card',          type: 'web' },
+  { key: 'zimswitch',     type: 'web' },
+  { key: 'bank_transfer', type: 'web' },
 ];
 
 const toneClasses = {
@@ -240,28 +241,47 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
             />
           </div>
 
-          {/* Payment method — compact grid */}
+          {/* Payment method — brand logo grid */}
           <div className="mb-4">
-            <label className="block text-[12px] text-gray-500 dark:text-white/50 mb-1.5">
+            <label className="block text-[12px] text-gray-500 dark:text-white/50 mb-2">
               Payment method
             </label>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
               {PAYMENT_METHODS.map((m) => {
-                const Icon = m.icon;
                 const selected = method === m.key;
+                const logo = PAYMENT_BRAND_LOGOS[m.key];
+                const label = PAYMENT_BRAND_LABELS[m.key] || m.key;
                 return (
                   <button
                     key={m.key}
                     type="button"
                     onClick={() => setMethod(m.key)}
-                    className={`flex flex-col items-center gap-1 py-2.5 rounded-lg border text-[11px] font-medium transition-all ${
+                    aria-label={label}
+                    title={label}
+                    className={`group relative h-[72px] rounded-lg border-2 bg-white flex items-center justify-center p-2 transition-all active:scale-[0.98] ${
                       selected
-                        ? 'border-taqon-orange bg-taqon-orange/5 text-taqon-orange'
-                        : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/60 hover:border-gray-300 dark:hover:border-white/20'
+                        ? 'border-taqon-orange ring-2 ring-taqon-orange/20 shadow-sm'
+                        : 'border-gray-200 dark:border-white/15 hover:border-gray-300 dark:hover:border-white/25'
                     }`}
                   >
-                    <Icon size={14} weight={selected ? 'fill' : 'regular'} />
-                    {m.label}
+                    {logo ? (
+                      <img
+                        src={logo}
+                        alt={label}
+                        className="max-h-[32px] w-auto max-w-full object-contain"
+                        draggable={false}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-gray-500">
+                        <Bank size={20} />
+                        <span className="text-[10px] font-semibold text-gray-700">Bank</span>
+                      </div>
+                    )}
+                    {selected && (
+                      <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-taqon-orange text-white flex items-center justify-center shadow-sm">
+                        <Check size={10} weight="bold" />
+                      </span>
+                    )}
                   </button>
                 );
               })}

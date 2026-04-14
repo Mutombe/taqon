@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart, Heart, Star, CaretRight, Minus, Plus,
@@ -92,8 +92,10 @@ function StockBadge({ stock }) {
 
 export default function ProductDetail() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [descExpanded, setDescExpanded] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [activeTab, setActiveTab] = useState('specs');
@@ -111,6 +113,17 @@ export default function ProductDetail() {
     setAddingToCart(true);
     try {
       await addItem(product.id, quantity, product);
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!product || stock <= 0) return;
+    setAddingToCart(true);
+    try {
+      await addItem(product.id, quantity, product);
+      navigate('/checkout');
     } finally {
       setAddingToCart(false);
     }
@@ -437,9 +450,21 @@ export default function ProductDetail() {
                     )}
                   </div>
 
-                  {/* Description */}
+                  {/* Description — 2-line clamp with inline See more / See less */}
                   {product.description && (
-                    <p className="text-gray-600 dark:text-white/60 leading-relaxed">{product.description}</p>
+                    <div className="text-gray-600 dark:text-white/60 leading-relaxed">
+                      <p className={descExpanded ? '' : 'line-clamp-2'}>
+                        {product.description}
+                      </p>
+                      {product.description.length > 120 && (
+                        <button
+                          onClick={() => setDescExpanded((v) => !v)}
+                          className="mt-1 text-sm font-medium text-taqon-muted dark:text-white/50 hover:text-taqon-orange transition-colors"
+                        >
+                          {descExpanded ? 'See less' : 'See more'}
+                        </button>
+                      )}
+                    </div>
                   )}
 
                   {/* Stock Status */}
@@ -478,6 +503,14 @@ export default function ProductDetail() {
                         <ShoppingCart size={18} />
                       )}
                       {addingToCart ? 'Adding...' : 'Add to Cart'}
+                    </button>
+
+                    <button
+                      onClick={handleBuyNow}
+                      disabled={addingToCart || stock <= 0}
+                      className="flex-1 inline-flex items-center justify-center gap-2 border-2 border-taqon-orange text-taqon-orange py-3.5 px-6 rounded-xl font-semibold hover:bg-taqon-orange/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+                    >
+                      Buy Now
                     </button>
 
                     <button

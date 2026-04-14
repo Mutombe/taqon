@@ -24,6 +24,7 @@ import { paymentsApi } from '../../api/payments';
 import useCartStore from '../../stores/cartStore';
 import useAuthStore from '../../stores/authStore';
 import { toast } from 'sonner';
+import { PAYMENT_BRAND_LOGOS, PAYMENT_BRAND_LABELS } from '../../data/paymentBrands';
 
 const STEPS = [
   { key: 'delivery', label: 'Delivery', icon: Truck },
@@ -493,8 +494,9 @@ export default function CheckoutPage() {
 
                     <div className="space-y-3">
                       {PAYMENT_METHODS.map((method) => {
-                        const Icon = method.icon;
                         const isSelected = paymentMethod === method.key;
+                        const logo = PAYMENT_BRAND_LOGOS[method.key];
+                        const brandLabel = PAYMENT_BRAND_LABELS[method.key];
 
                         return (
                           <button
@@ -503,22 +505,26 @@ export default function CheckoutPage() {
                               setPaymentMethod(method.key);
                               if (errors.paymentMethod) setErrors((prev) => ({ ...prev, paymentMethod: '' }));
                             }}
-                            className={`w-full flex items-center gap-4 p-5 rounded-xl border-2 transition-all text-left ${
+                            aria-label={method.label}
+                            className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
                               isSelected
-                                ? 'border-taqon-orange bg-taqon-orange/10'
+                                ? 'border-taqon-orange bg-taqon-orange/5 ring-2 ring-taqon-orange/10'
                                 : 'border-warm-200 dark:border-white/10 hover:border-warm-300 dark:hover:border-white/20'
                             }`}
                           >
-                            <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                                isSelected
-                                  ? 'bg-taqon-orange text-white'
-                                  : 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/40'
-                              }`}
-                            >
-                              <Icon size={20} />
+                            <div className="w-16 h-12 rounded-lg bg-white border border-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                              {logo ? (
+                                <img
+                                  src={logo}
+                                  alt={brandLabel || method.label}
+                                  className="max-h-[30px] w-auto max-w-[56px] object-contain"
+                                  draggable={false}
+                                />
+                              ) : method.icon ? (
+                                <method.icon size={22} className="text-gray-500" />
+                              ) : null}
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <p
                                 className={`font-semibold text-sm transition-colors ${
                                   isSelected ? 'text-taqon-charcoal dark:text-white' : 'text-gray-700 dark:text-white/70'
@@ -526,10 +532,10 @@ export default function CheckoutPage() {
                               >
                                 {method.label}
                               </p>
-                              <p className="text-gray-400 dark:text-white/40 text-xs mt-0.5">{method.description}</p>
+                              <p className="text-gray-400 dark:text-white/40 text-xs mt-0.5 truncate">{method.description}</p>
                             </div>
                             <div
-                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
                                 isSelected
                                   ? 'border-taqon-orange bg-taqon-orange'
                                   : 'border-warm-300 dark:border-white/20'

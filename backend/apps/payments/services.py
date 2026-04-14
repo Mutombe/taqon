@@ -338,3 +338,11 @@ class PaymentService:
                 )
             except Exception:
                 pass
+
+        # Email the customer their receipt. Best-effort; never blocks the
+        # payment flow if email delivery fails (it's logged separately).
+        try:
+            from .receipts import email_receipt
+            email_receipt(payment)
+        except Exception:
+            logger.exception('Receipt email hook failed for %s', payment.reference)

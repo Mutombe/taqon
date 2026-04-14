@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, Package, ArrowRight } from '@phosphor-icons/react';
+import { CheckCircle, Package, ArrowRight, DownloadSimple } from '@phosphor-icons/react';
+import { toast } from 'sonner';
 import { shopApi } from '../../api/shop';
+import { paymentsApi } from '../../api/payments';
 import { DetailPageSkeleton } from '../../components/Skeletons';
 
 export default function OrderConfirmation() {
   const { orderNumber } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [paidPayment, setPaidPayment] = useState(null);
 
   useEffect(() => {
     shopApi.getOrder(orderNumber)
@@ -16,6 +19,39 @@ export default function OrderConfirmation() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [orderNumber]);
+
+  // When order is paid, look up a paid Payment so we can offer receipt download
+  useEffect(() => {
+    if (!order || order.payment_status !== 'paid') return;
+    paymentsApi.getOrderPayments(order.order_number)
+      .then(({ data }) => {
+        const paid = (Array.isArray(data) ? data : data.results || []).find((p) => p.status === 'paid');
+        if (paid) setPaidPayment(paid);
+      })
+      .catch(() => {});
+  }, [order]);
+
+  const downloadReceipt = async () => {
+    if (!paidPayment?.reference) return;
+    try {
+      toast.loading('Preparing receipt...', { id: 'receipt' });
+      const res = await paymentsApi.downloadReceipt(paidPayment.reference);
+      const contentType = res.headers['content-type'] || 'application/pdf';
+      const ext = contentType.includes('html') ? 'html' : 'pdf';
+      const blob = new Blob([res.data], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Taqon-Receipt-${paidPayment.reference}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Receipt downloaded', { id: 'receipt' });
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Could not download receipt', { id: 'receipt' });
+    }
+  };
 
   if (loading) return <DetailPageSkeleton />;
 
@@ -67,9 +103,17 @@ export default function OrderConfirmation() {
         )}
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {paidPayment && (
+            <button
+              onClick={downloadReceipt}
+              className="inline-flex items-center justify-center gap-2 bg-taqon-orange text-white px-6 py-3 rounded-xl font-semibold hover:bg-taqon-orange/90 active:scale-[0.98] transition-all"
+            >
+              <DownloadSimple size={16} weight="bold" /> Download Receipt
+            </button>
+          )}
           <Link
             to="/account/orders"
-            className="inline-flex items-center justify-center gap-2 bg-taqon-orange text-white px-6 py-3 rounded-xl font-semibold hover:bg-taqon-orange/90 transition-all"
+            className="inline-flex items-center justify-center gap-2 border border-warm-200 dark:border-white/20 text-taqon-charcoal dark:text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
           >
             View My Orders <ArrowRight size={16} />
           </Link>
@@ -80,6 +124,10 @@ export default function OrderConfirmation() {
             Continue Shopping
           </Link>
         </div>
+
+        {paidPayment && (
+          <p className="text-xs text-gray-500 dark:text-white/40 mt-4">A copy of the receipt has also been emailed to you.</p>
+        )}
       </motion.div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   MagnifyingGlass, X, Tag, Star, ArrowRight, Phone,
   ShoppingCart, SlidersHorizontal, CircleNotch,
@@ -101,6 +101,7 @@ export default function Shop() {
   const [searchInput, setSearchInput] = useState(search);
   const searchTimeoutRef = useRef(null);
 
+  const navigate = useNavigate();
   const { addItem } = useCartStore();
   const { toggleProduct, likedProducts } = useSavesStore();
   const { prefetchProduct } = usePrefetch();
@@ -165,6 +166,18 @@ export default function Shop() {
     setAddingToCartId(product.id);
     try {
       await addItem(product.id, 1, product);
+    } finally {
+      setAddingToCartId(null);
+    }
+  };
+
+  const handleBuyNow = async (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setAddingToCartId(product.id);
+    try {
+      await addItem(product.id, 1, product);
+      navigate('/checkout');
     } finally {
       setAddingToCartId(null);
     }
@@ -617,19 +630,38 @@ export default function Shop() {
                             )}
                           </div>
 
-                          {/* Always-visible Add to Cart */}
-                          <button
-                            onClick={(e) => handleAddToCart(e, product)}
-                            disabled={!product.in_stock || addingToCartId === product.id}
-                            className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed bg-taqon-orange/10 text-taqon-orange hover:bg-taqon-orange hover:text-white"
-                          >
-                            {addingToCartId === product.id ? (
-                              <CircleNotch size={15} className="animate-spin" />
-                            ) : (
-                              <ShoppingCart size={15} />
-                            )}
-                            {!product.in_stock ? 'Out of Stock' : 'Add to Cart'}
-                          </button>
+                          {/* Add to Cart + Buy Now */}
+                          {!product.in_stock ? (
+                            <button
+                              disabled
+                              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed"
+                            >
+                              Out of Stock
+                            </button>
+                          ) : (
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                onClick={(e) => handleAddToCart(e, product)}
+                                disabled={addingToCartId === product.id}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed bg-taqon-orange text-white hover:bg-taqon-orange/90"
+                              >
+                                {addingToCartId === product.id ? (
+                                  <CircleNotch size={14} className="animate-spin" />
+                                ) : (
+                                  <ShoppingCart size={14} />
+                                )}
+                                <span className="hidden sm:inline">Add to Cart</span>
+                                <span className="sm:hidden">Add</span>
+                              </button>
+                              <button
+                                onClick={(e) => handleBuyNow(e, product)}
+                                disabled={addingToCartId === product.id}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold border-2 border-taqon-orange text-taqon-orange hover:bg-taqon-orange/5 transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                Buy Now
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </Link>
                     </motion.div>

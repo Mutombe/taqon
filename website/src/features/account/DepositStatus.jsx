@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CheckCircle, XCircle, Clock, SpinnerGap, ArrowLeft, Phone,
-  EnvelopeSimple, MapPin, Wallet, WarningCircle, ArrowClockwise,
+  EnvelopeSimple, MapPin, Wallet, WarningCircle, ArrowClockwise, DownloadSimple,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import SEO from '../../components/SEO';
@@ -130,6 +130,28 @@ export default function DepositStatus() {
     }
   };
 
+  const downloadReceipt = async () => {
+    if (!deposit?.latest_payment?.reference) return;
+    try {
+      toast.loading('Preparing receipt...', { id: 'receipt' });
+      const res = await paymentsApi.downloadReceipt(deposit.latest_payment.reference);
+      const contentType = res.headers['content-type'] || 'application/pdf';
+      const ext = contentType.includes('html') ? 'html' : 'pdf';
+      const blob = new Blob([res.data], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Taqon-Receipt-${deposit.latest_payment.reference}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Receipt downloaded', { id: 'receipt' });
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Could not download receipt', { id: 'receipt' });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4 flex items-center justify-center">
@@ -246,6 +268,18 @@ export default function DepositStatus() {
               >
                 <Wallet size={16} /> Complete payment on Paynow
               </a>
+            </div>
+          )}
+
+          {deposit.status === 'paid' && (
+            <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
+              <button
+                onClick={downloadReceipt}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 active:scale-[0.98] transition-all"
+              >
+                <DownloadSimple size={16} weight="bold" /> Download Receipt
+              </button>
+              <p className="text-xs text-gray-500 dark:text-white/40 self-center">A copy has also been emailed to you.</p>
             </div>
           )}
         </div>

@@ -16,6 +16,9 @@ export const paymentsApi = {
   // Get all payments for a specific order
   getOrderPayments: (orderNumber) => api.get(`/payments/order/${orderNumber}/`),
 
+  // Download receipt PDF (returns blob)
+  downloadReceipt: (reference) => api.get(`/payments/${reference}/receipt/`, { responseType: 'blob' }),
+
   // Package deposits — customer
   initiateDeposit: (data) => api.post('/payments/deposits/initiate/', data),
   getMyDeposits: () => api.get('/payments/deposits/mine/'),

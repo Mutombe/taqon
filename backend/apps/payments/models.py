@@ -82,6 +82,7 @@ class Payment(TimeStampedModel):
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     failure_reason = models.TextField(blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
+    receipt_sent_at = models.DateTimeField(null=True, blank=True)
     metadata = models.JSONField(default=dict, blank=True)
 
     class Meta:
