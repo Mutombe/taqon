@@ -111,6 +111,7 @@ const AdminProducts = lazy(() => import('./features/admin/AdminProducts'));
 const AdminPackages = lazy(() => import('./features/admin/AdminPackages'));
 const AdminQuotations = lazy(() => import('./features/admin/AdminQuotations'));
 const AdminDeposits = lazy(() => import('./features/admin/AdminDeposits'));
+const AdminAppliances = lazy(() => import('./features/admin/AdminAppliances'));
 const AdminBlog = lazy(() => import('./features/admin/AdminBlog'));
 const AdminBlogEditor = lazy(() => import('./features/admin/AdminBlogEditor'));
 const AdminMedia = lazy(() => import('./features/admin/AdminMedia'));
@@ -320,6 +321,7 @@ function AppContent() {
               <Route path="packages" element={<AdminPackages />} />
               <Route path="quotations" element={<AdminQuotations />} />
               <Route path="deposits" element={<AdminDeposits />} />
+              <Route path="appliances" element={<AdminAppliances />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="blog/new" element={<AdminBlogEditor />} />
               <Route path="blog/:slug/edit" element={<AdminBlogEditor />} />

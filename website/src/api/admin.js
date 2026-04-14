@@ -55,6 +55,13 @@ export const adminApi = {
   getAdminComponents: (params) => api.get('/solar-config/admin/components/', { params }),
   getAdminFamilies: (params) => api.get('/solar-config/admin/families/', { params }),
 
+  // Appliances (CRUD)
+  getAdminAppliances: (params) => api.get('/solar-config/admin/appliances/', { params }),
+  getAdminAppliance: (slug) => api.get(`/solar-config/admin/appliances/${slug}/`),
+  createAppliance: (data) => api.post('/solar-config/admin/appliances/create/', data),
+  updateAppliance: (slug, data) => api.patch(`/solar-config/admin/appliances/${slug}/`, data),
+  deleteAppliance: (slug) => api.delete(`/solar-config/admin/appliances/${slug}/delete/`),
+
   // Instant quotes & Solar Advisor tracking
   getInstantQuotes: (params) => api.get('/solar-config/admin/instant-quotes/', { params }),
   getInstantQuoteDetail: (id) => api.get(`/solar-config/admin/instant-quotes/${id}/`),

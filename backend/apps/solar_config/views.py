@@ -1313,13 +1313,52 @@ class AdminComponentDeleteView(APIView):
 # ── Admin Appliances ──
 
 class AdminApplianceListView(generics.ListAPIView):
-    """Admin: list all appliances."""
+    """Admin: list all appliances. Supports search, category and active filters."""
     permission_classes = [IsAdmin]
     serializer_class = ApplianceSerializer
     pagination_class = StandardPagination
 
     def get_queryset(self):
-        return Appliance.objects.filter(is_deleted=False)
+        from django.db.models import Q
+        qs = Appliance.objects.filter(is_deleted=False)
+
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search)
+                | Q(slug__icontains=search)
+                | Q(description__icontains=search)
+            )
+
+        category = self.request.query_params.get('category', '').strip()
+        if category:
+            qs = qs.filter(category=category)
+
+        is_active = self.request.query_params.get('is_active', '').strip().lower()
+        if is_active in ('true', '1', 'yes'):
+            qs = qs.filter(is_active=True)
+        elif is_active in ('false', '0', 'no'):
+            qs = qs.filter(is_active=False)
+
+        smart_load = self.request.query_params.get('smart_load_eligible', '').strip().lower()
+        if smart_load in ('true', '1', 'yes'):
+            qs = qs.filter(smart_load_eligible=True)
+        elif smart_load in ('false', '0', 'no'):
+            qs = qs.filter(smart_load_eligible=False)
+
+        ordering = self.request.query_params.get('ordering', 'sort_order').strip()
+        allowed = {
+            'sort_order', '-sort_order', 'name', '-name', 'category', '-category',
+            'typical_wattage', '-typical_wattage',
+            'power_points', '-power_points', 'energy_points', '-energy_points',
+            'created_at', '-created_at',
+        }
+        if ordering in allowed:
+            qs = qs.order_by(ordering, 'name')
+        else:
+            qs = qs.order_by('sort_order', 'name')
+
+        return qs
 
 
 class AdminApplianceCreateView(generics.CreateAPIView):
