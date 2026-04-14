@@ -20,4 +20,5 @@ python manage.py sync_appliances_to_spec
 python manage.py link_components_to_shop
 python manage.py clean_ghost_packages
 python manage.py seed_new_appliances
+python manage.py clean_appliances
 python manage.py shell < scripts/reset_admin.py
