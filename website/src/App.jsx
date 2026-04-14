@@ -121,6 +121,7 @@ const ProfileSettings = lazy(() => import('./features/account/ProfileSettings'))
 const SecuritySettings = lazy(() => import('./features/account/SecuritySettings'));
 const Wishlist = lazy(() => import('./features/account/Wishlist'));
 const Addresses = lazy(() => import('./features/account/Addresses'));
+const DepositStatus = lazy(() => import('./features/account/DepositStatus'));
 
 // React Query client — tuned for instant perceived performance.
 //
@@ -309,6 +310,7 @@ function AppContent() {
             <Route path="/account/security" element={<SecuritySettings />} />
             <Route path="/account/wishlist" element={<Wishlist />} />
             <Route path="/account/addresses" element={<Addresses />} />
+            <Route path="/account/deposits/:id" element={<DepositStatus />} />
             {/* Admin routes — wrapped in AdminLayout */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<AdminDashboard />} />

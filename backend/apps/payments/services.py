@@ -102,6 +102,41 @@ class PaymentService:
                 if not redirect_url.startswith(('http://', 'https://')):
                     redirect_url = ''
 
+                # Web-redirect methods MUST come back with a working redirect URL.
+                # If Paynow reports success without one, it's a broken integration
+                # state — treat as failure so the frontend doesn't pretend success.
+                from .gateways.paynow_gateway import PAYNOW_WEB_METHODS, PAYNOW_MOBILE_METHODS
+                is_web_method = gateway_name == 'paynow' and method in PAYNOW_WEB_METHODS
+                is_mobile_method = gateway_name == 'paynow' and method in PAYNOW_MOBILE_METHODS
+
+                if is_web_method and not redirect_url:
+                    payment.status = 'failed'
+                    payment.failure_reason = (
+                        'Paynow did not return a checkout redirect URL for this method. '
+                        'Please try a different payment method or contact support.'
+                    )
+                    payment.save(update_fields=['status', 'failure_reason'])
+                    logger.error(
+                        'Paynow web method %s returned success but no redirect_url for %s',
+                        method, reference,
+                    )
+                    return payment, payment.failure_reason
+
+                # Mobile methods MUST come back with a poll URL — otherwise we can't
+                # verify the payment later. Treat empty poll_url as a failure.
+                if is_mobile_method and not (result.poll_url or ''):
+                    payment.status = 'failed'
+                    payment.failure_reason = (
+                        f'Paynow did not return a poll URL for {method}. '
+                        f'The STK prompt may not have been sent. Please try again.'
+                    )
+                    payment.save(update_fields=['status', 'failure_reason'])
+                    logger.error(
+                        'Paynow mobile method %s returned success but no poll_url for %s',
+                        method, reference,
+                    )
+                    return payment, payment.failure_reason
+
                 payment.status = 'awaiting_redirect' if redirect_url else 'pending'
                 payment.gateway_reference = result.gateway_reference
                 payment.gateway_redirect_url = redirect_url

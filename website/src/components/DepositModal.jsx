@@ -15,12 +15,12 @@ import {
 const DEPOSIT_PERCENT = 20;
 
 const PAYMENT_METHODS = [
-  { key: 'ecocash',       label: 'EcoCash',        icon: DeviceMobile, requiresPhone: true },
-  { key: 'onemoney',      label: 'OneMoney',       icon: DeviceMobile, requiresPhone: true },
-  { key: 'innbucks',      label: 'InnBucks',       icon: DeviceMobile, requiresPhone: true },
-  { key: 'card',          label: 'Card',           icon: CreditCard },
-  { key: 'zimswitch',     label: 'ZimSwitch',      icon: CreditCard },
-  { key: 'bank_transfer', label: 'Bank Transfer',  icon: Bank },
+  { key: 'ecocash',       label: 'EcoCash',        icon: DeviceMobile, type: 'mobile' },
+  { key: 'onemoney',      label: 'OneMoney',       icon: DeviceMobile, type: 'mobile' },
+  { key: 'innbucks',      label: 'InnBucks',       icon: DeviceMobile, type: 'mobile' },
+  { key: 'card',          label: 'Card',           icon: CreditCard,   type: 'web' },
+  { key: 'zimswitch',     label: 'ZimSwitch',      icon: CreditCard,   type: 'web' },
+  { key: 'bank_transfer', label: 'Bank Transfer',  icon: Bank,         type: 'web' },
 ];
 
 const toneClasses = {
@@ -58,6 +58,7 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
   }, [packageTotal]);
 
   const selectedMethod = PAYMENT_METHODS.find((m) => m.key === method);
+  const requiresPhone = selectedMethod?.type === 'mobile';
   const customerName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim() || user?.email || '';
 
   const fmtUSD = (n) => `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -76,7 +77,7 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
       toast.error('Select a payment method.');
       return;
     }
-    if (selectedMethod?.requiresPhone && !phone.trim()) {
+    if (requiresPhone && !phone.trim()) {
       toast.error('Phone number is required for mobile money.');
       return;
     }
@@ -92,21 +93,46 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
         customer_phone: phone.trim() || user?.phone || '',
         customer_address: address.trim(),
         method,
-        phone: selectedMethod?.requiresPhone ? phone.trim() : '',
+        phone: requiresPhone ? phone.trim() : '',
         terms_accepted: true,
       });
 
       const payment = data.payment;
       const deposit = data.deposit;
 
-      if (payment?.gateway_redirect_url) {
-        toast.success('Redirecting to Paynow...');
+      // If the backend explicitly returned a failed payment, stop here.
+      if (payment?.status === 'failed') {
+        toast.error(payment.failure_reason || 'Payment failed to initialise.');
+        return;
+      }
+
+      // Explicit dispatch per method type — no silent fall-through.
+      if (selectedMethod?.type === 'web') {
+        // Card, ZimSwitch, Bank Transfer — Paynow's hosted checkout handles it
+        if (!payment?.gateway_redirect_url) {
+          toast.error(
+            'Payment gateway did not return a checkout URL. Please try a different method or contact support.',
+          );
+          return;
+        }
+        toast.success('Redirecting to Paynow checkout...');
         window.location.href = payment.gateway_redirect_url;
         return;
       }
 
-      toast.success('Check your phone to authorise the payment.');
-      window.location.href = `/account/deposits/${deposit.id}`;
+      if (selectedMethod?.type === 'mobile') {
+        // EcoCash / OneMoney / InnBucks — STK push goes to the customer's phone
+        if (!payment?.gateway_poll_url && !payment?.reference) {
+          toast.error('Payment was not initialised correctly. Please try again.');
+          return;
+        }
+        toast.success('Check your phone to authorise the payment.');
+        window.location.href = `/account/deposits/${deposit.id}`;
+        return;
+      }
+
+      // Unknown method — shouldn't happen because picker is constrained
+      toast.error('Unsupported payment method.');
     } catch (err) {
       const msg =
         err.response?.data?.error
@@ -243,7 +269,7 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
           </div>
 
           {/* Mobile money phone */}
-          {selectedMethod?.requiresPhone && (
+          {requiresPhone && (
             <div className="mb-4">
               <label className="block text-[12px] text-gray-500 dark:text-white/50 mb-1.5">
                 Mobile money number

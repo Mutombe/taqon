@@ -32,13 +32,13 @@ const STEPS = [
 ];
 
 const PAYMENT_METHODS = [
-  { key: 'ecocash', label: 'EcoCash', icon: DeviceMobile, description: 'STK prompt to your EcoCash number', requiresPhone: true },
-  { key: 'onemoney', label: 'OneMoney', icon: DeviceMobile, description: 'STK prompt to your OneMoney number', requiresPhone: true },
-  { key: 'innbucks', label: 'InnBucks', icon: DeviceMobile, description: 'Pay with your InnBucks wallet', requiresPhone: true },
-  { key: 'card', label: 'Card Payment', icon: CreditCard, description: 'Visa or Mastercard via Paynow' },
-  { key: 'zimswitch', label: 'ZimSwitch', icon: CreditCard, description: 'Local ZimSwitch card via Paynow' },
-  { key: 'bank_transfer', label: 'Bank Transfer', icon: Bank, description: 'Direct bank transfer via Paynow' },
-  { key: 'cash', label: 'Cash on Delivery', icon: Money, description: 'Pay when your order arrives' },
+  { key: 'ecocash', label: 'EcoCash', icon: DeviceMobile, description: 'STK prompt to your EcoCash number', requiresPhone: true, type: 'mobile' },
+  { key: 'onemoney', label: 'OneMoney', icon: DeviceMobile, description: 'STK prompt to your OneMoney number', requiresPhone: true, type: 'mobile' },
+  { key: 'innbucks', label: 'InnBucks', icon: DeviceMobile, description: 'Pay with your InnBucks wallet', requiresPhone: true, type: 'mobile' },
+  { key: 'card', label: 'Card Payment', icon: CreditCard, description: 'Visa or Mastercard — enter card details on Paynow', type: 'web' },
+  { key: 'zimswitch', label: 'ZimSwitch', icon: CreditCard, description: 'Local ZimSwitch card — complete payment on Paynow', type: 'web' },
+  { key: 'bank_transfer', label: 'Bank Transfer', icon: Bank, description: 'Direct bank transfer — complete payment on Paynow', type: 'web' },
+  { key: 'cash', label: 'Cash on Delivery', icon: Money, description: 'Pay when your order arrives', type: 'cash' },
 ];
 
 export default function CheckoutPage() {
@@ -167,14 +167,40 @@ export default function CheckoutPage() {
 
         const { data: payment } = await paymentsApi.initiate(paymentData);
 
-        // Paynow web redirect (bank_transfer)
-        if (payment.gateway_redirect_url) {
-          toast.success('Redirecting to payment...');
+        // Payment explicitly failed on the backend (e.g. Paynow couldn't build
+        // a checkout URL or poll URL) — stop here so the user doesn't think
+        // they paid.
+        if (payment?.status === 'failed') {
+          toast.error(payment.failure_reason || 'Payment failed to initialise.');
+          navigate(`/order-confirmation/${order.order_number}`, { replace: true });
+          return;
+        }
+
+        // Explicit dispatch per method — no silent fall-through.
+        const MOBILE = ['ecocash', 'onemoney', 'innbucks'];
+        const WEB = ['card', 'zimswitch', 'bank_transfer'];
+
+        if (WEB.includes(paymentMethod)) {
+          if (!payment.gateway_redirect_url) {
+            toast.error('Payment gateway did not return a checkout URL. Please try a different method.');
+            navigate(`/order-confirmation/${order.order_number}`, { replace: true });
+            return;
+          }
+          toast.success('Redirecting to Paynow checkout...');
           window.location.href = payment.gateway_redirect_url;
           return;
         }
 
-        // Stripe card — go to payment page with client secret
+        if (MOBILE.includes(paymentMethod)) {
+          toast.success('Check your phone to authorise the payment.');
+          navigate(`/payment/status/${payment.reference}`, {
+            replace: true,
+            state: { orderNumber: order.order_number },
+          });
+          return;
+        }
+
+        // Stripe fallback (kept for compatibility if ever re-enabled)
         if (payment.stripe_client_secret) {
           navigate(`/payment/${payment.reference}`, {
             replace: true,
@@ -183,11 +209,9 @@ export default function CheckoutPage() {
           return;
         }
 
-        // Mobile money (EcoCash/OneMoney/InnBucks) — poll for result
-        navigate(`/payment/status/${payment.reference}`, {
-          replace: true,
-          state: { orderNumber: order.order_number },
-        });
+        // Unknown — don't pretend success
+        toast.error('Payment method not recognised.');
+        navigate(`/order-confirmation/${order.order_number}`, { replace: true });
       } catch (payError) {
         // Order was created but payment failed — navigate to order page
         const msg = payError.response?.data?.error || 'Payment initiation failed. You can retry from your orders.';
