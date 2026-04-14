@@ -29,6 +29,7 @@ import { autoLink, confirmExternalNavigation } from './ContentLink';
 import { getGemFamily, getGemByKva } from '../data/gemFamilies';
 import { solarConfigApi } from '../api/solarConfig';
 import { quotationsApi } from '../api/quotations';
+import useAuthStore from '../stores/authStore';
 
 // Icon map for the includes section
 const iconMap = {
@@ -42,7 +43,16 @@ const iconMap = {
 /* ─── Quote Modal ─── */
 
 function QuoteModal({ pkg, gem, onClose }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
+  const { user } = useAuthStore();
+  const [form, setForm] = useState(() => {
+    const name = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
+    return {
+      name: name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      address: '',
+    };
+  });
   const [generating, setGenerating] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 

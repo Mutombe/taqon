@@ -16,6 +16,21 @@ import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { solarConfigApi } from '../api/solarConfig';
 import { quotationsApi } from '../api/quotations';
+import useAuthStore from '../stores/authStore';
+
+/* ─── Helpers ─── */
+
+// Build prefill defaults from auth user
+function prefillFromUser(user) {
+  if (!user) return { name: '', email: '', phone: '', address: '' };
+  const name = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+  return {
+    name: name || '',
+    email: user.email || '',
+    phone: user.phone || '',
+    address: '',
+  };
+}
 
 /* ─── Constants ─── */
 
@@ -559,7 +574,8 @@ function RecommendationSlotCards({ settled }) {
 /* ─── Instant Quote Modal ─── */
 
 function QuoteModal({ pkg, tierKey, distanceKm, sessionId, onClose }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
+  const { user } = useAuthStore();
+  const [form, setForm] = useState(() => prefillFromUser(user));
   const [generating, setGenerating] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -764,7 +780,7 @@ function getWhyThisMatchesYou(preferences) {
 
 /* ─── Recommendation Card (Step 3) — Gem-styled ─── */
 
-function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, clientFormRef, preferences, sessionId }) {
+function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, onRequestDetails, preferences, sessionId }) {
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [downloadingQuote, setDownloadingQuote] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -953,7 +969,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                       onClick={async (e) => {
                         e.stopPropagation();
                         if (!detailsCollected) {
-                          clientFormRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          onRequestDetails?.();
                           return;
                         }
                         setDownloadingQuote(true);
@@ -1129,7 +1145,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             <button
               onClick={async () => {
                 if (!detailsCollected) {
-                  clientFormRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  onRequestDetails?.();
                   return;
                 }
                 setDownloadingQuote(true);
@@ -1534,6 +1550,7 @@ function saveDraft(data) {
 
 export default function SolarAdvisor() {
   const draft = useRef(loadDraft());
+  const { user } = useAuthStore();
 
   const [step, setStepRaw] = useState(draft.current?.step || 1);
   const [appliances, setAppliances] = useState([]);
@@ -1556,8 +1573,14 @@ export default function SolarAdvisor() {
   const [selectedArea, setSelectedArea] = useState(draft.current?.selectedArea || '');
   // customCoords is used when user clicks the map somewhere that isn't a known area
   const [customCoords, setCustomCoords] = useState(draft.current?.customCoords || null);
-  const [clientDetails, setClientDetails] = useState(draft.current?.clientDetails || { name: '', phone: '', email: '', area: '' });
+  const [clientDetails, setClientDetails] = useState(() => {
+    const fromDraft = draft.current?.clientDetails;
+    if (fromDraft && (fromDraft.name || fromDraft.phone || fromDraft.email)) return fromDraft;
+    const pref = prefillFromUser(user);
+    return { name: pref.name, phone: pref.phone, email: pref.email, area: fromDraft?.area || '' };
+  });
   const [detailsCollected, setDetailsCollected] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [areaSearch, setAreaSearch] = useState('');
   const [areaDropdownOpen, setAreaDropdownOpen] = useState(false);
 
@@ -1576,7 +1599,6 @@ export default function SolarAdvisor() {
       setDistanceKm(km);
     }
   }, []);
-  const clientFormRef = useRef(null);
   const [downloadingAll, setDownloadingAll] = useState(false);
 
   // ── Persist draft to sessionStorage ──
@@ -1740,12 +1762,12 @@ export default function SolarAdvisor() {
     trackEvent('step_view', { step });
   }, [step, trackEvent]);
 
-  const handleRecommend = async () => {
+  const handleRecommend = async ({ changeStep = true } = {}) => {
     setAnalysisComplete(false);
     setRecommendation(null);
     setRecommendError(null);
     setRecommendRun((prev) => prev + 1);
-    setStep(4);
+    if (changeStep) setStep(4);
 
     try {
       const applianceList = Object.entries(selections)
@@ -1772,10 +1794,32 @@ export default function SolarAdvisor() {
     } catch (err) {
       console.error('Recommendation failed:', err);
       setRecommendError(err.response?.data?.detail || err.message || 'Failed to get recommendations');
+      setAnalysisComplete(true); // stop spinner so error UI can render
     }
   };
 
   const hasSelections = Object.values(selections).some((q) => q > 0);
+
+  // ── Session resume recovery ──
+  // If a user lands on step 4 from a restored session, the recommendation
+  // state was not persisted. Auto re-fetch once appliances have loaded
+  // so the slot cards don't spin forever. If there are no selections,
+  // fall back to step 1.
+  const didResumeRef = useRef(false);
+  useEffect(() => {
+    if (didResumeRef.current) return;
+    if (loadingAppliances) return;
+    if (step !== 4) return;
+    didResumeRef.current = true;
+
+    if (!hasSelections) {
+      setStepRaw(1);
+      return;
+    }
+    if (!recommendation) {
+      handleRecommend({ changeStep: false });
+    }
+  }, [loadingAppliances, step, hasSelections, recommendation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -2287,8 +2331,35 @@ export default function SolarAdvisor() {
             {step === 4 && (
               <motion.div key="step4" {...stepTransition}>
                 {/* Casino-style slot cards during analysis */}
-                {!analysisComplete && (
+                {!analysisComplete && !recommendError && (
                   <RecommendationSlotCards settled={false} />
+                )}
+
+                {/* Error state */}
+                {recommendError && (
+                  <div className="max-w-xl mx-auto text-center py-10 px-4">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/10 text-red-500 mb-4">
+                      <X size={26} weight="bold" />
+                    </div>
+                    <h3 className="text-lg md:text-xl font-bold font-syne text-taqon-charcoal dark:text-white mb-2">
+                      Couldn't load recommendations
+                    </h3>
+                    <p className="text-sm text-taqon-muted dark:text-white/50 mb-5">{recommendError}</p>
+                    <div className="flex flex-col sm:flex-row justify-center gap-3">
+                      <button
+                        onClick={() => handleRecommend({ changeStep: false })}
+                        className="px-5 py-2.5 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 transition-all"
+                      >
+                        Try again
+                      </button>
+                      <button
+                        onClick={() => setStep(1)}
+                        className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                      >
+                        Start over
+                      </button>
+                    </div>
+                  </div>
                 )}
 
                 {/* Recommendations (appear after analysis completes) */}
@@ -2323,7 +2394,7 @@ export default function SolarAdvisor() {
                               distanceKm={distanceKm}
                               clientDetails={clientDetails}
                               detailsCollected={detailsCollected}
-                              clientFormRef={clientFormRef}
+                              onRequestDetails={() => setShowDetailsModal(true)}
                               preferences={preferences}
                               sessionId={recommendation?.session_id}
                             />
@@ -2332,95 +2403,37 @@ export default function SolarAdvisor() {
                       );
                     })()}
 
-                    {/* Client details form */}
-                    <div ref={clientFormRef} className="max-w-xl mx-auto mt-10 sm:mt-12">
+                    {/* Client details CTA / success */}
+                    <div className="max-w-xl mx-auto mt-10 sm:mt-12">
                       {!detailsCollected ? (
-                        <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-8 shadow-sm">
-                          <div className="flex items-center gap-2 mb-5">
-                            <FileText size={20} className="text-taqon-orange" />
-                            <h3 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white">
-                              Get Your Quotes
-                            </h3>
+                        <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-taqon-orange/10 text-taqon-orange flex items-center justify-center shrink-0">
+                            <FileText size={20} weight="bold" />
                           </div>
-                          <form
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              if (!clientDetails.name.trim() || !clientDetails.phone.trim()) return;
-                              setDetailsCollected(true);
-                              toast.success('Details saved! You can now download quotes.');
-                            }}
-                            className="space-y-4"
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-taqon-charcoal dark:text-white">Get your quotes</p>
+                            <p className="text-xs text-taqon-muted dark:text-white/50 mt-0.5">Share a few details to unlock PDF downloads for any package.</p>
+                          </div>
+                          <button
+                            onClick={() => setShowDetailsModal(true)}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
                           >
-                            <div>
-                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Full Name *</label>
-                              <input
-                                type="text"
-                                required
-                                value={clientDetails.name}
-                                onChange={(e) => setClientDetails(d => ({ ...d, name: e.target.value }))}
-                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                placeholder="John Doe"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone *</label>
-                              <input
-                                type="tel"
-                                required
-                                value={clientDetails.phone}
-                                onChange={(e) => setClientDetails(d => ({ ...d, phone: e.target.value }))}
-                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                placeholder="+263 77 123 4567"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email</label>
-                              <input
-                                type="email"
-                                value={clientDetails.email}
-                                onChange={(e) => setClientDetails(d => ({ ...d, email: e.target.value }))}
-                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                placeholder="john@example.com"
-                              />
-                            </div>
-                            {selectedArea ? (
-                              /* Already picked in step 2 — show as read-only */
-                              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-taqon-orange/5 border border-taqon-orange/20">
-                                <MapPin size={14} className="text-taqon-orange shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] font-semibold text-taqon-muted dark:text-white/50 uppercase tracking-wider">Installation Area</p>
-                                  <p className="text-sm font-medium text-taqon-charcoal dark:text-white truncate">
-                                    {selectedArea} &middot; {distanceKm}km from Harare
-                                  </p>
-                                </div>
-                              </div>
-                            ) : (
-                              <div>
-                                <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
-                                <input
-                                  type="text"
-                                  value={clientDetails.area}
-                                  onChange={(e) => setClientDetails(d => ({ ...d, area: e.target.value }))}
-                                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                  placeholder="Borrowdale, Harare"
-                                />
-                              </div>
-                            )}
-                            <button
-                              type="submit"
-                              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
-                            >
-                              <DownloadSimple size={16} weight="bold" /> Unlock Downloads
-                            </button>
-                          </form>
+                            <DownloadSimple size={16} weight="bold" /> Unlock Downloads
+                          </button>
                         </div>
                       ) : (
                         <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/10 p-5 sm:p-6 flex items-center gap-3">
                           <CheckCircle size={24} className="text-emerald-500 shrink-0" weight="fill" />
-                          <div>
+                          <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm text-emerald-700 dark:text-emerald-300">Details saved</p>
                             <p className="text-xs text-emerald-600 dark:text-emerald-400/70 mt-0.5">You can now download quotes for any package above.</p>
                           </div>
+                          <button
+                            onClick={() => setShowDetailsModal(true)}
+                            className="text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:underline shrink-0"
+                          >
+                            Edit
+                          </button>
                         </div>
                       )}
                     </div>
@@ -2525,6 +2538,135 @@ export default function SolarAdvisor() {
           />
         )}
       </section>
+
+      {/* Client details modal */}
+      <AnimatePresence>
+        {showDetailsModal && (
+          <ClientDetailsModal
+            clientDetails={clientDetails}
+            setClientDetails={setClientDetails}
+            selectedArea={selectedArea}
+            distanceKm={distanceKm}
+            onSubmit={() => {
+              setDetailsCollected(true);
+              setShowDetailsModal(false);
+              toast.success('Details saved! You can now download quotes.');
+            }}
+            onClose={() => setShowDetailsModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
+  );
+}
+
+/* ─── Client Details Modal ─── */
+function ClientDetailsModal({ clientDetails, setClientDetails, selectedArea, distanceKm, onSubmit, onClose }) {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!clientDetails.name.trim() || !clientDetails.phone.trim()) return;
+    onSubmit();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="relative bg-white dark:bg-taqon-charcoal rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-gray-200 dark:border-white/10 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 hover:text-taqon-charcoal dark:hover:text-white transition-colors"
+        >
+          <X size={14} weight="bold" />
+        </button>
+
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText size={20} className="text-taqon-orange" />
+            <h3 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white">
+              Get Your Quotes
+            </h3>
+          </div>
+          <p className="text-sm text-taqon-muted dark:text-white/50">
+            Share a few details to unlock PDF downloads for all three packages.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Full Name *</label>
+            <input
+              type="text"
+              required
+              value={clientDetails.name}
+              onChange={(e) => setClientDetails((d) => ({ ...d, name: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+              placeholder="John Doe"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone *</label>
+            <input
+              type="tel"
+              required
+              value={clientDetails.phone}
+              onChange={(e) => setClientDetails((d) => ({ ...d, phone: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+              placeholder="+263 77 123 4567"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email</label>
+            <input
+              type="email"
+              value={clientDetails.email}
+              onChange={(e) => setClientDetails((d) => ({ ...d, email: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+              placeholder="john@example.com"
+            />
+          </div>
+          {selectedArea ? (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-taqon-orange/5 border border-taqon-orange/20">
+              <MapPin size={14} className="text-taqon-orange shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold text-taqon-muted dark:text-white/50 uppercase tracking-wider">Installation Area</p>
+                <p className="text-sm font-medium text-taqon-charcoal dark:text-white truncate">
+                  {selectedArea} &middot; {distanceKm}km from Harare
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
+              <input
+                type="text"
+                value={clientDetails.area}
+                onChange={(e) => setClientDetails((d) => ({ ...d, area: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                placeholder="Borrowdale, Harare"
+              />
+            </div>
+          )}
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
+          >
+            <DownloadSimple size={16} weight="bold" /> Save &amp; Unlock Downloads
+          </button>
+        </form>
+      </motion.div>
+    </motion.div>
   );
 }
