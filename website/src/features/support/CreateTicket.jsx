@@ -157,7 +157,7 @@ export default function CreateTicket() {
               <WarningCircle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
               <p className="text-xs text-gray-400">
                 Our support team typically responds within 24 hours. For urgent matters,
-                call us directly at <strong className="text-taqon-charcoal dark:text-white">+263 772 771 036</strong>.
+                call us directly at <strong className="text-taqon-charcoal dark:text-white">+263 77 277 1036</strong>.
               </p>
             </div>
 

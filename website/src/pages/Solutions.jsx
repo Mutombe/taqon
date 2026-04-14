@@ -231,16 +231,14 @@ export default function Solutions() {
                   <Phone size={24} className="text-taqon-orange" />
                   <div>
                     <p className="text-white/80 text-sm font-medium">Call Us</p>
-                    <p className="text-white/50 text-xs mt-1">+263 242 304860</p>
-                    <p className="text-white/50 text-xs">+263 8644 290 072</p>
+                    <p className="text-white/50 text-xs mt-1">+263 77 277 1036</p>
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-3 p-5 rounded-2xl bg-white/5 border border-white/10">
                   <WhatsappLogo size={24} className="text-taqon-orange" />
                   <div>
                     <p className="text-white/80 text-sm font-medium">WhatsApp</p>
-                    <p className="text-white/50 text-xs mt-1">+263 772 771 036</p>
-                    <p className="text-white/50 text-xs">+263 8644 290 072</p>
+                    <p className="text-white/50 text-xs mt-1">+263 77 277 1036</p>
                   </div>
                 </div>
               </div>

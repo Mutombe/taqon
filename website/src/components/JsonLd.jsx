@@ -16,7 +16,7 @@ export function localBusinessSchema() {
     name: 'Taqon Electrico',
     description: "Zimbabwe's premier solar and electrical engineering company. Expert solar installations, electrical maintenance, and renewable energy solutions.",
     url: 'https://www.taqon.co.zw',
-    telephone: '+263 8644 290072',
+    telephone: '+263 77 277 1036',
     email: 'info@taqon.co.zw',
     address: {
       '@type': 'PostalAddress',
@@ -59,7 +59,7 @@ export function organizationSchema() {
     description: "Zimbabwe's premier solar and electrical engineering company.",
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+263 8644 290072',
+      telephone: '+263 77 277 1036',
       contactType: 'customer service',
       availableLanguage: ['English', 'Shona', 'Ndebele'],
     },

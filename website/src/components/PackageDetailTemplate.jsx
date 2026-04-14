@@ -407,10 +407,10 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                   <DownloadSimple size={16} weight="bold" /> Get a Quote
                 </button>
                 <a
-                  href="tel:+263242304860"
+                  href="tel:+263772771036"
                   className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium"
                 >
-                  <Phone size={16} /> +263 242 304860
+                  <Phone size={16} /> +263 77 277 1036
                 </a>
               </motion.div>
             </div>
@@ -765,8 +765,8 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
           <div className="grid sm:grid-cols-3 gap-8">
             {[
               { icon: MapPin, title: 'Visit Us', lines: ['876 Ringwood Drive, Strathaven, Harare'] },
-              { icon: Phone, title: 'Call Us', lines: ['+263 242 304860', '+263 8644 290 072'] },
-              { icon: WhatsappLogo, title: 'WhatsApp', lines: ['+263 772 771 036', '+263 8644 290 072'] },
+              { icon: Phone, title: 'Call Us', lines: ['+263 77 277 1036'] },
+              { icon: WhatsappLogo, title: 'WhatsApp', lines: ['+263 77 277 1036'] },
             ].map((item, i) => (
               <AnimatedSection key={i} delay={i * 0.1}>
                 <div className="flex items-start gap-4">

@@ -368,15 +368,26 @@ export const brands = [
   "Jinko Solar", "Pylontech", "Dyness", "Kodak", "JA Solar", "Deye"
 ];
 
+// Canonical contact details — single source of truth.
+// Changing these values updates the whole platform (navbar, footer,
+// contact page, WhatsApp buttons, JSON-LD structured data, etc.).
+export const TAQON_PHONE = '+263 77 277 1036';
+export const TAQON_PHONE_INTL = '263772771036';           // for tel: and wa.me URLs (no spaces/plus)
+export const TAQON_PHONE_TEL = '+263772771036';           // for tel: links
+export const TAQON_WHATSAPP_MESSAGE = "Hi Taqon Electrico, I'd like to enquire about your solar solutions.";
+export const TAQON_WHATSAPP_URL = `https://wa.me/${TAQON_PHONE_INTL}?text=${encodeURIComponent(TAQON_WHATSAPP_MESSAGE)}`;
+export const TAQON_EMAIL = 'info@taqon.co.zw';
+export const TAQON_ADDRESS = '876 Ringwood Drive, Strathaven, Harare';
+
 // Company info
 export const companyInfo = {
   name: "TAQON ELECTRICO",
   tagline: "Customer is King!",
   address: "203 Sherwood Drive, Strathaven, Harare",
-  visitAddress: "876 Ringwood Drive, Strathaven, Harare",
-  phone: ["+263 8644 290072", "+263 772 771 036", "+263 719 771 036"],
-  landline: "+263 242 304860",
-  email: "info@taqon.co.zw",
+  visitAddress: TAQON_ADDRESS,
+  phone: [TAQON_PHONE],
+  landline: TAQON_PHONE,
+  email: TAQON_EMAIL,
   website: "www.taqon.co.zw",
   mapLink: "https://goo.gl/maps/gEBWUQoo4cgKEym2A",
   social: {

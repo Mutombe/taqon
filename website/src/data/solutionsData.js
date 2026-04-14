@@ -53,7 +53,7 @@ export const solutionsData = [
     ],
     relatedSolutions: ['solar-installations', 'electrical-maintenance', 'electrical-hardware'],
     ctaText: 'Schedule your solar system maintenance today and ensure peak performance year-round.',
-    ctaPhone: '+263 772 771 036',
+    ctaPhone: '+263 77 277 1036',
   },
   {
     slug: 'electrical-maintenance',
@@ -108,7 +108,7 @@ export const solutionsData = [
     ],
     relatedSolutions: ['solar-installations', 'solar-system-maintenance', 'lighting-solutions'],
     ctaText: 'Need an electrician? Contact our team for fast, reliable electrical maintenance services.',
-    ctaPhone: '+263 772 771 036',
+    ctaPhone: '+263 77 277 1036',
   },
   {
     slug: 'solar-installations',
@@ -163,7 +163,7 @@ export const solutionsData = [
     ],
     relatedSolutions: ['solar-system-maintenance', 'electrical-hardware', 'borehole-pump-installations'],
     ctaText: 'Ready to go solar? Get a free consultation and custom system design today.',
-    ctaPhone: '+263 772 771 036',
+    ctaPhone: '+263 77 277 1036',
   },
   {
     slug: 'borehole-pump-installations',
@@ -218,7 +218,7 @@ export const solutionsData = [
     ],
     relatedSolutions: ['solar-installations', 'electrical-maintenance', 'electrical-hardware'],
     ctaText: 'Need a reliable water supply? Contact us for a borehole pump consultation.',
-    ctaPhone: '+263 772 771 036',
+    ctaPhone: '+263 77 277 1036',
   },
   {
     slug: 'electrical-hardware',
@@ -273,7 +273,7 @@ export const solutionsData = [
     ],
     relatedSolutions: ['solar-installations', 'borehole-pump-installations', 'solar-system-maintenance'],
     ctaText: 'Browse our range of quality electrical hardware and solar equipment.',
-    ctaPhone: '+263 772 771 036',
+    ctaPhone: '+263 77 277 1036',
   },
   {
     slug: 'lighting-solutions',
@@ -328,7 +328,7 @@ export const solutionsData = [
     ],
     relatedSolutions: ['electrical-maintenance', 'electrical-hardware', 'solar-installations'],
     ctaText: 'Transform your space with expert lighting design and installation.',
-    ctaPhone: '+263 772 771 036',
+    ctaPhone: '+263 77 277 1036',
   },
   {
     slug: 'solar-calculator',
@@ -345,7 +345,7 @@ export const solutionsData = [
     stats: [],
     relatedSolutions: ['solar-installations', 'electrical-hardware'],
     ctaText: 'Try our free solar calculator now.',
-    ctaPhone: '+263 772 771 036',
+    ctaPhone: '+263 77 277 1036',
   },
 ];
 

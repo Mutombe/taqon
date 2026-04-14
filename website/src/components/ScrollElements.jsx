@@ -1,7 +1,8 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp } from '@phosphor-icons/react';
+import { WhatsappLogo } from '@phosphor-icons/react';
+import { TAQON_WHATSAPP_URL } from '../data/siteData';
 
 export function ScrollProgress() {
   const [progress, setProgress] = useState(0);
@@ -27,29 +28,31 @@ export function ScrollProgress() {
   );
 }
 
+/**
+ * Floating WhatsApp button — always visible, sits directly above the
+ * Tidio chat bubble. Replaces the previous BackToTop button; users
+ * prefer a direct line to WhatsApp for quick enquiries.
+ */
 export function BackToTop() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setVisible(window.scrollY > 500);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
     <AnimatePresence>
-      {visible && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-[90px] right-[18px] z-[60] w-11 h-11 rounded-full bg-taqon-orange text-white shadow-lg shadow-taqon-orange/30 flex items-center justify-center hover:bg-taqon-orange/90 transition-all active:scale-90"
-          whileHover={{ y: -3 }}
-        >
-          <ArrowUp size={20} />
-        </motion.button>
-      )}
+      <motion.a
+        key="whatsapp-float"
+        href={TAQON_WHATSAPP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat with Taqon on WhatsApp"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        whileHover={{ y: -3, scale: 1.05 }}
+        whileTap={{ scale: 0.92 }}
+        className="fixed bottom-[90px] right-[18px] z-[60] w-12 h-12 rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 flex items-center justify-center hover:bg-[#1ebe58] transition-colors group"
+      >
+        {/* Pulsing ring for a bit of attention */}
+        <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-75 animate-ping" style={{ animationDuration: '2.2s' }} />
+        <WhatsappLogo size={26} weight="fill" className="relative z-10" />
+      </motion.a>
     </AnimatePresence>
   );
 }
