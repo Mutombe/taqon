@@ -188,7 +188,21 @@ class PaymentReceiptView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        pdf_bytes, is_pdf = generate_receipt_pdf(payment)
+        try:
+            pdf_bytes, is_pdf = generate_receipt_pdf(payment)
+        except Exception:
+            logger.exception('Receipt generation failed for %s', payment.reference)
+            return Response(
+                {'error': 'Could not generate receipt. Please contact support.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        if not pdf_bytes:
+            return Response(
+                {'error': 'Receipt generation produced no output.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         content_type = 'application/pdf' if is_pdf else 'text/html'
         ext = 'pdf' if is_pdf else 'html'
         filename = f'Taqon-Receipt-{payment.reference}.{ext}'

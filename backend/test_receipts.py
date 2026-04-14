@@ -95,32 +95,36 @@ def mock_deposit_payment():
 
 
 def mock_order_payment():
-    """Payment attached to a shop Order via GFK."""
+    """
+    Payment attached to a shop Order via GFK.
+    Uses real Order field names (tax_amount, discount_amount, delivery_fee,
+    OrderItem.total_price) so the mock matches production reality — this is
+    the class of drift that caused a 500 in prod on PAY-2026-AA823690.
+    """
     from apps.shop.models import Order
     order = MagicMock(spec=Order)
-    order.order_number = 'ORD-7788'
-    order.delivery_phone = '+263 77 333 4444'
+    order.order_number = 'TAQ-2026-00042'
     order.delivery_address = '5 Samora Machel Ave'
     order.delivery_city = 'Harare'
     order.delivery_province = 'Harare'
     order.subtotal = Decimal('250.00')
-    order.tax = Decimal('37.50')
-    order.discount = Decimal('0.00')
-    order.shipping_fee = Decimal('15.00')
+    order.tax_amount = Decimal('37.50')
+    order.discount_amount = Decimal('0.00')
+    order.delivery_fee = Decimal('15.00')
     order.total = Decimal('302.50')
 
     item_a = MagicMock(
         product_name='Luxeon 200Ah Battery',
         quantity=1,
         unit_price=Decimal('220.00'),
-        line_total=Decimal('220.00'),
+        total_price=Decimal('220.00'),
         product=MagicMock(short_description='Deep cycle, 12V, sealed'),
     )
     item_b = MagicMock(
         product_name='PWM Solar Charge Controller',
         quantity=2,
         unit_price=Decimal('15.00'),
-        line_total=Decimal('30.00'),
+        total_price=Decimal('30.00'),
         product=MagicMock(short_description='20A, USB out'),
     )
     order.items.all.return_value = [item_a, item_b]
@@ -166,7 +170,7 @@ def run_order():
 
     all_ok = True
     all_ok &= check('kind == order', ctx['kind'] == 'order')
-    all_ok &= check('summary line mentions ORD', 'ORD-7788' in ctx['summary_line'])
+    all_ok &= check('summary line mentions order number', 'TAQ-2026-00042' in ctx['summary_line'])
     all_ok &= check('has 2 items from order', len(ctx['items']) == 2)
     all_ok &= check('first item is Luxeon battery', ctx['items'][0]['name'] == 'Luxeon 200Ah Battery')
     all_ok &= check('totals include tax', ctx['tax'] == Decimal('37.50'))

@@ -64,25 +64,35 @@ def _build_receipt_context(payment):
     if isinstance(payable, Order):
         ctx['kind'] = 'order'
         ctx['summary_line'] = f'Order {payable.order_number}'
-        ctx['customer_name'] = f'{payment.user.first_name} {payment.user.last_name}'.strip() or payment.user.email
-        ctx['customer_phone'] = getattr(payable, 'delivery_phone', '') or ''
+        user = payment.user
+        ctx['customer_name'] = (
+            f'{user.first_name} {user.last_name}'.strip()
+            if user else ''
+        ) or (user.email if user else '')
+        ctx['customer_email'] = user.email if user else ''
+        # Order has no phone field — best-effort pull from user profile if present
+        ctx['customer_phone'] = getattr(user, 'phone', '') or getattr(user, 'phone_number', '') or ''
         ctx['customer_address'] = ', '.join(filter(None, [
             getattr(payable, 'delivery_address', ''),
             getattr(payable, 'delivery_city', ''),
             getattr(payable, 'delivery_province', ''),
         ])) or ''
         for item in payable.items.all():
+            try:
+                product_desc = item.product.short_description if item.product else ''
+            except Exception:
+                product_desc = ''
             ctx['items'].append({
                 'name': item.product_name or (item.product.name if item.product else 'Item'),
-                'description': item.product.short_description if item.product else '',
+                'description': product_desc,
                 'quantity': item.quantity,
                 'unit_price': item.unit_price,
-                'total': item.line_total,
+                'total': item.total_price,
             })
         ctx['subtotal'] = payable.subtotal
-        ctx['tax'] = payable.tax
-        ctx['discount'] = payable.discount
-        ctx['shipping'] = payable.shipping_fee
+        ctx['tax'] = payable.tax_amount
+        ctx['discount'] = payable.discount_amount
+        ctx['shipping'] = payable.delivery_fee
         ctx['total'] = payable.total
     elif isinstance(payable, PackageDeposit):
         ctx['kind'] = 'deposit'
