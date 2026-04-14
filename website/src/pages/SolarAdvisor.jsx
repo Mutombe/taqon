@@ -168,9 +168,6 @@ function CategoryTabs({ categories, activeCategory, onSelect, onClearSearch }) {
             >
               <Icon size={16} weight={isActive ? 'fill' : 'regular'} />
               {cat.label}
-              <span className={`text-[10px] ml-0.5 tabular-nums ${isActive ? 'text-white/75' : 'opacity-50'}`}>
-                {cat.count}
-              </span>
             </button>
           );
         })}
