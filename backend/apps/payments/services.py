@@ -103,7 +103,15 @@ class PaymentService:
                     payment.stripe_payment_intent_id = result.gateway_reference
                     payment.stripe_client_secret = result.client_secret
 
-                payment.metadata.update(result.raw_response)
+                # Defensive: only store JSON-serializable values in metadata
+                if isinstance(result.raw_response, dict):
+                    import json
+                    for k, v in result.raw_response.items():
+                        try:
+                            json.dumps(v)
+                            payment.metadata[k] = v
+                        except (TypeError, ValueError):
+                            payment.metadata[k] = str(v)
                 payment.save()
                 return payment, None
             else:

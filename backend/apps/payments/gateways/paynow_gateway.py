@@ -82,13 +82,25 @@ class PaynowGateway(BasePaymentGateway):
                 response = self.client.send(payment)
 
             if response.success:
+                # Coerce every field we pass along to a plain string — the
+                # Paynow SDK sometimes hands back method references or bound
+                # attributes that aren't JSON-serializable, which breaks
+                # payment.metadata.update(raw_response) + payment.save().
+                instructions = getattr(response, 'instructions', '') or ''
+                if not isinstance(instructions, (str, int, float, bool)) and instructions is not None:
+                    instructions = str(instructions)
+
                 return PaymentResult(
                     success=True,
                     status='pending',
-                    gateway_reference=str(getattr(response, 'poll_url', '')),
-                    redirect_url=getattr(response, 'redirect_url', '') or '',
-                    poll_url=getattr(response, 'poll_url', '') or '',
-                    raw_response={'instructions': getattr(response, 'instructions', '')},
+                    gateway_reference=str(getattr(response, 'poll_url', '') or ''),
+                    redirect_url=str(getattr(response, 'redirect_url', '') or ''),
+                    poll_url=str(getattr(response, 'poll_url', '') or ''),
+                    raw_response={
+                        'instructions': str(instructions) if instructions else '',
+                        'gateway': 'paynow',
+                        'method': method,
+                    },
                 )
             else:
                 # The Paynow SDK nests the real error message in response.data.error
