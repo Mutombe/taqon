@@ -48,8 +48,8 @@ export function BackToTop() {
         exit={{ opacity: 0, scale: 0.8 }}
         whileHover={{ y: -2, scale: 1.05 }}
         whileTap={{ scale: 0.92 }}
-        style={{ bottom: '100px', right: '20px' }}
-        className="fixed z-[60] w-[56px] h-[56px] rounded-full bg-[#25D366] text-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center hover:bg-[#1ebe58] transition-colors"
+        className="fixed z-[60] w-[56px] h-[56px] rounded-full bg-[#25D366] text-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center hover:bg-[#1ebe58] transition-colors
+          bottom-[100px] right-[20px] md:bottom-[130px] md:right-[24px]"
       >
         <WhatsappLogo size={28} weight="fill" />
       </motion.a>
