@@ -17,7 +17,7 @@ const DEPOSIT_PERCENT = 20;
 const PAYMENT_METHODS = [
   { key: 'ecocash',       label: 'EcoCash',        icon: DeviceMobile, type: 'mobile' },
   { key: 'onemoney',      label: 'OneMoney',       icon: DeviceMobile, type: 'mobile' },
-  { key: 'innbucks',      label: 'InnBucks',       icon: DeviceMobile, type: 'mobile' },
+  { key: 'innbucks',      label: 'InnBucks',       icon: DeviceMobile, type: 'web' },
   { key: 'card',          label: 'Card',           icon: CreditCard,   type: 'web' },
   { key: 'zimswitch',     label: 'ZimSwitch',      icon: CreditCard,   type: 'web' },
   { key: 'bank_transfer', label: 'Bank Transfer',  icon: Bank,         type: 'web' },

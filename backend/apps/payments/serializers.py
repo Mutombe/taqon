@@ -19,7 +19,9 @@ class InitiatePaymentSerializer(serializers.Serializer):
     return_url = serializers.URLField(required=False, allow_blank=True, default='')
 
     def validate(self, data):
-        mobile_methods = ('ecocash', 'onemoney', 'innbucks')
+        # Only ecocash/onemoney push STK to the phone — innbucks is now
+        # routed through the web checkout (Paynow test-mode restriction).
+        mobile_methods = ('ecocash', 'onemoney')
         if data['method'] in mobile_methods and not data.get('phone'):
             raise serializers.ValidationError({
                 'phone': f'Phone number is required for {data["method"]} payments.',
@@ -90,7 +92,7 @@ class InitiateDepositSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
-        mobile_methods = ('ecocash', 'onemoney', 'innbucks')
+        mobile_methods = ('ecocash', 'onemoney')
         if data['method'] in mobile_methods and not data.get('phone'):
             raise serializers.ValidationError({
                 'phone': f'Phone number is required for {data["method"]} payments.',

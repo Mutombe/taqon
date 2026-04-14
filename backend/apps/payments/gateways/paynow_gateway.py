@@ -5,18 +5,22 @@ from .base import BasePaymentGateway, PaymentResult
 logger = logging.getLogger(__name__)
 
 # Mobile money methods — push STK/USSD prompt directly to the customer's phone
-# via Paynow Express Checkout. SDK docstring confirms ecocash + onemoney are
-# the canonical methods; Paynow's API also accepts innbucks today.
+# via Paynow Express Checkout (send_mobile). Verified against Paynow's test
+# API: ecocash + onemoney work in test mode, InnBucks does not — Paynow
+# rejects remote InnBucks for test-mode integration IDs with:
+#   "The ID specified is currently in test mode. This is not permitted for
+#    remote InnBucks transactions"
+# So InnBucks is routed through the web checkout flow where Paynow's hosted
+# page handles the wallet authentication regardless of mode.
 PAYNOW_MOBILE_METHODS = {
     'ecocash': 'ecocash',
     'onemoney': 'onemoney',
-    'innbucks': 'innbucks',
 }
 
 # Web-redirect methods — user is sent to Paynow's hosted checkout page where
-# they pick the actual instrument (Visa, Mastercard, ZimSwitch, InnBucks web,
-# EcoCash web, bank transfer, etc., whatever the merchant has enabled).
-PAYNOW_WEB_METHODS = {'card', 'bank_transfer', 'zimswitch'}
+# they pick the actual instrument (Visa, Mastercard, ZimSwitch, InnBucks,
+# bank transfer, etc., whatever the merchant has enabled).
+PAYNOW_WEB_METHODS = {'card', 'bank_transfer', 'zimswitch', 'innbucks'}
 
 
 class PaynowGateway(BasePaymentGateway):

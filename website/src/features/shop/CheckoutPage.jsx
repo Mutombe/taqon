@@ -34,7 +34,7 @@ const STEPS = [
 const PAYMENT_METHODS = [
   { key: 'ecocash', label: 'EcoCash', icon: DeviceMobile, description: 'STK prompt to your EcoCash number', requiresPhone: true, type: 'mobile' },
   { key: 'onemoney', label: 'OneMoney', icon: DeviceMobile, description: 'STK prompt to your OneMoney number', requiresPhone: true, type: 'mobile' },
-  { key: 'innbucks', label: 'InnBucks', icon: DeviceMobile, description: 'Pay with your InnBucks wallet', requiresPhone: true, type: 'mobile' },
+  { key: 'innbucks', label: 'InnBucks', icon: DeviceMobile, description: 'Pay with InnBucks — authenticate on Paynow', type: 'web' },
   { key: 'card', label: 'Card Payment', icon: CreditCard, description: 'Visa or Mastercard — enter card details on Paynow', type: 'web' },
   { key: 'zimswitch', label: 'ZimSwitch', icon: CreditCard, description: 'Local ZimSwitch card — complete payment on Paynow', type: 'web' },
   { key: 'bank_transfer', label: 'Bank Transfer', icon: Bank, description: 'Direct bank transfer — complete payment on Paynow', type: 'web' },
@@ -177,8 +177,10 @@ export default function CheckoutPage() {
         }
 
         // Explicit dispatch per method — no silent fall-through.
-        const MOBILE = ['ecocash', 'onemoney', 'innbucks'];
-        const WEB = ['card', 'zimswitch', 'bank_transfer'];
+        // InnBucks now goes through the web redirect (Paynow rejects remote
+        // InnBucks for test-mode IDs; web checkout handles it either way).
+        const MOBILE = ['ecocash', 'onemoney'];
+        const WEB = ['card', 'zimswitch', 'bank_transfer', 'innbucks'];
 
         if (WEB.includes(paymentMethod)) {
           if (!payment.gateway_redirect_url) {
