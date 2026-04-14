@@ -917,12 +917,8 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                         <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between text-[11px] text-taqon-muted dark:text-white/40">
-                        <span>Labour (8%)</span>
-                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-[11px] text-taqon-muted dark:text-white/40">
-                        <span>Transport ({distanceKm}km)</span>
-                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
+                        <span>Labour and Transport</span>
+                        <span className="tabular-nums">${(parseFloat(tier.price_breakdown.labour) + parseFloat(tier.price_breakdown.transport)).toLocaleString()}</span>
                       </div>
                       <div
                         className="pt-2 mt-1.5 flex justify-between items-baseline"
@@ -1085,12 +1081,8 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                 <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                <span>Labour (8%)</span>
-                <span className="tabular-nums">${parseFloat(tier.price_breakdown.labour).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
-                <span>Transport ({distanceKm}km)</span>
-                <span className="tabular-nums">${parseFloat(tier.price_breakdown.transport).toLocaleString()}</span>
+                <span>Labour and Transport</span>
+                <span className="tabular-nums">${(parseFloat(tier.price_breakdown.labour) + parseFloat(tier.price_breakdown.transport)).toLocaleString()}</span>
               </div>
               <div
                 className="pt-2.5 mt-2.5 flex justify-between items-baseline"
@@ -1388,7 +1380,7 @@ function CalculationLog({ selections, appliances, totals, distanceKm, recommenda
       }
     });
 
-    q(400, { agent: 'PRICING', type: 'price', text: `Calculating pricing \u2014 materials + 8% labour + ${distanceKm}km transport...` });
+    q(400, { agent: 'PRICING', type: 'price', text: `Calculating pricing \u2014 materials, labour and transport...` });
 
     ['budget', 'good_fit', 'excellent'].forEach((tierKey) => {
       const tier = recommendation.tiers?.[tierKey];
