@@ -50,11 +50,12 @@ def _transport_cost(distance_km, installation_cost):
     cutoff = float(PRICING['transport_linear_km'])       # 25
     base = float(PRICING['transport_exp_base'])          # 1.15
 
-    jsm = _job_size_multiplier(installation_cost)
-
     if D <= cutoff:
-        tc = rate * D * jsm
+        # Zone 1 — flat rate, no Job Size Multiplier
+        tc = rate * D
     else:
+        # Zone 2 — linear part + exponential tail, entire thing scaled by JSM
+        jsm = _job_size_multiplier(installation_cost)
         linear_part = rate * cutoff
         exp_part = rate * (D - cutoff) * pow(base, D - cutoff)
         tc = (linear_part + exp_part) * jsm
