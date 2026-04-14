@@ -185,7 +185,7 @@ def email_receipt(payment):
         f"Paid via: {ctx['method_label']}\n\n"
         "Your receipt is attached as a PDF for your records.\n\n"
         "— The Taqon Electrico team\n"
-        "876 Ringwood Drive, Strathaven, Harare\n"
+        "203 Sherwood Drive, Strathaven, Harare\n"
         "+263 77 277 1036 · info@taqon.co.zw · www.taqon.co.zw\n"
     )
 

@@ -6,6 +6,10 @@ class InitiatePaymentSerializer(serializers.Serializer):
     """Validate input for starting a new payment."""
 
     order_number = serializers.CharField(max_length=20)
+    # Cash-on-delivery is no longer accepted — all live orders must be
+    # settled through an online channel. Historical Payment records with
+    # method='cash' still exist in the DB; Payment.METHOD_CHOICES keeps
+    # 'cash' so admin reports don't break.
     method = serializers.ChoiceField(choices=[
         ('ecocash', 'EcoCash'),
         ('onemoney', 'OneMoney'),
@@ -13,7 +17,6 @@ class InitiatePaymentSerializer(serializers.Serializer):
         ('bank_transfer', 'Bank Transfer'),
         ('zimswitch', 'ZimSwitch'),
         ('card', 'Card'),
-        ('cash', 'Cash'),
     ])
     phone = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
     return_url = serializers.URLField(required=False, allow_blank=True, default='')

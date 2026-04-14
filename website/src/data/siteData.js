@@ -377,7 +377,7 @@ export const TAQON_PHONE_TEL = '+263772771036';           // for tel: links
 export const TAQON_WHATSAPP_MESSAGE = "Hi Taqon Electrico, I'd like to enquire about your solar solutions.";
 export const TAQON_WHATSAPP_URL = `https://wa.me/${TAQON_PHONE_INTL}?text=${encodeURIComponent(TAQON_WHATSAPP_MESSAGE)}`;
 export const TAQON_EMAIL = 'info@taqon.co.zw';
-export const TAQON_ADDRESS = '876 Ringwood Drive, Strathaven, Harare';
+export const TAQON_ADDRESS = '203 Sherwood Drive, Strathaven, Harare';
 
 // Company info
 export const companyInfo = {

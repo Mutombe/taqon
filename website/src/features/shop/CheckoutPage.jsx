@@ -7,7 +7,6 @@ import {
   CreditCard,
   Bank,
   DeviceMobile,
-  Money,
   Check,
   CaretRight,
   CaretLeft,
@@ -39,7 +38,6 @@ const PAYMENT_METHODS = [
   { key: 'card', label: 'Card Payment', icon: CreditCard, description: 'Visa or Mastercard — enter card details on Paynow', type: 'web' },
   { key: 'zimswitch', label: 'ZimSwitch', icon: CreditCard, description: 'Local ZimSwitch card — complete payment on Paynow', type: 'web' },
   { key: 'bank_transfer', label: 'Bank Transfer', icon: Bank, description: 'Direct bank transfer — complete payment on Paynow', type: 'web' },
-  { key: 'cash', label: 'Cash on Delivery', icon: Money, description: 'Pay when your order arrives', type: 'cash' },
 ];
 
 export default function CheckoutPage() {
@@ -147,13 +145,6 @@ export default function CheckoutPage() {
 
       // 1. Create the order
       const { data: order } = await shopApi.checkout(orderData);
-
-      // 2. Initiate payment (skip for cash — go straight to confirmation)
-      if (paymentMethod === 'cash') {
-        toast.success('Order placed successfully!');
-        navigate(`/order-confirmation/${order.order_number}`, { replace: true });
-        return;
-      }
 
       try {
         const paymentData = {

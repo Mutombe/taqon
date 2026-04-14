@@ -38,7 +38,7 @@ const RESPONSES = {
   },
   contact: {
     keywords: ['contact', 'phone', 'call', 'email', 'address', 'location', 'where', 'visit', 'office', 'reach'],
-    reply: "You can reach us at:\n\nPhone: +263 772 771 036\nEmail: info@taqon.co.zw\nOffice: 876 Ringwood Drive, Strathaven, Harare\n\nBusiness Hours: Mon-Fri 08:00-16:30, Sat 08:00-13:00",
+    reply: "You can reach us at:\n\nPhone: +263 772 771 036\nEmail: info@taqon.co.zw\nOffice: 203 Sherwood Drive, Strathaven, Harare\n\nBusiness Hours: Mon-Fri 08:00-16:30, Sat 08:00-13:00",
     suggestions: ['WhatsApp us', 'Contact page', 'Get directions'],
     links: { 'Contact page': '/contact' },
   },

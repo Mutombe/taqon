@@ -783,7 +783,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid sm:grid-cols-3 gap-8">
             {[
-              { icon: MapPin, title: 'Visit Us', lines: ['876 Ringwood Drive, Strathaven, Harare'] },
+              { icon: MapPin, title: 'Visit Us', lines: ['203 Sherwood Drive, Strathaven, Harare'] },
               { icon: Phone, title: 'Call Us', lines: ['+263 77 277 1036'] },
               { icon: WhatsappLogo, title: 'WhatsApp', lines: ['+263 77 277 1036'] },
             ].map((item, i) => (

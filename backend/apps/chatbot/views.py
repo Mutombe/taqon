@@ -112,7 +112,7 @@ CHATBOT_RESPONSES = {
     },
     'contact': {
         'keywords': ['contact', 'phone', 'call', 'email', 'address', 'location', 'where', 'office'],
-        'reply': "Phone: +263 772 771 036\nEmail: info@taqon.co.zw\nOffice: 876 Ringwood Drive, Strathaven, Harare\nHours: Mon-Fri 08:00-16:30, Sat 08:00-13:00",
+        'reply': "Phone: +263 772 771 036\nEmail: info@taqon.co.zw\nOffice: 203 Sherwood Drive, Strathaven, Harare\nHours: Mon-Fri 08:00-16:30, Sat 08:00-13:00",
         'suggestions': ['WhatsApp us', 'Contact page'],
     },
     'products': {

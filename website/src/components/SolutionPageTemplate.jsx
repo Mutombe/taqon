@@ -406,7 +406,7 @@ export default function SolutionPageTemplate({ solution, allSolutions }) {
                   <div>
                     <p className="text-white/80 text-sm font-medium">Visit Us</p>
                     <p className="text-white/50 text-xs mt-1">
-                      876 Ringwood Drive, Strathaven, Harare
+                      203 Sherwood Drive, Strathaven, Harare
                     </p>
                   </div>
                 </div>
