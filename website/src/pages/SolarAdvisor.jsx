@@ -1580,6 +1580,14 @@ export default function SolarAdvisor() {
     saveDraft({ step, selections, distanceKm, preferences, selectedArea, customCoords, clientDetails });
   }, [step, selections, distanceKm, preferences, selectedArea, customCoords, clientDetails]);
 
+  // Auto-sync area from step 2 selection into client details (so the
+  // quote download doesn't ask for it again).
+  useEffect(() => {
+    if (selectedArea && clientDetails.area !== selectedArea) {
+      setClientDetails(d => ({ ...d, area: selectedArea }));
+    }
+  }, [selectedArea]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Browser back/forward support ──
   const setStep = useCallback((newStep) => {
     setStepRaw(newStep);
@@ -1628,6 +1636,14 @@ export default function SolarAdvisor() {
   // This puts "always-on" items (fridge, router, CCTV, lights) at the
   // top and occasional-use items (hair dryer, toaster, pool pump) at
   // the bottom — matches how people pick appliances in practice.
+  // Room order = category order (kitchen first -> other last). Matches
+  // the category tabs above so when the user scans "All Categories" they
+  // see kitchen appliances first, then lounge, then bedroom, etc.
+  const CATEGORY_PRIORITY = useMemo(() => ({
+    kitchen: 0, lounge: 1, bedroom: 2, bathroom: 3, laundry: 4,
+    office: 5, outdoor: 6, security: 7, garage: 8, other: 9,
+  }), []);
+
   const filteredAppliances = useMemo(() => {
     let filtered = appliances;
     if (activeCategory) {
@@ -1637,16 +1653,20 @@ export default function SolarAdvisor() {
       const q = search.toLowerCase();
       filtered = filtered.filter((a) => a.name.toLowerCase().includes(q));
     }
-    const score = (a) => parseFloat(a.concurrency_factor || 0) + parseFloat(a.night_use_factor || 0);
+    const usageScore = (a) => parseFloat(a.concurrency_factor || 0) + parseFloat(a.night_use_factor || 0);
     return [...filtered].sort((a, b) => {
-      const diff = score(b) - score(a);
-      if (diff !== 0) return diff;
-      // Tiebreaker: higher energy points (bigger presence in daily load)
+      // Primary: group by room in the same order as the category tabs
+      const catDiff = (CATEGORY_PRIORITY[a.category] ?? 99) - (CATEGORY_PRIORITY[b.category] ?? 99);
+      if (catDiff !== 0) return catDiff;
+      // Secondary within a room: usage frequency (most-used first)
+      const usageDiff = usageScore(b) - usageScore(a);
+      if (usageDiff !== 0) return usageDiff;
+      // Tiebreakers
       const epDiff = parseFloat(b.energy_points || 0) - parseFloat(a.energy_points || 0);
       if (epDiff !== 0) return epDiff;
       return a.name.localeCompare(b.name);
     });
-  }, [appliances, activeCategory, search]);
+  }, [appliances, activeCategory, search, CATEGORY_PRIORITY]);
 
   // Running totals — with Zimbabwe market adjustment factors
   const ZIM_PP_FACTOR = 1.25;
@@ -2358,16 +2378,29 @@ export default function SolarAdvisor() {
                                 placeholder="john@example.com"
                               />
                             </div>
-                            <div>
-                              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
-                              <input
-                                type="text"
-                                value={clientDetails.area}
-                                onChange={(e) => setClientDetails(d => ({ ...d, area: e.target.value }))}
-                                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-                                placeholder="Borrowdale, Harare"
-                              />
-                            </div>
+                            {selectedArea ? (
+                              /* Already picked in step 2 — show as read-only */
+                              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-taqon-orange/5 border border-taqon-orange/20">
+                                <MapPin size={14} className="text-taqon-orange shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] font-semibold text-taqon-muted dark:text-white/50 uppercase tracking-wider">Installation Area</p>
+                                  <p className="text-sm font-medium text-taqon-charcoal dark:text-white truncate">
+                                    {selectedArea} &middot; {distanceKm}km from Harare
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div>
+                                <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
+                                <input
+                                  type="text"
+                                  value={clientDetails.area}
+                                  onChange={(e) => setClientDetails(d => ({ ...d, area: e.target.value }))}
+                                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+                                  placeholder="Borrowdale, Harare"
+                                />
+                              </div>
+                            )}
                             <button
                               type="submit"
                               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-sm hover:bg-taqon-orange/90 active:scale-[0.98] transition-all shadow-lg shadow-taqon-orange/25 min-h-[44px]"
