@@ -1626,7 +1626,11 @@ export default function SolarAdvisor() {
     load();
   }, []);
 
-  // Filter appliances by category and search
+  // Filter & sort appliances by category, search, and usage frequency.
+  // Sort key: concurrency + night_use (higher = more frequently used).
+  // This puts "always-on" items (fridge, router, CCTV, lights) at the
+  // top and occasional-use items (hair dryer, toaster, pool pump) at
+  // the bottom — matches how people pick appliances in practice.
   const filteredAppliances = useMemo(() => {
     let filtered = appliances;
     if (activeCategory) {
@@ -1636,7 +1640,15 @@ export default function SolarAdvisor() {
       const q = search.toLowerCase();
       filtered = filtered.filter((a) => a.name.toLowerCase().includes(q));
     }
-    return filtered;
+    const score = (a) => parseFloat(a.concurrency_factor || 0) + parseFloat(a.night_use_factor || 0);
+    return [...filtered].sort((a, b) => {
+      const diff = score(b) - score(a);
+      if (diff !== 0) return diff;
+      // Tiebreaker: higher energy points (bigger presence in daily load)
+      const epDiff = parseFloat(b.energy_points || 0) - parseFloat(a.energy_points || 0);
+      if (epDiff !== 0) return epDiff;
+      return a.name.localeCompare(b.name);
+    });
   }, [appliances, activeCategory, search]);
 
   // Running totals — with Zimbabwe market adjustment factors
