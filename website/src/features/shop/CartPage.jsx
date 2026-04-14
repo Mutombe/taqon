@@ -60,9 +60,19 @@ export default function CartPage() {
       transition={{ duration: 0.5 }}
       className="min-h-screen bg-taqon-cream dark:bg-taqon-dark"
     >
-      {/* Header */}
-      <section className="pt-32 pb-8 lg:pt-40 lg:pb-12">
-        <div className="max-w-7xl mx-auto px-4">
+      {/* Dark hero strip — gives nav links contrast on light theme */}
+      <div className="relative bg-taqon-dark overflow-hidden">
+        <div className="absolute inset-0 dark-mesh" />
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1556742393-d75f468bfcb0?w=1920&q=80"
+            alt=""
+            className="w-full h-full object-cover opacity-20"
+            loading="eager"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-taqon-dark/90 via-taqon-dark/70 to-taqon-dark/90" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-28 pb-8 lg:pt-36 lg:pb-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -71,20 +81,20 @@ export default function CartPage() {
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">
               Your Cart
             </span>
-            <h1 className="mt-2 text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
+            <h1 className="mt-2 text-3xl lg:text-4xl font-bold font-syne text-white">
               Shopping Cart
               {totalItems > 0 && (
-                <span className="text-gray-400 dark:text-white/40 text-xl font-normal ml-3">
+                <span className="text-white/50 text-xl font-normal ml-3">
                   ({totalItems} item{totalItems !== 1 ? 's' : ''})
                 </span>
               )}
             </h1>
           </motion.div>
         </div>
-      </section>
+      </div>
 
       {/* Cart Content */}
-      <section className="pb-16 lg:pb-24">
+      <section className="pt-8 lg:pt-12 pb-16 lg:pb-24">
         <div className="max-w-7xl mx-auto px-4">
           {!_hasFetched ? (
             /* Skeleton loading state */

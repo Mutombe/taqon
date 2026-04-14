@@ -12,6 +12,7 @@ import logoImg from '../assets/taqon-electrico-logo.jpg';
 import NotificationBell from './NotificationBell';
 import useAuthStore from '../stores/authStore';
 import useSavesStore from '../stores/savesStore';
+import useCartStore from '../stores/cartStore';
 import { useTheme } from '../contexts/ThemeContext';
 import { prefetchRoute } from '../lib/routePrefetch';
 
@@ -315,6 +316,7 @@ export default function Navbar() {
   const { isAuthenticated, user, logout, openAuthModal } = useAuthStore();
   const { likedBlogs, likedProjects, likedProducts, likedPackages } = useSavesStore();
   const savesCount = likedBlogs.length + likedProjects.length + likedProducts.length + likedPackages.length;
+  const cartCount = useCartStore((s) => s.totalItems);
   const { theme, toggleTheme } = useTheme();
 
   // ── Scroll tracking ─────────────────────────────────────────────────────────
@@ -570,9 +572,15 @@ export default function Navbar() {
               {/* Shop bag */}
               <Link
                 to="/cart"
-                className={`p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
+                className={`relative p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
+                aria-label="Shopping cart"
               >
                 <Bag size={18} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-taqon-orange text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
               </Link>
 
               {/* Theme toggle */}

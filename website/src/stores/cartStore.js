@@ -51,41 +51,24 @@ const useCartStore = create(
 
       // ── Add item ──
       // `product` is the full product object from the listing/detail page.
+      // Optimistic: UI updates instantly, server sync happens in background.
       addItem: async (productId, quantity = 1, product = null) => {
-        if (isAuthenticated()) {
-          set({ isLoading: true });
-          try {
-            await shopApi.addToCart(productId, quantity);
-            await get().fetchCart();
-            toast.success('Added to cart');
-          } catch (error) {
-            const msg = error.response?.data?.detail || error.response?.data?.error || 'Failed to add to cart';
-            toast.error(msg);
-          } finally {
-            set({ isLoading: false });
-          }
-          return;
-        }
-
-        // Guest: local cart
-        if (!product) {
-          toast.error('Could not add to cart — please try again.');
-          return;
-        }
-
         const { items } = get();
+        const prev = { items, totalItems: get().totalItems, subtotal: get().subtotal, totalSavings: get().totalSavings };
+
+        // Build optimistic state
         const existing = items.find((i) => (i.product?.id || i.product_id) === productId);
-        let updated;
+        let optimistic;
 
         if (existing) {
           const newQty = existing.quantity + quantity;
-          const unitPrice = parseFloat(existing.price_at_addition || product.price || 0);
-          updated = items.map((i) =>
+          const unitPrice = parseFloat(existing.price_at_addition || existing.product?.price || product?.price || 0);
+          optimistic = items.map((i) =>
             i.id === existing.id
               ? { ...i, quantity: newQty, line_total: String(unitPrice * newQty) }
               : i,
           );
-        } else {
+        } else if (product) {
           const unitPrice = parseFloat(product.price || 0);
           const newItem = {
             id: `local-${_nextLocalId++}`,
@@ -102,11 +85,39 @@ const useCartStore = create(
             quantity,
             line_total: String(unitPrice * quantity),
           };
-          updated = [...items, newItem];
+          optimistic = [...items, newItem];
+        } else if (!isAuthenticated()) {
+          // Guest, no product data — can't optimistically add
+          toast.error('Could not add to cart — please try again.');
+          return;
+        } else {
+          // Auth without product data: bare placeholder
+          optimistic = [...items, {
+            id: `local-${_nextLocalId++}`,
+            product: { id: productId },
+            product_id: productId,
+            price_at_addition: '0',
+            quantity,
+            line_total: '0',
+          }];
         }
 
-        set({ ...recalcTotals(updated), _hasFetched: true });
+        // Apply optimistic update immediately
+        set({ ...recalcTotals(optimistic), _hasFetched: true });
         toast.success('Added to cart');
+
+        // Server sync for authenticated users
+        if (isAuthenticated()) {
+          try {
+            await shopApi.addToCart(productId, quantity);
+            // Refresh with authoritative state (gets real item IDs, server-calculated totals)
+            get().fetchCart();
+          } catch (error) {
+            set(prev);
+            const msg = error.response?.data?.detail || error.response?.data?.error || 'Failed to add to cart';
+            toast.error(msg);
+          }
+        }
       },
 
       // ── Update quantity ──

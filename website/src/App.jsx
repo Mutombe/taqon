@@ -8,6 +8,7 @@ import { useTheme } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { ScrollProgress, BackToTop } from './components/ScrollElements';
+import FloatingCart from './components/FloatingCart';
 import { PrivacyModal, CookieModal, CookieConsent } from './components/Modals';
 import AuthModal from './features/auth/components/AuthModal';
 import PageLoader from './components/PageLoader';
@@ -333,6 +334,7 @@ function AppContent() {
       )}
 
       {!isAdminRoute && !isSolarAdvisor && <BackToTop />}
+      {!isAdminRoute && !isSolarAdvisor && <FloatingCart />}
       <CookieConsent onOpenCookies={() => setCookiesOpen(true)} />
       <AuthModal />
       <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
