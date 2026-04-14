@@ -19,7 +19,7 @@
   .section-title { font-size: 8pt; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
   .customer-name { font-weight: bold; font-size: 11pt; }
 
-  .highlight-box { margin-bottom: 15px; padding: 12px 18px 12px 22px; background-color: #fff7ed; border-left: 3px solid #F26522; }
+  .highlight-box { margin-bottom: 15px; padding-top: 12px; padding-bottom: 12px; padding-left: 24px; padding-right: 18px; background-color: #fff7ed; border-left: 3px solid #F26522; }
   .highlight-title { font-size: 10pt; font-weight: bold; color: #F26522; margin-bottom: 4px; }
 
   table.items { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
@@ -38,7 +38,7 @@
   table.totals tr.grand td { border-top: 2px solid #1a1a1a; padding-top: 8px; font-size: 13pt; font-weight: bold; color: #1a1a1a; }
 
   .validity { margin: 12px 0; padding: 8px 14px; background-color: #fffbeb; border: 1px solid #fde68a; font-size: 8pt; color: #92400e; }
-  .payment-box { margin-top: 12px; padding: 12px 18px 12px 22px; background-color: #fff7ed; border-left: 3px solid #F26522; }
+  .payment-box { margin-top: 12px; padding-top: 12px; padding-bottom: 12px; padding-left: 24px; padding-right: 18px; background-color: #fff7ed; border-left: 3px solid #F26522; }
   .payment-title { font-size: 9pt; font-weight: bold; color: #F26522; margin-bottom: 4px; }
   .terms { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
   .terms-title { font-size: 8pt; color: #999; text-transform: uppercase; margin-bottom: 4px; }
@@ -53,11 +53,13 @@
   <tr>
     <td style="width: 55%; vertical-align: top;">
       {% if logo_data_uri %}
-        <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 42px; width: auto; margin-bottom: 16px;"/>
+        <div style="padding-bottom: 18px;">
+          <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 42px; width: auto;"/>
+        </div>
       {% else %}
-        <div class="company-name">TAQON ELECTRICO</div>
+        <div class="company-name" style="padding-bottom: 18px;">TAQON ELECTRICO</div>
       {% endif %}
-      <div class="company-tagline">Solar &amp; Electrical Solutions</div>
+      <div class="company-tagline" style="padding-bottom: 4px;">Solar &amp; Electrical Solutions</div>
       <div class="company-details">876 Ringwood Drive, Strathaven, Harare<br/>+263 77 277 1036<br/>info@taqon.co.zw &bull; www.taqon.co.zw</div>
     </td>
     <td style="width: 45%; vertical-align: top;">
@@ -82,8 +84,8 @@
 </div>
 
 <!-- System Summary -->
-<div class="highlight-box">
-  <div class="highlight-title">System Specifications</div>
+<div style="margin-bottom: 15px; padding-top: 12px; padding-bottom: 12px; padding-left: 28px; padding-right: 20px; background-color: #fff7ed; border-left: 3px solid #F26522;">
+  <div style="font-size: 10pt; font-weight: bold; color: #F26522; margin-bottom: 6px;">System Specifications</div>
   <table cellpadding="0" cellspacing="0" style="width: 100%;">
     <tr>
       <td style="width: 25%; text-align: center; padding: 6px;">
@@ -151,19 +153,19 @@
   <strong>Note:</strong> This quotation is valid for 10 days from the date of issue. Prices are subject to change based on market conditions and component availability.
 </div>
 
-<!-- Payment / Bank details -->
-<div class="payment-box">
-  <div class="payment-title">Bank Transfer Details</div>
-  <table cellpadding="0" cellspacing="0" style="width: 100%; font-size: 8.5pt; line-height: 1.6;">
+<!-- Payment / Bank details — inline padding for xhtml2pdf reliability -->
+<div style="margin-top: 12px; padding-top: 14px; padding-bottom: 14px; padding-left: 28px; padding-right: 20px; background-color: #fff7ed; border-left: 3px solid #F26522;">
+  <div style="font-size: 9pt; font-weight: bold; color: #F26522; margin-bottom: 8px;">Bank Transfer Details</div>
+  <table cellpadding="0" cellspacing="0" style="width: 100%; font-size: 8.5pt; line-height: 1.7;">
     <tr>
-      <td style="width: 50%; vertical-align: top; padding-right: 10px;">
+      <td style="width: 50%; vertical-align: top; padding-right: 12px;">
         <strong>Bank:</strong> FBC<br/>
         <strong>Branch:</strong> Southerton<br/>
         <strong>Branch Code:</strong> 8103<br/>
         <strong>Account Name:</strong> Taqon Electrico<br/>
         <strong>Account Number:</strong> 6832967310002
       </td>
-      <td style="width: 50%; vertical-align: top;">
+      <td style="width: 50%; vertical-align: top; padding-left: 12px;">
         <strong>Swift Code:</strong> FBCPZWHA<br/>
         <strong>Correspondent Bank:</strong><br/>
         Standard Chartered Bank, New York<br/>

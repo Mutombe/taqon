@@ -49,11 +49,13 @@
   <tr>
     <td style="width: 55%; vertical-align: top;">
       {% if logo_data_uri %}
-        <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 42px; width: auto; margin-bottom: 16px;"/>
+        <div style="padding-bottom: 18px;">
+          <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 42px; width: auto;"/>
+        </div>
       {% else %}
-        <div class="company-name">TAQON ELECTRICO</div>
+        <div class="company-name" style="padding-bottom: 18px;">TAQON ELECTRICO</div>
       {% endif %}
-      <div class="company-tagline">Solar &amp; Electrical Solutions</div>
+      <div class="company-tagline" style="padding-bottom: 4px;">Solar &amp; Electrical Solutions</div>
       <div class="company-details">876 Ringwood Drive, Strathaven, Harare<br/>+263 77 277 1036<br/>info@taqon.co.zw &bull; www.taqon.co.zw</div>
     </td>
     <td style="width: 45%; vertical-align: top;">
@@ -111,18 +113,18 @@
   {% if invoice.amount_due %}<tr class="due"><td>Amount Due</td><td class="right">{{ invoice.currency }} {{ invoice.amount_due|floatformat:2 }}</td></tr>{% endif %}
 </table>
 
-<div class="payment-box">
-  <div class="payment-title">Bank Transfer Details</div>
-  <table cellpadding="0" cellspacing="0" style="width: 100%; font-size: 8.5pt; line-height: 1.6;">
+<div style="margin-top: 12px; padding-top: 14px; padding-bottom: 14px; padding-left: 28px; padding-right: 20px; background-color: #fff7ed; border-left: 3px solid #F26522;">
+  <div style="font-size: 9pt; font-weight: bold; color: #F26522; margin-bottom: 8px;">Bank Transfer Details</div>
+  <table cellpadding="0" cellspacing="0" style="width: 100%; font-size: 8.5pt; line-height: 1.7;">
     <tr>
-      <td style="width: 50%; vertical-align: top; padding-right: 10px;">
+      <td style="width: 50%; vertical-align: top; padding-right: 12px;">
         <strong>Bank:</strong> FBC<br/>
         <strong>Branch:</strong> Southerton<br/>
         <strong>Branch Code:</strong> 8103<br/>
         <strong>Account Name:</strong> Taqon Electrico<br/>
         <strong>Account Number:</strong> 6832967310002
       </td>
-      <td style="width: 50%; vertical-align: top;">
+      <td style="width: 50%; vertical-align: top; padding-left: 12px;">
         <strong>Swift Code:</strong> FBCPZWHA<br/>
         <strong>Correspondent Bank:</strong><br/>
         Standard Chartered Bank, New York<br/>
