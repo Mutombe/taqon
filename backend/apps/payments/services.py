@@ -264,13 +264,13 @@ class PaymentService:
 
     @staticmethod
     def _mark_payable_paid(payment):
-        """Update the related payable object (e.g., Order) when payment succeeds."""
+        """Update the related payable object (e.g., Order, PackageDeposit) when payment succeeds."""
         payable = payment.content_object
         if not payable:
             return
 
-        # If the payable is an Order, update its payment status
         from apps.shop.models import Order, OrderStatusHistory
+        from .models import PackageDeposit
 
         if isinstance(payable, Order):
             payable.payment_status = 'paid'
@@ -284,3 +284,22 @@ class PaymentService:
                 new_status='confirmed',
                 notes=f'Payment received via {payment.gateway} ({payment.method}). Ref: {payment.reference}',
             )
+
+        elif isinstance(payable, PackageDeposit):
+            payable.status = 'paid'
+            payable.save(update_fields=['status', 'updated_at'])
+            # Notify admin so the site-assessment team can schedule
+            try:
+                from apps.notifications.services import send_notification
+                send_notification(
+                    user=payable.user,
+                    title='Deposit received',
+                    message=(
+                        f'Your reservation deposit of USD {payable.deposit_amount} for '
+                        f'{payable.package_name} has been received. A technician will '
+                        f'contact you within 5 business days to schedule your site assessment.'
+                    ),
+                    category='payment',
+                )
+            except Exception:
+                pass

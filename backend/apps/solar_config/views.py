@@ -423,8 +423,8 @@ class InstantQuoteView(APIView):
             'item_groups': item_groups,
             'material_total': f'{float(price["material"]):,.2f}',
             'sundries_total': f'{float(price["sundries"]):,.2f}',
-            'labour_total': f'{float(price["labour"]):,.2f}',
-            'transport_total': f'{float(price["transport"]):,.2f}',
+            # Labour + transport are merged on the PDF for simpler customer-facing display
+            'labour_transport_total': f'{float(price["labour"]) + float(price["transport"]):,.2f}',
             'grand_total': f'{float(price["total"]):,.2f}',
             'distance_km': int(distance_km),
         }

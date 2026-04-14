@@ -30,6 +30,7 @@ import { getGemFamily, getGemByKva } from '../data/gemFamilies';
 import { solarConfigApi } from '../api/solarConfig';
 import { quotationsApi } from '../api/quotations';
 import useAuthStore from '../stores/authStore';
+import DepositModal from './DepositModal';
 
 // Icon map for the includes section
 const iconMap = {
@@ -261,6 +262,7 @@ function QuoteModal({ pkg, gem, onClose }) {
 
 export default function PackageDetailTemplate({ package: pkg, allPackages }) {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
 
@@ -416,6 +418,14 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 >
                   <DownloadSimple size={16} weight="bold" /> Get a Quote
                 </button>
+                {priceBreakdown?.total > 0 && (
+                  <button
+                    onClick={() => setDepositModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-taqon-charcoal font-semibold rounded-xl transition-all shadow-lg hover:bg-white/90 active:scale-[0.98]"
+                  >
+                    Pay 10% Deposit · USD {(parseFloat(priceBreakdown.total) * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </button>
+                )}
                 <a
                   href="tel:+263772771036"
                   className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium"
@@ -833,6 +843,24 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
             pkg={pkg}
             gem={gem}
             onClose={() => setQuoteModalOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Deposit Modal ── */}
+      <AnimatePresence>
+        {depositModalOpen && pkg._apiData && (
+          <DepositModal
+            pkg={{
+              slug: pkg._apiData.slug,
+              name: pkg._apiData.name,
+              family_name: pkg._apiData.family?.name || pkg._apiData.name,
+              tier: pkg._apiData.tier,
+            }}
+            tierLabel={pkg._apiData.tier || ''}
+            packageTotal={parseFloat(priceBreakdown?.total || 0)}
+            distanceKm={parseFloat(pkg._apiData?.distance_km || 10)}
+            onClose={() => setDepositModalOpen(false)}
           />
         )}
       </AnimatePresence>

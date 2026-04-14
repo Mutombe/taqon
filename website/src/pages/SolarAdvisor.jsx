@@ -17,6 +17,7 @@ import SEO from '../components/SEO';
 import { solarConfigApi } from '../api/solarConfig';
 import { quotationsApi } from '../api/quotations';
 import useAuthStore from '../stores/authStore';
+import DepositModal from '../components/DepositModal';
 
 /* ─── Helpers ─── */
 
@@ -782,9 +783,11 @@ function getWhyThisMatchesYou(preferences) {
 
 function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, onRequestDetails, preferences, sessionId }) {
   const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
   const [downloadingQuote, setDownloadingQuote] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const pkg = tier.package;
+  const totalForDeposit = tier.price_breakdown ? parseFloat(tier.price_breakdown.total) : 0;
   const explanation = getPackageExplanation(pkg);
   const matchReason = isHighlighted && preferences ? getWhyThisMatchesYou(preferences) : null;
   const tierGem = TIER_GEMS[tierKey];
@@ -1012,6 +1015,14 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                       )}
                     </button>
                   </div>
+                  {totalForDeposit > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowDepositModal(true); }}
+                      className="w-full mt-2 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-taqon-charcoal dark:bg-white/10 text-white font-semibold text-xs hover:bg-taqon-charcoal/90 dark:hover:bg-white/15 active:scale-[0.98] transition-all"
+                    >
+                      <CurrencyDollar size={12} weight="bold" /> Pay 10% Deposit · USD {(totalForDeposit * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -1187,6 +1198,15 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                 <><DownloadSimple size={14} /> {detailsCollected ? 'Download Quote' : 'Get Instant Quote'}</>
               )}
             </button>
+            {totalForDeposit > 0 && (
+              <button
+                onClick={() => setShowDepositModal(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-taqon-charcoal dark:bg-white/10 text-white font-semibold text-sm hover:bg-taqon-charcoal/90 dark:hover:bg-white/15 active:scale-[0.98] transition-all min-h-[44px] shadow-lg"
+              >
+                <CurrencyDollar size={14} weight="bold" />
+                Pay 10% Deposit · USD {(totalForDeposit * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </button>
+            )}
           </div>
         </div>
 
@@ -1209,6 +1229,19 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             distanceKm={distanceKm}
             sessionId={sessionId}
             onClose={() => setShowQuoteModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Deposit Modal */}
+      <AnimatePresence>
+        {showDepositModal && (
+          <DepositModal
+            pkg={pkg}
+            tierLabel={tierLabels[tierKey] || tierKey}
+            packageTotal={totalForDeposit}
+            distanceKm={distanceKm}
+            onClose={() => setShowDepositModal(false)}
           />
         )}
       </AnimatePresence>

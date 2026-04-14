@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 
@@ -12,12 +13,14 @@ from apps.core.pagination import StandardPagination
 from apps.core.utils import get_client_ip
 from apps.shop.models import Order
 
-from .models import Payment
+from .models import Payment, PackageDeposit
 from .serializers import (
     InitiatePaymentSerializer,
     PaymentSerializer,
     PaymentListSerializer,
     VerifyPaymentSerializer,
+    InitiateDepositSerializer,
+    PackageDepositSerializer,
 )
 from .services import PaymentService
 
@@ -278,3 +281,202 @@ class StripeWebhookView(APIView):
             )
 
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Package Deposits
+# ═══════════════════════════════════════════════════════════════════════════
+
+@extend_schema(tags=['Payments'])
+class InitiateDepositView(APIView):
+    """
+    Initiate a 10% reservation deposit against a solar package.
+    Creates a PackageDeposit record, snapshots the quoted price at the
+    selected distance, and kicks off a Paynow payment.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from django.utils import timezone
+        from decimal import Decimal
+        from apps.solar_config.models import SolarPackageTemplate
+        from apps.solar_config.engine.pricing import calculate_price
+
+        serializer = InitiateDepositSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        try:
+            package = SolarPackageTemplate.objects.select_related('family').get(slug=data['package_slug'])
+        except SolarPackageTemplate.DoesNotExist:
+            return Response({'error': 'Package not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Compute total at the client's distance — same engine used everywhere else
+        distance_km = Decimal(data.get('distance_km') or 10)
+        try:
+            price = calculate_price(package, distance_km=distance_km)
+            package_total = Decimal(str(price['total']))
+        except Exception:
+            package_total = package.price or Decimal('0')
+
+        if package_total <= 0:
+            return Response({'error': 'Unable to compute package total.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        deposit_percent = Decimal('10.00')
+        deposit_amount = (package_total * deposit_percent / Decimal('100')).quantize(Decimal('0.01'))
+
+        deposit = PackageDeposit.objects.create(
+            user=request.user,
+            package=package,
+            package_name=(package.family.name if package.family else package.name),
+            package_slug=package.slug,
+            tier_label=data.get('tier_label') or '',
+            inverter_kva=str(package.inverter_kva or ''),
+            battery_kwh=str(package.battery_capacity_kwh or ''),
+            distance_km=distance_km,
+            package_total=package_total,
+            deposit_percent=deposit_percent,
+            deposit_amount=deposit_amount,
+            currency='USD',
+            customer_name=data['customer_name'],
+            customer_email=data['customer_email'],
+            customer_phone=data.get('customer_phone', ''),
+            customer_address=data.get('customer_address', ''),
+            terms_version='v2',
+            terms_accepted_at=timezone.now(),
+            terms_accepted_ip=get_client_ip(request),
+            status='pending',
+        )
+
+        # Kick off the Paynow (or other) payment against this deposit
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        return_url = f'{frontend_url}/account/deposits/{deposit.id}'
+
+        payment, error = PaymentService.initiate_payment(
+            payable_object=deposit,
+            user=request.user,
+            amount=deposit_amount,
+            method=data['method'],
+            currency='USD',
+            phone=data.get('phone', ''),
+            description=f'Taqon Electrico Deposit ({deposit.package_name})',
+            return_url=return_url,
+            ip_address=get_client_ip(request),
+            metadata={
+                'deposit_id': str(deposit.id),
+                'package_slug': package.slug,
+                'package_name': deposit.package_name,
+                'type': 'package_deposit',
+            },
+        )
+
+        if error and not payment:
+            deposit.status = 'cancelled'
+            deposit.save(update_fields=['status', 'updated_at'])
+            return Response({'error': error}, status=status.HTTP_400_BAD_REQUEST)
+
+        if payment and payment.status == 'failed':
+            deposit.status = 'cancelled'
+            deposit.save(update_fields=['status', 'updated_at'])
+            return Response(
+                {'error': error or 'Payment initiation failed.', 'deposit': PackageDepositSerializer(deposit).data},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                'deposit': PackageDepositSerializer(deposit).data,
+                'payment': PaymentSerializer(payment).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+@extend_schema(tags=['Payments'])
+class MyDepositsView(APIView):
+    """List the authenticated user's deposits."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        qs = PackageDeposit.objects.filter(user=request.user).order_by('-created_at')
+        return Response(PackageDepositSerializer(qs, many=True).data)
+
+
+@extend_schema(tags=['Payments'])
+class DepositDetailView(APIView):
+    """Customer deposit detail (owner only)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, deposit_id):
+        try:
+            deposit = PackageDeposit.objects.get(pk=deposit_id, user=request.user)
+        except PackageDeposit.DoesNotExist:
+            return Response({'error': 'Deposit not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(PackageDepositSerializer(deposit).data)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Admin — Deposits
+# ═══════════════════════════════════════════════════════════════════════════
+
+@extend_schema(tags=['Admin'])
+class AdminDepositListView(APIView):
+    """List all package deposits across all users. Filterable by status."""
+    from apps.core.permissions import IsAdmin
+    permission_classes = [IsAdmin]
+    pagination_class = StandardPagination
+
+    def get(self, request):
+        qs = PackageDeposit.objects.all().select_related('user', 'package', 'package__family').order_by('-created_at')
+
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+
+        search = request.query_params.get('search', '').strip()
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(customer_name__icontains=search)
+                | Q(customer_email__icontains=search)
+                | Q(customer_phone__icontains=search)
+                | Q(package_name__icontains=search)
+            )
+
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(qs, request)
+        serializer = PackageDepositSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+@extend_schema(tags=['Admin'])
+class AdminDepositDetailView(APIView):
+    """Admin deposit detail — allows updating status and notes."""
+    from apps.core.permissions import IsAdmin
+    permission_classes = [IsAdmin]
+
+    def get(self, request, deposit_id):
+        try:
+            deposit = PackageDeposit.objects.select_related('user', 'package').get(pk=deposit_id)
+        except PackageDeposit.DoesNotExist:
+            return Response({'error': 'Deposit not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(PackageDepositSerializer(deposit).data)
+
+    def patch(self, request, deposit_id):
+        try:
+            deposit = PackageDeposit.objects.get(pk=deposit_id)
+        except PackageDeposit.DoesNotExist:
+            return Response({'error': 'Deposit not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Allow status + notes updates
+        new_status = request.data.get('status')
+        if new_status and new_status in dict(PackageDeposit.STATUS_CHOICES):
+            deposit.status = new_status
+
+        notes = request.data.get('admin_notes')
+        if notes is not None:
+            deposit.admin_notes = notes
+
+        deposit.save()
+        return Response(PackageDepositSerializer(deposit).data)

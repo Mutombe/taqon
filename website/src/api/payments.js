@@ -15,4 +15,14 @@ export const paymentsApi = {
 
   // Get all payments for a specific order
   getOrderPayments: (orderNumber) => api.get(`/payments/order/${orderNumber}/`),
+
+  // Package deposits — customer
+  initiateDeposit: (data) => api.post('/payments/deposits/initiate/', data),
+  getMyDeposits: () => api.get('/payments/deposits/mine/'),
+  getDeposit: (depositId) => api.get(`/payments/deposits/${depositId}/`),
+
+  // Package deposits — admin
+  adminListDeposits: (params) => api.get('/payments/admin/deposits/', { params }),
+  adminGetDeposit: (depositId) => api.get(`/payments/admin/deposits/${depositId}/`),
+  adminUpdateDeposit: (depositId, data) => api.patch(`/payments/admin/deposits/${depositId}/`, data),
 };
