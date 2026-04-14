@@ -91,9 +91,15 @@ class PaymentService:
             )
 
             if result.success:
-                payment.status = 'awaiting_redirect' if result.redirect_url else 'pending'
+                # Guard: only treat redirect_url as real if it's an http(s) URL.
+                # Some SDK quirks leave non-URL strings there.
+                redirect_url = result.redirect_url or ''
+                if not redirect_url.startswith(('http://', 'https://')):
+                    redirect_url = ''
+
+                payment.status = 'awaiting_redirect' if redirect_url else 'pending'
                 payment.gateway_reference = result.gateway_reference
-                payment.gateway_redirect_url = result.redirect_url
+                payment.gateway_redirect_url = redirect_url
                 payment.gateway_poll_url = result.poll_url
 
                 if gateway_name == 'paynow':

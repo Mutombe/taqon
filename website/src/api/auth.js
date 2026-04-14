@@ -29,7 +29,7 @@ export const authApi = {
   deleteAccount: () => api.delete('/auth/me/delete/'),
 
   // Google OAuth
-  googleLogin: () => api.get('/auth/google/'),
+  googleLogin: (next) => api.get('/auth/google/', { params: next ? { next } : undefined }),
   googleCodeExchange: (code, redirect_uri) => api.post('/auth/google/exchange/', { code, redirect_uri }),
   googleTokenLogin: (credential) => api.post('/auth/google/token/', { credential }),
 

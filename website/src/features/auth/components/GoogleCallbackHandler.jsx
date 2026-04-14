@@ -18,7 +18,17 @@ export default function GoogleCallbackHandler() {
     const access = searchParams.get('access');
     const refresh = searchParams.get('refresh');
     const error = searchParams.get('error');
-    const next = searchParams.get('next') || searchParams.get('state') || '/';
+    // Priority: explicit `next` param > Google `state` > sessionStorage > home
+    let next = searchParams.get('next') || searchParams.get('state') || '/';
+    if (!next || next === '/' || next === '') {
+      try {
+        const stored = sessionStorage.getItem('taqon-auth-next');
+        if (stored && stored !== '/') next = stored;
+      } catch {}
+    }
+    // Safety: only allow in-app paths (not external redirects)
+    if (!next.startsWith('/')) next = '/';
+    try { sessionStorage.removeItem('taqon-auth-next'); } catch {}
 
     if (error) {
       const messages = {

@@ -26,7 +26,12 @@ export default function LoginView() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const { data } = await authApi.googleLogin();
+      // Remember where the user was so we can return them after sign-in
+      // (e.g. /checkout, /shop/product-name, /packages/home-luxury).
+      const next = window.location.pathname + window.location.search + window.location.hash;
+      // Persist in sessionStorage as a backup in case Google strips the state param
+      try { sessionStorage.setItem('taqon-auth-next', next); } catch {}
+      const { data } = await authApi.googleLogin(next);
       window.location.href = data.url;
     } catch {
       toast.error('Failed to initiate Google sign-in.');

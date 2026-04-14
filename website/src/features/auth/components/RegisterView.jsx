@@ -42,7 +42,9 @@ export default function RegisterView() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const { data } = await authApi.googleLogin();
+      const next = window.location.pathname + window.location.search + window.location.hash;
+      try { sessionStorage.setItem('taqon-auth-next', next); } catch {}
+      const { data } = await authApi.googleLogin(next);
       window.location.href = data.url;
     } catch {
       toast.error('Failed to initiate Google sign-in.');

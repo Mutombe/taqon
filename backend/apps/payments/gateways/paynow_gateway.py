@@ -82,22 +82,23 @@ class PaynowGateway(BasePaymentGateway):
                 response = self.client.send(payment)
 
             if response.success:
-                # Coerce every field we pass along to a plain string — the
-                # Paynow SDK sometimes hands back method references or bound
-                # attributes that aren't JSON-serializable, which breaks
-                # payment.metadata.update(raw_response) + payment.save().
-                instructions = getattr(response, 'instructions', '') or ''
-                if not isinstance(instructions, (str, int, float, bool)) and instructions is not None:
-                    instructions = str(instructions)
+                # The Paynow SDK's default for missing fields is often the
+                # `str` class itself (not an empty string). `str or ''`
+                # evaluates to str because classes are truthy, and then
+                # str(str) becomes "<class 'str'>" — which was leaking into
+                # redirect URLs. Accept only actual string values.
+                def _clean_str(obj, attr):
+                    v = getattr(obj, attr, None)
+                    return v if isinstance(v, str) else ''
 
                 return PaymentResult(
                     success=True,
                     status='pending',
-                    gateway_reference=str(getattr(response, 'poll_url', '') or ''),
-                    redirect_url=str(getattr(response, 'redirect_url', '') or ''),
-                    poll_url=str(getattr(response, 'poll_url', '') or ''),
+                    gateway_reference=_clean_str(response, 'poll_url'),
+                    redirect_url=_clean_str(response, 'redirect_url'),
+                    poll_url=_clean_str(response, 'poll_url'),
                     raw_response={
-                        'instructions': str(instructions) if instructions else '',
+                        'instructions': _clean_str(response, 'instructions'),
                         'gateway': 'paynow',
                         'method': method,
                     },
