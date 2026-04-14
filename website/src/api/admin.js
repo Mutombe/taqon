@@ -57,7 +57,9 @@ export const adminApi = {
 
   // Instant quotes & Solar Advisor tracking
   getInstantQuotes: (params) => api.get('/solar-config/admin/instant-quotes/', { params }),
+  getInstantQuoteDetail: (id) => api.get(`/solar-config/admin/instant-quotes/${id}/`),
   getAdvisorSessions: (params) => api.get('/solar-config/admin/advisor-sessions/', { params }),
+  getAdvisorSessionDetail: (id) => api.get(`/solar-config/admin/advisor-sessions/${id}/`),
 
   // Quotation Requests
   getQuotationRequests: (params) => api.get('/quotations/admin/requests/', { params }),

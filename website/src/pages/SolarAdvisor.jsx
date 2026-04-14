@@ -558,7 +558,7 @@ function RecommendationSlotCards({ settled }) {
 
 /* ─── Instant Quote Modal ─── */
 
-function QuoteModal({ pkg, tierKey, distanceKm, onClose }) {
+function QuoteModal({ pkg, tierKey, distanceKm, sessionId, onClose }) {
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
   const [generating, setGenerating] = useState(false);
 
@@ -577,6 +577,7 @@ function QuoteModal({ pkg, tierKey, distanceKm, onClose }) {
         customer_phone: form.phone,
         customer_address: form.address,
         tier_label: tierLabels[tierKey] || tierKey,
+        session_id: sessionId,
       });
       const contentType = res.headers['content-type'] || 'application/pdf';
       const ext = contentType.includes('html') ? 'html' : 'pdf';
@@ -763,7 +764,7 @@ function getWhyThisMatchesYou(preferences) {
 
 /* ─── Recommendation Card (Step 3) — Gem-styled ─── */
 
-function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, clientFormRef, preferences }) {
+function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDetails, detailsCollected, clientFormRef, preferences, sessionId }) {
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [downloadingQuote, setDownloadingQuote] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -965,6 +966,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                             customer_phone: clientDetails.phone,
                             customer_address: clientDetails.area,
                             tier_label: tierLabels[tierKey] || tierKey,
+                            session_id: sessionId,
                           });
                           const contentType = res.headers['content-type'] || 'application/pdf';
                           const ext = contentType.includes('html') ? 'html' : 'pdf';
@@ -1140,6 +1142,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                     customer_phone: clientDetails.phone,
                     customer_address: clientDetails.area,
                     tier_label: tierLabels[tierKey] || tierKey,
+                    session_id: sessionId,
                   });
                   const contentType = res.headers['content-type'] || 'application/pdf';
                   const ext = contentType.includes('html') ? 'html' : 'pdf';
@@ -1188,6 +1191,7 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             pkg={pkg}
             tierKey={tierKey}
             distanceKm={distanceKm}
+            sessionId={sessionId}
             onClose={() => setShowQuoteModal(false)}
           />
         )}
@@ -2321,6 +2325,7 @@ export default function SolarAdvisor() {
                               detailsCollected={detailsCollected}
                               clientFormRef={clientFormRef}
                               preferences={preferences}
+                              sessionId={recommendation?.session_id}
                             />
                           ))}
                         </div>
@@ -2439,6 +2444,7 @@ export default function SolarAdvisor() {
                                   customer_phone: clientDetails.phone,
                                   customer_address: clientDetails.area,
                                   tier_label: tierLabels[tierKey] || tierKey,
+                                  session_id: recommendation?.session_id,
                                 });
                                 const contentType = res.headers['content-type'] || 'application/pdf';
                                 const ext = contentType.includes('html') ? 'html' : 'pdf';

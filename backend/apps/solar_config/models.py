@@ -455,7 +455,8 @@ class ConfigurationItem(TimeStampedModel):
 
 
 class InstantQuoteDownload(TimeStampedModel):
-    """Tracks every instant quote PDF downloaded from the Solar Advisor."""
+    """Tracks every instant quote PDF downloaded from the Solar Advisor
+    or from a package detail page."""
 
     package = models.ForeignKey(
         SolarPackageTemplate, on_delete=models.SET_NULL,
@@ -470,6 +471,18 @@ class InstantQuoteDownload(TimeStampedModel):
     customer_email = models.EmailField(blank=True)
     customer_phone = models.CharField(max_length=30, blank=True)
     customer_address = models.CharField(max_length=300, blank=True)
+
+    # Link to the Solar Advisor session — null if downloaded from package
+    # detail page (where no appliances were selected).
+    session = models.ForeignKey(
+        'RecommendationSession', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='quote_downloads',
+    )
+
+    # Snapshot of appliances at quote time — duplicated from session so the
+    # record is self-contained even if the session is deleted later.
+    # Format: [{"id": uuid, "name": str, "quantity": int, "category": str}]
+    appliances = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -494,6 +507,10 @@ class RecommendationSession(TimeStampedModel):
     use_style = models.CharField(max_length=30, blank=True)
 
     ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    # Full appliance selections at time of recommendation
+    # Format: [{"id": uuid, "name": str, "quantity": int, "category": str, "pp": float, "ep": float}]
+    appliances = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ['-created_at']

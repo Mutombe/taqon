@@ -44,6 +44,7 @@ from .serializers import (
     AdminPackageFamilyCreateUpdateSerializer,
     AdminPackageItemSerializer,
     InstantQuoteDownloadSerializer,
+    InstantQuoteDownloadDetailSerializer,
     RecommendationSessionSerializer,
 )
 
@@ -202,22 +203,37 @@ class RecommendView(APIView):
         from .engine.recommender import recommend_packages
         result = recommend_packages(selections, distance_km=distance_km, preferences=preferences)
 
-        # Track session
+        # Track session — store full appliance selection so admin can
+        # see exactly what the customer picked.
+        session_id = None
         try:
             from .models import RecommendationSession
             tiers = result.get('tiers', {})
-            RecommendationSession.objects.create(
+            appliances_snapshot = [
+                {
+                    'id': str(appliance.id),
+                    'name': appliance.name,
+                    'category': appliance.category,
+                    'quantity': qty,
+                    'pp': float(appliance.power_points or 0),
+                    'ep': float(appliance.energy_points or 0),
+                }
+                for appliance, qty in selections
+            ]
+            session = RecommendationSession.objects.create(
                 total_pp=result.get('total_pp', 0),
                 total_ep=result.get('total_ep', 0),
                 distance_km=distance_km,
-                appliance_count=len(selections),
+                appliance_count=sum(qty for _, qty in selections),
                 budget_package=tiers.get('budget', {}).get('package', None) and tiers['budget']['package'].name or '',
                 good_fit_package=tiers.get('good_fit', {}).get('package', None) and tiers['good_fit']['package'].name or '',
                 excellent_package=tiers.get('excellent', {}).get('package', None) and tiers['excellent']['package'].name or '',
                 priority=preferences.get('priority', ''),
                 use_style=preferences.get('use_style', ''),
                 ip_address=request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip(),
+                appliances=appliances_snapshot,
             )
+            session_id = str(session.id)
         except Exception:
             pass  # Never fail the recommendation due to tracking
 
@@ -227,6 +243,7 @@ class RecommendView(APIView):
             'total_ep': str(result['total_ep']),
             'distance_km': str(result['distance_km']),
             'best_match_tier': result.get('best_match_tier', 'good_fit'),
+            'session_id': session_id,  # Frontend passes this back when downloading a quote
             'tiers': {},
         }
 
@@ -272,6 +289,7 @@ class InstantQuoteView(APIView):
         customer_phone = request.data.get('customer_phone', '').strip()
         customer_address = request.data.get('customer_address', '').strip()
         tier_label = request.data.get('tier_label', '')
+        session_id = request.data.get('session_id')  # Optional — links to the advisor session
 
         if not slug or not customer_name or not customer_email:
             return Response(
@@ -395,9 +413,18 @@ class InstantQuoteView(APIView):
             'distance_km': int(distance_km),
         }
 
-        # Track download
+        # Track download + link to advisor session if provided
         try:
-            from .models import InstantQuoteDownload
+            from .models import InstantQuoteDownload, RecommendationSession
+            session = None
+            appliances_snapshot = []
+            if session_id:
+                try:
+                    session = RecommendationSession.objects.get(pk=session_id)
+                    appliances_snapshot = session.appliances or []
+                except (RecommendationSession.DoesNotExist, ValueError, TypeError):
+                    session = None
+
             InstantQuoteDownload.objects.create(
                 package=package,
                 package_name=package.family.name if package.family else package.name,
@@ -408,6 +435,8 @@ class InstantQuoteView(APIView):
                 customer_email=customer_email,
                 customer_phone=customer_phone,
                 customer_address=customer_address,
+                session=session,
+                appliances=appliances_snapshot,
             )
         except Exception:
             pass  # Never fail the quote due to tracking
@@ -1526,6 +1555,14 @@ class AdminInstantQuotesView(generics.ListAPIView):
         return qs
 
 
+class AdminInstantQuoteDetailView(generics.RetrieveAPIView):
+    """Admin: retrieve full details for a single instant quote, including
+    the appliances list (if the quote was downloaded from Solar Advisor)."""
+    permission_classes = [IsAdmin]
+    serializer_class = InstantQuoteDownloadDetailSerializer
+    queryset = InstantQuoteDownload.objects.select_related('session').all()
+
+
 class AdminAdvisorSessionsView(generics.ListAPIView):
     """Admin: list all Solar Advisor recommendation sessions."""
     permission_classes = [IsAdmin]
@@ -1534,3 +1571,10 @@ class AdminAdvisorSessionsView(generics.ListAPIView):
 
     def get_queryset(self):
         return RecommendationSession.objects.all()
+
+
+class AdminAdvisorSessionDetailView(generics.RetrieveAPIView):
+    """Admin: retrieve full details for a single advisor session."""
+    permission_classes = [IsAdmin]
+    serializer_class = RecommendationSessionSerializer
+    queryset = RecommendationSession.objects.all()

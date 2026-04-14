@@ -407,11 +407,31 @@ class AdminPackageFamilyCreateUpdateSerializer(serializers.ModelSerializer):
 # ── Tracking Serializers ──
 
 class InstantQuoteDownloadSerializer(serializers.ModelSerializer):
+    """Compact list view — no appliances/session details."""
+
     class Meta:
         model = InstantQuoteDownload
         fields = [
             'id', 'package_name', 'tier_label', 'distance_km', 'total_price',
             'customer_name', 'customer_email', 'customer_phone', 'customer_address',
+            'created_at',
+        ]
+        read_only_fields = fields
+
+
+class InstantQuoteDownloadDetailSerializer(serializers.ModelSerializer):
+    """Full detail with appliances list and session info."""
+    session_id = serializers.UUIDField(source='session.id', read_only=True, allow_null=True)
+    session_total_pp = serializers.DecimalField(source='session.total_pp', max_digits=8, decimal_places=2, read_only=True, allow_null=True)
+    session_total_ep = serializers.DecimalField(source='session.total_ep', max_digits=8, decimal_places=2, read_only=True, allow_null=True)
+
+    class Meta:
+        model = InstantQuoteDownload
+        fields = [
+            'id', 'package_name', 'tier_label', 'distance_km', 'total_price',
+            'customer_name', 'customer_email', 'customer_phone', 'customer_address',
+            'appliances',
+            'session_id', 'session_total_pp', 'session_total_ep',
             'created_at',
         ]
         read_only_fields = fields
@@ -423,6 +443,8 @@ class RecommendationSessionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'total_pp', 'total_ep', 'distance_km', 'appliance_count',
             'budget_package', 'good_fit_package', 'excellent_package',
-            'priority', 'use_style', 'ip_address', 'created_at',
+            'priority', 'use_style', 'ip_address',
+            'appliances',
+            'created_at',
         ]
         read_only_fields = fields

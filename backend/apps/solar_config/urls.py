@@ -73,5 +73,7 @@ urlpatterns = [
 
     # Admin — Tracking
     path('admin/instant-quotes/', views.AdminInstantQuotesView.as_view(), name='admin-instant-quotes'),
+    path('admin/instant-quotes/<uuid:pk>/', views.AdminInstantQuoteDetailView.as_view(), name='admin-instant-quote-detail'),
     path('admin/advisor-sessions/', views.AdminAdvisorSessionsView.as_view(), name='admin-advisor-sessions'),
+    path('admin/advisor-sessions/<uuid:pk>/', views.AdminAdvisorSessionDetailView.as_view(), name='admin-advisor-session-detail'),
 ]
