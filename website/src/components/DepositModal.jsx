@@ -12,6 +12,7 @@ import {
   DEPOSIT_TERMS_LAST_UPDATED,
 } from '../data/depositTerms';
 import { PAYMENT_BRAND_LOGOS, PAYMENT_BRAND_LABELS } from '../data/paymentBrands';
+import { getSavedLocation, saveLocation } from '../data/locationSession';
 
 const DEPOSIT_PERCENT = 20;
 
@@ -48,7 +49,7 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
 
   const [method, setMethod] = useState('');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState(() => getSavedLocation()?.area || '');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showFullTerms, setShowFullTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -82,6 +83,11 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
       toast.error('Phone number is required for mobile money.');
       return;
     }
+    if (!address.trim()) {
+      toast.error('Please enter the installation location.');
+      return;
+    }
+    saveLocation({ area: address.trim(), distanceKm });
 
     setSubmitting(true);
     try {
@@ -227,18 +233,20 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
             </p>
           </div>
 
-          {/* Address (only if not yet captured in session) */}
+          {/* Installation location — pre-filled from any prior pick */}
           <div className="mb-4">
             <label className="block text-[12px] text-gray-500 dark:text-white/50 mb-1.5">
-              Installation address
+              Installation location *
             </label>
             <input
               type="text"
+              required
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="e.g. 12 Baines Ave, Borrowdale"
+              placeholder="e.g. Borrowdale, Harare"
               className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[13px] text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
             />
+            <p className="mt-1 text-[11px] text-gray-400 dark:text-white/40">Pre-filled if you've already chosen an area in the Solar Advisor.</p>
           </div>
 
           {/* Payment method — brand logo grid */}

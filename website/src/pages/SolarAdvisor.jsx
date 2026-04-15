@@ -18,6 +18,7 @@ import { solarConfigApi } from '../api/solarConfig';
 import { quotationsApi } from '../api/quotations';
 import useAuthStore from '../stores/authStore';
 import DepositModal from '../components/DepositModal';
+import { getSavedLocation, saveLocation } from '../data/locationSession';
 
 /* ─── Helpers ─── */
 
@@ -576,7 +577,13 @@ function RecommendationSlotCards({ settled }) {
 
 function QuoteModal({ pkg, tierKey, distanceKm, sessionId, onClose }) {
   const { user } = useAuthStore();
-  const [form, setForm] = useState(() => prefillFromUser(user));
+  const [form, setForm] = useState(() => {
+    // Prefill customer fields from auth, address from any prior location
+    // the user has already filled in (advisor step 2 or another quote flow).
+    const base = prefillFromUser(user);
+    const saved = getSavedLocation();
+    return { ...base, address: base.address || saved?.area || '' };
+  });
   const [generating, setGenerating] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -584,6 +591,12 @@ function QuoteModal({ pkg, tierKey, distanceKm, sessionId, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim()) return;
+    if (!form.address?.trim()) {
+      toast.error('Please enter the installation location.');
+      return;
+    }
+    // Persist the location the user entered so the next quote flow picks it up
+    saveLocation({ area: form.address.trim(), distanceKm });
     setGenerating(true);
     try {
       const res = await solarConfigApi.getInstantQuote({
@@ -712,14 +725,16 @@ function QuoteModal({ pkg, tierKey, distanceKm, sessionId, onClose }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Address</label>
+            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation location *</label>
             <input
               type="text"
+              required
               value={form.address}
               onChange={(e) => set('address', e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
-              placeholder="Harare, Zimbabwe"
+              placeholder="e.g. Borrowdale, Harare"
             />
+            <p className="mt-1 text-[11px] text-taqon-muted dark:text-white/40">Where the system will be installed. Pre-filled if you've selected an area earlier.</p>
           </div>
 
           <button
@@ -1638,6 +1653,14 @@ export default function SolarAdvisor() {
       setClientDetails(d => ({ ...d, area: selectedArea }));
     }
   }, [selectedArea]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mirror the chosen location into the cross-page session helper so the
+  // package detail page and deposit modal pre-fill it automatically.
+  useEffect(() => {
+    if (selectedArea) {
+      saveLocation({ area: selectedArea, distanceKm, coords: customCoords });
+    }
+  }, [selectedArea, distanceKm, customCoords]);
 
   // ── Browser back/forward support ──
   const setStep = useCallback((newStep) => {
@@ -2590,6 +2613,10 @@ function ClientDetailsModal({ clientDetails, setClientDetails, selectedArea, dis
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!clientDetails.name.trim() || !clientDetails.phone.trim()) return;
+    // Carry the chosen area into shared session so deposit / package detail
+    // flows pick it up automatically.
+    const area = (selectedArea || clientDetails.area || '').trim();
+    if (area) saveLocation({ area, distanceKm });
     onSubmit();
   };
 

@@ -31,6 +31,7 @@ import { solarConfigApi } from '../api/solarConfig';
 import { quotationsApi } from '../api/quotations';
 import useAuthStore from '../stores/authStore';
 import DepositModal from './DepositModal';
+import { getSavedLocation, saveLocation } from '../data/locationSession';
 
 // Icon map for the includes section
 const iconMap = {
@@ -47,11 +48,12 @@ function QuoteModal({ pkg, gem, onClose }) {
   const { user } = useAuthStore();
   const [form, setForm] = useState(() => {
     const name = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
+    const saved = getSavedLocation();
     return {
       name: name || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      address: '',
+      address: saved?.area || '',
     };
   });
   const [generating, setGenerating] = useState(false);
@@ -67,6 +69,11 @@ function QuoteModal({ pkg, gem, onClose }) {
       toast.error('Name and email are required');
       return;
     }
+    if (!form.address.trim()) {
+      toast.error('Please enter the installation location.');
+      return;
+    }
+    saveLocation({ area: form.address.trim(), distanceKm });
     setGenerating(true);
     try {
       const res = await solarConfigApi.getInstantQuote({
@@ -214,18 +221,20 @@ function QuoteModal({ pkg, gem, onClose }) {
             </div>
             <div>
               <label className="block text-xs font-semibold text-taqon-muted dark:text-white/60 uppercase tracking-wider mb-1.5">
-                Area
+                Installation location *
               </label>
               <div className="relative">
                 <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted" />
                 <input
                   type="text"
+                  required
                   value={form.address}
                   onChange={(e) => set('address', e.target.value)}
-                  placeholder="Harare"
+                  placeholder="e.g. Borrowdale, Harare"
                   className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none transition-all"
                 />
               </div>
+              <p className="mt-1 text-[11px] text-taqon-muted dark:text-white/40">Pre-filled if you've already chosen an area in the Solar Advisor.</p>
             </div>
           </div>
 

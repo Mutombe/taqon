@@ -438,7 +438,9 @@ function InstantQuotesTab({ onOpen }) {
               </div>
               <div className="col-span-3 mt-2 md:mt-0">
                 <p className="text-sm text-[var(--text-primary)]">{q.package_name}</p>
-                <p className="text-[10px] text-[var(--text-muted)]">{q.distance_km}km from Harare</p>
+                <p className="text-[10px] text-[var(--text-muted)] truncate">
+                  {q.customer_address || `${q.distance_km}km from Harare`}
+                </p>
               </div>
               <div className="col-span-2 mt-2 md:mt-0">
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tierBadgeClass(q.tier_label)}`}>
