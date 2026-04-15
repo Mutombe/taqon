@@ -929,11 +929,11 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[11px] text-taqon-muted dark:text-white/40">
                         <span>Materials</span>
-                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
+                        <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                       </div>
                       <div className="flex justify-between text-[11px] text-taqon-muted dark:text-white/40">
                         <span>Labour and Transport</span>
-                        <span className="tabular-nums">${(parseFloat(tier.price_breakdown.labour) + parseFloat(tier.price_breakdown.transport)).toLocaleString()}</span>
+                        <span className="tabular-nums">${(parseFloat(tier.price_breakdown.labour) + parseFloat(tier.price_breakdown.transport)).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                       </div>
                       <div
                         className="pt-2 mt-1.5 flex justify-between items-baseline"
@@ -1093,11 +1093,11 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             <div className="mt-3 space-y-2">
               <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
                 <span>Materials</span>
-                <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString()}</span>
+                <span className="tabular-nums">${parseFloat(tier.price_breakdown.material).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between text-xs text-taqon-muted dark:text-white/40">
                 <span>Labour and Transport</span>
-                <span className="tabular-nums">${(parseFloat(tier.price_breakdown.labour) + parseFloat(tier.price_breakdown.transport)).toLocaleString()}</span>
+                <span className="tabular-nums">${(parseFloat(tier.price_breakdown.labour) + parseFloat(tier.price_breakdown.transport)).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
               <div
                 className="pt-2.5 mt-2.5 flex justify-between items-baseline"
@@ -1119,11 +1119,6 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             <p className="text-xs text-taqon-muted dark:text-white/50">
               <span className="font-semibold text-taqon-charcoal dark:text-white/70">How it works:</span> {explanation.howItWorks}
             </p>
-            {explanation.whyUpgrade && (
-              <p className="text-xs text-taqon-muted dark:text-white/50">
-                <span className="font-semibold text-taqon-charcoal dark:text-white/70">Why upgrade:</span> {explanation.whyUpgrade}
-              </p>
-            )}
           </div>
 
           {/* Why this matches you */}

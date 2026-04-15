@@ -214,20 +214,44 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     goodfit_family = _select_family(goodfit_pp, families)
     goodfit_pkg = _select_variant(goodfit_ep, goodfit_family)
 
-    # Step 4: Budget = one step DOWN from good_fit (cheaper variant or cheaper family)
-    # Find the next cheaper package below good_fit
-    cheaper = [p for p in packages if p.price < goodfit_pkg.price]
-    if cheaper:
-        budget_pkg = sorted(cheaper, key=lambda p: p.price, reverse=True)[0]  # most expensive of the cheaper ones
-    else:
-        budget_pkg = goodfit_pkg  # good_fit IS the cheapest (edge case)
+    # Helper: kVA of a package (float, family-preferred)
+    def _pkg_kva(p):
+        return float(p.family.kva_rating) if p.family else float(p.inverter_kva)
 
-    # Step 5: Excellent = one step UP from good_fit (more expensive variant or next family)
-    more_expensive = [p for p in packages if p.price > goodfit_pkg.price and p.id != budget_pkg.id]
-    if more_expensive:
-        excellent_pkg = sorted(more_expensive, key=lambda p: p.price)[0]  # cheapest of the more expensive ones
+    goodfit_kva = _pkg_kva(goodfit_pkg)
+
+    # Step 4: Budget = a package from a DIFFERENT (smaller) family when possible,
+    # so the user sees a genuinely different size, not just a stripped variant.
+    # Fall back to the cheapest same-family variant if no smaller family exists.
+    cheaper_diff_family = [p for p in packages if p.price < goodfit_pkg.price and _pkg_kva(p) < goodfit_kva]
+    if cheaper_diff_family:
+        # Pick the largest family below good_fit, then cheapest in that family
+        budget_kva = max(_pkg_kva(p) for p in cheaper_diff_family)
+        budget_candidates = [p for p in cheaper_diff_family if _pkg_kva(p) == budget_kva]
+        budget_pkg = sorted(budget_candidates, key=lambda p: p.price, reverse=True)[0]
     else:
-        excellent_pkg = goodfit_pkg  # good_fit IS the most expensive (edge case)
+        cheaper_any = [p for p in packages if p.price < goodfit_pkg.price]
+        budget_pkg = (
+            sorted(cheaper_any, key=lambda p: p.price, reverse=True)[0]
+            if cheaper_any else goodfit_pkg
+        )
+
+    # Step 5: Excellent = a package from a DIFFERENT (larger) family when possible.
+    # This gives the user a meaningful "step up" option rather than the same
+    # system with a couple of extra panels. Fall back to same-family variant
+    # only if no larger family exists in the catalogue.
+    pricier_diff_family = [p for p in packages if p.price > goodfit_pkg.price and _pkg_kva(p) > goodfit_kva]
+    if pricier_diff_family:
+        # Pick the smallest family above good_fit, then cheapest in that family
+        excellent_kva = min(_pkg_kva(p) for p in pricier_diff_family)
+        excellent_candidates = [p for p in pricier_diff_family if _pkg_kva(p) == excellent_kva]
+        excellent_pkg = sorted(excellent_candidates, key=lambda p: p.price)[0]
+    else:
+        pricier_any = [p for p in packages if p.price > goodfit_pkg.price and p.id != budget_pkg.id]
+        excellent_pkg = (
+            sorted(pricier_any, key=lambda p: p.price)[0]
+            if pricier_any else goodfit_pkg
+        )
 
     # Step 6: Handle edge cases — bottom and top of catalogue
     sorted_all = sorted(packages, key=lambda p: p.price)
