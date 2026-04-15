@@ -86,7 +86,7 @@ TABLE = {
     ('Lights Group (5-10)', 'lounge'):         {'pp': '0.5',  'ep': '1',    'cf': '0.7',  'nu': '0.85', 'smart': False, 'w': 80},
     ('Pedestal Fan', 'lounge'):                {'pp': '0.3',  'ep': '0.6',  'cf': '0.7',  'nu': '0.6',  'smart': False, 'w': 55},
     ('Projector', 'lounge'):                   {'pp': '1.5',  'ep': '0.8',  'cf': '0.3',  'nu': '0.45', 'smart': False, 'w': 300},
-    ('TV (MEDIUM0', 'lounge'):                 {'pp': '0.7',  'ep': '0.8',  'cf': '0.6',  'nu': '0.65', 'smart': False, 'w': 110},
+    ('TV (Medium)', 'lounge'):                 {'pp': '0.7',  'ep': '0.8',  'cf': '0.6',  'nu': '0.65', 'smart': False, 'w': 110},
     ('TV (Small)', 'lounge'):                  {'pp': '0.5',  'ep': '0.7',  'cf': '0.6',  'nu': '0.65', 'smart': False, 'w': 80},
     ('TV (LARGE)', 'lounge'):                  {'pp': '0.8',  'ep': '0.9',  'cf': '0.6',  'nu': '0.65', 'smart': False, 'w': 180},
     ('sound bar', 'lounge'):                   {'pp': '1',    'ep': '1',    'cf': '0.4',  'nu': '0.5',  'smart': False, 'w': 200},
