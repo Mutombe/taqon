@@ -21,5 +21,9 @@ python manage.py link_components_to_shop
 python manage.py clean_ghost_packages
 python manage.py seed_new_appliances
 python manage.py clean_appliances
-python manage.py tweak_concurrency
+# Taqon_Appliances_Current.xlsx is the single source of truth for PP / EP /
+# Concurrency / NightUse / smart-load / wattage. Runs LAST among appliance
+# commands so any drift from earlier seeds or admin edits is corrected
+# before the recommendation engine sees it.
+python manage.py apply_xlsx_appliances
 python manage.py shell < scripts/reset_admin.py
