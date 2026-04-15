@@ -11,15 +11,19 @@ from django.core.management.base import BaseCommand
 from apps.solar_config.models import Appliance
 
 
-# (name, target concurrency_factor) — names are matched case-insensitively
+# (name, target concurrency_factor) — names are matched case-insensitively.
+# Seed values restored so the recommendation mapping returns to pre-tweak
+# behaviour. Only Lawn Mower stays — it's a new appliance, not in the
+# original seed, so its value doesn't change any existing recommendation
+# until a customer actually selects it.
 TWEAKS = [
-    ('Kettle',       Decimal('0.30')),  # restored to original seed value
-    ('Microwave',    Decimal('0.30')),  # restored to original seed value
+    ('Kettle',       Decimal('0.30')),
+    ('Microwave',    Decimal('0.30')),
+    ('Slow Cooker',  Decimal('0.30')),
+    ('Rice Cooker',  Decimal('0.30')),
+    ('Air Fryer',    Decimal('0.30')),
+    ('Ice Maker',    Decimal('0.50')),
     ('Lawn Mower',   Decimal('0.70')),
-    ('Slow Cooker',  Decimal('0.40')),
-    ('Ice Maker',    Decimal('0.40')),  # 'ice cooker' candidate #1
-    ('Rice Cooker',  Decimal('0.40')),
-    ('Air Fryer',    Decimal('0.40')),
 ]
 
 

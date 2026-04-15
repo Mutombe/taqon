@@ -45,14 +45,6 @@ COMFORT_RANK = {
 PRICING = {
     'sundries_rate': Decimal('0.005'),
     'labour_rate': Decimal('0.08'),
-    # Transport per km — linear up to TRANSPORT_LINEAR_KM, exponential beyond
-    'transport_per_km': Decimal('0.85'),
-    'transport_linear_km': Decimal('25'),
-    'transport_exp_base': Decimal('1.15'),
-    # Baseline installation cost for Job Size Multiplier — a job at this cost
-    # yields JSM = 1.0 (no size surcharge). Smaller jobs pay less transport,
-    # larger jobs pay more because they are heavier and riskier to transport.
-    'transport_baseline_cost': Decimal('5000'),
-    'transport_jsm_exponent': Decimal('0.6'),
+    'transport_per_km': Decimal('0.65'),
     'default_distance_km': Decimal('10'),
 }
