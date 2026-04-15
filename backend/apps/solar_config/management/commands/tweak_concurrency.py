@@ -13,8 +13,8 @@ from apps.solar_config.models import Appliance
 
 # (name, target concurrency_factor) — names are matched case-insensitively
 TWEAKS = [
-    ('Kettle',       Decimal('0.60')),
-    ('Microwave',    Decimal('0.60')),
+    ('Kettle',       Decimal('0.30')),  # restored to original seed value
+    ('Microwave',    Decimal('0.30')),  # restored to original seed value
     ('Lawn Mower',   Decimal('0.70')),
     ('Slow Cooker',  Decimal('0.40')),
     ('Ice Maker',    Decimal('0.40')),  # 'ice cooker' candidate #1
