@@ -21,4 +21,5 @@ python manage.py link_components_to_shop
 python manage.py clean_ghost_packages
 python manage.py seed_new_appliances
 python manage.py clean_appliances
+python manage.py tweak_concurrency
 python manage.py shell < scripts/reset_admin.py
