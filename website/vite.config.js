@@ -24,6 +24,10 @@ export default defineConfig({
     },
   },
   build: {
+    // Explicit target — Vite 7's default 'baseline-widely-available' assumes
+    // Safari 16.4+, which excludes iPhones stuck on iOS 15/16.0-16.3.
+    // Targeting safari14 covers every iPhone still receiving security updates.
+    target: ['es2020', 'safari14', 'ios14'],
     chunkSizeWarningLimit: 250,
     rollupOptions: {
       output: {
