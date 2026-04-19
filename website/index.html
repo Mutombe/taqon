@@ -18,19 +18,11 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap" />
     <title>Taqon Electrico — Zimbabwe's Premier Solar & Electrical Company</title>
     <meta name="description" content="Taqon Electrico provides professional solar installations, electrical maintenance, and renewable energy solutions in Harare, Zimbabwe. ZERA recommended solar company." />
-    <!-- iOS safety net: if Tailwind's modern CSS fails on older iOS Safari,
-         these inline rules keep the page readable (cream bg, dark text). -->
+    <!-- iOS safety net: ensures a readable cream background before Tailwind
+         loads, so older iPhones never show a black screen during load. -->
     <style>
       html, body { background-color: #FFFBF5; color: #1A1A1A; margin: 0; }
       #root { min-height: 100vh; background-color: #FFFBF5; }
-      #root:empty::before {
-        content: "Loading…";
-        display: block;
-        padding: 2rem;
-        font-family: system-ui, -apple-system, sans-serif;
-        color: #1A1A1A;
-        text-align: center;
-      }
     </style>
     <!-- Analytics: Uncomment to activate Plausible -->
     <!-- <script defer data-domain="taqon.co.zw" src="https://plausible.io/js/script.js"></script> -->
