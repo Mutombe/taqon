@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taqon-v3';
+const CACHE_NAME = 'taqon-v4';
 const API_CACHE_NAME = 'taqon-api-v1';
 const STATIC_ASSETS = [
   '/',
