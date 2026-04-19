@@ -193,34 +193,31 @@ function AppContent() {
 
   // Predictive prefetching: when on a page, prefetch routes the user is likely
   // to navigate to next. Runs after idle to avoid competing with current page resources.
+  // Must use window.requestIdleCallback (not bare) — Safari has no such variable,
+  // and `requestIdleCallback?.()` still throws ReferenceError for undeclared globals.
   useEffect(() => {
-    const id = requestIdleCallback?.(() => {
+    const doPrefetch = () => {
       if (pathname === '/') {
-        // From Home, users most commonly go to: packages, shop, projects, contact
         prefetchRoute('/packages');
         prefetchRoute('/shop');
         prefetchRoute('/projects');
         prefetchRoute('/contact');
       } else if (pathname === '/shop') {
-        // Shop users often go to product detail (already lazy) or packages
         prefetchRoute('/packages');
       } else if (pathname === '/packages') {
         prefetchRoute('/shop');
         prefetchRoute('/contact');
       }
-    }) ?? setTimeout(() => {
-      // Fallback for browsers without requestIdleCallback
-      if (pathname === '/') {
-        prefetchRoute('/packages');
-        prefetchRoute('/shop');
-        prefetchRoute('/projects');
-        prefetchRoute('/contact');
-      }
-    }, 2000);
+    };
+    const hasRIC = typeof window.requestIdleCallback === 'function';
+    const id = hasRIC ? window.requestIdleCallback(doPrefetch) : setTimeout(doPrefetch, 2000);
 
     return () => {
-      if (typeof cancelIdleCallback === 'function') cancelIdleCallback(id);
-      else clearTimeout(id);
+      if (hasRIC && typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(id);
+      } else {
+        clearTimeout(id);
+      }
     };
   }, [pathname]);
 
