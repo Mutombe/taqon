@@ -34,28 +34,6 @@
     </style>
     <!-- Analytics: Uncomment to activate Plausible -->
     <!-- <script defer data-domain="taqon.co.zw" src="https://plausible.io/js/script.js"></script> -->
-    <!-- Diagnostic: surface JS errors on-page for users who can't open devtools.
-         Remove once the iPhone rendering issue is resolved. -->
-    <script>
-      (function () {
-        function show(msg) {
-          var el = document.getElementById('__diag__') || (function () {
-            var d = document.createElement('div');
-            d.id = '__diag__';
-            d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#F26522;color:#fff;padding:12px;font:12px/1.4 system-ui,-apple-system,sans-serif;z-index:999999;white-space:pre-wrap;max-height:60vh;overflow:auto';
-            document.body && document.body.appendChild(d);
-            return d;
-          })();
-          el.textContent += msg + '\n\n';
-        }
-        window.addEventListener('error', function (e) {
-          show('[error] ' + (e.message || '') + '\nat ' + (e.filename || '') + ':' + (e.lineno || '') + ':' + (e.colno || ''));
-        });
-        window.addEventListener('unhandledrejection', function (e) {
-          show('[promise] ' + (e.reason && (e.reason.stack || e.reason.message || e.reason) || 'unknown'));
-        });
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
