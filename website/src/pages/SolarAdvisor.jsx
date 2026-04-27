@@ -590,8 +590,27 @@ function QuoteModal({ pkg, tierKey, distanceKm, sessionId, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim()) return;
-    if (!form.address?.trim()) {
+    const name = form.name.trim();
+    const email = form.email.trim();
+    const phone = form.phone.trim();
+    const address = form.address?.trim() || '';
+    if (!name) {
+      toast.error('Please enter your full name.');
+      return;
+    }
+    if (!email) {
+      toast.error('Please enter your email address.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    if (!phone) {
+      toast.error('Please enter your phone number.');
+      return;
+    }
+    if (!address) {
       toast.error('Please enter the installation location.');
       return;
     }
@@ -715,9 +734,10 @@ function QuoteModal({ pkg, tierKey, distanceKm, sessionId, onClose }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone</label>
+            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Phone *</label>
             <input
               type="tel"
+              required
               value={form.phone}
               onChange={(e) => set('phone', e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
@@ -2607,11 +2627,33 @@ export default function SolarAdvisor() {
 function ClientDetailsModal({ clientDetails, setClientDetails, selectedArea, distanceKm, onSubmit, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!clientDetails.name.trim() || !clientDetails.phone.trim()) return;
+    const name = clientDetails.name.trim();
+    const phone = clientDetails.phone.trim();
+    const email = clientDetails.email.trim();
+    const area = (selectedArea || clientDetails.area || '').trim();
+    if (!name) {
+      toast.error('Please enter your full name.');
+      return;
+    }
+    if (!phone) {
+      toast.error('Please enter your phone number.');
+      return;
+    }
+    if (!email) {
+      toast.error('Please enter your email address.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    if (!area) {
+      toast.error('Please enter your installation area.');
+      return;
+    }
     // Carry the chosen area into shared session so deposit / package detail
     // flows pick it up automatically.
-    const area = (selectedArea || clientDetails.area || '').trim();
-    if (area) saveLocation({ area, distanceKm });
+    saveLocation({ area, distanceKm });
     onSubmit();
   };
 
@@ -2675,9 +2717,10 @@ function ClientDetailsModal({ clientDetails, setClientDetails, selectedArea, dis
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email</label>
+            <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Email *</label>
             <input
               type="email"
+              required
               value={clientDetails.email}
               onChange={(e) => setClientDetails((d) => ({ ...d, email: e.target.value }))}
               className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
@@ -2696,9 +2739,10 @@ function ClientDetailsModal({ clientDetails, setClientDetails, selectedArea, dis
             </div>
           ) : (
             <div>
-              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area</label>
+              <label className="block text-xs font-medium text-taqon-charcoal dark:text-white/70 mb-1">Installation Area *</label>
               <input
                 type="text"
+                required
                 value={clientDetails.area}
                 onChange={(e) => setClientDetails((d) => ({ ...d, area: e.target.value }))}
                 className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
