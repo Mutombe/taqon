@@ -228,19 +228,33 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     goodfit_family = _select_family(goodfit_pp, families)
     goodfit_pkg = _select_variant(goodfit_ep, goodfit_family, pp=goodfit_pp)
 
-    # Step 4: Budget = the immediately preceding package by price within
-    # the SAME family as Good Fit. Keeps the customer in a consistent
-    # inverter class and only drops Budget when Good Fit is already the
-    # cheapest variant in its family.
+    # Step 4: Budget = the immediately cheaper variant within Good Fit's
+    # family. If Good Fit is already the cheapest variant in its family,
+    # step DOWN one family (next-smaller kVA) and take that family's
+    # highest (most expensive) variant.
     cheaper_in_family = [
         p for p in packages
         if p.price < goodfit_pkg.price
         and p.family_id == goodfit_pkg.family_id
     ]
-    budget_pkg = (
-        sorted(cheaper_in_family, key=lambda p: p.price, reverse=True)[0]
-        if cheaper_in_family else None
-    )
+    if cheaper_in_family:
+        budget_pkg = sorted(cheaper_in_family, key=lambda p: p.price, reverse=True)[0]
+    else:
+        goodfit_kva = float(goodfit_pkg.family.kva_rating)
+        smaller_family_pkgs = [
+            p for p in packages
+            if p.family and float(p.family.kva_rating) < goodfit_kva
+        ]
+        if smaller_family_pkgs:
+            # Pick the largest family below Good Fit, then its priciest variant
+            next_down_kva = max(float(p.family.kva_rating) for p in smaller_family_pkgs)
+            next_down_pkgs = [
+                p for p in smaller_family_pkgs
+                if float(p.family.kva_rating) == next_down_kva
+            ]
+            budget_pkg = sorted(next_down_pkgs, key=lambda p: p.price, reverse=True)[0]
+        else:
+            budget_pkg = None
 
     # Step 5: Excellent = the package with the next-larger battery capacity
     # above Good Fit. Stepping by battery_kwh ensures the upgrade is a real
