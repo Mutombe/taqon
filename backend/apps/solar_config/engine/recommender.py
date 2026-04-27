@@ -130,16 +130,28 @@ def _select_family(pp, families):
     return families[largest_kva]
 
 
-def _select_variant(ep, family_pkgs):
+def _select_variant(ep, family_pkgs, pp=None):
     """
     EP → Variant selection within a family.
     Find the variant whose EP range best contains the adjusted EP.
+
+    When pp is provided, variants whose pp_max < pp are excluded so the
+    chosen package can actually handle the customer's peak load. Falls
+    back to the full variant list only if no variant satisfies the PP
+    requirement.
     """
+    # Drop variants that can't handle the customer's PP (peak load).
+    # Variant selection picks by EP, but a variant with pp_max < pp would
+    # leave the inverter under-sized even though the family-level union
+    # contains pp.
+    candidates = list(family_pkgs)
+    if pp is not None:
+        pp_safe = [p for p in candidates if p.pp_max >= pp]
+        if pp_safe:
+            candidates = pp_safe
+
     # Find variants where EP falls within range
-    matching = []
-    for pkg in family_pkgs:
-        if pkg.ep_min <= ep <= pkg.ep_max:
-            matching.append(pkg)
+    matching = [p for p in candidates if p.ep_min <= ep <= p.ep_max]
 
     if matching:
         # Pick the one where EP is most centered
@@ -148,8 +160,8 @@ def _select_variant(ep, family_pkgs):
 
     # EP doesn't match exactly — find closest variant
     # Prefer the variant whose ep_min is just below EP (closest fit going up)
-    below = [(p, ep - p.ep_max) for p in family_pkgs if p.ep_max <= ep]
-    above = [(p, p.ep_min - ep) for p in family_pkgs if p.ep_min > ep]
+    below = [(p, ep - p.ep_max) for p in candidates if p.ep_max <= ep]
+    above = [(p, p.ep_min - ep) for p in candidates if p.ep_min > ep]
 
     if below:
         # EP is above this variant's range — pick the highest one below
@@ -159,7 +171,7 @@ def _select_variant(ep, family_pkgs):
         return min(above, key=lambda x: x[1])[0]
 
     # Fallback — cheapest in family
-    return sorted(family_pkgs, key=lambda p: p.price)[0]
+    return sorted(candidates, key=lambda p: p.price)[0]
 
 
 def recommend_packages(appliance_selections, distance_km=None, preferences=None):
@@ -210,9 +222,11 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     goodfit_pp, goodfit_ep = _adjust_for_smart_load(base_pp, base_ep, smart_eligible, 'good_fit', preferences)
     excellent_pp, excellent_ep = _adjust_for_smart_load(base_pp, base_ep, smart_eligible, 'excellent', preferences)
 
-    # Step 3: PP → Family, EP → Variant for GOOD FIT first (anchor)
+    # Step 3: PP → Family, EP → Variant for GOOD FIT first (anchor).
+    # PP is passed to the variant selector too so it doesn't pick a
+    # variant whose pp_max sits below the customer's peak load.
     goodfit_family = _select_family(goodfit_pp, families)
-    goodfit_pkg = _select_variant(goodfit_ep, goodfit_family)
+    goodfit_pkg = _select_variant(goodfit_ep, goodfit_family, pp=goodfit_pp)
 
     # Step 4: Budget = the immediately preceding package by price.
     # Single decremental step across the full catalogue (ignores family),
