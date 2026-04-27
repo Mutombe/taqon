@@ -214,104 +214,44 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     goodfit_family = _select_family(goodfit_pp, families)
     goodfit_pkg = _select_variant(goodfit_ep, goodfit_family)
 
-    # Helper: kVA of a package (float, family-preferred)
-    def _pkg_kva(p):
-        return float(p.family.kva_rating) if p.family else float(p.inverter_kva)
+    # Step 4: Budget = the immediately preceding package by price.
+    # Single decremental step across the full catalogue (ignores family),
+    # so the customer sees the closest cheaper alternative.
+    cheaper = [p for p in packages if p.price < goodfit_pkg.price]
+    budget_pkg = (
+        sorted(cheaper, key=lambda p: p.price, reverse=True)[0]
+        if cheaper else None
+    )
 
-    goodfit_kva = _pkg_kva(goodfit_pkg)
+    # Step 5: Excellent = the package with the next-larger battery capacity
+    # above Good Fit. Stepping by battery_kwh ensures the upgrade is a real
+    # storage improvement; ties broken by price ascending.
+    goodfit_battery = _compute_battery_kwh(goodfit_pkg)
+    bigger_battery = [
+        p for p in packages
+        if _compute_battery_kwh(p) > goodfit_battery
+    ]
+    excellent_pkg = (
+        sorted(bigger_battery, key=lambda p: (_compute_battery_kwh(p), p.price))[0]
+        if bigger_battery else None
+    )
 
-    # Step 4: Budget = a package from a DIFFERENT (smaller) family when possible,
-    # so the user sees a genuinely different size, not just a stripped variant.
-    # Fall back to the cheapest same-family variant if no smaller family exists.
-    cheaper_diff_family = [p for p in packages if p.price < goodfit_pkg.price and _pkg_kva(p) < goodfit_kva]
-    if cheaper_diff_family:
-        # Pick the largest family below good_fit, then cheapest in that family
-        budget_kva = max(_pkg_kva(p) for p in cheaper_diff_family)
-        budget_candidates = [p for p in cheaper_diff_family if _pkg_kva(p) == budget_kva]
-        budget_pkg = sorted(budget_candidates, key=lambda p: p.price, reverse=True)[0]
-    else:
-        cheaper_any = [p for p in packages if p.price < goodfit_pkg.price]
-        budget_pkg = (
-            sorted(cheaper_any, key=lambda p: p.price, reverse=True)[0]
-            if cheaper_any else goodfit_pkg
-        )
-
-    # Step 5: Excellent = a package from a DIFFERENT (larger) family when possible.
-    # This gives the user a meaningful "step up" option rather than the same
-    # system with a couple of extra panels. Fall back to same-family variant
-    # only if no larger family exists in the catalogue.
-    pricier_diff_family = [p for p in packages if p.price > goodfit_pkg.price and _pkg_kva(p) > goodfit_kva]
-    if pricier_diff_family:
-        # Pick the smallest family above good_fit, then cheapest in that family
-        excellent_kva = min(_pkg_kva(p) for p in pricier_diff_family)
-        excellent_candidates = [p for p in pricier_diff_family if _pkg_kva(p) == excellent_kva]
-        excellent_pkg = sorted(excellent_candidates, key=lambda p: p.price)[0]
-    else:
-        pricier_any = [p for p in packages if p.price > goodfit_pkg.price and p.id != budget_pkg.id]
-        excellent_pkg = (
-            sorted(pricier_any, key=lambda p: p.price)[0]
-            if pricier_any else goodfit_pkg
-        )
-
-    # Step 6: Handle edge cases — bottom and top of catalogue
-    sorted_all = sorted(packages, key=lambda p: p.price)
-    cheapest_pkg = sorted_all[0]
-    most_expensive_pkg = sorted_all[-1]
-
-    is_at_bottom = (goodfit_pkg.id == cheapest_pkg.id)  # HE-1 is best fit
-    is_at_top = (goodfit_pkg.id == most_expensive_pkg.id)  # MP-4 is best fit
-
-    # Determine best_match
+    # Step 6: Determine best_match tier and assemble tier_data, omitting
+    # tiers when Good Fit sits at the catalogue's bottom or top.
     priority = preferences.get('priority', 'balanced')
-    if priority == 'lowest_cost':
+    if priority == 'lowest_cost' and budget_pkg is not None:
         best_match_tier = 'budget'
-    elif priority == 'max_comfort':
+    elif priority == 'max_comfort' and excellent_pkg is not None:
         best_match_tier = 'excellent'
     else:
         best_match_tier = 'good_fit'
 
-    # Build tier_data based on edge cases
-    if is_at_bottom:
-        # Good fit is the cheapest package — no budget, only 2 cards
-        tier_data = {
-            'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
-            'excellent': (excellent_pkg, excellent_pp, excellent_ep),
-        }
-        if best_match_tier == 'budget':
-            best_match_tier = 'good_fit'
-    elif is_at_top:
-        # Good fit is the most expensive — no excellent, only 2 cards
-        tier_data = {
-            'budget': (budget_pkg, budget_pp, budget_ep),
-            'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
-        }
-        if best_match_tier == 'excellent':
-            best_match_tier = 'good_fit'
-    elif budget_pkg.id == goodfit_pkg.id:
-        # Budget and good_fit ended up same — push budget one more step down
-        even_cheaper = [p for p in packages if p.price < budget_pkg.price]
-        if even_cheaper:
-            budget_pkg = sorted(even_cheaper, key=lambda p: p.price, reverse=True)[0]
-            tier_data = {
-                'budget': (budget_pkg, budget_pp, budget_ep),
-                'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
-                'excellent': (excellent_pkg, excellent_pp, excellent_ep),
-            }
-        else:
-            # Can't go lower — show only 2 cards
-            tier_data = {
-                'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
-                'excellent': (excellent_pkg, excellent_pp, excellent_ep),
-            }
-            if best_match_tier == 'budget':
-                best_match_tier = 'good_fit'
-    else:
-        # Normal case — 3 distinct packages
-        tier_data = {
-            'budget': (budget_pkg, budget_pp, budget_ep),
-            'good_fit': (goodfit_pkg, goodfit_pp, goodfit_ep),
-            'excellent': (excellent_pkg, excellent_pp, excellent_ep),
-        }
+    tier_data = {}
+    if budget_pkg is not None:
+        tier_data['budget'] = (budget_pkg, budget_pp, budget_ep)
+    tier_data['good_fit'] = (goodfit_pkg, goodfit_pp, goodfit_ep)
+    if excellent_pkg is not None:
+        tier_data['excellent'] = (excellent_pkg, excellent_pp, excellent_ep)
 
     tiers = {}
     for tier_name, (pkg, adj_pp, adj_ep) in tier_data.items():
