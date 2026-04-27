@@ -228,13 +228,18 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
     goodfit_family = _select_family(goodfit_pp, families)
     goodfit_pkg = _select_variant(goodfit_ep, goodfit_family, pp=goodfit_pp)
 
-    # Step 4: Budget = the immediately preceding package by price.
-    # Single decremental step across the full catalogue (ignores family),
-    # so the customer sees the closest cheaper alternative.
-    cheaper = [p for p in packages if p.price < goodfit_pkg.price]
+    # Step 4: Budget = the immediately preceding package by price within
+    # the SAME family as Good Fit. Keeps the customer in a consistent
+    # inverter class and only drops Budget when Good Fit is already the
+    # cheapest variant in its family.
+    cheaper_in_family = [
+        p for p in packages
+        if p.price < goodfit_pkg.price
+        and p.family_id == goodfit_pkg.family_id
+    ]
     budget_pkg = (
-        sorted(cheaper, key=lambda p: p.price, reverse=True)[0]
-        if cheaper else None
+        sorted(cheaper_in_family, key=lambda p: p.price, reverse=True)[0]
+        if cheaper_in_family else None
     )
 
     # Step 5: Excellent = the package with the next-larger battery capacity
