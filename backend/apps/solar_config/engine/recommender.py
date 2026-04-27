@@ -257,12 +257,21 @@ def recommend_packages(appliance_selections, distance_km=None, preferences=None)
             budget_pkg = None
 
     # Step 5: Excellent = the package with the next-larger battery capacity
-    # above Good Fit. Stepping by battery_kwh ensures the upgrade is a real
-    # storage improvement; ties broken by price ascending.
+    # above Good Fit, restricted to the same family or a LARGER one.
+    # Without the family floor a smaller-family package (e.g. HL-6) with a
+    # bigger battery can be returned as the upgrade for an HD Good Fit,
+    # which is a downgrade in inverter class.
     goodfit_battery = _compute_battery_kwh(goodfit_pkg)
+    goodfit_kva = (
+        float(goodfit_pkg.family.kva_rating)
+        if goodfit_pkg.family else float(goodfit_pkg.inverter_kva)
+    )
     bigger_battery = [
         p for p in packages
         if _compute_battery_kwh(p) > goodfit_battery
+        and (
+            float(p.family.kva_rating) if p.family else float(p.inverter_kva)
+        ) >= goodfit_kva
     ]
     excellent_pkg = (
         sorted(bigger_battery, key=lambda p: (_compute_battery_kwh(p), p.price))[0]
