@@ -1743,7 +1743,7 @@ export default function SolarAdvisor() {
       filtered = filtered.filter((a) => a.name.toLowerCase().includes(q));
     }
     const usageScore = (a) => parseFloat(a.concurrency_factor || 0) + parseFloat(a.night_use_factor || 0);
-    return [...filtered].sort((a, b) => {
+    const sorted = [...filtered].sort((a, b) => {
       // Primary: group by room in the same order as the category tabs
       const catDiff = (CATEGORY_PRIORITY[a.category] ?? 99) - (CATEGORY_PRIORITY[b.category] ?? 99);
       if (catDiff !== 0) return catDiff;
@@ -1755,6 +1755,24 @@ export default function SolarAdvisor() {
       if (epDiff !== 0) return epDiff;
       return a.name.localeCompare(b.name);
     });
+
+    // "All Categories" tab: collapse cross-room duplicates so the same
+    // appliance (e.g. Hair Dryer in bathroom + bedroom, "TV Medium" vs
+    // "TV (Medium)") shows as a single card. Per-room tabs keep the
+    // full per-room granularity. Highest-priority category wins by
+    // virtue of sort order above.
+    if (!activeCategory) {
+      const normalize = (name) =>
+        name.toLowerCase().replace(/[()[\]]/g, '').replace(/\s+/g, ' ').trim();
+      const seen = new Set();
+      return sorted.filter((a) => {
+        const key = normalize(a.name);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    return sorted;
   }, [appliances, activeCategory, search, CATEGORY_PRIORITY]);
 
   // Running totals — with Zimbabwe market adjustment factors
