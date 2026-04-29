@@ -1733,6 +1733,58 @@ export default function SolarAdvisor() {
     office: 5, outdoor: 6, security: 7, garage: 8, other: 9,
   }), []);
 
+  // Cross-room duplicate appliances (Hair Dryer in bathroom + bedroom,
+  // Laptop in bedroom + lounge + office, "TV (Medium)" vs "TV Medium",
+  // etc.) collapse to a single canonical id so a click in any tab —
+  // including the per-room ones — increments the same counter.
+  const canonicalIdMap = useMemo(() => {
+    const normalize = (n) =>
+      n.toLowerCase().replace(/[()[\]]/g, '').replace(/\s+/g, ' ').trim();
+    const usageScore = (a) =>
+      parseFloat(a.concurrency_factor || 0) + parseFloat(a.night_use_factor || 0);
+    const sorted = [...appliances].sort((a, b) => {
+      const catDiff = (CATEGORY_PRIORITY[a.category] ?? 99) - (CATEGORY_PRIORITY[b.category] ?? 99);
+      if (catDiff !== 0) return catDiff;
+      const usageDiff = usageScore(b) - usageScore(a);
+      if (usageDiff !== 0) return usageDiff;
+      const epDiff = parseFloat(b.energy_points || 0) - parseFloat(a.energy_points || 0);
+      if (epDiff !== 0) return epDiff;
+      return a.name.localeCompare(b.name);
+    });
+    const firstByName = new Map();
+    for (const a of sorted) {
+      const k = normalize(a.name);
+      if (!firstByName.has(k)) firstByName.set(k, a.id);
+    }
+    const map = {};
+    for (const a of appliances) {
+      map[a.id] = firstByName.get(normalize(a.name)) || a.id;
+    }
+    return map;
+  }, [appliances, CATEGORY_PRIORITY]);
+
+  const canonId = useCallback(
+    (id) => canonicalIdMap[id] || id,
+    [canonicalIdMap],
+  );
+
+  // Migrate any pre-deploy draft selections (which may use non-canonical
+  // ids) onto the canonical id so existing sessions don't ghost-double.
+  useEffect(() => {
+    if (!appliances.length) return;
+    setSelections((prev) => {
+      let changed = false;
+      const next = {};
+      for (const [id, qty] of Object.entries(prev)) {
+        const cid = canonicalIdMap[id] || id;
+        if (cid !== id) changed = true;
+        next[cid] = (next[cid] || 0) + qty;
+      }
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canonicalIdMap]);
+
   const filteredAppliances = useMemo(() => {
     let filtered = appliances;
     if (activeCategory) {
@@ -1798,14 +1850,15 @@ export default function SolarAdvisor() {
   }, [selections, appliances]);
 
   const updateQty = (id, delta) => {
+    const cid = canonId(id);
     setSelections((prev) => {
-      const current = prev[id] || 0;
+      const current = prev[cid] || 0;
       const next = Math.max(0, current + delta);
       if (next === 0) {
-        const { [id]: _, ...rest } = prev;
+        const { [cid]: _, ...rest } = prev;
         return rest;
       }
-      return { ...prev, [id]: next };
+      return { ...prev, [cid]: next };
     });
   };
 
@@ -2060,7 +2113,7 @@ export default function SolarAdvisor() {
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-2.5">
                         {filteredAppliances.map((appliance) => {
-                          const qty = selections[appliance.id] || 0;
+                          const qty = selections[canonId(appliance.id)] || 0;
                           return (
                             <div
                               key={appliance.id}
@@ -2615,7 +2668,7 @@ export default function SolarAdvisor() {
               else if (step === 3) handleRecommend();
             }}
             onBack={() => setStep(step - 1)}
-            onRemove={(id) => updateQty(id, -(selections[id] || 0))}
+            onRemove={(id) => updateQty(id, -(selections[canonId(id)] || 0))}
           />
         )}
       </section>
