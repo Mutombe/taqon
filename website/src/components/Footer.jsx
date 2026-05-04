@@ -120,7 +120,7 @@ export default function Footer({ onOpenPrivacy, onOpenCookies }) {
                   onClick={(e) => confirmExternalNavigation(social.href, e)}
                   className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-taqon-orange hover:border-taqon-orange transition-all cursor-pointer"
                 >
-                  <social.icon size={16} weight="fill" />
+                  <social.icon size={16} weight="duotone" />
                 </a>
               ))}
             </div>

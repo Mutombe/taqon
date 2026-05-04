@@ -71,7 +71,7 @@ export default function Careers() {
               <AnimatedSection key={i} delay={i * 0.1}>
                 <div className="text-center p-8 rounded-3xl bg-taqon-cream dark:bg-taqon-dark border border-gray-100 dark:border-white/10">
                   <div className="w-14 h-14 rounded-2xl bg-taqon-orange/10 flex items-center justify-center mx-auto mb-4">
-                    <item.icon size={24} weight="fill" className="text-taqon-orange" />
+                    <item.icon size={24} weight="duotone" className="text-taqon-orange" />
                   </div>
                   <h3 className="font-bold font-syne text-taqon-charcoal dark:text-white">{item.title}</h3>
                   <p className="mt-2 text-sm text-taqon-muted dark:text-white/50">{item.desc}</p>
