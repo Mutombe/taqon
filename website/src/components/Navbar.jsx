@@ -44,7 +44,7 @@ const navLinks = [
         { path: '/packages/home-economy-3kva', label: 'Home Economy 3kVA' },
       ]},
       { tier: 'HOME PREMIUM', items: [
-        { path: '/packages/home-luxury-1-0-5kva', label: 'Home Luxury 5kVA', popular: true },
+        { path: '/packages/home-luxury-1-0-5kva', label: 'Home Luxury 5/6kVA', popular: true },
         { path: '/packages/home-delux-2-0-8kva', label: 'Home Deluxe 8kVA' },
       ]},
       { tier: 'COMMERCIAL', items: [
