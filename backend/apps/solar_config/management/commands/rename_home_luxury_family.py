@@ -77,6 +77,21 @@ class Command(BaseCommand):
             .prefetch_related('items__component')
         )
 
+        # Match a leading "<n>KVA" or "<n.n>KVA" token in a component name,
+        # e.g. "6KVA GROWATT HYBRID INVERTER 48V" -> "6".
+        kva_in_name = re.compile(r'^\s*(\d+(?:\.\d+)?)\s*KVA\b', re.IGNORECASE)
+
+        def detect_kva(component):
+            """Return the inverter's kVA as a Decimal, or None if undetectable.
+            Prefers `wattage` (VA) when set; falls back to parsing the leading
+            "NKVA" token from the component name (current data has it there)."""
+            if component.wattage and int(component.wattage) > 0:
+                return Decimal(int(component.wattage)) / Decimal(1000)
+            m = kva_in_name.search(component.name or '')
+            if m:
+                return Decimal(m.group(1))
+            return None
+
         for pkg in packages:
             inverter_items = [i for i in pkg.items.all() if i.component.category == 'inverter']
             if not inverter_items:
@@ -87,15 +102,15 @@ class Command(BaseCommand):
                 continue
 
             # Largest inverter wins (handles parallel-stacked configs).
-            max_va = max(int(i.component.wattage or 0) for i in inverter_items)
-            if max_va <= 0:
+            kvas = [k for k in (detect_kva(i.component) for i in inverter_items) if k is not None]
+            if not kvas:
                 self.stdout.write(self.style.WARNING(
-                    f'  {pkg.slug}: inverter component has no wattage, skipped'
+                    f'  {pkg.slug}: inverter kVA undetectable from wattage or name, skipped'
                 ))
                 skipped += 1
                 continue
 
-            actual_kva = Decimal(max_va) / Decimal(1000)
+            actual_kva = max(kvas)
             updates = {}
 
             if pkg.inverter_kva != actual_kva:
