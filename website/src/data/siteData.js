@@ -327,31 +327,19 @@ export const projects = [
 // Career positions
 export const careers = [
   {
-    id: 1,
-    title: "Solar Installation Technician",
-    department: "Installations",
-    type: "Full-time",
-    location: "Harare, Zimbabwe",
-    description: "Join our team of expert solar installers. You'll work on residential and commercial solar installations across Zimbabwe.",
-    requirements: ["Electrical engineering diploma or equivalent", "2+ years solar installation experience", "Valid driver's license", "Physical fitness for rooftop work"],
-  },
-  {
-    id: 2,
-    title: "Electrical Engineer",
-    department: "Engineering",
-    type: "Full-time",
-    location: "Harare, Zimbabwe",
-    description: "Lead electrical design and installation projects for our growing client base.",
-    requirements: ["BSc in Electrical Engineering", "Professional registration with ZIE", "3+ years experience", "Project management skills"],
-  },
-  {
     id: 3,
     title: "Sales Representative",
     department: "Sales",
     type: "Full-time",
     location: "Harare, Zimbabwe",
-    description: "Drive solar adoption by connecting with potential clients and presenting our solutions.",
-    requirements: ["Sales experience in energy/tech sector", "Strong communication skills", "Own vehicle", "Knowledge of solar systems preferred"],
+    description: "Drive solar adoption by connecting with potential clients, presenting Taqon's residential and commercial solutions, and closing deals. You'll be the face of our brand to homeowners and businesses across Harare.",
+    requirements: [
+      "Sales experience in energy, tech, or a related sector",
+      "Strong communication & relationship-building skills",
+      "Own vehicle & valid driver's licence",
+      "Working knowledge of solar systems is a plus",
+      "Driven, target-oriented, and customer-first mindset",
+    ],
   },
 ];
 

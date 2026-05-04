@@ -293,6 +293,9 @@ function ShopMegaMenu({ onClose }) {
 
 // ─── Main Navbar Component ──────────────────────────────────────────────────────
 
+// Height (in px) the HiringBanner adds at the top when visible.
+const HIRING_BANNER_HEIGHT = 36;
+
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -302,6 +305,14 @@ export default function Navbar() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState(null);
+  const [bannerVisible, setBannerVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.localStorage.getItem('taqon-hiring-banner-dismissed-v1') !== '1';
+    } catch {
+      return false;
+    }
+  });
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -322,6 +333,17 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // ── Listen for HiringBanner visibility changes ─────────────────────────────
+  useEffect(() => {
+    const handler = (e) => setBannerVisible(Boolean(e?.detail?.visible));
+    window.addEventListener('taqon:hiring-banner-state', handler);
+    return () => window.removeEventListener('taqon:hiring-banner-state', handler);
+  }, []);
+
+  // Active offset (px) the navbar must add to make room for the hiring banner.
+  // Drops to 0 once the user scrolls (banner slides away) or dismisses it.
+  const bannerOffset = bannerVisible && !isScrolled ? HIRING_BANNER_HEIGHT : 0;
 
   // ── Close everything on route change ────────────────────────────────────────
   useEffect(() => {
@@ -430,7 +452,10 @@ export default function Navbar() {
   return (
     <>
       {/* ── Top Info Bar ───────────────────────────────────────────────────── */}
-      <div className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ${isScrolled ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
+      <div
+        className={`fixed left-0 right-0 z-[60] transition-all duration-500 ${isScrolled ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}
+        style={{ top: bannerOffset }}
+      >
         <div className="bg-taqon-dark/90 backdrop-blur-sm text-white/70 text-xs py-1.5">
           <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
             <div className="flex items-center gap-4">
@@ -453,9 +478,10 @@ export default function Navbar() {
       <motion.nav
         className={`fixed left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled
-            ? 'top-0 bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-xl shadow-lg shadow-black/5'
-            : 'top-8 bg-transparent'
+            ? 'bg-white/90 dark:bg-taqon-dark/90 backdrop-blur-xl shadow-lg shadow-black/5'
+            : 'bg-transparent'
         }`}
+        style={{ top: isScrolled ? 0 : 32 + bannerOffset }}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

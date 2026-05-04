@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
 import { useTheme } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
+import HiringBanner from './components/HiringBanner';
 import Footer from './components/Footer';
 import { ScrollProgress, BackToTop } from './components/ScrollElements';
 import FloatingCart from './components/FloatingCart';
@@ -225,6 +226,7 @@ function AppContent() {
     <AnalyticsProvider>
       <ScrollToTop />
       {!isAdminRoute && <ScrollProgress />}
+      {!isAdminRoute && <HiringBanner />}
       {!isAdminRoute && <Navbar />}
 
       <main className={isAdminRoute ? undefined : 'min-h-screen'}>
