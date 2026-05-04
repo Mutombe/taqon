@@ -314,6 +314,15 @@ export default function Navbar() {
       return false;
     }
   });
+  const [careersViewed, setCareersViewed] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      return window.localStorage.getItem('taqon-careers-viewed-v1') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const showCareersIndicator = !careersViewed;
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -341,6 +350,18 @@ export default function Navbar() {
     window.addEventListener('taqon:hiring-banner-state', handler);
     return () => window.removeEventListener('taqon:hiring-banner-state', handler);
   }, []);
+
+  // ── Mark Careers as viewed once the user lands on /careers ────────────────
+  useEffect(() => {
+    if (location.pathname === '/careers' && !careersViewed) {
+      try {
+        window.localStorage.setItem('taqon-careers-viewed-v1', '1');
+      } catch {
+        // ignore — non-persistent is fine
+      }
+      setCareersViewed(true);
+    }
+  }, [location.pathname, careersViewed]);
 
   // Active offset (px) the navbar must add to make room for the hiring banner.
   // Drops to 0 once the user scrolls (banner slides away) or dismisses it.
@@ -527,6 +548,12 @@ export default function Navbar() {
                         />
                       )}
                       {link.label}
+                      {link.label === 'About' && showCareersIndicator && (
+                        <span className="relative flex h-1.5 w-1.5" aria-hidden>
+                          <span className="absolute inline-flex h-full w-full rounded-full bg-taqon-orange opacity-75 animate-ping" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-taqon-orange" />
+                        </span>
+                      )}
                       {hasChildren && (
                         <CaretDown
                           size={13}
@@ -553,9 +580,15 @@ export default function Navbar() {
                               <Link
                                 to={child.path}
                                 onClick={closeDropdown}
-                                className="block px-4 py-3 text-sm text-taqon-charcoal dark:text-white/70 hover:bg-taqon-orange/5 hover:text-taqon-orange transition-all border-b border-gray-50 dark:border-white/5 last:border-0"
+                                className="flex items-center justify-between gap-2 px-4 py-3 text-sm text-taqon-charcoal dark:text-white/70 hover:bg-taqon-orange/5 hover:text-taqon-orange transition-all border-b border-gray-50 dark:border-white/5 last:border-0"
                               >
-                                {child.label}
+                                <span>{child.label}</span>
+                                {child.path === '/careers' && showCareersIndicator && (
+                                  <span className="relative flex h-1.5 w-1.5 flex-shrink-0" aria-hidden>
+                                    <span className="absolute inline-flex h-full w-full rounded-full bg-taqon-orange opacity-75 animate-ping" />
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-taqon-orange" />
+                                  </span>
+                                )}
                               </Link>
                             </motion.div>
                           ))}
@@ -839,6 +872,12 @@ export default function Navbar() {
                             />
                           )}
                           {link.label}
+                          {link.label === 'About' && showCareersIndicator && (
+                            <span className="relative flex h-2 w-2" aria-hidden>
+                              <span className="absolute inline-flex h-full w-full rounded-full bg-taqon-orange opacity-75 animate-ping" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-taqon-orange" />
+                            </span>
+                          )}
                         </Link>
                         {hasChildren && (
                           <button
@@ -871,9 +910,15 @@ export default function Navbar() {
                                 <Link
                                   key={child.path + child.label}
                                   to={child.path}
-                                  className="block py-3 text-sm text-white/60 hover:text-taqon-orange transition-colors"
+                                  className="flex items-center justify-between gap-2 py-3 text-sm text-white/60 hover:text-taqon-orange transition-colors"
                                 >
-                                  {child.label}
+                                  <span>{child.label}</span>
+                                  {child.path === '/careers' && showCareersIndicator && (
+                                    <span className="relative flex h-1.5 w-1.5 flex-shrink-0" aria-hidden>
+                                      <span className="absolute inline-flex h-full w-full rounded-full bg-taqon-orange opacity-75 animate-ping" />
+                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-taqon-orange" />
+                                    </span>
+                                  )}
                                 </Link>
                               ))}
 
