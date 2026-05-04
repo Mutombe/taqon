@@ -5,8 +5,31 @@ import PackageDetailTemplate from '../components/PackageDetailTemplate';
 import SEO from '../components/SEO';
 import { usePackageDetail, usePackagePrice, useFamilyDetail } from '../hooks/useQueries';
 
+// Legacy /packages/:slug URLs that pre-date the DB-driven catalogue.
+// Each maps to a real package slug so the page (and downstream features
+// like instant-quote PDF download) work against live data instead of
+// the deprecated static fallback.
+const LEGACY_PACKAGE_REDIRECTS = {
+  'economy': 'home-economy-3kva',
+  'quick-access': 'home-economy-3kva',
+  'luxury': 'home-luxury-1-0-5kva',
+  'luxury-beta': 'home-luxury-1-0-5kva',
+  'deluxe': 'home-delux-2-0-8kva',
+  '8kva-ultra-power': 'ultra-power-v2-0-10kva',
+  '10kva-premium-power': 'premuim-power-1-0-12kva',
+  '12kva-propower': 'pro-power-1-0',
+  '16kva-masterpower': 'master-power-v1-0',
+  '20-24kva-ultramax': 'master-power-v1-0',
+};
+
 export default function PackageDetail() {
   const { slug } = useParams();
+
+  // Old slug? Redirect to its DB equivalent so the API resolves.
+  const redirectTarget = LEGACY_PACKAGE_REDIRECTS[slug];
+  if (redirectTarget) {
+    return <Navigate to={`/packages/${redirectTarget}`} replace />;
+  }
 
   const staticPkg = getPackageBySlug(slug);
 
