@@ -139,7 +139,7 @@ export default function NotificationBell() {
         className="relative p-2 text-gray-400 hover:text-white transition-colors"
         aria-label="Notifications"
       >
-        <Bell size={20} />
+        <Bell size={20} weight={unreadCount > 0 ? 'fill' : 'regular'} />
         {unreadCount > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-taqon-orange text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
             {unreadCount > 99 ? '99+' : unreadCount}

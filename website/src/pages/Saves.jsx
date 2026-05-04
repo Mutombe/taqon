@@ -35,12 +35,12 @@ export default function Saves() {
     <>
       <SEO title="Saved Items" description="Your saved articles, projects, products, and packages." />
 
-      <section className="relative bg-taqon-dark pt-28 pb-12">
+      <section className="relative flex items-end bg-taqon-dark pt-36 lg:pt-44 pb-14 lg:pb-16 min-h-[40vh]">
         <div className="absolute inset-0 dark-mesh" />
-        <div className="relative max-w-7xl mx-auto px-4">
+        <div className="relative max-w-7xl mx-auto px-4 w-full">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">Your Collection</span>
-            <h1 className="mt-3 text-4xl font-bold font-syne text-white">Saved <span className="text-gradient">Items</span></h1>
+            <h1 className="mt-3 text-4xl lg:text-5xl font-bold font-syne text-white">Saved <span className="text-gradient">Items</span></h1>
             <p className="mt-3 text-white/50">
               {totalSaves > 0 ? `${totalSaves} saved item${totalSaves !== 1 ? 's' : ''}` : 'Nothing saved yet'}
             </p>

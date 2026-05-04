@@ -108,7 +108,7 @@ function SolutionsMegaMenu({ onClose }) {
                   className="flex items-start gap-3 p-3 rounded-xl hover:bg-taqon-orange/5 dark:hover:bg-white/5 transition-all group"
                 >
                   <div className="mt-0.5 w-9 h-9 rounded-lg bg-taqon-orange/10 group-hover:bg-taqon-orange/20 flex items-center justify-center flex-shrink-0 transition-colors">
-                    <Icon size={18} weight="duotone" className="text-taqon-orange" />
+                    <Icon size={18} weight="fill" className="text-taqon-orange" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-taqon-charcoal dark:text-white/90 group-hover:text-taqon-orange transition-colors">
@@ -241,7 +241,7 @@ function ShopMegaMenu({ onClose }) {
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-taqon-orange/5 dark:hover:bg-white/5 transition-all group"
                 >
                   <div className="w-8 h-8 rounded-lg bg-taqon-orange/10 group-hover:bg-taqon-orange/20 flex items-center justify-center flex-shrink-0 transition-colors">
-                    <Icon size={16} weight="duotone" className="text-taqon-orange" />
+                    <Icon size={16} weight="fill" className="text-taqon-orange" />
                   </div>
                   <span className="text-sm font-medium text-taqon-charcoal dark:text-white/90 group-hover:text-taqon-orange transition-colors">
                     {item.label}
@@ -618,7 +618,7 @@ export default function Navbar() {
                 className={`relative p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
                 aria-label="Saved items"
               >
-                <Heart size={18} />
+                <Heart size={18} weight="fill" />
                 {savesCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
                     {savesCount > 99 ? '99+' : savesCount}
@@ -632,7 +632,7 @@ export default function Navbar() {
                 className={`relative p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
                 aria-label="Shopping cart"
               >
-                <Bag size={18} />
+                <Bag size={18} weight="fill" />
                 {cartCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-taqon-orange text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
                     {cartCount > 99 ? '99+' : cartCount}
@@ -646,7 +646,7 @@ export default function Navbar() {
                 className={`p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
                 aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                {theme === 'dark' ? <Sun size={18} weight="fill" /> : <Moon size={18} weight="fill" />}
               </button>
 
               {/* Notification bell */}

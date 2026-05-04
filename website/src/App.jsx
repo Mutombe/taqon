@@ -3,7 +3,6 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { IconContext } from '@phosphor-icons/react';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
 import { useTheme } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
@@ -360,19 +359,12 @@ function AppContent() {
   );
 }
 
-// Default Phosphor icons to the filled weight site-wide. Individual
-// icons that pass an explicit `weight` prop (e.g. weight="bold" for
-// arrows/carets, weight="duotone" for hero icons) override this.
-const PHOSPHOR_DEFAULTS = { weight: 'fill' };
-
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <IconContext.Provider value={PHOSPHOR_DEFAULTS}>
-        <Router>
-          <AppContent />
-        </Router>
-      </IconContext.Provider>
+      <Router>
+        <AppContent />
+      </Router>
     </QueryClientProvider>
   );
 }
