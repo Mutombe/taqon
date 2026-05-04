@@ -334,10 +334,7 @@ export const careers = [
     location: "Harare, Zimbabwe",
     description: "Drive solar adoption by connecting with potential clients, presenting Taqon's residential and commercial solutions, and closing deals. You'll be the face of our brand to homeowners and businesses across Harare.",
     requirements: [
-      "Sales experience in energy, tech, or a related sector",
       "Strong communication & relationship-building skills",
-      "Own vehicle & valid driver's licence",
-      "Working knowledge of solar systems is a plus",
       "Driven, target-oriented, and customer-first mindset",
     ],
   },

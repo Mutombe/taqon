@@ -83,29 +83,27 @@ export default function HiringBanner() {
             transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
           />
 
-          <div className="relative max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+          <div className="relative max-w-7xl mx-auto px-4 h-7 flex items-center justify-between gap-3">
             <Link
               to="/careers"
-              className="group flex items-center gap-2 min-w-0 text-xs sm:text-sm font-semibold"
+              className="group flex items-center gap-1.5 min-w-0 text-[11px] sm:text-xs font-semibold leading-none"
             >
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 flex-shrink-0">
-                <Briefcase size={13} weight="fill" />
-              </span>
+              <Briefcase size={12} weight="fill" className="flex-shrink-0" />
               <span className="truncate">
-                <span className="font-bold tracking-wide uppercase mr-2 hidden sm:inline">We're hiring</span>
+                <span className="font-bold tracking-wide uppercase mr-1.5 hidden sm:inline">We're hiring</span>
                 Sales Representative position open in Harare.
               </span>
-              <span className="hidden md:inline-flex items-center gap-1 text-white/95 underline-offset-2 group-hover:underline whitespace-nowrap">
-                Apply <ArrowRight size={13} weight="bold" />
+              <span className="hidden md:inline-flex items-center gap-0.5 text-white/95 underline-offset-2 group-hover:underline whitespace-nowrap">
+                Apply <ArrowRight size={11} weight="bold" />
               </span>
             </Link>
 
             <button
               onClick={handleDismiss}
-              className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-white/15 transition-colors flex-shrink-0"
+              className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors flex-shrink-0"
               aria-label="Dismiss hiring announcement"
             >
-              <X size={14} weight="bold" />
+              <X size={12} weight="bold" />
             </button>
           </div>
         </div>

@@ -294,7 +294,8 @@ function ShopMegaMenu({ onClose }) {
 // ─── Main Navbar Component ──────────────────────────────────────────────────────
 
 // Height (in px) the HiringBanner adds at the top when visible.
-const HIRING_BANNER_HEIGHT = 36;
+// Must match the banner's `h-7` Tailwind class (28px) — keep in sync if either changes.
+const HIRING_BANNER_HEIGHT = 28;
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
