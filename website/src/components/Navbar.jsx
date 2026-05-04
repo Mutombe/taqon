@@ -184,7 +184,7 @@ function PackagesMegaMenu({ onClose }) {
                   <Link
                     to={item.path}
                     onClick={onClose}
-                    className={`block px-3 py-2.5 rounded-xl text-sm transition-all hover:bg-taqon-orange/5 dark:hover:bg-white/5 ${
+                    className={`flex items-center gap-2 whitespace-nowrap px-3 py-2.5 rounded-xl text-sm transition-all hover:bg-taqon-orange/5 dark:hover:bg-white/5 ${
                       item.popular
                         ? 'bg-taqon-orange/5 dark:bg-taqon-orange/10 border border-taqon-orange/20'
                         : ''
@@ -194,8 +194,8 @@ function PackagesMegaMenu({ onClose }) {
                       {item.label}
                     </span>
                     {item.popular && (
-                      <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-taqon-orange bg-taqon-orange/10 px-1.5 py-0.5 rounded-full">
-                        Most Popular
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-taqon-orange bg-taqon-orange/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        Popular
                       </span>
                     )}
                   </Link>
