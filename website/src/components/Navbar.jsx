@@ -41,20 +41,17 @@ const navLinks = [
   {
     path: '/packages', label: 'Packages', type: 'mega', children: [
       { tier: 'HOME STARTER', items: [
-        { path: '/packages/economy', label: 'Economy (1kVA)' },
-        { path: '/packages/quick-access', label: 'Quick Access (1.5kVA)' },
+        { path: '/packages/home-economy-3kva', label: 'Home Economy 3kVA' },
       ]},
       { tier: 'HOME PREMIUM', items: [
-        { path: '/packages/luxury', label: 'Luxury (3kVA)', popular: true },
-        { path: '/packages/luxury-beta', label: 'Luxury Beta (5kVA)' },
-        { path: '/packages/deluxe', label: 'Deluxe (5kVA)' },
+        { path: '/packages/home-luxury-1-0-5kva', label: 'Home Luxury 5kVA', popular: true },
+        { path: '/packages/home-delux-2-0-8kva', label: 'Home Deluxe 8kVA' },
       ]},
       { tier: 'COMMERCIAL', items: [
-        { path: '/packages/8kva-ultra-power', label: '8KVA Ultra Power' },
-        { path: '/packages/10kva-premium-power', label: '10KVA Premium Power' },
-        { path: '/packages/12kva-propower', label: '12KVA ProPower' },
-        { path: '/packages/16kva-masterpower', label: '16KVA MasterPower' },
-        { path: '/packages/20-24kva-ultramax', label: '20-24KVA UltraMax' },
+        { path: '/packages/ultra-power-v2-0-10kva', label: 'Ultra Power 10kVA' },
+        { path: '/packages/premuim-power-1-0-12kva', label: 'Premium Power 12kVA' },
+        { path: '/packages/pro-power-1-0', label: 'ProPower 16kVA' },
+        { path: '/packages/master-power-v1-0', label: 'MasterPower 20kVA' },
       ]},
     ],
   },
