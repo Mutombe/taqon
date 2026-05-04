@@ -47,7 +47,7 @@ const navLinks = [
         { path: '/packages/home-luxury-1-0-5kva', label: 'Home Luxury 5/6kVA', popular: true },
         { path: '/packages/home-delux-2-0-8kva', label: 'Home Deluxe 8kVA' },
       ]},
-      { tier: 'COMMERCIAL', items: [
+      { tier: 'HOME MAX', items: [
         { path: '/packages/ultra-power-v2-0-10kva', label: 'Ultra Power 10kVA' },
         { path: '/packages/premuim-power-1-0-12kva', label: 'Premium Power 12kVA' },
         { path: '/packages/pro-power-1-0', label: 'ProPower 16kVA' },
