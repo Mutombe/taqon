@@ -273,6 +273,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showFeatureDetails, setShowFeatureDetails] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
 
   // Resolve gem identity from family slug or kVA
@@ -512,24 +513,67 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                 </div>
 
                 {/* Key features */}
-                <div>
-                  <h3 className="text-sm font-semibold text-taqon-charcoal dark:text-white mb-4 uppercase tracking-wider">
-                    Key Features
-                  </h3>
-                  <div className="space-y-3">
-                    {pkg.features.map((feature, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div
-                          className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: `color-mix(in srgb, ${gem.accent} 15%, transparent)` }}
-                        >
-                          <Check size={12} weight="bold" style={{ color: gem.accent }} />
-                        </div>
-                        <span className="text-sm text-taqon-charcoal/80 dark:text-white/70">{feature}</span>
+                {(pkg.features?.length ?? 0) > 0 && (() => {
+                  const featureItems = pkg.features.map((f) =>
+                    typeof f === 'string'
+                      ? { title: f, description: '' }
+                      : { title: f?.title ?? '', description: f?.description ?? '' }
+                  );
+                  const hasAnyDescription = featureItems.some((f) => f.description);
+                  return (
+                    <div>
+                      <h3 className="text-sm font-semibold text-taqon-charcoal dark:text-white mb-4 uppercase tracking-wider">
+                        Key Features
+                      </h3>
+                      <div className="space-y-3">
+                        {featureItems.map((feature, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <div
+                              className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: `color-mix(in srgb, ${gem.accent} 15%, transparent)` }}
+                            >
+                              <Check size={12} weight="bold" style={{ color: gem.accent }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-taqon-charcoal/90 dark:text-white/80 leading-snug">
+                                {feature.title}
+                              </p>
+                              <AnimatePresence initial={false}>
+                                {showFeatureDetails && feature.description && (
+                                  <motion.p
+                                    key="desc"
+                                    initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                    animate={{ height: 'auto', opacity: 1, marginTop: 4 }}
+                                    exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                                    className="overflow-hidden text-xs text-taqon-charcoal/60 dark:text-white/50 leading-relaxed"
+                                  >
+                                    {feature.description}
+                                  </motion.p>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      {hasAnyDescription && (
+                        <button
+                          type="button"
+                          onClick={() => setShowFeatureDetails((v) => !v)}
+                          className="mt-4 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:opacity-80"
+                          style={{ color: gem.accent }}
+                        >
+                          {showFeatureDetails ? 'Show less' : 'See more details'}
+                          <CaretDown
+                            size={11}
+                            weight="bold"
+                            className={`transition-transform duration-200 ${showFeatureDetails ? 'rotate-180' : ''}`}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Variant siblings */}
                 {siblings.length > 1 && (
