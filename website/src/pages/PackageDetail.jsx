@@ -92,8 +92,12 @@ export default function PackageDetail() {
       suitable_for: apiPackage.suitable_for || [],
       // Build includes from actual component items
       includes: buildIncludesFromItems(apiPackage.items || []),
-      // Use features as appliances placeholder
-      appliances: (apiPackage.features || []).slice(0, 8),
+      // Use features as appliances placeholder. Coerce {title,description}
+      // objects (the new format) to plain title strings so anywhere this
+      // array is rendered as text doesn't crash on the object shape.
+      appliances: (apiPackage.features || [])
+        .slice(0, 8)
+        .map((f) => (typeof f === 'string' ? f : f?.title ?? '')),
       cantPower: [],
       relatedPackages: buildRelatedFromSiblings(siblings, apiPackage.slug),
       // Extended data for price breakdown

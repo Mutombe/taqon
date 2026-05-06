@@ -221,7 +221,7 @@ export default function Packages() {
                             {pkg.features.slice(0, 4).map((feature, j) => (
                               <div key={j} className="flex items-center gap-2">
                                 <Check size={14} weight="bold" style={{ color: gem.accent }} className="flex-shrink-0" />
-                                <span className="text-sm text-taqon-muted dark:text-white/60">{feature}</span>
+                                <span className="text-sm text-taqon-muted dark:text-white/60">{typeof feature === 'string' ? feature : (feature?.title ?? '')}</span>
                               </div>
                             ))}
                           </div>

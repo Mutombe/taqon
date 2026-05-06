@@ -323,7 +323,7 @@ export default function AreaLanding() {
                     {pkg.features.map((f, j) => (
                       <li key={j} className="flex items-center gap-2 text-sm text-taqon-charcoal dark:text-white/80">
                         <CheckCircle size={14} className="text-taqon-orange flex-shrink-0" />
-                        {f}
+                        {typeof f === 'string' ? f : (f?.title ?? '')}
                       </li>
                     ))}
                   </ul>
