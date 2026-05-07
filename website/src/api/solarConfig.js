@@ -24,6 +24,9 @@ export const solarConfigApi = {
   getRecommendation: (data) => api.post(`${BASE}/recommend/`, data),
   getInstantQuote: (data) => api.post(`${BASE}/instant-quote/`, data, { responseType: 'blob' }),
 
+  // Business / Company profile PDF (public)
+  getBusinessProfile: () => api.get(`${BASE}/business-profile/`, { responseType: 'blob' }),
+
   // Package Price Calculator (public)
   getPackagePrice: (slug, params = {}) => api.get(`${BASE}/packages/${slug}/price/`, { params }),
 

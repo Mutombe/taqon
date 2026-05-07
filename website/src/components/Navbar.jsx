@@ -10,6 +10,7 @@ import {
 import { companyInfo, services, packages, products, solarTips, faqs } from '../data/siteData';
 import logoImg from '../assets/taqon-electrico-logo.jpg';
 import NotificationBell from './NotificationBell';
+import DownloadProfileButton from './DownloadProfileButton';
 import useAuthStore from '../stores/authStore';
 import useSavesStore from '../stores/savesStore';
 import useCartStore from '../stores/cartStore';
@@ -592,6 +593,17 @@ export default function Navbar() {
                               </Link>
                             </motion.div>
                           ))}
+                          {link.label === 'About' && (
+                            <div className="px-3 py-3 border-t border-gray-100 dark:border-white/10 bg-taqon-orange/5">
+                              <DownloadProfileButton
+                                variant="link"
+                                label="Download Company Profile"
+                                className="w-full justify-center"
+                                onComplete={closeDropdown}
+                                iconSize={14}
+                              />
+                            </div>
+                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>

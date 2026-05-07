@@ -3,159 +3,340 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  @page { size: A4; margin: 1.5cm 2cm; }
+  @page { size: A4; margin: 1.4cm 1.6cm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; line-height: 1.5; }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 9.5pt; color: #1a1a1a; line-height: 1.45; }
 
-  .header-table { width: 100%; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #F26522; }
-  .company-name { font-size: 20pt; font-weight: bold; color: #F26522; }
-  .company-tagline { font-size: 8pt; color: #666; }
-  .company-details { font-size: 8pt; color: #555; line-height: 1.6; margin-top: 8px; }
-  .doc-title { font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; text-align: right; }
-  .doc-subtitle { font-size: 9pt; color: #F26522; font-weight: bold; text-align: right; margin-top: 4px; }
-  .doc-meta { font-size: 8pt; color: #555; text-align: right; margin-top: 8px; line-height: 1.6; }
+  /* ---- Header ---- */
+  .doc-title { font-size: 30pt; font-weight: bold; color: #F26522; text-align: right; letter-spacing: -0.5pt; }
+  .doc-sub   { font-size: 9pt; color: #555; text-align: right; margin-top: 2px; }
+  .company-tagline { font-size: 7.5pt; color: #888; letter-spacing: 1pt; text-transform: uppercase; }
+  .company-details { font-size: 8pt; color: #555; line-height: 1.55; margin-top: 6px; }
 
-  .section-box { margin-bottom: 15px; padding: 12px 16px; background-color: #f8f8f8; }
-  .section-title { font-size: 8pt; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-  .customer-name { font-weight: bold; font-size: 11pt; }
+  /* ---- Rules / dividers ---- */
+  .rule-thick { border-bottom: 2.5pt solid #F26522; }
+  .rule-thin  { border-bottom: 1pt solid #e5e5e5; }
 
-  .highlight-box { margin-bottom: 15px; padding-top: 12px; padding-bottom: 12px; padding-left: 24px; padding-right: 18px; background-color: #fff7ed; border-left: 3px solid #F26522; }
-  .highlight-title { font-size: 10pt; font-weight: bold; color: #F26522; margin-bottom: 4px; }
+  /* ---- Meta strips ---- */
+  .meta-label { font-size: 8pt; color: #888; text-transform: uppercase; letter-spacing: 0.6pt; }
+  .meta-value { font-size: 9.5pt; color: #1a1a1a; font-weight: bold; }
 
-  table.items { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-  table.items th { background-color: #1a1a1a; color: white; font-size: 8pt; font-weight: bold; text-transform: uppercase; padding: 8px 10px; text-align: left; }
-  table.items th.right { text-align: right; }
-  table.items td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 9pt; }
-  table.items td.right { text-align: right; }
-  .item-name { font-weight: bold; }
-  .item-brand { font-size: 7.5pt; color: #888; }
-  .item-specs { font-size: 7pt; color: #999; }
-  .cat-row td { background-color: #f5f5f5; font-weight: bold; font-size: 8pt; text-transform: uppercase; color: #555; }
+  /* ---- Project description banner ---- */
+  .project-banner {
+    margin-top: 14px; margin-bottom: 14px;
+    padding: 12px 16px;
+    background-color: #fff7ed;
+    border-left: 3pt solid #F26522;
+    text-align: center;
+    font-size: 10.5pt;
+    font-weight: bold;
+    color: #1a1a1a;
+    line-height: 1.45;
+  }
 
-  table.totals { width: 250px; margin-left: auto; margin-bottom: 20px; }
-  table.totals td { padding: 4px 0; font-size: 9pt; color: #555; }
-  table.totals td.right { text-align: right; }
-  table.totals tr.grand td { border-top: 2px solid #1a1a1a; padding-top: 8px; font-size: 13pt; font-weight: bold; color: #1a1a1a; }
+  /* ---- System spec card ---- */
+  .spec-card { margin-bottom: 14px; padding: 10px 0; background-color: #fafafa; border-top: 1pt solid #ececec; border-bottom: 1pt solid #ececec; }
+  .spec-num   { font-size: 17pt; font-weight: bold; color: #1a1a1a; line-height: 1; }
+  .spec-unit  { font-size: 9pt; color: #1a1a1a; font-weight: normal; }
+  .spec-label { font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.8pt; margin-top: 4px; }
 
-  .validity { margin: 12px 0; padding: 8px 14px; background-color: #fffbeb; border: 1px solid #fde68a; font-size: 8pt; color: #92400e; }
-  .payment-box { margin-top: 12px; padding-top: 12px; padding-bottom: 12px; padding-left: 24px; padding-right: 18px; background-color: #fff7ed; border-left: 3px solid #F26522; }
-  .payment-title { font-size: 9pt; font-weight: bold; color: #F26522; margin-bottom: 4px; }
-  .terms { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
-  .terms-title { font-size: 8pt; color: #999; text-transform: uppercase; margin-bottom: 4px; }
-  .terms-text { font-size: 7.5pt; color: #666; line-height: 1.6; }
-  .footer-bar { margin-top: 20px; padding-top: 10px; border-top: 2px solid #F26522; text-align: center; font-size: 7.5pt; color: #999; }
+  /* ---- Items table ---- */
+  table.items { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  table.items thead th {
+    background-color: #1a1a1a; color: #ffffff;
+    font-size: 8pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6pt;
+    padding: 7px 10px;
+  }
+  table.items thead th.left  { text-align: left; }
+  table.items thead th.right { text-align: right; }
+  table.items td { padding: 7px 10px; border-bottom: 0.6pt solid #ededed; font-size: 9pt; vertical-align: top; }
+  table.items td.right { text-align: right; font-variant-numeric: tabular-nums; }
+  table.items tr.alt td { background-color: #fafafa; }
+  table.items tr.cat-row td {
+    background-color: #fff7ed;
+    color: #F26522;
+    font-size: 7.5pt; font-weight: bold;
+    text-transform: uppercase; letter-spacing: 1pt;
+    padding: 6px 10px; border-bottom: 0.6pt solid #fde2c8;
+  }
+  .item-name  { font-weight: bold; color: #1a1a1a; }
+  .item-brand { font-size: 8pt; color: #666; }
+  .item-specs { font-size: 7.5pt; color: #999; }
+
+  /* ---- Pricing strip ---- */
+  .price-strip { width: 100%; margin-top: 6px; margin-bottom: 16px; border-collapse: collapse; }
+  .price-strip td { vertical-align: top; padding: 0; }
+  .price-indicators { background-color: #fafafa; border: 1pt solid #ececec; padding: 10px 14px; }
+  .pi-row { font-size: 8.5pt; color: #555; line-height: 1.55; }
+  .pi-row strong { color: #1a1a1a; }
+  .pi-label { font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.8pt; }
+
+  table.totals { width: 100%; border-collapse: collapse; }
+  table.totals td { padding: 6px 12px; font-size: 9.5pt; }
+  table.totals td.label { color: #555; text-align: right; }
+  table.totals td.value { text-align: right; font-variant-numeric: tabular-nums; color: #1a1a1a; font-weight: bold; width: 110px; }
+  table.totals tr.sub td { border-top: 1pt solid #ececec; }
+  table.totals tr.grand td {
+    background-color: #1a1a1a; color: #ffffff;
+    font-size: 12pt; font-weight: bold;
+    padding-top: 9px; padding-bottom: 9px;
+  }
+  table.totals tr.grand td.label { color: #ffffff; }
+  table.totals tr.grand td.value { color: #F26522; }
+
+  /* ---- Section heading (Terms / Warranties / Bank) ---- */
+  .section-heading {
+    text-align: center;
+    font-size: 9.5pt; font-weight: bold;
+    color: #1a1a1a;
+    text-transform: uppercase; letter-spacing: 1.5pt;
+    margin-top: 16px; margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1pt solid #ececec;
+  }
+
+  /* ---- Terms ---- */
+  ol.terms { margin: 0 0 0 18px; padding: 0; font-size: 8.5pt; color: #444; line-height: 1.65; }
+  ol.terms li { margin-bottom: 2px; padding-left: 2px; }
+
+  /* ---- Bank box ---- */
+  .bank-box { margin-top: 4px; padding: 12px 16px; background-color: #fff7ed; border-left: 3pt solid #F26522; font-size: 8.5pt; line-height: 1.65; }
+  .bank-box strong { color: #1a1a1a; }
+
+  /* ---- Warranties table ---- */
+  table.warranties { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  table.warranties th {
+    background-color: #fafafa;
+    font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6pt;
+    color: #888;
+    padding: 6px 10px;
+    border: 0.6pt solid #ececec;
+    text-align: left;
+  }
+  table.warranties th.right { text-align: right; }
+  table.warranties td {
+    padding: 6px 10px;
+    border: 0.6pt solid #ececec;
+    font-size: 9pt;
+  }
+  table.warranties td.brand { font-weight: bold; color: #F26522; width: 22%; }
+  table.warranties td.years { text-align: right; font-weight: bold; width: 18%; font-variant-numeric: tabular-nums; }
+
+  /* ---- Footer ---- */
+  .thank-you {
+    text-align: center;
+    font-size: 12pt; font-weight: bold;
+    color: #F26522;
+    margin-top: 18px; margin-bottom: 6px;
+    font-style: italic;
+  }
+  .footer-bar {
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1pt solid #ececec;
+    text-align: center;
+    font-size: 7.5pt; color: #999;
+    line-height: 1.55;
+  }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<table class="header-table" cellpadding="0" cellspacing="0">
+<!-- ============ HEADER ============ -->
+<table cellpadding="0" cellspacing="0" style="width: 100%;">
   <tr>
-    <td style="width: 55%; vertical-align: top;">
+    <td style="width: 55%; vertical-align: top; padding-bottom: 10px;">
       {% if logo_data_uri %}
-        <div style="padding-bottom: 18px;">
-          <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 42px; width: auto;"/>
-        </div>
+        <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 46px; width: auto;"/>
       {% else %}
-        <div class="company-name" style="padding-bottom: 18px;">TAQON ELECTRICO</div>
+        <div style="font-size: 22pt; font-weight: bold; color: #F26522; letter-spacing: -0.5pt;">TAQON ELECTRICO</div>
       {% endif %}
-      <div class="company-tagline" style="padding-bottom: 4px;">Solar &amp; Electrical Solutions</div>
-      <div class="company-details">203 Sherwood Drive, Strathaven, Harare<br/>+263 77 277 1036<br/>info@taqon.co.zw &bull; www.taqon.co.zw</div>
+    </td>
+    <td style="width: 45%; vertical-align: top; padding-bottom: 10px;">
+      <div class="doc-title">Quotation</div>
+      <div class="doc-sub">{{ package_name }}</div>
+    </td>
+  </tr>
+</table>
+
+<div class="rule-thick"></div>
+
+<!-- Address strip + Meta strip -->
+<table cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 10px;">
+  <tr>
+    <td style="width: 55%; vertical-align: top; padding-right: 16px;">
+      <div class="company-tagline">Solar &amp; Electrical Solutions</div>
+      <div class="company-details">
+        203 Sherwood Drive, Strathaven<br/>
+        Harare, Zimbabwe<br/>
+        +263 77 277 1036 &bull; info@taqon.co.zw
+      </div>
     </td>
     <td style="width: 45%; vertical-align: top;">
-      <div class="doc-title">Quotation</div>
-      <div class="doc-subtitle">{{ package_name }}</div>
-      <div class="doc-meta">
-        <strong>Date:</strong> {{ date }}<br/>
-        <strong>Ref:</strong> {{ ref_number }}<br/>
-        <strong>Valid for:</strong> 10 days
+      <table cellpadding="0" cellspacing="0" style="width: 100%;">
+        <tr>
+          <td style="padding: 2px 0;"><span class="meta-label">Date</span></td>
+          <td style="padding: 2px 0; text-align: right;"><span class="meta-value">{{ date }}</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 2px 0;"><span class="meta-label">Quote No.</span></td>
+          <td style="padding: 2px 0; text-align: right;"><span class="meta-value">{{ ref_number }}</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 2px 0;"><span class="meta-label">Valid For</span></td>
+          <td style="padding: 2px 0; text-align: right;"><span class="meta-value">10 Days</span></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<div class="rule-thin" style="margin-top: 10px;"></div>
+
+<!-- Att/To + Delivery -->
+<table cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 10px;">
+  <tr>
+    <td style="width: 50%; vertical-align: top; padding-right: 16px;">
+      <span class="meta-label">Prepared For</span>
+      <div style="font-size: 10.5pt; font-weight: bold; color: #1a1a1a; margin-top: 3px;">{{ customer_name }}</div>
+      <div style="font-size: 8.5pt; color: #555; line-height: 1.6; margin-top: 2px;">
+        {{ customer_email }}{% if customer_phone %}<br/>{{ customer_phone }}{% endif %}
+      </div>
+    </td>
+    <td style="width: 50%; vertical-align: top;">
+      <span class="meta-label">Delivery Address</span>
+      <div style="font-size: 9.5pt; color: #1a1a1a; line-height: 1.6; margin-top: 3px;">
+        {% if customer_address %}{{ customer_address }}{% else %}<span style="color: #999;">To be confirmed on site visit</span>{% endif %}
       </div>
     </td>
   </tr>
 </table>
 
-<!-- Prepared For -->
-<div class="section-box">
-  <div class="section-title">Prepared For</div>
-  <div class="customer-name">{{ customer_name }}</div>
-  {{ customer_email }}<br/>
-  {% if customer_phone %}{{ customer_phone }}<br/>{% endif %}
-  {% if customer_address %}{{ customer_address }}{% endif %}
+<!-- ============ PROJECT DESCRIPTION BANNER ============ -->
+<div class="project-banner">
+  {% if project_description %}{{ project_description }}{% else %}Supply and Install {{ package_name }} &mdash; Hybrid Solar Power System with Inverter, Lithium Battery Storage and Solar PV Panels, complete with all protection and balance-of-system equipment.{% endif %}
 </div>
 
-<!-- System Summary -->
-<div style="margin-bottom: 15px; padding-top: 12px; padding-bottom: 12px; padding-left: 28px; padding-right: 20px; background-color: #fff7ed; border-left: 3px solid #F26522;">
-  <div style="font-size: 10pt; font-weight: bold; color: #F26522; margin-bottom: 6px;">System Specifications</div>
+<!-- ============ SYSTEM SPECIFICATIONS ============ -->
+<div class="spec-card">
   <table cellpadding="0" cellspacing="0" style="width: 100%;">
     <tr>
-      <td style="width: 25%; text-align: center; padding: 6px;">
-        <div style="font-size: 16pt; font-weight: bold;">{{ inverter_kva }}</div>
-        <div style="font-size: 7pt; color: #888; text-transform: uppercase;">Inverter (kVA)</div>
+      <td style="width: 25%; text-align: center;">
+        <span class="spec-num">{{ inverter_kva }}</span> <span class="spec-unit">kVA</span>
+        <div class="spec-label">Inverter</div>
       </td>
-      <td style="width: 25%; text-align: center; padding: 6px;">
-        <div style="font-size: 16pt; font-weight: bold;">{{ battery_kwh }}</div>
-        <div style="font-size: 7pt; color: #888; text-transform: uppercase;">Battery (kWh)</div>
+      <td style="width: 25%; text-align: center; border-left: 0.6pt solid #ececec;">
+        <span class="spec-num">{{ battery_kwh }}</span> <span class="spec-unit">kWh</span>
+        <div class="spec-label">Battery Storage</div>
       </td>
-      {% if panel_count %}<td style="width: 25%; text-align: center; padding: 6px;">
-        <div style="font-size: 16pt; font-weight: bold;">{{ panel_count }}</div>
-        <div style="font-size: 7pt; color: #888; text-transform: uppercase;">Panels</div>
-      </td>{% endif %}
-      <td style="width: 25%; text-align: center; padding: 6px;">
-        <div style="font-size: 16pt; font-weight: bold;">{{ tier_label }}</div>
-        <div style="font-size: 7pt; color: #888; text-transform: uppercase;">Tier</div>
+      <td style="width: 25%; text-align: center; border-left: 0.6pt solid #ececec;">
+        <span class="spec-num">{% if panel_count %}{{ panel_count }}{% else %}&mdash;{% endif %}</span>
+        <div class="spec-label">Solar Panels</div>
+      </td>
+      <td style="width: 25%; text-align: center; border-left: 0.6pt solid #ececec;">
+        <span class="spec-num" style="font-size: 13pt;">{{ tier_label }}</span>
+        <div class="spec-label">Specification Tier</div>
       </td>
     </tr>
   </table>
 </div>
 
-<!-- Items -->
-<table class="items">
+<!-- ============ ITEMS TABLE ============ -->
+<table class="items" cellpadding="0" cellspacing="0">
   <thead>
     <tr>
-      <th style="width: 5%;">#</th>
-      <th style="width: 45%;">Description</th>
-      <th class="right" style="width: 10%;">Qty</th>
-      <th class="right" style="width: 18%;">Unit Price</th>
-      <th class="right" style="width: 22%;">Total</th>
+      <th class="left" style="width: 8%;">No.</th>
+      <th class="left" style="width: 77%;">Description</th>
+      <th class="right" style="width: 15%;">Qty</th>
     </tr>
   </thead>
   <tbody>
     {% for group in item_groups %}
-    <tr class="cat-row"><td colspan="5">{{ group.label }}</td></tr>
-    {% for item in group.items %}
-    <tr>
-      <td>{{ item.num }}</td>
-      <td>
-        <span class="item-name">{{ item.name }}</span>
-        {% if item.brand %}<br/><span class="item-brand">{{ item.brand }}</span>{% endif %}
-        {% if item.specs %}<br/><span class="item-specs">{{ item.specs }}</span>{% endif %}
-      </td>
-      <td class="right">{{ item.qty }}</td>
-      <td class="right">USD {{ item.unit_price }}</td>
-      <td class="right">USD {{ item.total }}</td>
-    </tr>
-    {% endfor %}
+      <tr class="cat-row"><td colspan="3">{{ group.label }}</td></tr>
+      {% for item in group.items %}
+      <tr {% if forloop.counter|divisibleby:2 %}class="alt"{% endif %}>
+        <td>{{ item.num }}</td>
+        <td>
+          <span class="item-name">{{ item.name }}</span>
+          {% if item.brand %}<br/><span class="item-brand">{{ item.brand }}</span>{% endif %}
+          {% if item.specs %}<br/><span class="item-specs">{{ item.specs }}</span>{% endif %}
+        </td>
+        <td class="right">{{ item.qty }}</td>
+      </tr>
+      {% endfor %}
     {% endfor %}
   </tbody>
 </table>
 
-<!-- Totals -->
-<table class="totals">
-  <tr><td>Materials</td><td class="right">USD {{ material_total }}</td></tr>
-  <tr><td>Sundries</td><td class="right">USD {{ sundries_total }}</td></tr>
-  <tr><td>Labour and Transport</td><td class="right">USD {{ labour_transport_total }}</td></tr>
-  <tr class="grand"><td>Total</td><td class="right">USD {{ grand_total }}</td></tr>
+<!-- ============ PRICING STRIP ============ -->
+<table class="price-strip" cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="width: 45%; padding-right: 12px;">
+      <div class="price-indicators">
+        <div class="pi-label">System Indicators</div>
+        <table cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 4px;">
+          {% if usd_per_kw %}
+          <tr>
+            <td class="pi-row" style="padding: 2px 0;"><strong>USD {{ usd_per_kw }}</strong></td>
+            <td class="pi-row" style="padding: 2px 0; text-align: right;">per kW installed</td>
+          </tr>
+          {% endif %}
+          {% if usd_per_kwh %}
+          <tr>
+            <td class="pi-row" style="padding: 2px 0;"><strong>USD {{ usd_per_kwh }}</strong></td>
+            <td class="pi-row" style="padding: 2px 0; text-align: right;">per kWh storage</td>
+          </tr>
+          {% endif %}
+          {% if system_size_kw %}
+          <tr>
+            <td class="pi-row" style="padding: 2px 0;"><strong>{{ system_size_kw }} kW</strong></td>
+            <td class="pi-row" style="padding: 2px 0; text-align: right;">total system size</td>
+          </tr>
+          {% endif %}
+          {% if distance_km %}
+          <tr>
+            <td class="pi-row" style="padding: 2px 0;"><strong>{{ distance_km }} km</strong></td>
+            <td class="pi-row" style="padding: 2px 0; text-align: right;">site distance (Harare)</td>
+          </tr>
+          {% endif %}
+        </table>
+      </div>
+    </td>
+    <td style="width: 55%; vertical-align: top;">
+      <table class="totals" cellpadding="0" cellspacing="0">
+        <tr class="sub">
+          <td class="label">Subtotal (excl. VAT)</td>
+          <td class="value">USD {% if subtotal_excl_vat %}{{ subtotal_excl_vat }}{% else %}{{ grand_total }}{% endif %}</td>
+        </tr>
+        <tr>
+          <td class="label">VAT</td>
+          <td class="value">{% if vat_amount %}USD {{ vat_amount }}{% else %}Included{% endif %}</td>
+        </tr>
+        <tr class="grand">
+          <td class="label">Grand Total (incl.)</td>
+          <td class="value">USD {{ grand_total }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
 </table>
 
-<!-- Validity -->
-<div class="validity">
-  <strong>Note:</strong> This quotation is valid for 10 days from the date of issue. Prices are subject to change based on market conditions and component availability.
-</div>
+<!-- ============ STANDARD TERMS & CONDITIONS ============ -->
+<div class="section-heading">Standard Terms &amp; Conditions</div>
+<ol class="terms">
+  <li>This is a standard quotation. A site visit is required to confirm all materials; any additional items will be quoted separately.</li>
+  <li>This estimate is valid for 10 days from the date of issue. The final figure will be confirmed on completion of works.</li>
+  <li>All civil works, including trenching and structural preparation, are the client&rsquo;s responsibility unless explicitly quoted above.</li>
+  <li>Prices are quoted as per our current price list and are subject to change without notice in line with market conditions.</li>
+  <li>Transport and installation, where quoted, are estimates and will be billed against actual billable hours and mileage.</li>
+  <li>An order does not hold a price; pricing is confirmed only upon receipt of a 50% deposit.</li>
+  <li>All goods remain the property of Taqon Electrico until paid for in full. Taqon Electrico reserves the right to repossess any such property with 48 hours&rsquo; notice.</li>
+</ol>
 
-<!-- Payment / Bank details — inline padding for xhtml2pdf reliability -->
-<div style="margin-top: 12px; padding-top: 14px; padding-bottom: 14px; padding-left: 28px; padding-right: 20px; background-color: #fff7ed; border-left: 3px solid #F26522;">
-  <div style="font-size: 9pt; font-weight: bold; color: #F26522; margin-bottom: 8px;">Bank Transfer Details</div>
-  <table cellpadding="0" cellspacing="0" style="width: 100%; font-size: 8.5pt; line-height: 1.7;">
+<!-- ============ BANK TRANSFER DETAILS ============ -->
+<div class="section-heading">Bank Transfer Details</div>
+<div class="bank-box">
+  <table cellpadding="0" cellspacing="0" style="width: 100%;">
     <tr>
       <td style="width: 50%; vertical-align: top; padding-right: 12px;">
         <strong>Bank:</strong> FBC<br/>
@@ -167,26 +348,48 @@
       <td style="width: 50%; vertical-align: top; padding-left: 12px;">
         <strong>Swift Code:</strong> FBCPZWHA<br/>
         <strong>Correspondent Bank:</strong><br/>
-        Standard Chartered Bank, New York<br/>
-        <br/>
+        Standard Chartered Bank, New York<br/><br/>
         <strong>Payment Reference:</strong> {{ ref_number }}
       </td>
     </tr>
   </table>
 </div>
 
-<!-- Terms -->
-<div class="terms">
-  <div class="terms-title">Terms &amp; Conditions</div>
-  <div class="terms-text">
-    This quotation is valid for 10 days from the date of issue. Prices are subject to change based on market conditions. Installation timeline will be confirmed upon acceptance. A 50% deposit is required to commence work. Warranty terms apply as per product specifications.
-  </div>
-</div>
+<!-- ============ STANDARD EQUIPMENT WARRANTIES ============ -->
+<div class="section-heading">Standard Equipment Warranties</div>
+<table class="warranties" cellpadding="0" cellspacing="0">
+  <thead>
+    <tr>
+      <th style="width: 22%;">Brand</th>
+      <th>Equipment</th>
+      <th class="right" style="width: 18%;">Warranty</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if warranties %}
+      {% for w in warranties %}
+      <tr>
+        <td class="brand">{{ w.brand }}</td>
+        <td>{{ w.equipment }}</td>
+        <td class="years">{{ w.years }}</td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td class="brand">Deye / Solis</td><td>Hybrid Inverters</td><td class="years">5 Years</td></tr>
+      <tr><td class="brand">Greenrich / Pylontech</td><td>Lithium-Ion Batteries</td><td class="years">10 Years</td></tr>
+      <tr><td class="brand">JA Solar / Canadian Solar</td><td>PV Panels (Performance)</td><td class="years">25 Years</td></tr>
+      <tr><td class="brand">JA Solar / Canadian Solar</td><td>PV Panels (Product)</td><td class="years">12 Years</td></tr>
+      <tr><td class="brand">Taqon Electrico</td><td>Installation Workmanship</td><td class="years">2 Years</td></tr>
+    {% endif %}
+  </tbody>
+</table>
 
-<!-- Footer -->
+<!-- ============ THANK YOU + FOOTER ============ -->
+<div class="thank-you">Thank you for your business!</div>
+
 <div class="footer-bar">
-  Taqon Electrico &bull; Solar &amp; Electrical Solutions &bull; Harare, Zimbabwe<br/>
-  Thank you for considering Taqon Electrico for your solar needs!
+  Taqon Electrico (Pvt) Ltd &bull; 203 Sherwood Drive, Strathaven, Harare &bull; +263 77 277 1036<br/>
+  info@taqon.co.zw &bull; www.taqon.co.zw
 </div>
 
 </body>

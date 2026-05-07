@@ -5,6 +5,7 @@ import { MapPin, Phone, EnvelopeSimple, Clock, PaperPlaneTilt, ChatsTeardrop, Ar
 import { toast } from 'sonner';
 import AnimatedSection from '../components/AnimatedSection';
 import { confirmExternalNavigation } from '../components/ContentLink';
+import DownloadProfileButton from '../components/DownloadProfileButton';
 import SEO from '../components/SEO';
 import JsonLd, { localBusinessSchema } from '../components/JsonLd';
 import { companyInfo } from '../data/siteData';
@@ -46,6 +47,15 @@ export default function Contact() {
             <p className="mt-4 text-white/60 text-lg max-w-xl">
               Ready to go solar? Get a free consultation and quote from our expert team.
             </p>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <DownloadProfileButton variant="primary" label="Download Company Profile" />
+              <a
+                href="#contact-form"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-white/20 text-white/90 font-semibold text-sm hover:bg-white/5 transition-all"
+              >
+                Or message us below
+              </a>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -131,7 +141,7 @@ export default function Contact() {
             </div>
 
             {/* Contact Form */}
-            <div className="lg:col-span-3">
+            <div id="contact-form" className="lg:col-span-3 scroll-mt-32">
               <AnimatedSection variant="fadeRight">
                 <div className="bg-white dark:bg-taqon-charcoal rounded-3xl p-8 lg:p-10 border border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none">
                   <h2 className="text-2xl font-bold font-syne text-taqon-charcoal dark:text-white mb-2">Send Us a Message</h2>

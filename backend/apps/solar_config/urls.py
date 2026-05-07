@@ -16,6 +16,9 @@ urlpatterns = [
     path('recommend/', views.RecommendView.as_view(), name='recommend'),
     path('instant-quote/', views.InstantQuoteView.as_view(), name='instant-quote'),
 
+    # Business / Company Profile (public)
+    path('business-profile/', views.BusinessProfileView.as_view(), name='business-profile'),
+
     # Package Price Calculator (public)
     path('packages/<slug:slug>/price/', views.PackagePriceView.as_view(), name='package-price'),
 

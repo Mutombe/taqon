@@ -407,6 +407,24 @@ class InstantQuoteView(APIView):
         except Exception:
             pass  # Logo missing — template will show text fallback
 
+        # Per-kW / per-kWh indicators give the customer industry-relative
+        # context without exposing per-component pricing (the new non-itemized
+        # template hides line totals, so these become the comparison anchor).
+        total_num = float(price['total'])
+        panel_w_total = sum(
+            (pc.component.wattage or 0) * pc.quantity
+            for pc in package.items.all()
+            if pc.component.category == 'panel'
+        )
+        system_size_kw = round(panel_w_total / 1000, 1) if panel_w_total else None
+        battery_kwh_num = float(package.battery_capacity_kwh) if package.battery_capacity_kwh else None
+        usd_per_kw = (
+            f'{(total_num / system_size_kw):,.2f}' if system_size_kw else ''
+        )
+        usd_per_kwh = (
+            f'{(total_num / battery_kwh_num):,.2f}' if battery_kwh_num else ''
+        )
+
         context = {
             'logo_data_uri': logo_data_uri,
             'package_name': package.family.name if package.family else package.name,
@@ -427,6 +445,15 @@ class InstantQuoteView(APIView):
             'labour_transport_total': f'{float(price["labour"]) + float(price["transport"]):,.2f}',
             'grand_total': f'{float(price["total"]):,.2f}',
             'distance_km': int(distance_km),
+            # Non-itemized template extras — leave VAT-related fields blank
+            # so the template falls back to its 'VAT Included' presentation.
+            'subtotal_excl_vat': '',
+            'vat_amount': '',
+            'system_size_kw': str(system_size_kw) if system_size_kw else '',
+            'usd_per_kw': usd_per_kw,
+            'usd_per_kwh': usd_per_kwh,
+            'project_description': '',  # template generates fallback from package_name
+            'warranties': [],            # template uses default Taqon warranty block
         }
 
         # Track download + link to advisor session if provided
@@ -466,6 +493,147 @@ class InstantQuoteView(APIView):
         ext = 'pdf' if is_pdf else 'html'
         response = HttpResponse(pdf_bytes, content_type=content_type)
         response['Content-Disposition'] = f'attachment; filename="{ref_number}.{ext}"'
+        return response
+
+
+class BusinessProfileView(APIView):
+    """
+    GET: Generate Taqon's company / business profile PDF.
+
+    Open access — used by Contact, About, About-dropdown nav, and CTAs.
+    Pulls live `PackageFamily` rows for the packages section; everything
+    else (services, testimonials, stats, brands, company info) is sourced
+    from constants in this view to keep it self-contained.
+    """
+    permission_classes = [AllowAny]
+
+    # ── Static profile content (kept in code so it ships with the deploy
+    # rather than depending on a CMS table; tweak copy here when needed).
+    SERVICES = [
+        {'title': 'Solar Installations', 'description': 'Complete residential and commercial solar PV system design, supply and installation.', 'icon_unicode_or_letter': 'S'},
+        {'title': 'Solar System Maintenance', 'description': 'Preventative servicing, fault diagnosis, and rapid response on existing solar installations.', 'icon_unicode_or_letter': 'M'},
+        {'title': 'Electrical Maintenance', 'description': 'Domestic and commercial electrical maintenance, faults, and compliance work.', 'icon_unicode_or_letter': 'E'},
+        {'title': 'Borehole Pump Installations', 'description': 'Solar-powered water pumping for homes, farms and institutions.', 'icon_unicode_or_letter': 'B'},
+        {'title': 'Electrical Hardware Supply', 'description': 'Premium-grade equipment supply from world-leading brands.', 'icon_unicode_or_letter': 'H'},
+        {'title': 'Lighting Solutions', 'description': 'Custom interior, exterior and security lighting design and installation.', 'icon_unicode_or_letter': 'L'},
+    ]
+
+    PROJECTS = [
+        {'title': 'Borrowdale Residence', 'location': 'Harare', 'capacity_kw': '10', 'summary': '10 kW hybrid residential system with 15 kWh lithium storage and rooftop array.'},
+        {'title': 'City Plastics Manufacturing', 'location': 'Harare', 'capacity_kw': '50', 'summary': '50 kW commercial rooftop installation cutting daytime grid draw by ~70%.'},
+        {'title': 'Childline NGO Facility', 'location': 'Harare', 'capacity_kw': '8', 'summary': 'Off-grid solar + battery solution for 24/7 NGO operations.'},
+        {'title': 'Marondera Farm Borehole', 'location': 'Marondera', 'capacity_kw': '3', 'summary': 'Solar-powered irrigation pump system for off-grid agricultural site.'},
+    ]
+
+    BRANDS = ['Sunsynk', 'Growatt', 'JA Solar', 'Jinko Solar', 'Pylontech', 'Dyness', 'Kodak', 'Deye']
+
+    STATS = [
+        {'value': '500+', 'label': 'Projects Completed'},
+        {'value': '3000', 'label': 'kWp PV Installed'},
+        {'value': '5000+', 'label': 'kWh Battery Storage'},
+        {'value': '5+', 'label': 'Years Experience'},
+    ]
+
+    TESTIMONIALS = [
+        {'name': 'Tendai Moyo', 'role': 'Homeowner, Borrowdale', 'text': "Taqon Electrico transformed our home with a complete solar installation. We haven't worried about load shedding since. Their team was professional, punctual, and the system works flawlessly."},
+        {'name': 'City Plastics Harare', 'role': 'Manufacturing Company', 'text': "Our factory's energy costs have dropped significantly since Taqon installed our commercial solar system. The ROI has been excellent and their maintenance team keeps everything running perfectly."},
+        {'name': 'Rev. Blessing Chuma', 'role': 'Church Administrator', 'text': "The solar system installed at our church has been a blessing. We can now hold evening services without worrying about power outages. Taqon's team understood our needs perfectly."},
+    ]
+
+    ABOUT = (
+        'Taqon Electrico is a Harare-based solar and electrical solutions company '
+        'delivering reliable, premium-grade renewable energy systems across Zimbabwe. '
+        'We design, supply, install, and maintain residential, commercial and '
+        'institutional installations end-to-end.'
+    )
+    MISSION = (
+        'To deliver dependable, world-class solar and electrical systems to every '
+        'Zimbabwean home and business — combining premium components, certified '
+        'workmanship, and customer-first service.'
+    )
+    CTA_PARAGRAPH = (
+        "Whether you're sizing your first home back-up system or commissioning a "
+        "commercial-scale installation, our team is ready to help. Reach us through "
+        "the channels below and we'll arrange a free consultation and site survey."
+    )
+
+    def get(self, request):
+        from django.http import HttpResponse
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+        import base64
+        import os
+        import uuid
+
+        # Logo
+        logo_data_uri = ''
+        try:
+            logo_path = os.path.join(
+                os.path.dirname(__file__), '..', 'quotations', 'static',
+                'pdf_assets', 'taqon-electrico-logo.jpg',
+            )
+            with open(logo_path, 'rb') as f:
+                logo_data_uri = 'data:image/jpeg;base64,' + base64.b64encode(f.read()).decode('ascii')
+        except Exception:
+            pass
+
+        # Live package families. Wrapped defensively so a transient DB
+        # hiccup still produces a valid profile (the template has an
+        # {% empty %} fallback for the families table).
+        families = []
+        try:
+            for f in PackageFamily.objects.filter(
+                is_active=True, is_deleted=False
+            ).prefetch_related('packages').order_by('kva_rating'):
+                cheapest = f.packages.filter(is_active=True, is_deleted=False).order_by('price').first()
+                families.append({
+                    'name': f.name,
+                    'kva': str(f.kva_rating).rstrip('0').rstrip('.') if f.kva_rating else '',
+                    'short_description': f.short_description or '',
+                    'suitable_for': ', '.join(f.suitable_for) if isinstance(f.suitable_for, list) else (f.suitable_for or ''),
+                    'system_size_kw': str(cheapest.system_size_kw) if cheapest and cheapest.system_size_kw else '',
+                    'battery_kwh': str(cheapest.battery_capacity_kwh) if cheapest and cheapest.battery_capacity_kwh else '',
+                })
+        except Exception as exc:
+            logger.warning('BusinessProfile: package family lookup failed (%s)', exc)
+
+        ref_number = f'PROFILE-{timezone.now().strftime("%Y%m%d")}-{uuid.uuid4().hex[:6].upper()}'
+
+        context = {
+            'logo_data_uri': logo_data_uri,
+            'generated_date': timezone.now().strftime('%d %B %Y'),
+            'ref_number': ref_number,
+            'company': {
+                'name': 'TAQON ELECTRICO',
+                'tagline': 'Customer is King!',
+                'address': '203 Sherwood Drive, Strathaven, Harare',
+                'phone': '+263 77 277 1036',
+                'email': 'info@taqon.co.zw',
+                'website': 'www.taqon.co.zw',
+                'founding_year': '2020',
+                'registration_no': 'Licensed Electrical Contractor · ZERA-Recommended',
+            },
+            'about_paragraph': self.ABOUT,
+            'mission_paragraph': self.MISSION,
+            'cta_paragraph': self.CTA_PARAGRAPH,
+            'services': self.SERVICES,
+            'families': families,
+            'projects': self.PROJECTS,
+            'brands': self.BRANDS,
+            'stats': self.STATS,
+            'testimonials': self.TESTIMONIALS,
+        }
+
+        html_string = render_to_string('pdfs/business_profile.html', context)
+        from apps.quotations.pdf import _render_pdf
+        pdf_bytes = _render_pdf(html_string)
+        is_pdf = pdf_bytes[:4] == b'%PDF'
+        content_type = 'application/pdf' if is_pdf else 'text/html'
+        ext = 'pdf' if is_pdf else 'html'
+        response = HttpResponse(pdf_bytes, content_type=content_type)
+        response['Content-Disposition'] = (
+            f'attachment; filename="Taqon-Electrico-Company-Profile.{ext}"'
+        )
         return response
 
 

@@ -9,6 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import AnimatedSection, { AnimatedCounter, StaggerContainer, StaggerItem } from '../components/AnimatedSection';
 import ContentLink, { autoLink, confirmExternalNavigation } from '../components/ContentLink';
+import DownloadProfileButton from '../components/DownloadProfileButton';
 import SEO from '../components/SEO';
 import JsonLd, { faqSchema } from '../components/JsonLd';
 import { stats, faqs, companyInfo, brands } from '../data/siteData';
@@ -79,9 +80,15 @@ export default function About() {
                 >
                   Get in Touch <ArrowRight size={16} weight="bold" />
                 </Link>
+                <DownloadProfileButton
+                  variant="link"
+                  label="Download Company Profile"
+                  className="bg-white/10 hover:bg-white/20 text-white !text-white px-7 py-3.5 rounded-full border border-white/10"
+                  iconSize={16}
+                />
                 <Link
                   to="/projects"
-                  className="inline-flex items-center gap-2 bg-white/10 text-white px-7 py-3.5 rounded-full font-semibold hover:bg-white/20 transition-all border border-white/10"
+                  className="inline-flex items-center gap-2 bg-white/5 text-white/80 px-7 py-3.5 rounded-full font-semibold hover:bg-white/10 transition-all border border-white/10"
                 >
                   View Projects
                 </Link>
