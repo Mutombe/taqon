@@ -821,7 +821,16 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [downloadingQuote, setDownloadingQuote] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showFeatures, setShowFeatures] = useState(false);
   const pkg = tier.package;
+  // Coerce {title, description} feature objects (current shape) and bare
+  // strings (legacy) into a uniform list. Only render the block if
+  // there's at least one feature to show.
+  const featureItems = (pkg.features || []).map((f) =>
+    typeof f === 'string'
+      ? { title: f, description: '' }
+      : { title: f?.title ?? '', description: f?.description ?? '' }
+  ).filter((f) => f.title);
   const totalForDeposit = tier.price_breakdown ? parseFloat(tier.price_breakdown.total) : 0;
   const explanation = getPackageExplanation(pkg);
   const matchReason = isHighlighted && preferences ? getWhyThisMatchesYou(preferences) : null;
@@ -984,6 +993,62 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                         <Star size={10} weight="fill" /> Why this matches you
                       </p>
                       <p className="text-[11px] text-taqon-charcoal dark:text-white/80">{matchReason.priority}</p>
+                    </div>
+                  )}
+
+                  {/* Key features */}
+                  {featureItems.length > 0 && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setShowFeatures((v) => !v); }}
+                        className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
+                        style={{ color: tierGem.accent }}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Star size={10} weight="fill" /> {showFeatures ? 'Hide' : 'Show'} {featureItems.length} key features
+                        </span>
+                        <CaretDown
+                          size={10}
+                          weight="bold"
+                          className={`transition-transform duration-200 ${showFeatures ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {showFeatures && (
+                          <motion.div
+                            key="features-mobile"
+                            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                            animate={{ height: 'auto', opacity: 1, marginTop: 6 }}
+                            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <div className="space-y-2 px-1">
+                              {featureItems.map((feature, i) => (
+                                <div key={i} className="flex items-start gap-2">
+                                  <div
+                                    className="mt-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0"
+                                    style={{ backgroundColor: `color-mix(in srgb, ${tierGem.accent} 15%, transparent)` }}
+                                  >
+                                    <Check size={8} weight="bold" style={{ color: tierGem.accent }} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-medium text-taqon-charcoal/90 dark:text-white/80 leading-snug">
+                                      {feature.title}
+                                    </p>
+                                    {feature.description && (
+                                      <p className="text-[10px] text-taqon-charcoal/55 dark:text-white/45 leading-relaxed mt-0.5">
+                                        {feature.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
 
@@ -1160,6 +1225,62 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                   {matchReason.goal}
                 </li>
               </ul>
+            </div>
+          )}
+
+          {/* Key features (collapsed by default to keep card compact) */}
+          {featureItems.length > 0 && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setShowFeatures((v) => !v)}
+                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
+                style={{ color: tierGem.accent }}
+              >
+                <span className="flex items-center gap-1.5">
+                  <Star size={12} weight="fill" /> {showFeatures ? 'Hide' : `Show`} {featureItems.length} key features
+                </span>
+                <CaretDown
+                  size={12}
+                  weight="bold"
+                  className={`transition-transform duration-200 ${showFeatures ? 'rotate-180' : ''}`}
+                />
+              </button>
+              <AnimatePresence initial={false}>
+                {showFeatures && (
+                  <motion.div
+                    key="features-desktop"
+                    initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                    animate={{ height: 'auto', opacity: 1, marginTop: 8 }}
+                    exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-2.5 px-1">
+                      {featureItems.map((feature, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <div
+                            className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: `color-mix(in srgb, ${tierGem.accent} 15%, transparent)` }}
+                          >
+                            <Check size={9} weight="bold" style={{ color: tierGem.accent }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-taqon-charcoal/90 dark:text-white/80 leading-snug">
+                              {feature.title}
+                            </p>
+                            {feature.description && (
+                              <p className="text-[11px] text-taqon-charcoal/55 dark:text-white/45 leading-relaxed mt-0.5">
+                                {feature.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
