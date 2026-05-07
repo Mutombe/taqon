@@ -487,23 +487,30 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                   <h3 className="text-sm font-semibold text-taqon-charcoal dark:text-white mb-4 uppercase tracking-wider">
                     Power Capacity
                   </h3>
-                  <div className="relative">
-                    <div className="h-2.5 rounded-full bg-gray-200 dark:bg-white/10 w-full">
+                  <div>
+                    {/* Bar + tick share the same relative box so the tick
+                        centers on the bar's midline, not the bar+legend group. */}
+                    <div className="relative h-2.5">
+                      <div className="absolute inset-0 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pkg.capacityPercent}%` }}
+                          transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
+                          className="h-full rounded-full"
+                          style={{ background: `linear-gradient(90deg, ${gem.accentLight}, ${gem.accent}, ${gem.accentDark})` }}
+                        />
+                      </div>
                       <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pkg.capacityPercent}%` }}
+                        initial={{ left: 0, opacity: 0 }}
+                        animate={{ left: `${pkg.capacityPercent}%`, opacity: 1 }}
                         transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
-                        className="h-full rounded-full"
-                        style={{ background: `linear-gradient(90deg, ${gem.accentLight}, ${gem.accent}, ${gem.accentDark})` }}
+                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full border-2 border-white dark:border-taqon-charcoal shadow-md"
+                        style={{
+                          backgroundColor: gem.accent,
+                          boxShadow: `0 0 0 4px color-mix(in srgb, ${gem.accent} 25%, transparent)`,
+                        }}
                       />
                     </div>
-                    <motion.div
-                      initial={{ left: 0, opacity: 0 }}
-                      animate={{ left: `${pkg.capacityPercent}%`, opacity: 1 }}
-                      transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
-                      className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full ring-4"
-                      style={{ backgroundColor: gem.accent, ringColor: `color-mix(in srgb, ${gem.accent} 25%, transparent)` }}
-                    />
                     <div className="flex justify-between mt-3 text-xs text-taqon-muted dark:text-white/40">
                       <span>Starter</span>
                       <span>{pkg.capacityPercent}%</span>
