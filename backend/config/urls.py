@@ -126,6 +126,7 @@ urlpatterns = [
     path('api/v1/analytics/', include('apps.analytics.urls')),
     path('api/v1/blog/', include('apps.blog.urls')),
     path('api/v1/comments/', include('apps.comments.urls')),
+    path('api/v1/feature-flags/', include('apps.feature_flags.urls')),
 
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

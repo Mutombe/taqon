@@ -8,6 +8,7 @@ import { useTheme } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import HiringBanner from './components/HiringBanner';
 import Footer from './components/Footer';
+import FeatureGate from './components/FeatureGate';
 import { ScrollProgress, BackToTop } from './components/ScrollElements';
 import FloatingCart from './components/FloatingCart';
 import { PrivacyModal, CookieModal, CookieConsent } from './components/Modals';
@@ -116,6 +117,7 @@ const AdminAppliances = lazy(() => import('./features/admin/AdminAppliances'));
 const AdminBlog = lazy(() => import('./features/admin/AdminBlog'));
 const AdminBlogEditor = lazy(() => import('./features/admin/AdminBlogEditor'));
 const AdminMedia = lazy(() => import('./features/admin/AdminMedia'));
+const AdminFeatureFlags = lazy(() => import('./features/admin/AdminFeatureFlags'));
 
 // Customer Account Portal (lazy loaded)
 const AccountPortal = lazy(() => import('./features/account/AccountPortal'));
@@ -236,7 +238,7 @@ function AppContent() {
             <Route path="/about" element={<About />} />
             <Route path="/solutions" element={<Solutions />} />
             <Route path="/solutions/:slug" element={<SolutionDetail />} />
-            <Route path="/shop" element={<Shop />} />
+            <Route path="/shop" element={<FeatureGate flag="equipment_marketplace"><Shop /></FeatureGate>} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:slug" element={<ProjectDetail />} />
             <Route path="/contact" element={<Contact />} />
@@ -267,10 +269,10 @@ function AppContent() {
             <Route path="/auth/google/callback" element={<GoogleCallbackHandler />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
-            {/* Shop routes */}
-            <Route path="/shop/:slug" element={<ProductDetail />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
+            {/* Shop routes — gated behind equipment_marketplace flag */}
+            <Route path="/shop/:slug" element={<FeatureGate flag="equipment_marketplace"><ProductDetail /></FeatureGate>} />
+            <Route path="/cart" element={<FeatureGate flag="equipment_marketplace"><CartPage /></FeatureGate>} />
+            <Route path="/checkout" element={<FeatureGate flag="equipment_marketplace"><CheckoutPage /></FeatureGate>} />
             <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />
             <Route path="/account/orders" element={<OrderHistory />} />
             <Route path="/account/orders/:orderNumber" element={<OrderDetail />} />
@@ -280,17 +282,22 @@ function AppContent() {
             <Route path="/payment/:reference" element={<PaymentStatus />} />
             {/* Solar Configurator */}
             <Route path="/configurator" element={<SolarConfigurator />} />
-            {/* Technician Portal routes */}
-            <Route path="/technician" element={<TechnicianDashboard />} />
-            <Route path="/technician/jobs" element={<TechnicianJobList />} />
-            <Route path="/technician/jobs/:jobNumber" element={<TechnicianJobDetail />} />
-            <Route path="/technician/schedule" element={<TechnicianSchedule />} />
-            <Route path="/technician/profile" element={<TechnicianProfile />} />
-            {/* Course Platform routes */}
-            <Route path="/courses" element={<CourseCatalog />} />
-            <Route path="/courses/my" element={<MyCourses />} />
-            <Route path="/courses/learn/:enrollmentId" element={<LessonViewer />} />
-            <Route path="/courses/:slug" element={<CourseDetail />} />
+            {/* Technician Portal routes — gated behind installer_accounts flag */}
+            <Route path="/technician" element={<FeatureGate flag="installer_accounts"><TechnicianDashboard /></FeatureGate>} />
+            <Route path="/technician/jobs" element={<FeatureGate flag="installer_accounts"><TechnicianJobList /></FeatureGate>} />
+            <Route path="/technician/jobs/:jobNumber" element={<FeatureGate flag="installer_accounts"><TechnicianJobDetail /></FeatureGate>} />
+            <Route path="/technician/schedule" element={<FeatureGate flag="installer_accounts"><TechnicianSchedule /></FeatureGate>} />
+            <Route path="/technician/profile" element={<FeatureGate flag="installer_accounts"><TechnicianProfile /></FeatureGate>} />
+            {/* Course Platform routes — gated behind solar_training_courses flag */}
+            <Route path="/courses" element={<FeatureGate flag="solar_training_courses"><CourseCatalog /></FeatureGate>} />
+            <Route path="/courses/my" element={<FeatureGate flag="solar_training_courses"><MyCourses /></FeatureGate>} />
+            <Route path="/courses/learn/:enrollmentId" element={<FeatureGate flag="solar_training_courses"><LessonViewer /></FeatureGate>} />
+            <Route path="/courses/:slug" element={<FeatureGate flag="solar_training_courses"><CourseDetail /></FeatureGate>} />
+            {/* Stub routes for features not yet built — FeatureGate renders
+                a 'Coming soon' panel until admin flips the flag on. */}
+            <Route path="/installer/quoting" element={<FeatureGate flag="installer_quoting_tools" />} />
+            <Route path="/portal" element={<FeatureGate flag="technical_portals" />} />
+            <Route path="/subscriptions" element={<FeatureGate flag="industry_subscriptions" />} />
             {/* Notification routes */}
             <Route path="/notifications" element={<NotificationCenter />} />
             <Route path="/notifications/preferences" element={<NotificationPreferences />} />
@@ -326,6 +333,7 @@ function AppContent() {
               <Route path="blog/:slug/edit" element={<AdminBlogEditor />} />
               <Route path="media" element={<AdminMedia />} />
               <Route path="users" element={<AdminUsers />} />
+              <Route path="feature-flags" element={<AdminFeatureFlags />} />
             </Route>
           </Routes>
         </Suspense>
