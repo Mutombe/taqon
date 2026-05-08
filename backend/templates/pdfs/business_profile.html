@@ -92,60 +92,89 @@
 <body>
 
 <!-- ============================================================== -->
-<!-- COVER (full bleed, no margin)                                    -->
+<!-- COVER (light-themed; xhtml2pdf cannot reliably paint a div bg    -->
+<!-- across a full A4 page so we lean on a bold orange band + dark    -->
+<!-- typography on cream — same brand language, reliable render.)     -->
 <!-- ============================================================== -->
-<div style="background-color: #0D0D0D; color: #FFFBF5; width: 21cm; padding: 0;">
-  <table cellpadding="0" cellspacing="0" style="width: 100%;">
-    <tr>
-      <td style="vertical-align: top; padding: 2cm 2cm 0 2cm;">
-        <table cellpadding="0" cellspacing="0" style="width: 100%;">
-          <tr>
-            <td style="vertical-align: middle;">
-              {% if logo_data_uri %}
-                <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 44pt; width: auto;"/>
-              {% else %}
-                <span style="font-size: 14pt; font-weight: bold; color: #F26522; letter-spacing: 2pt;">TAQON</span>
-              {% endif %}
-            </td>
-            <td style="vertical-align: middle; text-align: right;">
-              <span class="eyebrow" style="color: #F26522;">Company Profile</span>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: middle; padding: 0 2cm;">
-        <div style="background: #F26522; height: 4px; width: 56pt; line-height: 4px; font-size: 0; margin-bottom: 18pt;">&nbsp;</div>
-        <div style="font-size: 9pt; color: #F26522; letter-spacing: 4pt; text-transform: uppercase; font-weight: bold; margin-bottom: 12pt;">Solar &amp; Electrical Solutions</div>
-        <div style="font-size: 46pt; font-weight: bold; line-height: 1.0; letter-spacing: -1pt; color: #FFFBF5;">TAQON</div>
-        <div style="font-size: 46pt; font-weight: bold; line-height: 1.0; letter-spacing: -1pt; color: #F26522;">ELECTRICO.</div>
-        <div style="margin-top: 22pt; font-size: 13pt; color: #FFFBF5; font-style: italic; line-height: 1.5;">&ldquo;{{ company.tagline|default:"Customer is King!" }}&rdquo;</div>
-        <div style="margin-top: 36pt; font-size: 10.5pt; line-height: 1.7; color: #C9C9C9; max-width: 380pt;">
-          {{ about_paragraph|default:"Powering Zimbabwe's homes, businesses and institutions with reliable solar and electrical solutions — designed, installed and maintained by a team that treats every site as its own." }}
-        </div>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: bottom; padding: 0 2cm 2cm 2cm;">
-        <div style="background: #1A1A1A; padding: 0;">&nbsp;</div>
-        <div class="rule-orange" style="margin-bottom: 18pt;">&nbsp;</div>
-        <table cellpadding="0" cellspacing="0" style="width: 100%;">
-          <tr>
-            <td style="vertical-align: top; width: 50%;">
-              <div class="eyebrow" style="color: #6B7280;">Issued</div>
-              <div style="font-size: 11pt; color: #FFFBF5; font-weight: bold; margin-top: 3pt;">{{ generated_date|default:"" }}</div>
-            </td>
-            <td style="vertical-align: top; width: 50%; text-align: right;">
-              <div class="eyebrow" style="color: #6B7280;">Reference</div>
-              <div style="font-size: 11pt; color: #FFFBF5; font-weight: bold; margin-top: 3pt;">{{ ref_number|default:"" }}</div>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</div>
+<table cellpadding="0" cellspacing="0" style="width: 100%;">
+  <!-- Top orange band: bgcolor on td renders reliably -->
+  <tr>
+    <td bgcolor="#F26522" style="height: 18pt; padding: 0;">&nbsp;</td>
+  </tr>
+  <!-- Top header strip: logo + 'Company Profile' tag -->
+  <tr>
+    <td style="vertical-align: middle; padding: 1.4cm 2cm 0 2cm;">
+      <table cellpadding="0" cellspacing="0" style="width: 100%;">
+        <tr>
+          <td style="vertical-align: middle;">
+            {% if logo_data_uri %}
+              <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 44pt; width: auto;"/>
+            {% else %}
+              <span style="font-size: 18pt; font-weight: bold; color: #0D0D0D; letter-spacing: 1pt;">TAQON</span>
+              <span style="font-size: 18pt; font-weight: bold; color: #F26522; letter-spacing: 1pt;">ELECTRICO</span>
+            {% endif %}
+          </td>
+          <td style="vertical-align: middle; text-align: right;">
+            <span style="font-size: 8pt; color: #6B7280; letter-spacing: 3pt; text-transform: uppercase; font-weight: bold;">Company Profile</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Hero typography block -->
+  <tr>
+    <td style="vertical-align: top; padding: 4cm 2cm 0 2cm;">
+      <table cellpadding="0" cellspacing="0">
+        <tr>
+          <td bgcolor="#F26522" style="width: 56pt; height: 4pt; line-height: 4pt; font-size: 0;">&nbsp;</td>
+        </tr>
+      </table>
+      <div style="margin-top: 18pt; font-size: 9pt; color: #F26522; letter-spacing: 4pt; text-transform: uppercase; font-weight: bold;">Solar &amp; Electrical Solutions</div>
+      <div style="margin-top: 14pt; font-size: 52pt; font-weight: bold; line-height: 1.0; letter-spacing: -1.2pt; color: #0D0D0D;">TAQON</div>
+      <div style="font-size: 52pt; font-weight: bold; line-height: 1.0; letter-spacing: -1.2pt; color: #F26522;">ELECTRICO.</div>
+      <div style="margin-top: 24pt; font-size: 13pt; color: #1A1A1A; font-style: italic; line-height: 1.5;">&ldquo;{{ company.tagline|default:"Customer is King!" }}&rdquo;</div>
+    </td>
+  </tr>
+
+  <!-- About block -->
+  <tr>
+    <td style="vertical-align: top; padding: 36pt 2cm 0 2cm;">
+      <div style="font-size: 11pt; line-height: 1.7; color: #1A1A1A; max-width: 420pt;">
+        {{ about_paragraph|default:"Powering Zimbabwe's homes, businesses and institutions with reliable solar and electrical solutions — designed, installed and maintained by a team that treats every site as its own." }}
+      </div>
+    </td>
+  </tr>
+
+  <!-- Issued / Reference panel: dark band rendered via bgcolor on td -->
+  <tr>
+    <td style="padding: 36pt 2cm 0 2cm;">
+      <table cellpadding="0" cellspacing="0" bgcolor="#0D0D0D" style="width: 100%;">
+        <tr>
+          <td bgcolor="#0D0D0D" style="vertical-align: top; width: 50%; padding: 16pt 18pt;">
+            <div style="font-size: 7.5pt; color: #F26522; letter-spacing: 2.5pt; text-transform: uppercase; font-weight: bold;">Issued</div>
+            <div style="font-size: 12pt; color: #FFFBF5; font-weight: bold; margin-top: 4pt;">{{ generated_date|default:"" }}</div>
+          </td>
+          <td bgcolor="#0D0D0D" style="vertical-align: top; width: 50%; padding: 16pt 18pt; text-align: right;">
+            <div style="font-size: 7.5pt; color: #F26522; letter-spacing: 2.5pt; text-transform: uppercase; font-weight: bold;">Reference</div>
+            <div style="font-size: 12pt; color: #FFFBF5; font-weight: bold; margin-top: 4pt;">{{ ref_number|default:"" }}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Bottom orange accent band -->
+  <tr>
+    <td style="padding: 36pt 0 0 0;">
+      <table cellpadding="0" cellspacing="0" style="width: 100%;">
+        <tr>
+          <td bgcolor="#F26522" style="height: 8pt; padding: 0;">&nbsp;</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
 
 <!-- Switch to interior page template (with margins + footer) -->
 <pdf:nextpage name="interior"/>
@@ -268,7 +297,7 @@
 <div class="rule-orange" style="width: 56pt; margin-bottom: 14pt;">&nbsp;</div>
 <p class="lead muted" style="margin-bottom: 16pt; max-width: 460pt;">Our system tiers scale from a small home back-up to a 20 kVA commercial installation. Every package below is a starting point — final specifications are tailored to your site survey and load profile.</p>
 
-<table class="pkg-table" cellpadding="0" cellspacing="0">
+<table class="pkg-table" cellpadding="0" cellspacing="0" style="margin-bottom: 14pt;">
   <thead>
     <tr>
       <th style="width: 36%;">Package family</th>
@@ -296,20 +325,6 @@
   </tbody>
 </table>
 
-<div class="card-wash" style="margin-top: 14pt;">
-  <table cellpadding="0" cellspacing="0" style="width: 100%;">
-    <tr>
-      <td style="width: 70%; vertical-align: middle;">
-        <div class="h3" style="color: #F26522;">Need a custom system?</div>
-        <p class="small muted" style="margin-top: 3pt;">We design beyond 20 kVA for industrial, agricultural and institutional clients. Talk to us about your load profile.</p>
-      </td>
-      <td style="width: 30%; vertical-align: middle; text-align: right;">
-        <div class="xs muted">Speak to engineering</div>
-        <div style="font-size: 11pt; font-weight: bold; color: #0D0D0D;">{{ company.phone|default:"+263 77 277 1036" }}</div>
-      </td>
-    </tr>
-  </table>
-</div>
 
 <pdf:nextpage/>
 
@@ -329,7 +344,12 @@
         {% if project.image_data_uri %}
           <img src="{{ project.image_data_uri }}" alt="{{ project.title }}" style="width: 100%; height: 70pt;"/>
         {% else %}
-          <div class="project-thumb">{{ project.title|default:"Project image" }}</div>
+          <table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 6pt;">
+            <tr>
+              <td bgcolor="#F26522" style="height: 4pt; line-height: 4pt; font-size: 0; width: 32pt;">&nbsp;</td>
+              <td bgcolor="#F3E9D9" style="height: 4pt; line-height: 4pt; font-size: 0;">&nbsp;</td>
+            </tr>
+          </table>
         {% endif %}
         <div class="project-title">{{ project.title }}</div>
         <div class="project-meta">{{ project.location|default:"Zimbabwe" }}{% if project.capacity_kw %} &middot; {{ project.capacity_kw }} kW{% endif %}</div>
@@ -435,38 +455,53 @@
       </div>
     </td>
     <td style="width: 50%; vertical-align: top; padding-left: 8pt;">
-      <div class="card-dark">
-        <div class="eyebrow" style="color: #F26522;">Office hours</div>
-        <table cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 8pt;">
-          <tr><td style="padding: 4pt 0; font-size: 9.5pt; color: #C9C9C9;">Mon &ndash; Fri</td><td style="padding: 4pt 0; font-size: 9.5pt; color: #FFFBF5; text-align: right; font-weight: bold;">08:00 &ndash; 16:30</td></tr>
-          <tr><td style="padding: 4pt 0; font-size: 9.5pt; color: #C9C9C9; border-top: 1px solid #2A2A2A;">Saturday</td><td style="padding: 4pt 0; font-size: 9.5pt; color: #FFFBF5; text-align: right; font-weight: bold; border-top: 1px solid #2A2A2A;">08:00 &ndash; 13:00</td></tr>
-          <tr><td style="padding: 4pt 0; font-size: 9.5pt; color: #C9C9C9; border-top: 1px solid #2A2A2A;">Sunday</td><td style="padding: 4pt 0; font-size: 9.5pt; color: #6B7280; text-align: right; font-weight: bold; border-top: 1px solid #2A2A2A;">Closed</td></tr>
-        </table>
-        <div style="margin-top: 14pt; padding-top: 12pt; border-top: 1px solid #2A2A2A;">
-          <div class="eyebrow" style="color: #F26522;">Registration</div>
-          <div style="font-size: 9.5pt; color: #FFFBF5; margin-top: 4pt;">{{ company.registration_no|default:"Licensed Electrical Contractor &middot; ZERA-Recommended" }}</div>
-        </div>
-      </div>
+      <table cellpadding="0" cellspacing="0" bgcolor="#0D0D0D" style="width: 100%;">
+        <tr>
+          <td bgcolor="#0D0D0D" style="padding: 16pt 18pt;">
+            <div style="font-size: 7.5pt; color: #F26522; letter-spacing: 2pt; text-transform: uppercase; font-weight: bold;">Office hours</div>
+            <table cellpadding="0" cellspacing="0" bgcolor="#0D0D0D" style="width: 100%; margin-top: 10pt;">
+              <tr>
+                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #C9C9C9;">Mon &ndash; Fri</td>
+                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #FFFBF5; text-align: right; font-weight: bold;">08:00 &ndash; 16:30</td>
+              </tr>
+              <tr>
+                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #C9C9C9;">Saturday</td>
+                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #FFFBF5; text-align: right; font-weight: bold;">08:00 &ndash; 13:00</td>
+              </tr>
+              <tr>
+                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #C9C9C9;">Sunday</td>
+                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #9CA3AF; text-align: right; font-weight: bold;">Closed</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#0D0D0D" style="padding: 0 18pt 18pt 18pt;">
+            <div style="border-top: 1pt solid #2A2A2A; padding-top: 14pt;">
+              <div style="font-size: 7.5pt; color: #F26522; letter-spacing: 2pt; text-transform: uppercase; font-weight: bold;">Registration</div>
+              <div style="font-size: 9.5pt; color: #FFFBF5; margin-top: 5pt; line-height: 1.5;">{{ company.registration_no|default:"Licensed Electrical Contractor &middot; ZERA-Recommended" }}</div>
+            </div>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
 </table>
 
-<div class="cta-band">
-  <table cellpadding="0" cellspacing="0" style="width: 100%;">
-    <tr>
-      <td style="vertical-align: middle; width: 70%;">
-        <div style="font-size: 8pt; letter-spacing: 2.5pt; text-transform: uppercase; font-weight: bold; color: #FFFBF5; opacity: 0.85;">Next step</div>
-        <div style="font-size: 22pt; font-weight: bold; color: #FFFFFF; line-height: 1.15; margin-top: 6pt; letter-spacing: -0.3pt;">Request a free site survey.</div>
-        <div style="font-size: 10pt; color: #FFFBF5; margin-top: 8pt; line-height: 1.5; opacity: 0.95;">No obligation. We'll quote based on your actual loads, not a guess.</div>
-      </td>
-      <td style="vertical-align: middle; width: 30%; text-align: right;">
-        <div style="font-size: 8pt; color: #FFFBF5; letter-spacing: 1.5pt; text-transform: uppercase; opacity: 0.85;">Call us today</div>
-        <div style="font-size: 18pt; font-weight: bold; color: #FFFFFF; margin-top: 4pt;">{{ company.phone }}</div>
-        <div style="font-size: 9pt; color: #FFFBF5; margin-top: 4pt; opacity: 0.95;">{{ company.email }}</div>
-      </td>
-    </tr>
-  </table>
-</div>
+<table cellpadding="0" cellspacing="0" bgcolor="#F26522" style="width: 100%;">
+  <tr>
+    <td bgcolor="#F26522" style="vertical-align: middle; width: 60%; padding: 24pt 26pt;">
+      <div style="font-size: 8pt; letter-spacing: 2.5pt; text-transform: uppercase; font-weight: bold; color: #FFFBF5;">Next step</div>
+      <div style="font-size: 22pt; font-weight: bold; color: #FFFFFF; line-height: 1.15; margin-top: 6pt; letter-spacing: -0.3pt;">Request a free site survey.</div>
+      <div style="font-size: 10pt; color: #FFFBF5; margin-top: 8pt; line-height: 1.5;">No obligation. We'll quote based on your actual loads, not a guess.</div>
+    </td>
+    <td bgcolor="#F26522" style="vertical-align: middle; width: 40%; padding: 24pt 26pt; text-align: right;">
+      <div style="font-size: 8pt; color: #FFFBF5; letter-spacing: 1.5pt; text-transform: uppercase;">Call us today</div>
+      <div style="font-size: 16pt; font-weight: bold; color: #FFFFFF; margin-top: 4pt; white-space: nowrap;">{{ company.phone }}</div>
+      <div style="font-size: 9pt; color: #FFFBF5; margin-top: 4pt;">{{ company.email }}</div>
+    </td>
+  </tr>
+</table>
 
 <div style="margin-top: 18pt; text-align: center;">
   <div class="rule-soft" style="margin-bottom: 10pt;">&nbsp;</div>
