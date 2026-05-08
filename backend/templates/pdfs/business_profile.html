@@ -5,11 +5,11 @@
 <title>{{ company.name }} — Company Profile</title>
 <style>
   /* ============================================================
-     FONTS — WeasyPrint can fetch Google Fonts directly
-     Syne   → display headings (editorial, distinctive)
-     Outfit → body copy (modern geometric sans)
+     FONTS — system stack chosen so the document renders without any
+     external network fetch (Render's native runtime can block
+     fonts.googleapis.com). Syne / Outfit can be re-introduced via a
+     local @font-face once we bundle the woff2 files into static.
   ============================================================ */
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
 
   /* ============================================================
      PAGE TEMPLATES
@@ -86,7 +86,7 @@
     color: #1A1A1A;
     line-height: 1.6;
     font-weight: 400;
-    -weasy-font-feature-settings: "kern" 1, "liga" 1;
+    font-feature-settings: "kern" 1, "liga" 1;
   }
 
   h1, h2, h3, h4, h5 {
