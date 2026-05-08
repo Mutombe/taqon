@@ -518,11 +518,71 @@ class BusinessProfileView(APIView):
         {'title': 'Lighting Solutions', 'description': 'Custom interior, exterior and security lighting design and installation.', 'icon_unicode_or_letter': 'L'},
     ]
 
+    # Real Taqon installs sourced from website/src/data/projectsData.js. Each
+    # `image_url` is fetched at PDF-render time by WeasyPrint, so it must be
+    # publicly reachable (production URL works for both prod and dev).
+    SITE_PUBLIC_BASE = 'https://www.taqon.co.zw'
+
+    # Both image_url and hero_image_url are populated on every project so
+    # the WeasyPrint template can fall back from one to the other without
+    # tripping Django's strict variable lookup. The first project is
+    # rendered as the full-bleed 16:9 hero on the projects page.
     PROJECTS = [
-        {'title': 'Borrowdale Residence', 'location': 'Harare', 'capacity_kw': '10', 'summary': '10 kW hybrid residential system with 15 kWh lithium storage and rooftop array.'},
-        {'title': 'City Plastics Manufacturing', 'location': 'Harare', 'capacity_kw': '50', 'summary': '50 kW commercial rooftop installation cutting daytime grid draw by ~70%.'},
-        {'title': 'Childline NGO Facility', 'location': 'Harare', 'capacity_kw': '8', 'summary': 'Off-grid solar + battery solution for 24/7 NGO operations.'},
-        {'title': 'Marondera Farm Borehole', 'location': 'Marondera', 'capacity_kw': '3', 'summary': 'Solar-powered irrigation pump system for off-grid agricultural site.'},
+        # First entry is rendered as the hero (full-bleed 16:9) by the template.
+        {
+            'title': 'Kadoma 24kVA Commercial Solar System',
+            'location': 'Kadoma',
+            'kva': '24kVA',
+            'category': 'Commercial',
+            'description': 'Large-scale 24 kVA commercial installation cutting reliance on the national grid. Canadian monocrystalline panels, lithium-ion storage, off-grid capable.',
+            'image_url': f'{SITE_PUBLIC_BASE}/kadoma-24kva-1.jpg',
+            'hero_image_url': f'{SITE_PUBLIC_BASE}/kadoma-24kva-1.jpg',
+        },
+        {
+            'title': 'Bulawayo 16kVA Residential System',
+            'location': 'Bulawayo',
+            'kva': '16kVA',
+            'category': 'Residential',
+            'description': '36 × 535 W panels, 16 kVA Sunsynk inverter, 4 × 100 Ah lithium batteries — powers a full two-storey home through load shedding.',
+            'image_url': f'{SITE_PUBLIC_BASE}/bulawayo-16kva-2.jpg',
+            'hero_image_url': f'{SITE_PUBLIC_BASE}/bulawayo-16kva-2.jpg',
+        },
+        {
+            'title': 'Thuli Service Station — Willowvale',
+            'location': 'Harare · Willowvale Rd',
+            'kva': '16kVA',
+            'category': 'Commercial',
+            'description': '16 kVA commercial system keeping a 24/7 service station running at full capacity through national grid outages.',
+            'image_url': f'{SITE_PUBLIC_BASE}/thuli-willowvale-16kva-2.jpg',
+            'hero_image_url': f'{SITE_PUBLIC_BASE}/thuli-willowvale-16kva-2.jpg',
+        },
+        {
+            'title': 'Nedbank Borrowdale 8kVA Backup',
+            'location': 'Borrowdale, Harare',
+            'kva': '8kVA',
+            'category': 'Commercial',
+            'description': '8 kVA hybrid backup keeping the branch online and core banking systems live during grid outages.',
+            'image_url': f'{SITE_PUBLIC_BASE}/nedbank-borrowdale-8kva-1.jpg',
+            'hero_image_url': f'{SITE_PUBLIC_BASE}/nedbank-borrowdale-8kva-1.jpg',
+        },
+        {
+            'title': 'Chisipiti 10kVA Hybrid System',
+            'location': 'Chisipiti, Harare',
+            'kva': '10kVA',
+            'category': 'Commercial',
+            'description': '10 kVA hybrid solar system delivering daily savings on grid draw plus reliable load-shedding cover.',
+            'image_url': f'{SITE_PUBLIC_BASE}/chisipiti-10kva-1.jpg',
+            'hero_image_url': f'{SITE_PUBLIC_BASE}/chisipiti-10kva-1.jpg',
+        },
+        {
+            'title': 'Nedbank Harare CBD 12kVA',
+            'location': 'Jason Moyo Ave, CBD',
+            'kva': '12kVA',
+            'category': 'Commercial',
+            'description': '12 kVA commercial solar at the Harare CBD branch — peak-demand cover during business hours.',
+            'image_url': f'{SITE_PUBLIC_BASE}/nedbank-harare-12kva-1.jpg',
+            'hero_image_url': f'{SITE_PUBLIC_BASE}/nedbank-harare-12kva-1.jpg',
+        },
     ]
 
     BRANDS = ['Sunsynk', 'Growatt', 'JA Solar', 'Jinko Solar', 'Pylontech', 'Dyness', 'Kodak', 'Deye']

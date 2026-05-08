@@ -20,29 +20,40 @@ def _logo_data_uri():
         return ''
 
 
-def _render_pdf(html_string):
-    """Convert HTML to PDF. Tries xhtml2pdf first (pure Python), then WeasyPrint, then HTML fallback."""
-    # Option 1: xhtml2pdf (pure Python, no native deps — works everywhere)
+def _render_pdf(html_string, base_url=None):
+    """Convert HTML to PDF.
+
+    Tries WeasyPrint first (full CSS3 — flex, grid, gradients, real
+    fonts, external image fetching). Falls back to xhtml2pdf for
+    environments where the GTK native libs are missing (e.g. local
+    Windows dev). Last resort returns raw HTML so callers don't 500.
+
+    `base_url` lets relative URLs resolve against a known origin —
+    useful when templates reference static files via /static/ paths.
+    """
+    # Option 1: WeasyPrint — modern CSS, the production renderer
+    try:
+        from weasyprint import HTML
+        return HTML(string=html_string, base_url=base_url).write_pdf()
+    except ImportError:
+        logger.warning('WeasyPrint not installed, falling back to xhtml2pdf')
+    except Exception as exc:  # pragma: no cover — runtime failure path
+        logger.warning('WeasyPrint failed (%s), falling back to xhtml2pdf', exc)
+
+    # Option 2: xhtml2pdf — pure Python, last-resort renderer
     try:
         from xhtml2pdf import pisa
         buf = io.BytesIO()
         result = pisa.CreatePDF(io.StringIO(html_string), dest=buf)
         if not result.err:
             return buf.getvalue()
-        logger.warning('xhtml2pdf returned errors, trying WeasyPrint')
+        logger.warning('xhtml2pdf returned errors, returning HTML')
     except ImportError:
         pass
     except Exception:
-        logger.warning('xhtml2pdf failed, trying WeasyPrint')
+        logger.warning('xhtml2pdf failed, returning HTML')
 
-    # Option 2: WeasyPrint (needs native GTK libs)
-    try:
-        from weasyprint import HTML
-        return HTML(string=html_string).write_pdf()
-    except Exception:
-        pass
-
-    # Option 3: HTML fallback
+    # Option 3: HTML fallback so the response never 500s
     logger.warning('No PDF library available — returning HTML')
     return html_string.encode('utf-8')
 

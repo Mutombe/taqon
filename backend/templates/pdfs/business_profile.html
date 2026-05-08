@@ -4,509 +4,1331 @@
 <meta charset="UTF-8">
 <title>{{ company.name }} — Company Profile</title>
 <style>
-  /* ---------- xhtml2pdf-safe page setup ---------- */
+  /* ============================================================
+     FONTS — WeasyPrint can fetch Google Fonts directly
+     Syne   → display headings (editorial, distinctive)
+     Outfit → body copy (modern geometric sans)
+  ============================================================ */
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+  /* ============================================================
+     PAGE TEMPLATES
+  ============================================================ */
   @page {
     size: A4;
-    margin: 0cm;
-    @frame content_frame { left: 0cm; top: 0cm; width: 21cm; height: 29.7cm; }
+    margin: 1.6cm 1.8cm 2cm 1.8cm;
+
+    @top-left {
+      content: string(section-name);
+      font-family: 'Outfit', sans-serif;
+      font-size: 7.5pt;
+      letter-spacing: 2.5pt;
+      text-transform: uppercase;
+      color: #6B7280;
+      font-weight: 600;
+      padding-top: 0.6cm;
+    }
+    @top-right {
+      content: "TAQON ELECTRICO";
+      font-family: 'Syne', sans-serif;
+      font-size: 7.5pt;
+      letter-spacing: 2.5pt;
+      color: #0D0D0D;
+      font-weight: 700;
+      padding-top: 0.6cm;
+    }
+    @bottom-left {
+      content: "TAQON ELECTRICO  ·  www.taqon.co.zw";
+      font-family: 'Outfit', sans-serif;
+      font-size: 7.5pt;
+      color: #9CA3AF;
+      letter-spacing: 1pt;
+      padding-bottom: 0.6cm;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: 'Outfit', sans-serif;
+      font-size: 7.5pt;
+      color: #9CA3AF;
+      letter-spacing: 1pt;
+      padding-bottom: 0.6cm;
+    }
   }
-  @page interior {
+
+  /* Cover page — full bleed, no chrome */
+  @page cover {
     size: A4;
-    margin: 1.6cm 1.8cm 1.8cm 1.8cm;
-    @frame content_frame { left: 1.8cm; top: 1.6cm; width: 17.4cm; height: 26cm; }
-    @frame footer_frame  { -pdf-frame-content: footer_content; left: 1.8cm; top: 27.8cm; width: 17.4cm; height: 1.2cm; }
+    margin: 0;
+    @top-left   { content: none; }
+    @top-right  { content: none; }
+    @bottom-left{ content: none; }
+    @bottom-right{ content: none; }
   }
-  body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1A1A1A; line-height: 1.55; }
+
+  /* CTA / closing page — no header chrome, custom feel */
+  @page closing {
+    size: A4;
+    margin: 0;
+    @top-left   { content: none; }
+    @top-right  { content: none; }
+    @bottom-left{ content: none; }
+    @bottom-right{ content: none; }
+  }
+
+  /* ============================================================
+     RESET + BASE
+  ============================================================ */
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  p { margin-bottom: 6pt; }
 
-  /* ---------- typography scale ---------- */
-  .eyebrow      { font-size: 7.5pt; letter-spacing: 2.5pt; text-transform: uppercase; color: #6B7280; font-weight: bold; }
-  .eyebrow-orange { font-size: 7.5pt; letter-spacing: 2.5pt; text-transform: uppercase; color: #F26522; font-weight: bold; }
-  .h1   { font-size: 26pt; font-weight: bold; line-height: 1.1; color: #0D0D0D; letter-spacing: -0.5pt; }
-  .h2   { font-size: 18pt; font-weight: bold; line-height: 1.15; color: #0D0D0D; letter-spacing: -0.3pt; }
-  .h3   { font-size: 12pt; font-weight: bold; color: #0D0D0D; }
-  .lead { font-size: 11pt; line-height: 1.6; color: #1A1A1A; }
-  .muted{ color: #6B7280; }
-  .small{ font-size: 8.5pt; }
-  .xs   { font-size: 7.5pt; }
+  html, body {
+    font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 9.5pt;
+    color: #1A1A1A;
+    line-height: 1.6;
+    font-weight: 400;
+    -weasy-font-feature-settings: "kern" 1, "liga" 1;
+  }
 
-  /* ---------- accent rules ---------- */
-  .rule-orange { background: #F26522; height: 3px; line-height: 3px; font-size: 0; }
-  .rule-soft   { background: #E5E7EB; height: 1px; line-height: 1px; font-size: 0; }
+  h1, h2, h3, h4, h5 {
+    font-family: 'Syne', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    color: #0D0D0D;
+    letter-spacing: -0.3pt;
+    line-height: 1.15;
+  }
 
-  /* ---------- cards / panels ---------- */
-  .card        { background: #FFFFFF; border: 1px solid #EEEEEE; padding: 14pt; }
-  .card-cream  { background: #FFFBF5; border: 1px solid #F3E9D9; padding: 14pt; }
-  .card-wash   { background: #fff7ed; border-left: 3px solid #F26522; padding: 12pt 14pt; }
-  .card-dark   { background: #0D0D0D; color: #FFFBF5; padding: 16pt; }
+  p { margin: 0 0 7pt 0; }
+  p:last-child { margin-bottom: 0; }
 
-  .service-card { background: #FFFFFF; border: 1px solid #EEEEEE; padding: 12pt; }
-  .service-icon { width: 28pt; height: 28pt; background: #fff7ed; color: #F26522; font-size: 14pt; font-weight: bold; text-align: center; line-height: 28pt; border-radius: 4pt; margin-bottom: 8pt; }
-  .service-title{ font-size: 11pt; font-weight: bold; color: #0D0D0D; margin-bottom: 4pt; }
-  .service-desc { font-size: 8.5pt; color: #6B7280; line-height: 1.5; }
+  em { font-style: italic; color: #0D0D0D; }
+  strong { font-weight: 600; color: #0D0D0D; }
 
-  /* ---------- tables (layout + data) ---------- */
-  .pkg-table { width: 100%; border-collapse: collapse; }
-  .pkg-table th { background: #0D0D0D; color: #FFFBF5; font-size: 8pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1pt; padding: 8pt 10pt; text-align: left; }
-  .pkg-table th.right { text-align: right; }
-  .pkg-table td { padding: 10pt; border-bottom: 1px solid #EEEEEE; font-size: 9pt; vertical-align: top; }
+  /* ============================================================
+     TYPE SCALE
+  ============================================================ */
+  .display-xl { font-size: 78pt; line-height: 0.95; letter-spacing: -2pt; font-weight: 800; }
+  .display-l  { font-size: 44pt; line-height: 1.05; letter-spacing: -1pt; font-weight: 700; }
+  .h1         { font-size: 30pt; letter-spacing: -0.6pt; font-weight: 700; }
+  .h2         { font-size: 22pt; letter-spacing: -0.4pt; font-weight: 700; }
+  .h3         { font-size: 13pt; letter-spacing: -0.1pt; font-weight: 600; }
+  .h4         { font-size: 10.5pt; font-weight: 600; }
+  .lead       { font-size: 11pt; line-height: 1.65; color: #1A1A1A; font-weight: 400; }
+  .body       { font-size: 9.5pt; line-height: 1.6; color: #1A1A1A; }
+  .small      { font-size: 8.5pt; line-height: 1.55; }
+  .xs         { font-size: 7.5pt; line-height: 1.4; }
+  .muted      { color: #6B7280; }
+  .ink        { color: #0D0D0D; }
+  .orange     { color: #F26522; }
+  .cream      { color: #FFFBF5; }
+
+  .eyebrow {
+    font-family: 'Outfit', sans-serif;
+    font-size: 7.5pt;
+    letter-spacing: 2.8pt;
+    text-transform: uppercase;
+    color: #F26522;
+    font-weight: 600;
+  }
+  .eyebrow-muted {
+    font-family: 'Outfit', sans-serif;
+    font-size: 7.5pt;
+    letter-spacing: 2.8pt;
+    text-transform: uppercase;
+    color: #6B7280;
+    font-weight: 600;
+  }
+
+  /* ============================================================
+     SECTION CHROME
+  ============================================================ */
+  .section { string-set: section-name attr(data-section); page-break-before: always; padding-top: 0.4cm; }
+  .section:first-of-type { page-break-before: auto; }
+
+  .section-head { margin-bottom: 22pt; }
+  .section-head .eyebrow { display: block; margin-bottom: 10pt; }
+  .section-head .h2 { margin-bottom: 10pt; max-width: 14cm; }
+  .section-head .lead { color: #6B7280; max-width: 14cm; }
+
+  .accent-bar {
+    display: block;
+    width: 48pt;
+    height: 3pt;
+    background: #F26522;
+    margin: 0 0 14pt 0;
+  }
+
+  /* ============================================================
+     COVER PAGE
+  ============================================================ */
+  .cover {
+    page: cover;
+    page-break-after: always;
+    width: 21cm;
+    height: 29.7cm;
+    position: relative;
+    background: #FFFBF5;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 88% 12%, rgba(242, 101, 34, 0.10) 0%, rgba(242, 101, 34, 0) 42%),
+      radial-gradient(circle at 8% 92%, rgba(242, 101, 34, 0.06) 0%, rgba(242, 101, 34, 0) 38%),
+      linear-gradient(180deg, #FFFBF5 0%, #FFF5EC 100%);
+    z-index: 0;
+  }
+  .cover-band-top {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 18pt;
+    background: linear-gradient(90deg, #F26522 0%, #FF8447 100%);
+    z-index: 2;
+  }
+  .cover-band-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 28pt;
+    background: #0D0D0D;
+    z-index: 2;
+  }
+  .cover-grid {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(to right, rgba(13, 13, 13, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(13, 13, 13, 0.03) 1px, transparent 1px);
+    background-size: 36pt 36pt;
+    z-index: 1;
+  }
+  .cover-inner {
+    position: relative;
+    z-index: 3;
+    padding: 1.6cm 2cm 1.6cm 2cm;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .cover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.6cm;
+  }
+  .cover-header .logo {
+    height: 46pt;
+    width: auto;
+  }
+  .cover-header .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 16pt;
+    font-weight: 800;
+    letter-spacing: 0.5pt;
+    color: #0D0D0D;
+  }
+  .cover-header .logo-text .accent { color: #F26522; }
+  .cover-header .doc-tag {
+    font-family: 'Outfit', sans-serif;
+    font-size: 8pt;
+    letter-spacing: 3.5pt;
+    text-transform: uppercase;
+    color: #6B7280;
+    font-weight: 600;
+  }
+  .cover-spacer { flex: 1; }
+  .cover-mark {
+    width: 64pt; height: 4pt;
+    background: #F26522;
+    margin-bottom: 22pt;
+  }
+  .cover-eyebrow {
+    font-family: 'Outfit', sans-serif;
+    font-size: 9.5pt;
+    letter-spacing: 4.5pt;
+    text-transform: uppercase;
+    color: #F26522;
+    font-weight: 600;
+    margin-bottom: 18pt;
+  }
+  .cover-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -2.4pt;
+    color: #0D0D0D;
+  }
+  .cover-title .line-1 { font-size: 78pt; display: block; }
+  .cover-title .line-2 { font-size: 78pt; display: block; color: #F26522; }
+  .cover-tagline {
+    margin-top: 22pt;
+    font-family: 'Syne', sans-serif;
+    font-size: 14pt;
+    font-style: italic;
+    color: #1A1A1A;
+    line-height: 1.4;
+    font-weight: 500;
+    max-width: 14cm;
+  }
+  .cover-about {
+    margin-top: 26pt;
+    font-family: 'Outfit', sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: #1A1A1A;
+    max-width: 13.5cm;
+    font-weight: 400;
+  }
+  .cover-meta {
+    margin-top: 30pt;
+    display: flex;
+    gap: 0;
+    background: #0D0D0D;
+    border-radius: 4pt;
+    overflow: hidden;
+    box-shadow: 0 4pt 24pt rgba(13, 13, 13, 0.18);
+  }
+  .cover-meta-cell {
+    flex: 1;
+    padding: 16pt 20pt;
+    color: #FFFBF5;
+  }
+  .cover-meta-cell + .cover-meta-cell {
+    border-left: 1px solid rgba(255, 251, 245, 0.12);
+  }
+  .cover-meta-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 7pt;
+    letter-spacing: 2.6pt;
+    text-transform: uppercase;
+    color: #F26522;
+    font-weight: 600;
+    margin-bottom: 6pt;
+  }
+  .cover-meta-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 12pt;
+    font-weight: 600;
+    color: #FFFBF5;
+    letter-spacing: -0.1pt;
+  }
+  .cover-footer {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 28pt;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2cm;
+    color: rgba(255, 251, 245, 0.7);
+    font-family: 'Outfit', sans-serif;
+    font-size: 7.5pt;
+    letter-spacing: 2pt;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* ============================================================
+     ABOUT
+  ============================================================ */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 22pt;
+    margin-bottom: 18pt;
+  }
+  .about-narrative .lead { font-size: 11pt; color: #1A1A1A; line-height: 1.7; }
+  .about-narrative .lead + .lead { margin-top: 9pt; }
+
+  .mission-card {
+    background: linear-gradient(135deg, #FFFBF5 0%, #FFF1E2 100%);
+    border-radius: 6pt;
+    padding: 18pt 20pt;
+    border: 1px solid #F3E0CC;
+    break-inside: avoid;
+  }
+  .mission-card .eyebrow { margin-bottom: 8pt; }
+  .mission-card .h3 { margin-bottom: 8pt; }
+  .mission-card p { font-size: 9.5pt; line-height: 1.65; color: #1A1A1A; }
+
+  .about-pills {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8pt;
+    margin-top: 10pt;
+  }
+  .pill-card {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 6pt;
+    padding: 14pt 12pt;
+    text-align: center;
+    break-inside: avoid;
+  }
+  .pill-card .num {
+    font-family: 'Syne', sans-serif;
+    font-size: 22pt;
+    font-weight: 700;
+    color: #F26522;
+    line-height: 1;
+    letter-spacing: -0.5pt;
+  }
+  .pill-card .lbl {
+    font-family: 'Outfit', sans-serif;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 1.6pt;
+    color: #6B7280;
+    margin-top: 6pt;
+    font-weight: 600;
+  }
+
+  .differentiators {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12pt;
+    margin-top: 6pt;
+    page-break-inside: avoid;
+  }
+  .diff-card {
+    background: #fff7ed;
+    border-left: 3pt solid #F26522;
+    border-radius: 0 5pt 5pt 0;
+    padding: 14pt 16pt;
+    break-inside: avoid;
+  }
+  .diff-card .h4 { color: #0D0D0D; margin-bottom: 5pt; }
+  .diff-card p { font-size: 8.8pt; color: #4B5563; line-height: 1.55; }
+
+  /* ============================================================
+     SERVICES — 6-card grid
+  ============================================================ */
+  .services-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12pt;
+  }
+  .service-card {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 6pt;
+    padding: 16pt 18pt;
+    display: flex;
+    align-items: flex-start;
+    gap: 14pt;
+    break-inside: avoid;
+  }
+  .service-icon {
+    flex: 0 0 36pt;
+    width: 36pt;
+    height: 36pt;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #F26522 0%, #FF8447 100%);
+    color: #FFFBF5;
+    font-family: 'Syne', sans-serif;
+    font-size: 14pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2pt 8pt rgba(242, 101, 34, 0.28);
+  }
+  .service-body { flex: 1; }
+  .service-body .title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11pt;
+    font-weight: 600;
+    color: #0D0D0D;
+    margin-bottom: 4pt;
+    letter-spacing: -0.1pt;
+  }
+  .service-body .desc {
+    font-size: 8.8pt;
+    color: #4B5563;
+    line-height: 1.55;
+  }
+
+  /* ============================================================
+     PACKAGES TABLE
+  ============================================================ */
+  .pkg-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 4pt;
+    border-radius: 6pt;
+    overflow: hidden;
+    box-shadow: 0 1pt 3pt rgba(13, 13, 13, 0.04);
+  }
+  .pkg-table thead th {
+    background: #0D0D0D;
+    color: #FFFBF5;
+    font-family: 'Outfit', sans-serif;
+    font-size: 7.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.4pt;
+    padding: 11pt 12pt;
+    text-align: left;
+  }
+  .pkg-table thead th.right { text-align: right; }
+  .pkg-table tbody td {
+    background: #FFFFFF;
+    padding: 14pt 12pt;
+    border-bottom: 1px solid #F0F0F0;
+    font-size: 9.5pt;
+    vertical-align: middle;
+  }
+  .pkg-table tbody tr:nth-child(even) td { background: #FAFAFA; }
+  .pkg-table tbody tr:last-child td { border-bottom: none; }
   .pkg-table td.right { text-align: right; }
-  .pkg-name { font-weight: bold; color: #0D0D0D; font-size: 10pt; }
-  .pkg-suit { color: #6B7280; font-size: 8pt; margin-top: 2pt; }
-  .pkg-spec-pill { display: inline-block; padding: 2pt 7pt; background: #fff7ed; color: #F26522; font-size: 8pt; font-weight: bold; border-radius: 3pt; }
+  .pkg-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    color: #0D0D0D;
+    font-size: 10.5pt;
+    letter-spacing: -0.1pt;
+  }
+  .pkg-suit {
+    color: #6B7280;
+    font-size: 8.3pt;
+    margin-top: 3pt;
+    line-height: 1.45;
+    max-width: 6cm;
+  }
+  .pkg-pill {
+    display: inline-block;
+    padding: 4pt 10pt;
+    background: linear-gradient(135deg, #FFEDDC 0%, #FFE0C4 100%);
+    color: #B83F00;
+    font-family: 'Syne', sans-serif;
+    font-size: 9pt;
+    font-weight: 700;
+    border-radius: 999pt;
+    letter-spacing: -0.2pt;
+  }
+  .pkg-spec {
+    font-family: 'Syne', sans-serif;
+    font-size: 10pt;
+    font-weight: 600;
+    color: #0D0D0D;
+  }
+  .pkg-spec-unit {
+    font-family: 'Outfit', sans-serif;
+    font-size: 8pt;
+    color: #6B7280;
+    font-weight: 400;
+    letter-spacing: 0.5pt;
+  }
 
-  /* ---------- stats ---------- */
-  .stat-cell   { background: #FFFBF5; padding: 16pt 10pt; text-align: center; border: 1px solid #F3E9D9; }
-  .stat-value  { font-size: 22pt; font-weight: bold; color: #F26522; line-height: 1.05; }
-  .stat-label  { font-size: 8pt; color: #6B7280; text-transform: uppercase; letter-spacing: 1pt; margin-top: 4pt; }
+  .pkg-note {
+    margin-top: 16pt;
+    padding: 12pt 16pt;
+    background: #fff7ed;
+    border-left: 2pt solid #F26522;
+    border-radius: 0 4pt 4pt 0;
+    font-size: 8.8pt;
+    color: #4B5563;
+    line-height: 1.55;
+  }
+  .pkg-note strong { color: #F26522; }
 
-  /* ---------- testimonials ---------- */
-  .quote-card  { background: #FFFFFF; border: 1px solid #EEEEEE; padding: 14pt 16pt; }
-  .quote-mark  { font-size: 28pt; color: #F26522; line-height: 0.6; font-family: Georgia, serif; }
-  .quote-text  { font-size: 9.5pt; line-height: 1.6; color: #1A1A1A; font-style: italic; }
-  .quote-attr  { font-size: 8.5pt; color: #6B7280; margin-top: 8pt; }
-  .quote-name  { font-weight: bold; color: #0D0D0D; }
+  /* ============================================================
+     PROJECTS — full-bleed photo cards
+  ============================================================ */
+  .projects-hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 8pt;
+    overflow: hidden;
+    margin-bottom: 12pt;
+    box-shadow: 0 6pt 24pt rgba(13, 13, 13, 0.12);
+    break-inside: avoid;
+  }
+  .projects-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .projects-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(13,13,13,0) 40%, rgba(13,13,13,0.85) 100%);
+  }
+  .projects-hero-caption {
+    position: absolute;
+    left: 22pt;
+    right: 22pt;
+    bottom: 18pt;
+    color: #FFFBF5;
+  }
+  .projects-hero-caption .meta {
+    font-family: 'Outfit', sans-serif;
+    font-size: 8pt;
+    letter-spacing: 2.5pt;
+    text-transform: uppercase;
+    color: #FFB48A;
+    font-weight: 600;
+    margin-bottom: 6pt;
+  }
+  .projects-hero-caption .title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18pt;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.4pt;
+    margin-bottom: 6pt;
+  }
+  .projects-hero-caption .desc {
+    font-family: 'Outfit', sans-serif;
+    font-size: 9pt;
+    line-height: 1.55;
+    color: rgba(255, 251, 245, 0.92);
+    max-width: 13cm;
+  }
 
-  /* ---------- brand wall ---------- */
-  .brand-cell  { background: #FFFFFF; border: 1px solid #EEEEEE; padding: 14pt 8pt; text-align: center; font-size: 10pt; font-weight: bold; color: #1A1A1A; letter-spacing: 0.5pt; }
+  .projects-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14pt;
+  }
+  .project-card {
+    background: #FFFFFF;
+    border-radius: 6pt;
+    overflow: hidden;
+    border: 1px solid #EAEAEA;
+    box-shadow: 0 1pt 3pt rgba(13, 13, 13, 0.04);
+    break-inside: avoid;
+  }
+  .project-image {
+    width: 100%;
+    aspect-ratio: 16/10;
+    background: #f8f8f8;
+    overflow: hidden;
+  }
+  .project-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .project-body { padding: 12pt 14pt 14pt; }
+  .project-meta {
+    font-family: 'Outfit', sans-serif;
+    font-size: 7.5pt;
+    color: #F26522;
+    text-transform: uppercase;
+    letter-spacing: 1.8pt;
+    font-weight: 600;
+    margin-bottom: 5pt;
+  }
+  .project-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: #0D0D0D;
+    line-height: 1.25;
+    letter-spacing: -0.2pt;
+    margin-bottom: 6pt;
+  }
+  .project-desc {
+    font-size: 8.5pt;
+    color: #4B5563;
+    line-height: 1.55;
+  }
 
-  /* ---------- project items ---------- */
-  .project-card { background: #FFFFFF; border: 1px solid #EEEEEE; padding: 12pt; }
-  .project-thumb { background: #f8f8f8; height: 70pt; border: 1px dashed #E5E7EB; text-align: center; line-height: 70pt; color: #9CA3AF; font-size: 8pt; }
-  .project-title { font-size: 10pt; font-weight: bold; color: #0D0D0D; margin-top: 8pt; }
-  .project-meta  { font-size: 8pt; color: #F26522; font-weight: bold; margin-top: 2pt; letter-spacing: 0.5pt; text-transform: uppercase; }
-  .project-desc  { font-size: 8.5pt; color: #6B7280; margin-top: 4pt; line-height: 1.5; }
+  /* ============================================================
+     BRANDS
+  ============================================================ */
+  .brand-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8pt;
+    margin-bottom: 24pt;
+  }
+  .brand-chip {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 4pt;
+    padding: 16pt 8pt;
+    text-align: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 10pt;
+    font-weight: 600;
+    color: #1A1A1A;
+    letter-spacing: 0.2pt;
+    break-inside: avoid;
+  }
 
-  /* ---------- contact / cta ---------- */
-  .contact-row td { padding: 6pt 0; vertical-align: top; }
-  .contact-label  { font-size: 7.5pt; color: #6B7280; text-transform: uppercase; letter-spacing: 1.5pt; font-weight: bold; }
-  .contact-value  { font-size: 11pt; color: #0D0D0D; font-weight: bold; }
-  .cta-band       { background: #F26522; color: #FFFFFF; padding: 22pt 24pt; }
+  /* ============================================================
+     STATS
+  ============================================================ */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10pt;
+    margin-top: 4pt;
+  }
+  .stat-card {
+    background: linear-gradient(180deg, #FFFBF5 0%, #FFF1E2 100%);
+    border: 1px solid #F3E0CC;
+    border-radius: 6pt;
+    padding: 22pt 12pt;
+    text-align: center;
+    break-inside: avoid;
+  }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 32pt;
+    font-weight: 800;
+    color: #F26522;
+    line-height: 1;
+    letter-spacing: -1.2pt;
+  }
+  .stat-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 7.5pt;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 1.6pt;
+    margin-top: 8pt;
+    font-weight: 600;
+  }
 
-  /* ---------- footer (running) ---------- */
-  .pf { font-size: 7.5pt; color: #9CA3AF; }
-  .pf .pf-r { text-align: right; }
+  /* ============================================================
+     TESTIMONIALS
+  ============================================================ */
+  .testimonial {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 6pt;
+    padding: 22pt 26pt 22pt 26pt;
+    margin-bottom: 14pt;
+    position: relative;
+    break-inside: avoid;
+  }
+  .testimonial::before {
+    content: "\201C";
+    position: absolute;
+    top: 6pt;
+    left: 18pt;
+    font-family: 'Syne', serif;
+    font-size: 64pt;
+    font-weight: 700;
+    color: #F26522;
+    line-height: 1;
+    opacity: 0.18;
+  }
+  .testimonial .quote {
+    font-family: 'Syne', sans-serif;
+    font-size: 12pt;
+    line-height: 1.55;
+    color: #1A1A1A;
+    font-weight: 500;
+    font-style: italic;
+    letter-spacing: -0.1pt;
+    position: relative;
+    z-index: 1;
+  }
+  .testimonial .attr {
+    margin-top: 14pt;
+    padding-top: 12pt;
+    border-top: 1px solid #F0F0F0;
+    font-size: 8.5pt;
+    color: #6B7280;
+  }
+  .testimonial .attr .name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    color: #0D0D0D;
+    font-size: 10pt;
+  }
+  .testimonial .attr .role {
+    color: #6B7280;
+    margin-left: 6pt;
+  }
+
+  /* ============================================================
+     CLOSING / CONTACT
+  ============================================================ */
+  .closing {
+    page: closing;
+    page-break-before: always;
+    width: 21cm;
+    height: 29.7cm;
+    position: relative;
+    background: #FFFBF5;
+    overflow: hidden;
+  }
+  .closing-inner {
+    position: relative;
+    padding: 1.8cm 2cm 0 2cm;
+    z-index: 2;
+  }
+
+  .closing-head .eyebrow { margin-bottom: 12pt; }
+  .closing-head h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 42pt;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -1pt;
+    color: #0D0D0D;
+    margin-bottom: 14pt;
+    max-width: 14cm;
+  }
+  .closing-head .accent-bar { margin-bottom: 18pt; }
+  .closing-head p {
+    font-size: 11pt;
+    line-height: 1.65;
+    color: #4B5563;
+    max-width: 14cm;
+    margin-bottom: 28pt;
+  }
+
+  .closing-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 16pt;
+    margin-bottom: 22pt;
+  }
+  .contact-block {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 6pt;
+    padding: 6pt 0;
+  }
+  .contact-row {
+    padding: 12pt 18pt;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .contact-row:last-child { border-bottom: none; }
+  .contact-row .label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 2.2pt;
+    color: #6B7280;
+    font-weight: 600;
+    margin-bottom: 4pt;
+  }
+  .contact-row .value {
+    font-family: 'Syne', sans-serif;
+    font-size: 11pt;
+    font-weight: 600;
+    color: #0D0D0D;
+    letter-spacing: -0.1pt;
+  }
+
+  .hours-block {
+    background: #0D0D0D;
+    color: #FFFBF5;
+    border-radius: 6pt;
+    padding: 18pt 20pt;
+    box-shadow: 0 4pt 16pt rgba(13, 13, 13, 0.18);
+    position: relative;
+    overflow: hidden;
+  }
+  .hours-block::after {
+    content: "";
+    position: absolute;
+    top: -40pt;
+    right: -40pt;
+    width: 120pt;
+    height: 120pt;
+    background: radial-gradient(circle, rgba(242, 101, 34, 0.20) 0%, rgba(242, 101, 34, 0) 70%);
+    z-index: 0;
+  }
+  .hours-block > * { position: relative; z-index: 1; }
+  .hours-block .label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 2.2pt;
+    color: #F26522;
+    font-weight: 600;
+    margin-bottom: 12pt;
+  }
+  .hours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6pt 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 9.5pt;
+    border-bottom: 1px solid rgba(255, 251, 245, 0.08);
+  }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-row .day { color: #C9C9C9; }
+  .hours-row .time { color: #FFFBF5; font-weight: 600; }
+  .hours-row.closed .time { color: #6B7280; }
+  .hours-block .reg {
+    margin-top: 14pt;
+    padding-top: 14pt;
+    border-top: 1px solid rgba(255, 251, 245, 0.10);
+  }
+  .hours-block .reg .label { margin-bottom: 6pt; }
+  .hours-block .reg .text {
+    font-size: 9pt;
+    line-height: 1.5;
+    color: #FFFBF5;
+  }
+
+  .cta-band {
+    background: linear-gradient(135deg, #F26522 0%, #E04F0E 60%, #C73F00 100%);
+    color: #FFFBF5;
+    border-radius: 6pt;
+    padding: 28pt 30pt;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20pt;
+    align-items: center;
+    box-shadow: 0 8pt 28pt rgba(242, 101, 34, 0.32);
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-band::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 50%),
+      radial-gradient(circle at 0% 100%, rgba(13, 13, 13, 0.12) 0%, rgba(13, 13, 13, 0) 50%);
+    z-index: 0;
+  }
+  .cta-band > * { position: relative; z-index: 1; }
+  .cta-band .label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 8pt;
+    letter-spacing: 3pt;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #FFFBF5;
+    opacity: 0.92;
+    margin-bottom: 8pt;
+  }
+  .cta-band .headline {
+    font-family: 'Syne', sans-serif;
+    font-size: 24pt;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #FFFFFF;
+    letter-spacing: -0.5pt;
+    margin-bottom: 8pt;
+  }
+  .cta-band .sub {
+    font-family: 'Outfit', sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    color: rgba(255, 251, 245, 0.94);
+  }
+  .cta-band .right {
+    text-align: right;
+    border-left: 1px solid rgba(255, 251, 245, 0.18);
+    padding-left: 22pt;
+  }
+  .cta-band .right .label { margin-bottom: 6pt; opacity: 0.88; }
+  .cta-band .right .phone {
+    font-family: 'Syne', sans-serif;
+    font-size: 18pt;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.3pt;
+    margin-bottom: 4pt;
+  }
+  .cta-band .right .email {
+    font-family: 'Outfit', sans-serif;
+    font-size: 9pt;
+    color: rgba(255, 251, 245, 0.92);
+  }
+
+  .closing-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14pt 2cm;
+    background: #0D0D0D;
+    color: rgba(255, 251, 245, 0.6);
+    font-family: 'Outfit', sans-serif;
+    font-size: 7.5pt;
+    letter-spacing: 1.5pt;
+    text-transform: uppercase;
+    text-align: center;
+    z-index: 3;
+  }
+  .closing-footer .accent { color: #F26522; }
 </style>
 </head>
 <body>
 
-<!-- ============================================================== -->
-<!-- COVER (light-themed; xhtml2pdf cannot reliably paint a div bg    -->
-<!-- across a full A4 page so we lean on a bold orange band + dark    -->
-<!-- typography on cream — same brand language, reliable render.)     -->
-<!-- ============================================================== -->
-<table cellpadding="0" cellspacing="0" style="width: 100%;">
-  <!-- Top orange band: bgcolor on td renders reliably -->
-  <tr>
-    <td bgcolor="#F26522" style="height: 18pt; padding: 0;">&nbsp;</td>
-  </tr>
-  <!-- Top header strip: logo + 'Company Profile' tag -->
-  <tr>
-    <td style="vertical-align: middle; padding: 1.4cm 2cm 0 2cm;">
-      <table cellpadding="0" cellspacing="0" style="width: 100%;">
-        <tr>
-          <td style="vertical-align: middle;">
-            {% if logo_data_uri %}
-              <img src="{{ logo_data_uri }}" alt="Taqon Electrico" style="height: 44pt; width: auto;"/>
-            {% else %}
-              <span style="font-size: 18pt; font-weight: bold; color: #0D0D0D; letter-spacing: 1pt;">TAQON</span>
-              <span style="font-size: 18pt; font-weight: bold; color: #F26522; letter-spacing: 1pt;">ELECTRICO</span>
-            {% endif %}
-          </td>
-          <td style="vertical-align: middle; text-align: right;">
-            <span style="font-size: 8pt; color: #6B7280; letter-spacing: 3pt; text-transform: uppercase; font-weight: bold;">Company Profile</span>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
+<!-- ============================================================
+     COVER
+============================================================ -->
+<section class="cover">
+  <div class="cover-band-top"></div>
+  <div class="cover-grid"></div>
 
-  <!-- Hero typography block -->
-  <tr>
-    <td style="vertical-align: top; padding: 4cm 2cm 0 2cm;">
-      <table cellpadding="0" cellspacing="0">
-        <tr>
-          <td bgcolor="#F26522" style="width: 56pt; height: 4pt; line-height: 4pt; font-size: 0;">&nbsp;</td>
-        </tr>
-      </table>
-      <div style="margin-top: 18pt; font-size: 9pt; color: #F26522; letter-spacing: 4pt; text-transform: uppercase; font-weight: bold;">Solar &amp; Electrical Solutions</div>
-      <div style="margin-top: 14pt; font-size: 52pt; font-weight: bold; line-height: 1.0; letter-spacing: -1.2pt; color: #0D0D0D;">TAQON</div>
-      <div style="font-size: 52pt; font-weight: bold; line-height: 1.0; letter-spacing: -1.2pt; color: #F26522;">ELECTRICO.</div>
-      <div style="margin-top: 24pt; font-size: 13pt; color: #1A1A1A; font-style: italic; line-height: 1.5;">&ldquo;{{ company.tagline|default:"Customer is King!" }}&rdquo;</div>
-    </td>
-  </tr>
-
-  <!-- About block -->
-  <tr>
-    <td style="vertical-align: top; padding: 36pt 2cm 0 2cm;">
-      <div style="font-size: 11pt; line-height: 1.7; color: #1A1A1A; max-width: 420pt;">
-        {{ about_paragraph|default:"Powering Zimbabwe's homes, businesses and institutions with reliable solar and electrical solutions — designed, installed and maintained by a team that treats every site as its own." }}
-      </div>
-    </td>
-  </tr>
-
-  <!-- Issued / Reference panel: dark band rendered via bgcolor on td -->
-  <tr>
-    <td style="padding: 36pt 2cm 0 2cm;">
-      <table cellpadding="0" cellspacing="0" bgcolor="#0D0D0D" style="width: 100%;">
-        <tr>
-          <td bgcolor="#0D0D0D" style="vertical-align: top; width: 50%; padding: 16pt 18pt;">
-            <div style="font-size: 7.5pt; color: #F26522; letter-spacing: 2.5pt; text-transform: uppercase; font-weight: bold;">Issued</div>
-            <div style="font-size: 12pt; color: #FFFBF5; font-weight: bold; margin-top: 4pt;">{{ generated_date|default:"" }}</div>
-          </td>
-          <td bgcolor="#0D0D0D" style="vertical-align: top; width: 50%; padding: 16pt 18pt; text-align: right;">
-            <div style="font-size: 7.5pt; color: #F26522; letter-spacing: 2.5pt; text-transform: uppercase; font-weight: bold;">Reference</div>
-            <div style="font-size: 12pt; color: #FFFBF5; font-weight: bold; margin-top: 4pt;">{{ ref_number|default:"" }}</div>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-
-  <!-- Bottom orange accent band -->
-  <tr>
-    <td style="padding: 36pt 0 0 0;">
-      <table cellpadding="0" cellspacing="0" style="width: 100%;">
-        <tr>
-          <td bgcolor="#F26522" style="height: 8pt; padding: 0;">&nbsp;</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
-<!-- Switch to interior page template (with margins + footer) -->
-<pdf:nextpage name="interior"/>
-<pdf:nexttemplate name="interior"/>
-
-<!-- Running footer content (rendered in @frame footer_frame on every interior page) -->
-<div id="footer_content">
-  <table cellpadding="0" cellspacing="0" style="width: 100%;">
-    <tr>
-      <td class="pf" style="vertical-align: middle;">{{ company.name }} &nbsp;&middot;&nbsp; {{ company.website }}</td>
-      <td class="pf pf-r" style="vertical-align: middle;">Page <pdf:pagenumber/> of <pdf:pagecount/></td>
-    </tr>
-  </table>
-</div>
-
-<!-- ============================================================== -->
-<!-- PAGE 2 — ABOUT                                                   -->
-<!-- ============================================================== -->
-<table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 14pt;">
-  <tr>
-    <td style="vertical-align: top;">
-      <div class="eyebrow-orange">01 &nbsp;/&nbsp; About Taqon</div>
-      <div class="h1" style="margin-top: 6pt;">A Zimbabwean energy<br/>partner you can plan around.</div>
-    </td>
-  </tr>
-</table>
-<div class="rule-orange" style="width: 56pt; margin-bottom: 16pt;">&nbsp;</div>
-
-<table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 18pt;">
-  <tr>
-    <td style="vertical-align: top; width: 58%; padding-right: 16pt;">
-      <p class="lead">{{ about_paragraph|default:"Taqon Electrico is a Harare-based solar and electrical solutions company serving residential, commercial, institutional and agricultural clients across Zimbabwe. From a single-light system to a 50 kWp commercial rooftop, our engineers design and install power infrastructure that holds up to local conditions — and we stand behind every installation with workmanship cover and ongoing maintenance." }}</p>
-      <p class="lead" style="margin-top: 10pt;">We exist for one reason: to make reliable, clean energy a default — not a luxury — for Zimbabwean homes and businesses. Every project starts with a free site assessment and a system designed around the way <em>you</em> actually use power.</p>
-    </td>
-    <td style="vertical-align: top; width: 42%;">
-      <div class="card-cream">
-        <div class="eyebrow-orange" style="margin-bottom: 8pt;">Our Mission</div>
-        <p style="font-size: 10pt; line-height: 1.6; color: #1A1A1A;">{{ mission_paragraph|default:"To deliver dependable, professionally engineered solar and electrical systems that protect our clients from load shedding, reduce energy costs, and stand the test of time — backed by genuine after-sales care." }}</p>
-      </div>
-      <table cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 12pt;">
-        <tr>
-          <td style="width: 50%; padding-right: 6pt;">
-            <div class="card" style="text-align: center;">
-              <div style="font-size: 20pt; font-weight: bold; color: #F26522;">{{ company.founding_year|default:"2020" }}</div>
-              <div class="xs muted" style="text-transform: uppercase; letter-spacing: 1pt; margin-top: 2pt;">Established</div>
-            </div>
-          </td>
-          <td style="width: 50%; padding-left: 6pt;">
-            <div class="card" style="text-align: center;">
-              <div style="font-size: 20pt; font-weight: bold; color: #F26522;">ZERA</div>
-              <div class="xs muted" style="text-transform: uppercase; letter-spacing: 1pt; margin-top: 2pt;">Recommended</div>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
-<div class="card-wash" style="margin-bottom: 0;">
-  <div class="eyebrow-orange" style="margin-bottom: 4pt;">What sets us apart</div>
-  <table cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 6pt;">
-    <tr>
-      <td style="width: 33%; vertical-align: top; padding-right: 10pt;">
-        <div class="h3">Tier-1 components only</div>
-        <p class="small muted" style="margin-top: 3pt;">Jinko, JA, Pylontech, Dyness, Deye, Kodak — bankable hardware with full manufacturer warranty.</p>
-      </td>
-      <td style="width: 33%; vertical-align: top; padding: 0 5pt;">
-        <div class="h3">Engineered, not estimated</div>
-        <p class="small muted" style="margin-top: 3pt;">Every system is sized from your actual load profile, not a generic kVA rule of thumb.</p>
-      </td>
-      <td style="width: 33%; vertical-align: top; padding-left: 10pt;">
-        <div class="h3">After-install care</div>
-        <p class="small muted" style="margin-top: 3pt;">24-hour fault response, scheduled maintenance, and a team you can actually reach.</p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-<pdf:nextpage/>
-
-<!-- ============================================================== -->
-<!-- PAGE 3 — WHAT WE DO                                              -->
-<!-- ============================================================== -->
-<div class="eyebrow-orange">02 &nbsp;/&nbsp; What we do</div>
-<div class="h2" style="margin-top: 6pt; margin-bottom: 6pt;">Six service lines. One accountable team.</div>
-<div class="rule-orange" style="width: 56pt; margin-bottom: 14pt;">&nbsp;</div>
-<p class="lead muted" style="margin-bottom: 18pt; max-width: 460pt;">From system design to long-term maintenance, every Taqon project is delivered end-to-end by our in-house engineering and installation teams.</p>
-
-{# Two-column grid rendered with forloop.counter — no custom filters required #}
-<table cellpadding="0" cellspacing="0" style="width: 100%;">
-  {% for service in services %}
-    {% if forloop.counter0|divisibleby:2 %}<tr>{% endif %}
-    <td style="width: 50%; vertical-align: top; padding: 0 6pt 12pt 0;{% if forloop.counter|divisibleby:2 %} padding-right: 0; padding-left: 6pt;{% endif %}">
-      <div class="service-card">
-        <table cellpadding="0" cellspacing="0" style="width: 100%;">
-          <tr>
-            <td style="width: 36pt; vertical-align: top;">
-              <div class="service-icon">{{ service.icon_unicode_or_letter|default:service.title|slice:":1"|upper }}</div>
-            </td>
-            <td style="vertical-align: top; padding-left: 10pt;">
-              <div class="service-title">{{ service.title }}</div>
-              <div class="service-desc">{{ service.description }}</div>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </td>
-    {% if forloop.counter|divisibleby:2 or forloop.last %}</tr>{% endif %}
-  {% endfor %}
-</table>
-
-<pdf:nextpage/>
-
-<!-- ============================================================== -->
-<!-- PAGE 4 — OUR PACKAGES                                            -->
-<!-- ============================================================== -->
-<div class="eyebrow-orange">03 &nbsp;/&nbsp; Our packages</div>
-<div class="h2" style="margin-top: 6pt; margin-bottom: 6pt;">Sized for the way you live and work.</div>
-<div class="rule-orange" style="width: 56pt; margin-bottom: 14pt;">&nbsp;</div>
-<p class="lead muted" style="margin-bottom: 16pt; max-width: 460pt;">Our system tiers scale from a small home back-up to a 20 kVA commercial installation. Every package below is a starting point — final specifications are tailored to your site survey and load profile.</p>
-
-<table class="pkg-table" cellpadding="0" cellspacing="0" style="margin-bottom: 14pt;">
-  <thead>
-    <tr>
-      <th style="width: 36%;">Package family</th>
-      <th style="width: 14%;" class="right">Inverter</th>
-      <th style="width: 16%;" class="right">PV array</th>
-      <th style="width: 16%;" class="right">Battery</th>
-      <th style="width: 18%;">Suitable for</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for f in families %}
-    <tr>
-      <td>
-        <div class="pkg-name">{{ f.name }}</div>
-        {% if f.short_description %}<div class="pkg-suit">{{ f.short_description }}</div>{% endif %}
-      </td>
-      <td class="right"><span class="pkg-spec-pill">{{ f.kva }} kVA</span></td>
-      <td class="right">{% if f.system_size_kw %}{{ f.system_size_kw }} kWp{% else %}&mdash;{% endif %}</td>
-      <td class="right">{% if f.battery_kwh %}{{ f.battery_kwh }} kWh{% else %}&mdash;{% endif %}</td>
-      <td class="small muted">{{ f.suitable_for|default:"On request" }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="5" class="muted small" style="text-align: center; padding: 24pt;">Package details available on request.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-
-<pdf:nextpage/>
-
-<!-- ============================================================== -->
-<!-- PAGE 5 — PROJECTS                                                -->
-<!-- ============================================================== -->
-<div class="eyebrow-orange">04 &nbsp;/&nbsp; Selected projects</div>
-<div class="h2" style="margin-top: 6pt; margin-bottom: 6pt;">A track record across Zimbabwe.</div>
-<div class="rule-orange" style="width: 56pt; margin-bottom: 14pt;">&nbsp;</div>
-<p class="lead muted" style="margin-bottom: 16pt; max-width: 460pt;">From private homes in Borrowdale to manufacturing plants and rural water-pumping schemes, we have delivered installations across every category of demand.</p>
-
-<table cellpadding="0" cellspacing="0" style="width: 100%;">
-  {% for project in projects %}
-    {% if forloop.counter0|divisibleby:3 %}<tr>{% endif %}
-    <td style="width: 33.33%; vertical-align: top; padding: 0 4pt 8pt 4pt;">
-      <div class="project-card">
-        {% if project.image_data_uri %}
-          <img src="{{ project.image_data_uri }}" alt="{{ project.title }}" style="width: 100%; height: 70pt;"/>
+  <div class="cover-inner">
+    <div class="cover-header">
+      <div>
+        {% if logo_data_uri %}
+          <img src="{{ logo_data_uri }}" alt="Taqon Electrico" class="logo"/>
         {% else %}
-          <table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 6pt;">
-            <tr>
-              <td bgcolor="#F26522" style="height: 4pt; line-height: 4pt; font-size: 0; width: 32pt;">&nbsp;</td>
-              <td bgcolor="#F3E9D9" style="height: 4pt; line-height: 4pt; font-size: 0;">&nbsp;</td>
-            </tr>
-          </table>
+          <div class="logo-text">TAQON<span class="accent">ELECTRICO</span></div>
         {% endif %}
-        <div class="project-title">{{ project.title }}</div>
-        <div class="project-meta">{{ project.location|default:"Zimbabwe" }}{% if project.capacity_kw %} &middot; {{ project.capacity_kw }} kW{% endif %}</div>
-        {% if project.summary %}<div class="project-desc">{{ project.summary }}</div>{% endif %}
       </div>
-    </td>
-    {% if forloop.counter|divisibleby:3 or forloop.last %}</tr>{% endif %}
-  {% endfor %}
-</table>
+      <div class="doc-tag">Company Profile</div>
+    </div>
 
-<pdf:nextpage/>
+    <div class="cover-spacer"></div>
 
-<!-- ============================================================== -->
-<!-- PAGE 6 — BRANDS + STATS                                          -->
-<!-- ============================================================== -->
-<div class="eyebrow-orange">05 &nbsp;/&nbsp; Trusted brands</div>
-<div class="h2" style="margin-top: 6pt; margin-bottom: 6pt;">We install what we'd put on our own roof.</div>
-<div class="rule-orange" style="width: 56pt; margin-bottom: 14pt;">&nbsp;</div>
-<p class="lead muted" style="margin-bottom: 14pt; max-width: 460pt;">Our hardware is sourced from tier-1 manufacturers with full local warranty support — never from grey-market or unbranded suppliers.</p>
+    <div class="cover-mark"></div>
+    <div class="cover-eyebrow">Solar &amp; Electrical Solutions</div>
 
-<table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 24pt;">
-  {% for brand in brands %}
-    {% if forloop.counter0|divisibleby:3 %}<tr>{% endif %}
-    <td style="width: 33.33%; vertical-align: middle; padding: 0 4pt 8pt 4pt;">
-      <div class="brand-cell">{{ brand }}</div>
-    </td>
-    {% if forloop.counter|divisibleby:3 or forloop.last %}</tr>{% endif %}
-  {% endfor %}
-</table>
+    <h1 class="cover-title">
+      <span class="line-1">TAQON</span>
+      <span class="line-2">ELECTRICO.</span>
+    </h1>
 
-<div class="eyebrow-orange">06 &nbsp;/&nbsp; By the numbers</div>
-<div class="h2" style="margin-top: 6pt; margin-bottom: 6pt;">Five years. One promise: power that works.</div>
-<div class="rule-orange" style="width: 56pt; margin-bottom: 14pt;">&nbsp;</div>
+    <div class="cover-tagline">
+      &ldquo;{{ company.tagline|default:"Customer is King!" }}&rdquo;
+    </div>
 
-<table cellpadding="0" cellspacing="0" style="width: 100%;">
-  <tr>
-    {% for s in stats %}
-      <td style="width: 25%; vertical-align: top; padding: 0 4pt;">
-        <div class="stat-cell">
-          <div class="stat-value">{{ s.value }}</div>
-          <div class="stat-label">{{ s.label }}</div>
+    <div class="cover-about">
+      {{ about_paragraph|default:"Powering Zimbabwe's homes, businesses and institutions with reliable solar and electrical solutions — designed, installed and maintained by a team that treats every site as its own." }}
+    </div>
+
+    <div class="cover-meta">
+      <div class="cover-meta-cell">
+        <div class="cover-meta-label">Issued</div>
+        <div class="cover-meta-value">{{ generated_date|default:"" }}</div>
+      </div>
+      <div class="cover-meta-cell">
+        <div class="cover-meta-label">Reference</div>
+        <div class="cover-meta-value">{{ ref_number|default:"" }}</div>
+      </div>
+      <div class="cover-meta-cell">
+        <div class="cover-meta-label">Established</div>
+        <div class="cover-meta-value">{{ company.founding_year|default:"2020" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cover-band-bottom"></div>
+  <div class="cover-footer">
+    <span>{{ company.website|default:"www.taqon.co.zw" }}</span>
+    <span>Harare · Zimbabwe</span>
+  </div>
+</section>
+
+<!-- ============================================================
+     01 — ABOUT
+============================================================ -->
+<section class="section" data-section="01 / About Taqon">
+  <div class="section-head">
+    <span class="eyebrow">01 &nbsp;/&nbsp; About Taqon</span>
+    <span class="accent-bar"></span>
+    <h2 class="h2">A Zimbabwean energy partner you can plan around.</h2>
+    <p class="lead">Engineered systems, tier-1 hardware, and a team that stays accountable long after commissioning.</p>
+  </div>
+
+  <div class="about-grid">
+    <div class="about-narrative">
+      <p class="lead">{{ about_paragraph|default:"Taqon Electrico is a Harare-based solar and electrical solutions company serving residential, commercial, institutional and agricultural clients across Zimbabwe. From a single-light system to a 50 kWp commercial rooftop, our engineers design and install power infrastructure that holds up to local conditions — and we stand behind every installation with workmanship cover and ongoing maintenance." }}</p>
+      <p class="lead">We exist for one reason: to make reliable, clean energy a default — not a luxury — for Zimbabwean homes and businesses. Every project starts with a free site assessment and a system designed around the way <em>you</em> actually use power.</p>
+    </div>
+
+    <div>
+      <div class="mission-card">
+        <div class="eyebrow">Our Mission</div>
+        <h3 class="h3">Power that just works.</h3>
+        <p>{{ mission_paragraph|default:"To deliver dependable, professionally engineered solar and electrical systems that protect our clients from load shedding, reduce energy costs, and stand the test of time — backed by genuine after-sales care." }}</p>
+      </div>
+
+      <div class="about-pills">
+        <div class="pill-card">
+          <div class="num">{{ company.founding_year|default:"2020" }}</div>
+          <div class="lbl">Established</div>
         </div>
-      </td>
+        <div class="pill-card">
+          <div class="num">ZERA</div>
+          <div class="lbl">Recommended</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="differentiators">
+    <div class="diff-card">
+      <div class="h4">Tier-1 components only</div>
+      <p>Sunsynk, Deye, Jinko, JA, Pylontech, Dyness — bankable hardware with full manufacturer warranty.</p>
+    </div>
+    <div class="diff-card">
+      <div class="h4">Engineered, not estimated</div>
+      <p>Every system is sized from your actual load profile — not a generic kVA rule of thumb.</p>
+    </div>
+    <div class="diff-card">
+      <div class="h4">After-install care</div>
+      <p>24-hour fault response, scheduled maintenance, and a team you can actually reach.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     02 — WHAT WE DO
+============================================================ -->
+<section class="section" data-section="02 / What we do">
+  <div class="section-head">
+    <span class="eyebrow">02 &nbsp;/&nbsp; What we do</span>
+    <span class="accent-bar"></span>
+    <h2 class="h2">Six service lines. One accountable team.</h2>
+    <p class="lead">From system design to long-term maintenance, every Taqon project is delivered end-to-end by our in-house engineering and installation teams.</p>
+  </div>
+
+  <div class="services-grid">
+    {% for service in services %}
+      <div class="service-card">
+        <div class="service-icon">{{ service.icon_unicode_or_letter|default:service.title|slice:":1"|upper }}</div>
+        <div class="service-body">
+          <div class="title">{{ service.title }}</div>
+          <div class="desc">{{ service.description }}</div>
+        </div>
+      </div>
     {% endfor %}
-  </tr>
-</table>
+  </div>
+</section>
 
-<pdf:nextpage/>
+<!-- ============================================================
+     03 — PACKAGES
+============================================================ -->
+<section class="section" data-section="03 / Our packages">
+  <div class="section-head">
+    <span class="eyebrow">03 &nbsp;/&nbsp; Our packages</span>
+    <span class="accent-bar"></span>
+    <h2 class="h2">Sized for the way you live and work.</h2>
+    <p class="lead">Our system tiers scale from a small home back-up to a 20 kVA commercial installation. Every package below is a starting point — final specifications are tailored to your site survey and load profile.</p>
+  </div>
 
-<!-- ============================================================== -->
-<!-- PAGE 7 — TESTIMONIALS                                            -->
-<!-- ============================================================== -->
-<div class="eyebrow-orange">07 &nbsp;/&nbsp; In our clients' words</div>
-<div class="h2" style="margin-top: 6pt; margin-bottom: 6pt;">Trust, earned project by project.</div>
-<div class="rule-orange" style="width: 56pt; margin-bottom: 18pt;">&nbsp;</div>
+  <table class="pkg-table">
+    <thead>
+      <tr>
+        <th style="width: 38%;">Package family</th>
+        <th style="width: 14%;" class="right">Inverter</th>
+        <th style="width: 16%;" class="right">PV array</th>
+        <th style="width: 16%;" class="right">Battery</th>
+        <th style="width: 16%;">Suitable for</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in families %}
+      <tr>
+        <td>
+          <div class="pkg-name">{{ f.name }}</div>
+          {% if f.short_description %}<div class="pkg-suit">{{ f.short_description }}</div>{% endif %}
+        </td>
+        <td class="right"><span class="pkg-pill">{{ f.kva }} kVA</span></td>
+        <td class="right">
+          {% if f.system_size_kw %}
+            <span class="pkg-spec">{{ f.system_size_kw }}</span> <span class="pkg-spec-unit">kWp</span>
+          {% else %}<span class="muted">—</span>{% endif %}
+        </td>
+        <td class="right">
+          {% if f.battery_kwh %}
+            <span class="pkg-spec">{{ f.battery_kwh }}</span> <span class="pkg-spec-unit">kWh</span>
+          {% else %}<span class="muted">—</span>{% endif %}
+        </td>
+        <td class="small muted">{{ f.suitable_for|default:"On request" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="muted small" style="text-align: center; padding: 28pt;">Package details available on request.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
-{% for t in testimonials %}
-<table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 12pt;">
-  <tr>
-    <td>
-      <div class="quote-card">
-        <table cellpadding="0" cellspacing="0" style="width: 100%;">
-          <tr>
-            <td style="width: 22pt; vertical-align: top;"><span class="quote-mark">&ldquo;</span></td>
-            <td style="vertical-align: top; padding-left: 6pt;">
-              <p class="quote-text">{{ t.text }}</p>
-              <div class="quote-attr">
-                <span class="quote-name">{{ t.name }}</span>{% if t.role %} &nbsp;&middot;&nbsp; {{ t.role }}{% endif %}
-              </div>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </td>
-  </tr>
-</table>
-{% endfor %}
+  <div class="pkg-note">
+    <strong>Note:</strong> Final pricing reflects your site's solar yield, load profile and accessory selection. Each proposal is built on a free, on-site survey — request one any time at <strong>{{ company.email|default:"info@taqon.co.zw" }}</strong>.
+  </div>
+</section>
 
-<pdf:nextpage/>
+<!-- ============================================================
+     04 — SELECTED PROJECTS
+============================================================ -->
+<section class="section" data-section="04 / Selected projects">
+  <div class="section-head">
+    <span class="eyebrow">04 &nbsp;/&nbsp; Selected projects</span>
+    <span class="accent-bar"></span>
+    <h2 class="h2">A track record across Zimbabwe.</h2>
+    <p class="lead">From private homes in Borrowdale to commercial premises and rural pumping schemes, we have delivered installations across every category of demand.</p>
+  </div>
 
-<!-- ============================================================== -->
-<!-- PAGE 8 — CONTACT / CTA                                           -->
-<!-- ============================================================== -->
-<div class="eyebrow-orange">08 &nbsp;/&nbsp; Let's talk</div>
-<div class="h1" style="margin-top: 6pt; margin-bottom: 6pt;">Ready when you are.</div>
-<div class="rule-orange" style="width: 56pt; margin-bottom: 18pt;">&nbsp;</div>
-
-<p class="lead" style="max-width: 460pt; margin-bottom: 22pt;">{{ cta_paragraph|default:"Whether you're sizing your first home back-up or specifying a 50 kVA commercial array, we'd be glad to walk your site, model your loads and put a clear, no-pressure proposal in your inbox." }}</p>
-
-<table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 22pt;">
-  <tr>
-    <td style="width: 50%; vertical-align: top; padding-right: 8pt;">
-      <div class="card">
-        <table cellpadding="0" cellspacing="0" class="contact-row" style="width: 100%;">
-          <tr><td><div class="contact-label">Visit us</div><div class="contact-value">{{ company.address }}</div></td></tr>
-          <tr><td><div class="rule-soft">&nbsp;</div></td></tr>
-          <tr><td><div class="contact-label">Call / WhatsApp</div><div class="contact-value">{{ company.phone }}</div></td></tr>
-          <tr><td><div class="rule-soft">&nbsp;</div></td></tr>
-          <tr><td><div class="contact-label">Email</div><div class="contact-value">{{ company.email }}</div></td></tr>
-          <tr><td><div class="rule-soft">&nbsp;</div></td></tr>
-          <tr><td><div class="contact-label">Web</div><div class="contact-value">{{ company.website }}</div></td></tr>
-        </table>
-      </div>
-    </td>
-    <td style="width: 50%; vertical-align: top; padding-left: 8pt;">
-      <table cellpadding="0" cellspacing="0" bgcolor="#0D0D0D" style="width: 100%;">
-        <tr>
-          <td bgcolor="#0D0D0D" style="padding: 16pt 18pt;">
-            <div style="font-size: 7.5pt; color: #F26522; letter-spacing: 2pt; text-transform: uppercase; font-weight: bold;">Office hours</div>
-            <table cellpadding="0" cellspacing="0" bgcolor="#0D0D0D" style="width: 100%; margin-top: 10pt;">
-              <tr>
-                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #C9C9C9;">Mon &ndash; Fri</td>
-                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #FFFBF5; text-align: right; font-weight: bold;">08:00 &ndash; 16:30</td>
-              </tr>
-              <tr>
-                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #C9C9C9;">Saturday</td>
-                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #FFFBF5; text-align: right; font-weight: bold;">08:00 &ndash; 13:00</td>
-              </tr>
-              <tr>
-                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #C9C9C9;">Sunday</td>
-                <td bgcolor="#0D0D0D" style="padding: 5pt 0; font-size: 9.5pt; color: #9CA3AF; text-align: right; font-weight: bold;">Closed</td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td bgcolor="#0D0D0D" style="padding: 0 18pt 18pt 18pt;">
-            <div style="border-top: 1pt solid #2A2A2A; padding-top: 14pt;">
-              <div style="font-size: 7.5pt; color: #F26522; letter-spacing: 2pt; text-transform: uppercase; font-weight: bold;">Registration</div>
-              <div style="font-size: 9.5pt; color: #FFFBF5; margin-top: 5pt; line-height: 1.5;">{{ company.registration_no|default:"Licensed Electrical Contractor &middot; ZERA-Recommended" }}</div>
+  {% if projects %}
+    {# Hero project — first entry #}
+    {% with projects|first as hero %}
+      {% if hero.image_url or hero.hero_image_url %}
+        <div class="projects-hero">
+          <img src="{{ hero.hero_image_url|default:hero.image_url }}" alt="{{ hero.title }}"/>
+          <div class="projects-hero-overlay"></div>
+          <div class="projects-hero-caption">
+            <div class="meta">
+              {{ hero.kva|default:"" }}{% if hero.kva and hero.location %} &nbsp;·&nbsp; {% endif %}{{ hero.location|default:"" }}{% if hero.category %} &nbsp;·&nbsp; {{ hero.category }}{% endif %}
             </div>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+            <div class="title">{{ hero.title }}</div>
+            <div class="desc">{{ hero.description }}</div>
+          </div>
+        </div>
+      {% endif %}
+    {% endwith %}
 
-<table cellpadding="0" cellspacing="0" bgcolor="#F26522" style="width: 100%;">
-  <tr>
-    <td bgcolor="#F26522" style="vertical-align: middle; width: 60%; padding: 24pt 26pt;">
-      <div style="font-size: 8pt; letter-spacing: 2.5pt; text-transform: uppercase; font-weight: bold; color: #FFFBF5;">Next step</div>
-      <div style="font-size: 22pt; font-weight: bold; color: #FFFFFF; line-height: 1.15; margin-top: 6pt; letter-spacing: -0.3pt;">Request a free site survey.</div>
-      <div style="font-size: 10pt; color: #FFFBF5; margin-top: 8pt; line-height: 1.5;">No obligation. We'll quote based on your actual loads, not a guess.</div>
-    </td>
-    <td bgcolor="#F26522" style="vertical-align: middle; width: 40%; padding: 24pt 26pt; text-align: right;">
-      <div style="font-size: 8pt; color: #FFFBF5; letter-spacing: 1.5pt; text-transform: uppercase;">Call us today</div>
-      <div style="font-size: 16pt; font-weight: bold; color: #FFFFFF; margin-top: 4pt; white-space: nowrap;">{{ company.phone }}</div>
-      <div style="font-size: 9pt; color: #FFFBF5; margin-top: 4pt;">{{ company.email }}</div>
-    </td>
-  </tr>
-</table>
+    {# Remaining projects in 2-col grid #}
+    <div class="projects-grid">
+      {% for project in projects|slice:"1:5" %}
+        <div class="project-card">
+          {% if project.image_url or project.hero_image_url %}
+            <div class="project-image">
+              <img src="{{ project.image_url|default:project.hero_image_url }}" alt="{{ project.title }}"/>
+            </div>
+          {% endif %}
+          <div class="project-body">
+            <div class="project-meta">
+              {{ project.kva|default:"" }}{% if project.kva and project.location %} &nbsp;·&nbsp; {% endif %}{{ project.location|default:"Zimbabwe" }}
+            </div>
+            <div class="project-title">{{ project.title }}</div>
+            {% if project.description %}<div class="project-desc">{{ project.description|truncatewords:24 }}</div>{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted small">Project portfolio available on request.</p>
+  {% endif %}
+</section>
 
-<div style="margin-top: 18pt; text-align: center;">
-  <div class="rule-soft" style="margin-bottom: 10pt;">&nbsp;</div>
-  <div class="xs muted">{{ company.name }} &nbsp;&middot;&nbsp; {{ company.tagline }} &nbsp;&middot;&nbsp; Document reference {{ ref_number|default:"" }} &nbsp;&middot;&nbsp; Generated {{ generated_date|default:"" }}</div>
-</div>
+<!-- ============================================================
+     05 — TRUSTED BRANDS + STATS
+============================================================ -->
+<section class="section" data-section="05 / Trusted brands">
+  <div class="section-head">
+    <span class="eyebrow">05 &nbsp;/&nbsp; Trusted brands</span>
+    <span class="accent-bar"></span>
+    <h2 class="h2">We install what we'd put on our own roof.</h2>
+    <p class="lead">Our hardware is sourced from tier-1 manufacturers with full local warranty support — never from grey-market or unbranded suppliers.</p>
+  </div>
+
+  <div class="brand-grid">
+    {% for brand in brands %}
+      <div class="brand-chip">{{ brand }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="section-head" style="margin-top: 8pt;">
+    <span class="eyebrow">06 &nbsp;/&nbsp; By the numbers</span>
+    <span class="accent-bar"></span>
+    <h2 class="h2">Five years. One promise: power that works.</h2>
+  </div>
+
+  <div class="stats-grid">
+    {% for s in stats %}
+      <div class="stat-card">
+        <div class="stat-value">{{ s.value }}</div>
+        <div class="stat-label">{{ s.label }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ============================================================
+     07 — TESTIMONIALS
+============================================================ -->
+<section class="section" data-section="07 / In our clients' words">
+  <div class="section-head">
+    <span class="eyebrow">07 &nbsp;/&nbsp; In our clients' words</span>
+    <span class="accent-bar"></span>
+    <h2 class="h2">Trust, earned project by project.</h2>
+  </div>
+
+  {% for t in testimonials %}
+    <div class="testimonial">
+      <p class="quote">{{ t.text }}</p>
+      <div class="attr">
+        <span class="name">{{ t.name }}</span>{% if t.role %}<span class="role">·  {{ t.role }}</span>{% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</section>
+
+<!-- ============================================================
+     08 — CLOSING / CONTACT
+============================================================ -->
+<section class="closing">
+  <div class="closing-inner">
+    <div class="closing-head">
+      <span class="eyebrow">08 &nbsp;/&nbsp; Let's talk</span>
+      <h1>Ready when you are.</h1>
+      <span class="accent-bar"></span>
+      <p>{{ cta_paragraph|default:"Whether you're sizing your first home back-up or specifying a 50 kVA commercial array, we'd be glad to walk your site, model your loads and put a clear, no-pressure proposal in your inbox." }}</p>
+    </div>
+
+    <div class="closing-grid">
+      <div class="contact-block">
+        <div class="contact-row">
+          <div class="label">Visit us</div>
+          <div class="value">{{ company.address }}</div>
+        </div>
+        <div class="contact-row">
+          <div class="label">Call / WhatsApp</div>
+          <div class="value">{{ company.phone }}</div>
+        </div>
+        <div class="contact-row">
+          <div class="label">Email</div>
+          <div class="value">{{ company.email }}</div>
+        </div>
+        <div class="contact-row">
+          <div class="label">Web</div>
+          <div class="value">{{ company.website }}</div>
+        </div>
+      </div>
+
+      <div class="hours-block">
+        <div class="label">Office hours</div>
+        <div class="hours-row">
+          <span class="day">Mon &ndash; Fri</span>
+          <span class="time">08:00 &ndash; 16:30</span>
+        </div>
+        <div class="hours-row">
+          <span class="day">Saturday</span>
+          <span class="time">08:00 &ndash; 13:00</span>
+        </div>
+        <div class="hours-row closed">
+          <span class="day">Sunday</span>
+          <span class="time">Closed</span>
+        </div>
+        <div class="reg">
+          <div class="label">Registration</div>
+          <div class="text">{{ company.registration_no|default:"Licensed Electrical Contractor · ZERA-Recommended" }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-band">
+      <div class="left">
+        <div class="label">Next step</div>
+        <div class="headline">Request a free site survey.</div>
+        <div class="sub">No obligation. We'll quote based on your actual loads, not a guess.</div>
+      </div>
+      <div class="right">
+        <div class="label">Call us today</div>
+        <div class="phone">{{ company.phone }}</div>
+        <div class="email">{{ company.email }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="closing-footer">
+    {{ company.name }} <span class="accent">·</span> {{ company.tagline }} <span class="accent">·</span> Ref {{ ref_number|default:"" }} <span class="accent">·</span> {{ generated_date|default:"" }}
+  </div>
+</section>
 
 </body>
 </html>
