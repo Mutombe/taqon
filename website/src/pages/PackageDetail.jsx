@@ -175,16 +175,23 @@ function buildIncludesFromItems(items) {
 
   const result = [];
 
+  // Warranty labels used in place of the line-item totals — the
+  // package detail page no longer shows component-level prices.
+  const warrantyLabel = {
+    inverter: '5-Year Warranty',
+    battery: '10-Year Warranty',
+    panel: '25-Year Warranty',
+  };
+
   // 1. Detailed cards for inverter / battery / panel
   for (const cat of ['inverter', 'battery', 'panel']) {
     if (!groups[cat]) continue;
     const catItems = groups[cat];
     const names = catItems.map((i) => `${i.component.name} x${i.quantity}`).join(', ');
-    const totalValue = catItems.reduce((sum, i) => sum + parseFloat(i.line_total || 0), 0);
     result.push({
       name: labelMap[cat],
       description: names,
-      warranty: totalValue > 0 ? `$${totalValue.toLocaleString()}` : 'Included',
+      warranty: warrantyLabel[cat] || 'Included',
       icon: iconMap[cat],
     });
   }
@@ -195,22 +202,20 @@ function buildIncludesFromItems(items) {
     if (groups[cat]) installItems.push(...groups[cat]);
   }
   if (installItems.length > 0) {
-    const installTotal = installItems.reduce((sum, i) => sum + parseFloat(i.line_total || 0), 0);
     result.push({
       name: 'Installation & Mounting',
       description: descMap.installation,
-      warranty: `$${installTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+      warranty: '1-Year Workmanship',
       icon: 'Wrench',
     });
   }
 
   // 3. Rolled-up "Accessories"
   if (groups.accessory) {
-    const accessoryTotal = groups.accessory.reduce((sum, i) => sum + parseFloat(i.line_total || 0), 0);
     result.push({
       name: 'Accessories',
       description: descMap.accessories,
-      warranty: `$${accessoryTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+      warranty: 'Included',
       icon: 'BookOpen',
     });
   }
