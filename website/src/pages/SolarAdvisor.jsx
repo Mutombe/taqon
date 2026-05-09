@@ -1052,18 +1052,8 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                     </div>
                   )}
 
-                  {/* CTAs */}
+                  {/* CTAs — Download is primary (the conversion), View Details secondary */}
                   <div className="flex gap-2">
-                    <Link
-                      to={`/packages/${pkg.slug}`}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-xs text-white active:scale-[0.98] transition-all"
-                      style={{
-                        backgroundColor: tierGem.accent,
-                        boxShadow: `0 4px 14px -2px ${tierGem.glowColorSubtle}`,
-                      }}
-                    >
-                      View Details <ArrowRight size={12} weight="bold" />
-                    </Link>
                     <button
                       onClick={async (e) => {
                         e.stopPropagation();
@@ -1102,14 +1092,24 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                         }
                       }}
                       disabled={downloadingQuote}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-xs active:scale-[0.98] transition-all disabled:opacity-60"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-xs text-white active:scale-[0.98] transition-all disabled:opacity-60"
+                      style={{
+                        backgroundColor: tierGem.accent,
+                        boxShadow: `0 4px 14px -2px ${tierGem.glowColorSubtle}`,
+                      }}
                     >
                       {downloadingQuote ? (
                         <SpinnerGap size={14} className="animate-spin" />
                       ) : (
-                        <><DownloadSimple size={12} /> {detailsCollected ? 'Quote' : 'Get Quote'}</>
+                        <><DownloadSimple size={12} weight="bold" /> {detailsCollected ? 'Download Quote' : 'Get Quote'}</>
                       )}
                     </button>
+                    <Link
+                      to={`/packages/${pkg.slug}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-xs active:scale-[0.98] transition-all"
+                    >
+                      View Details <ArrowRight size={12} weight="bold" />
+                    </Link>
                   </div>
                   {totalForDeposit > 0 && (
                     <button
@@ -1284,18 +1284,8 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
             </div>
           )}
 
-          {/* CTAs */}
+          {/* CTAs — Download is primary (the conversion), View Details secondary */}
           <div className="mt-5 space-y-2">
-            <Link
-              to={`/packages/${pkg.slug}`}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-white active:scale-[0.98] transition-all min-h-[44px]"
-              style={{
-                backgroundColor: tierGem.accent,
-                boxShadow: `0 4px 14px -2px ${tierGem.glowColorSubtle}`,
-              }}
-            >
-              View Details <ArrowRight size={14} weight="bold" />
-            </Link>
             <button
               onClick={async () => {
                 if (!detailsCollected) {
@@ -1333,14 +1323,24 @@ function RecommendationCard({ tierKey, tier, isHighlighted, distanceKm, clientDe
                 }
               }}
               disabled={downloadingQuote}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px] disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-white active:scale-[0.98] transition-all min-h-[44px] disabled:opacity-60"
+              style={{
+                backgroundColor: tierGem.accent,
+                boxShadow: `0 4px 14px -2px ${tierGem.glowColorSubtle}`,
+              }}
             >
               {downloadingQuote ? (
                 <SpinnerGap size={16} className="animate-spin" />
               ) : (
-                <><DownloadSimple size={14} /> {detailsCollected ? 'Download Quote' : 'Get Instant Quote'}</>
+                <><DownloadSimple size={14} weight="bold" /> {detailsCollected ? 'Download Quote' : 'Get Instant Quote'}</>
               )}
             </button>
+            <Link
+              to={`/packages/${pkg.slug}`}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all min-h-[44px]"
+            >
+              View Details <ArrowRight size={14} weight="bold" />
+            </Link>
             {totalForDeposit > 0 && (
               <button
                 onClick={() => setShowDepositModal(true)}

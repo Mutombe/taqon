@@ -304,34 +304,22 @@
     </td>
     <td style="width: 55%; vertical-align: top;">
       <table class="totals" cellpadding="0" cellspacing="0">
-        <tr class="sub">
-          <td class="label">Subtotal (excl. VAT)</td>
-          <td class="value">USD {% if subtotal_excl_vat %}{{ subtotal_excl_vat }}{% else %}{{ grand_total }}{% endif %}</td>
+        <tr>
+          <td class="label">Materials</td>
+          <td class="value">USD {{ material_total }}</td>
         </tr>
         <tr>
-          <td class="label">VAT</td>
-          <td class="value">{% if vat_amount %}USD {{ vat_amount }}{% else %}Included{% endif %}</td>
+          <td class="label">Labour and Transport</td>
+          <td class="value">USD {{ labour_transport_total }}</td>
         </tr>
         <tr class="grand">
-          <td class="label">Grand Total (incl.)</td>
+          <td class="label">Total</td>
           <td class="value">USD {{ grand_total }}</td>
         </tr>
       </table>
     </td>
   </tr>
 </table>
-
-<!-- ============ STANDARD TERMS & CONDITIONS ============ -->
-<div class="section-heading">Standard Terms &amp; Conditions</div>
-<ol class="terms">
-  <li>This is a standard quotation. A site visit is required to confirm all materials; any additional items will be quoted separately.</li>
-  <li>This estimate is valid for 10 days from the date of issue. The final figure will be confirmed on completion of works.</li>
-  <li>All civil works, including trenching and structural preparation, are the client&rsquo;s responsibility unless explicitly quoted above.</li>
-  <li>Prices are quoted as per our current price list and are subject to change without notice in line with market conditions.</li>
-  <li>Transport and installation, where quoted, are estimates and will be billed against actual billable hours and mileage.</li>
-  <li>An order does not hold a price; pricing is confirmed only upon receipt of a 50% deposit.</li>
-  <li>All goods remain the property of Taqon Electrico until paid for in full. Taqon Electrico reserves the right to repossess any such property with 48 hours&rsquo; notice.</li>
-</ol>
 
 <!-- ============ BANK TRANSFER DETAILS ============ -->
 <div class="section-heading">Bank Transfer Details</div>

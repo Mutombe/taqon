@@ -46,14 +46,17 @@ const iconMap = {
 
 function QuoteModal({ pkg, gem, onClose }) {
   const { user } = useAuthStore();
+  // Saved location wins so an advisor flow that picked an area + distance
+  // automatically carries through to this download — no re-typing, no
+  // forced 10 km default that quietly under-bills transport.
+  const savedLocation = getSavedLocation();
   const [form, setForm] = useState(() => {
     const name = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
-    const saved = getSavedLocation();
     return {
       name: name || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      address: saved?.area || '',
+      address: savedLocation?.area || '',
     };
   });
   const [generating, setGenerating] = useState(false);
@@ -61,7 +64,10 @@ function QuoteModal({ pkg, gem, onClose }) {
 
   const pkgSlug = pkg._apiData?.slug || pkg.slug;
   const pkgName = pkg._apiData?.family?.name || pkg._apiData?.name || pkg.name;
-  const distanceKm = parseFloat(pkg._apiData?.distance_km || 10);
+  // Distance precedence: saved advisor session → API package value → 10 km
+  const distanceKm = parseFloat(
+    savedLocation?.distanceKm ?? pkg._apiData?.distance_km ?? 10
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -234,7 +240,11 @@ function QuoteModal({ pkg, gem, onClose }) {
                   className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none transition-all"
                 />
               </div>
-              <p className="mt-1 text-[11px] text-taqon-muted dark:text-white/40">Pre-filled if you've already chosen an area in the Solar Advisor.</p>
+              <p className="mt-1 text-[11px] text-taqon-muted dark:text-white/40">
+                {savedLocation?.distanceKm
+                  ? `Using ${savedLocation.distanceKm} km from Harare (from your Solar Advisor selection).`
+                  : "Pre-filled if you've already chosen an area in the Solar Advisor."}
+              </p>
             </div>
           </div>
 
