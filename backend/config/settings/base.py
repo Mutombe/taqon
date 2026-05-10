@@ -57,6 +57,7 @@ LOCAL_APPS = [
     'apps.blog',
     'apps.comments',
     'apps.feature_flags',
+    'apps.inquiries',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -241,6 +242,14 @@ EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Taqon Electrico <noreply@taqon.co.zw>')
+
+# Inquiry notification recipients — every customer submission via the
+# public inquiry form fans out to these addresses. Override per-env via
+# INQUIRY_NOTIFICATION_RECIPIENTS as a comma-separated list.
+INQUIRY_NOTIFICATION_RECIPIENTS = env.list(
+    'INQUIRY_NOTIFICATION_RECIPIENTS',
+    default=['simbamtombe@gmail.com', 'mcdonaldmatiki@gmail.com'],
+)
 
 # Frontend URL (for email links)
 FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:5173')

@@ -33,6 +33,7 @@ const Contact = lazy(() => import('./pages/Contact'));
 const Packages = lazy(() => import('./pages/Packages'));
 const Careers = lazy(() => import('./pages/Careers'));
 const SolarSecrets = lazy(() => import('./pages/SolarSecrets'));
+const Inquiry = lazy(() => import('./pages/Inquiry'));
 
 // Other lazy pages
 const SavingsCalculator = lazy(() => import('./pages/SavingsCalculator'));
@@ -118,6 +119,7 @@ const AdminBlog = lazy(() => import('./features/admin/AdminBlog'));
 const AdminBlogEditor = lazy(() => import('./features/admin/AdminBlogEditor'));
 const AdminMedia = lazy(() => import('./features/admin/AdminMedia'));
 const AdminFeatureFlags = lazy(() => import('./features/admin/AdminFeatureFlags'));
+const AdminInquiries = lazy(() => import('./features/admin/AdminInquiries'));
 
 // Customer Account Portal (lazy loaded)
 const AccountPortal = lazy(() => import('./features/account/AccountPortal'));
@@ -246,6 +248,10 @@ function AppContent() {
             <Route path="/packages/:slug" element={<PackageDetail />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/solar-secrets" element={<SolarSecrets />} />
+            {/* Public inquiry form — sharable as a direct link */}
+            <Route path="/inquiry" element={<Inquiry />} />
+            <Route path="/get-recommendation" element={<Inquiry />} />
+            <Route path="/get-quote" element={<Inquiry />} />
             {/* New routes */}
             <Route path="/calculator" element={<SavingsCalculator />} />
             <Route path="/quote" element={<Navigate to="/solar-advisor" replace />} />
@@ -334,6 +340,8 @@ function AppContent() {
               <Route path="media" element={<AdminMedia />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="feature-flags" element={<AdminFeatureFlags />} />
+              <Route path="inquiries" element={<AdminInquiries />} />
+              <Route path="inquiries/:id" element={<AdminInquiries />} />
             </Route>
           </Routes>
         </Suspense>

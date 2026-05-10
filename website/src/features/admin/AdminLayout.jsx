@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   SquaresFour, ChartBar, Package, ShoppingCart, SolarPanel,
   Article, Image, Users, List, X, CaretRight, SignOut,
-  Bell, MoonStars, Sun, FileText, Wallet, Lightning, ToggleRight,
+  Bell, MoonStars, Sun, FileText, Wallet, Lightning, ToggleRight, ChatCircle,
 } from '@phosphor-icons/react';
 import useAuthStore from '../../stores/authStore';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -39,6 +39,7 @@ const NAV_SECTIONS = [
     label: 'People',
     items: [
       { to: '/admin/users', label: 'Users', icon: Users },
+      { to: '/admin/inquiries', label: 'Inquiries', icon: ChatCircle },
     ],
   },
   {
@@ -199,6 +200,7 @@ const PAGE_TITLES = {
   '/admin/blog/new': 'New Blog Post',
   '/admin/media': 'Media Library',
   '/admin/users': 'Users',
+  '/admin/inquiries': 'Inquiries',
   '/admin/feature-flags': 'Feature Flags',
 };
 

@@ -1,0 +1,29 @@
+New customer inquiry — Taqon Electrico
+========================================
+
+A new inquiry just came in via the public form. Triage in the admin
+dashboard:
+
+  {{ admin_url }}
+
+CUSTOMER
+--------
+Name:     {{ inquiry.name }}
+Email:    {{ inquiry.email }}{% if inquiry.phone %}
+Phone:    {{ inquiry.phone }}{% endif %}{% if inquiry.area %}
+Area:     {{ inquiry.area }}{% if inquiry.distance_km %} ({{ inquiry.distance_km }} km from HQ){% endif %}{% endif %}
+
+DEMAND
+------
+{% if inquiry.monthly_grid_bill %}Monthly bill:    USD {{ inquiry.monthly_grid_bill }}
+{% endif %}Appliance items: {{ inquiry.appliance_count }}
+{% if inquiry.message %}
+Customer notes:
+{{ inquiry.message }}
+{% endif %}
+Source:   {{ inquiry.get_source_display }}
+Received: {{ inquiry.created_at|date:"d M Y · H:i" }}
+
+----
+Taqon Electrico · 203 Sherwood Drive, Strathaven, Harare
++263 77 277 1036 · info@taqon.co.zw · www.taqon.co.zw
