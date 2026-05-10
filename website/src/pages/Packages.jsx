@@ -9,6 +9,17 @@ import { autoLink } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { packagesDetailed } from '../data/packagesData';
 import { openPackageBrochure } from '../lib/packageBrochure';
+import SapphireFamilyCard from '../components/family-cards/SapphireFamilyCard';
+
+// Entry-level family slugs that should render as the Sapphire identity
+// (humble horizontal layout, dawn-horizon motif). The legacy static
+// data has the smallest tiers as 'economy' and 'quick-access'; new live
+// DB families use 'home-economy-3kva'. Match either.
+const SAPPHIRE_SLUGS = new Set([
+  'economy',
+  'quick-access',
+  'home-economy-3kva',
+]);
 import { getGemFamily } from '../data/gemFamilies';
 import { useFamilies } from '../hooks/useQueries';
 import useSavesStore from '../stores/savesStore';
@@ -134,6 +145,13 @@ export default function Packages() {
             /* ── Static fallback: gem-styled individual cards ── */
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {packagesDetailed.map((pkg, i) => {
+                // Sapphire (Home Economy) gets its own family-specific card.
+                // Other families fall through to the canonical gem template
+                // until each one ships its own identity.
+                if (SAPPHIRE_SLUGS.has(pkg.slug)) {
+                  return <SapphireFamilyCard key={pkg.slug} pkg={pkg} delay={i * 0.08} />;
+                }
+
                 const gemSlug = STATIC_GEM_MAP[pkg.slug] || pkg.slug;
                 const gem = getGemFamily(gemSlug);
                 const isDark = pkg.tier === 'premium' || pkg.tier === 'commercial';
