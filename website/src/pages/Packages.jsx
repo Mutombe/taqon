@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Star, ArrowRight, Lightning, MagnifyingGlass, Heart } from '@phosphor-icons/react';
+import { Check, Star, ArrowRight, Lightning, MagnifyingGlass, Heart, FileText } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import GemFamilySection from '../components/GemFamilySection';
 import GemPackageCard from '../components/GemPackageCard';
 import { autoLink } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { packagesDetailed } from '../data/packagesData';
+import { openPackageBrochure } from '../lib/packageBrochure';
 import { getGemFamily } from '../data/gemFamilies';
 import { useFamilies } from '../hooks/useQueries';
 import useSavesStore from '../stores/savesStore';
@@ -226,15 +227,28 @@ export default function Packages() {
                             ))}
                           </div>
 
-                          {/* CTA */}
-                          <div
-                            className="mt-6 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
-                            style={{
-                              backgroundColor: gem.accent,
-                              boxShadow: `0 4px 14px -2px ${gem.glowColorSubtle}`,
-                            }}
-                          >
-                            View Details <ArrowRight size={14} weight="bold" />
+                          {/* CTAs — primary navigates, secondary downloads brochure */}
+                          <div className="mt-6 grid grid-cols-1 gap-2">
+                            <div
+                              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
+                              style={{
+                                backgroundColor: gem.accent,
+                                boxShadow: `0 4px 14px -2px ${gem.glowColorSubtle}`,
+                              }}
+                            >
+                              View Details <ArrowRight size={14} weight="bold" />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                openPackageBrochure(pkg);
+                              }}
+                              className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 dark:border-white/15 text-taqon-charcoal dark:text-white/85 font-medium text-xs hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                            >
+                              <FileText size={13} weight="duotone" /> Download Brochure
+                            </button>
                           </div>
                         </div>
 

@@ -178,6 +178,9 @@ export default function ProductDetail() {
     if (!product) return;
     const price = parseFloat(product.price).toFixed(2);
     const comparePrice = product.compare_at_price ? parseFloat(product.compare_at_price).toFixed(2) : null;
+    const generatedDate = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'long', year: 'numeric',
+    });
     const specs = product.specifications
       ? typeof product.specifications === 'string' ? JSON.parse(product.specifications) : product.specifications
       : {};
@@ -232,12 +235,20 @@ export default function ProductDetail() {
     </table>
   </div>` : ''}
   <div class="footer">
-    <div class="logo">TAQON <span>ELECTRICO</span></div>
-    <div class="contact">
-      www.taqon.co.zw<br/>
-      +263 77 277 1036<br/>
-      Harare, Zimbabwe
+    <div>
+      <div class="logo">TAQON <span>ELECTRICO</span></div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:4px;letter-spacing:1.4px;text-transform:uppercase;font-weight:500;">Customer is King!</div>
     </div>
+    <div class="contact">
+      <strong style="color:#F26522;letter-spacing:1.2px;font-size:10px;text-transform:uppercase;">Reach us</strong><br/>
+      203 Sherwood Drive, Strathaven, Harare<br/>
+      +263 77 277 1036 &nbsp;·&nbsp; info@taqon.co.zw<br/>
+      www.taqon.co.zw
+    </div>
+  </div>
+  <div style="background:#0D0D0D;color:rgba(255,255,255,0.45);padding:10px 40px;font-size:10px;letter-spacing:0.8px;border-top:1px solid rgba(255,255,255,0.12);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span>Generated ${generatedDate}</span>
+    <span>This is an informational brochure. Final pricing depends on stock and delivery location.</span>
   </div>
 </body></html>`;
 

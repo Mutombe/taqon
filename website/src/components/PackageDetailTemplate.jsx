@@ -32,6 +32,7 @@ import { quotationsApi } from '../api/quotations';
 import useAuthStore from '../stores/authStore';
 import DepositModal from './DepositModal';
 import { getSavedLocation, saveLocation } from '../data/locationSession';
+import { openPackageBrochure } from '../lib/packageBrochure';
 
 // Icon map for the includes section
 const iconMap = {
@@ -445,6 +446,18 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                     Pay 20% Deposit · USD {(parseFloat(priceBreakdown.total) * 0.2).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </button>
                 )}
+                <button
+                  onClick={() =>
+                    openPackageBrochure(pkg._apiData || pkg, {
+                      family: pkg._apiData?.family,
+                      includes: pkg.includes || [],
+                      appliances: pkg.appliances || [],
+                    })
+                  }
+                  className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium"
+                >
+                  <FileText size={16} weight="duotone" /> Download Brochure
+                </button>
                 <a
                   href="tel:+263772771036"
                   className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium"
