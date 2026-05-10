@@ -749,36 +749,88 @@ class PackagesCatalogueView(APIView):
         from django.utils import timezone
         import uuid
 
+        try:
+            return self._build(request)
+        except Exception:
+            # An unhandled 500 here drops CORS headers in some Django
+            # configurations, which the browser surfaces as a confusing
+            # "blocked by CORS policy" error. Catch everything and
+            # return a clear text response so the operator can see the
+            # actual failure in the network tab.
+            logger.exception('PackagesCatalogue: top-level render failed')
+            return Response(
+                {'detail': 'Catalogue render failed — please try again or contact support.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def _build(self, request):
+        from django.http import HttpResponse
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+        import uuid
+
         # Pull every active family with its full variant list. Each
         # variant carries enough specs that the catalogue can render
         # both the family overview and a per-variant breakdown table.
+        # Wrapped per-package so one bad row never crashes the whole
+        # catalogue render — a 500 here breaks CORS too, which the
+        # browser surfaces as a misleading "blocked by CORS policy" error.
         families = []
         try:
-            for f in PackageFamily.objects.filter(
-                is_active=True, is_deleted=False
-            ).prefetch_related('packages__items__component').order_by('kva_rating'):
+            family_qs = (
+                PackageFamily.objects
+                .filter(is_active=True, is_deleted=False)
+                .prefetch_related('packages__items__component')
+                .order_by('kva_rating')
+            )
+            for f in family_qs:
                 variants = []
                 inverter_brand = ''
                 for p in f.packages.filter(is_active=True, is_deleted=False).order_by('price'):
-                    items = list(p.items.all()) if hasattr(p, 'items') else []
-                    inv_items = [i for i in items if i.component.category == 'inverter']
-                    bat_items = [i for i in items if i.component.category == 'battery']
-                    pan_items = [i for i in items if i.component.category == 'panel']
+                    try:
+                        items = list(p.items.all()) if hasattr(p, 'items') else []
+                    except Exception:
+                        items = []
+                    inv_items = [i for i in items if i.component and i.component.category == 'inverter']
+                    bat_items = [i for i in items if i.component and i.component.category == 'battery']
+                    pan_items = [i for i in items if i.component and i.component.category == 'panel']
+
                     inv_label = ''
-                    if inv_items:
-                        c = inv_items[0].component
-                        inv_label = f'{c.brand or ""} {c.name}'.strip()
-                        if not inverter_brand and c.brand:
-                            inverter_brand = c.brand
+                    try:
+                        if inv_items:
+                            c = inv_items[0].component
+                            inv_label = ' '.join(filter(None, [c.brand or '', c.name or ''])).strip()
+                            if not inverter_brand and c.brand:
+                                inverter_brand = c.brand
+                    except Exception:
+                        pass
+
                     bat_label = ''
-                    if bat_items:
-                        total_kwh = sum((i.component.capacity_kwh or 0) * i.quantity for i in bat_items)
-                        bat_label = f'{total_kwh:g} kWh' if total_kwh else (bat_items[0].component.name or '')
+                    try:
+                        if bat_items:
+                            total_kwh = float(sum(
+                                float(i.component.capacity_kwh or 0) * (i.quantity or 0)
+                                for i in bat_items
+                            ))
+                            if total_kwh > 0:
+                                bat_label = f'{total_kwh:g} kWh'
+                            else:
+                                bat_label = bat_items[0].component.name or ''
+                    except Exception:
+                        pass
+
                     pan_label = ''
-                    if pan_items:
-                        total_panels = sum(i.quantity for i in pan_items)
-                        watt = pan_items[0].component.wattage
-                        pan_label = f'{total_panels} × {watt} W' if watt else f'{total_panels} panels'
+                    try:
+                        if pan_items:
+                            total_panels = sum((i.quantity or 0) for i in pan_items)
+                            watt = pan_items[0].component.wattage if pan_items[0].component else None
+                            if total_panels and watt:
+                                pan_label = f'{total_panels} × {watt} W'
+                            elif total_panels:
+                                pan_label = f'{total_panels} panels'
+                    except Exception:
+                        pass
+
                     variants.append({
                         'name': p.name,
                         'inverter_kva': str(p.inverter_kva).rstrip('0').rstrip('.') if p.inverter_kva else '',
@@ -801,11 +853,11 @@ class PackagesCatalogueView(APIView):
                     'variants': variants,
                     'variant_count': len(variants),
                 })
-        except Exception as exc:
-            logger.warning('PackagesCatalogue: family lookup failed (%s)', exc)
+        except Exception:
+            logger.exception('PackagesCatalogue: family lookup failed — catalogue will render with empty families')
 
         ref_number = f'CAT-{timezone.now().strftime("%Y%m%d")}-{uuid.uuid4().hex[:6].upper()}'
-        total_variants = sum(f['variant_count'] for f in families)
+        total_variants = sum(f.get('variant_count', 0) for f in families)
 
         context = {
             'generated_date': timezone.now().strftime('%d %B %Y'),

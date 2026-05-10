@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Star, ArrowRight, Lightning, MagnifyingGlass, Heart, FileText } from '@phosphor-icons/react';
+import { Check, Star, ArrowRight, Lightning, MagnifyingGlass, Heart, FileText, SpinnerGap } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import GemFamilySection from '../components/GemFamilySection';
 import GemPackageCard from '../components/GemPackageCard';
@@ -46,8 +46,39 @@ const STATIC_GEM_MAP = {
 export default function Packages() {
   const { data: families, isLoading: loading } = useFamilies();
   const { togglePackage, likedPackages } = useSavesStore();
+  const [downloadingCatalogue, setDownloadingCatalogue] = useState(false);
 
   const useApi = families && families.length > 0;
+
+  const handleDownloadCatalogue = async () => {
+    if (downloadingCatalogue) return;
+    setDownloadingCatalogue(true);
+    const t = toast.loading('Building your catalogue…');
+    try {
+      const res = await solarConfigApi.getPackagesCatalogue();
+      const contentType = res.headers['content-type'] || 'application/pdf';
+      const ext = contentType.includes('html') ? 'html' : 'pdf';
+      const blob = new Blob([res.data], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Taqon-Electrico-Packages-Catalogue.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Catalogue downloaded', { id: t });
+    } catch (err) {
+      toast.error(
+        err.response?.status >= 500
+          ? 'Catalogue is being rebuilt — try again in a moment.'
+          : 'Could not generate catalogue. Please try again.',
+        { id: t },
+      );
+    } finally {
+      setDownloadingCatalogue(false);
+    }
+  };
 
   return (
     <>
@@ -76,26 +107,20 @@ export default function Packages() {
             <div className="mt-7 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={async () => {
-                  try {
-                    const res = await solarConfigApi.getPackagesCatalogue();
-                    const contentType = res.headers['content-type'] || 'application/pdf';
-                    const ext = contentType.includes('html') ? 'html' : 'pdf';
-                    const blob = new Blob([res.data], { type: contentType });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Taqon-Electrico-Packages-Catalogue.${ext}`;
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    toast.success('Catalogue downloaded');
-                  } catch {
-                    toast.error('Could not generate catalogue');
-                  }
-                }}
-                className="inline-flex items-center gap-2 px-5 py-3 bg-taqon-orange text-white rounded-xl font-semibold text-sm hover:bg-taqon-orange/90 transition-all shadow-sm hover:shadow-md"
+                onClick={handleDownloadCatalogue}
+                disabled={downloadingCatalogue}
+                className="inline-flex items-center gap-2 px-5 py-3 bg-taqon-orange text-white rounded-xl font-semibold text-sm hover:bg-taqon-orange/90 transition-all shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-wait"
               >
-                <FileText size={16} weight="duotone" /> Download Full Catalogue
+                {downloadingCatalogue ? (
+                  <>
+                    <SpinnerGap size={16} className="animate-spin" />
+                    Preparing catalogue…
+                  </>
+                ) : (
+                  <>
+                    <FileText size={16} weight="duotone" /> Download Full Catalogue
+                  </>
+                )}
               </button>
               <Link
                 to="/get-recommendation"

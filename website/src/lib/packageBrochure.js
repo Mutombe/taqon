@@ -50,6 +50,19 @@ export function openPackageBrochure(pkg, { family, includes = [], appliances = [
     family?.short_description ||
     'A complete solar solution from Taqon Electrico.';
 
+  // Price string — handles both API shape (numeric) and static shape ("From $1,200")
+  let priceLabel = '';
+  if (pkg.price !== undefined && pkg.price !== null && pkg.price !== '') {
+    if (typeof pkg.price === 'string') {
+      priceLabel = pkg.price;
+    } else {
+      const n = parseFloat(pkg.price);
+      if (!isNaN(n) && n > 0) {
+        priceLabel = `From USD ${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+      }
+    }
+  }
+
   // Compose the spec strip — only show keys we actually have
   const specRows = [
     kvaRating && { label: 'Inverter Capacity', value: `${kvaRating} kVA` },
@@ -153,6 +166,38 @@ export function openPackageBrochure(pkg, { family, includes = [], appliances = [
     font-size: 14.5px; line-height: 1.7; color: #1A1A1A; max-width: 660px;
   }
   .accent-bar { width: 56px; height: 3px; background: #F26522; margin-bottom: 18px; }
+
+  /* ---- Price strip ---- */
+  .price-strip {
+    margin-top: 28px;
+    background: linear-gradient(135deg, #F26522 0%, #FF8447 100%);
+    color: #FFFBF5;
+    padding: 22px 26px;
+    border-radius: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 8px 22px -8px rgba(242,101,34,0.4);
+  }
+  .price-eyebrow {
+    font-size: 10px; letter-spacing: 2.4px; text-transform: uppercase;
+    font-weight: 700; opacity: 0.92;
+  }
+  .price-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 30px; font-weight: 800; margin-top: 4px; letter-spacing: -0.6px;
+  }
+  .price-note {
+    font-size: 11px; color: rgba(255,255,255,0.85); margin-top: 4px;
+  }
+  .price-callout {
+    text-align: right;
+  }
+  .price-callout-eyebrow {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85;
+  }
+  .price-callout-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700; margin-top: 4px;
+  }
 
   .block { margin-top: 36px; }
   .block-title {
@@ -284,6 +329,23 @@ export function openPackageBrochure(pkg, { family, includes = [], appliances = [
         a 1-year workmanship warranty. We use only tier-1 components &mdash;
         no grey-market hardware.
       </p>
+
+      ${
+        priceLabel
+          ? `
+        <div class="price-strip">
+          <div>
+            <div class="price-eyebrow">Indicative price</div>
+            <div class="price-value">${escapeHtml(priceLabel)}</div>
+            <div class="price-note">Final pricing depends on your site survey and delivery location.</div>
+          </div>
+          <div class="price-callout">
+            <div class="price-callout-eyebrow">Talk to engineering</div>
+            <div class="price-callout-num">${escapeHtml(TAQON_PHONE)}</div>
+          </div>
+        </div>`
+          : ''
+      }
 
       ${includesHtml}
 
