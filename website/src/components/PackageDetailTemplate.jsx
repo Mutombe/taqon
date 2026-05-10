@@ -452,6 +452,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                       family: pkg._apiData?.family,
                       includes: pkg.includes || [],
                       appliances: pkg.appliances || [],
+                      surface: 'package_detail',
                     })
                   }
                   className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium"

@@ -2,48 +2,42 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>{{ company.name }} — Package Catalogue</title>
+<title>{{ company.name }} — Solar Package Catalogue</title>
 <style>
   /* ============================================================
      PAGE TEMPLATES
   ============================================================ */
   @page {
     size: A4;
-    margin: 1.6cm 1.8cm 2cm 1.8cm;
+    margin: 1.5cm 1.6cm 2cm 1.6cm;
     @top-left  {
       content: string(section-name);
       font-family: Helvetica, Arial, sans-serif;
-      font-size: 7.5pt;
-      letter-spacing: 2.5pt;
+      font-size: 7.5pt; letter-spacing: 2.5pt;
       text-transform: uppercase;
-      color: #6B7280;
-      font-weight: 600;
-      padding-top: 0.6cm;
+      color: #6B7280; font-weight: 700;
+      padding-top: 0.5cm;
     }
     @top-right {
-      content: "TAQON ELECTRICO";
+      content: "TAQON ELECTRICO  ·  CATALOGUE";
       font-family: Helvetica, Arial, sans-serif;
-      font-size: 7.5pt;
-      letter-spacing: 2.5pt;
-      color: #0D0D0D;
-      font-weight: 700;
-      padding-top: 0.6cm;
+      font-size: 7.5pt; letter-spacing: 2.5pt;
+      color: #0D0D0D; font-weight: 700;
+      padding-top: 0.5cm;
     }
     @bottom-left {
-      content: "TAQON ELECTRICO  ·  www.taqon.co.zw";
+      content: "TAQON ELECTRICO  ·  www.taqon.co.zw  ·  +263 77 277 1036";
       font-family: Helvetica, Arial, sans-serif;
-      font-size: 7.5pt;
-      color: #9CA3AF;
-      letter-spacing: 1pt;
-      padding-bottom: 0.6cm;
+      font-size: 7pt; color: #9CA3AF;
+      letter-spacing: 0.8pt;
+      padding-bottom: 0.5cm;
     }
     @bottom-right {
       content: "Page " counter(page) " of " counter(pages);
       font-family: Helvetica, Arial, sans-serif;
-      font-size: 7.5pt;
-      color: #9CA3AF;
-      letter-spacing: 1pt;
-      padding-bottom: 0.6cm;
+      font-size: 7pt; color: #9CA3AF;
+      letter-spacing: 0.8pt;
+      padding-bottom: 0.5cm;
     }
   }
   @page cover { margin: 0; @top-left{content:none;} @top-right{content:none;} @bottom-left{content:none;} @bottom-right{content:none;} }
@@ -65,40 +59,34 @@
     font-weight: 700;
     color: #0D0D0D;
     letter-spacing: -0.3pt;
-    line-height: 1.15;
+    line-height: 1.1;
   }
   p { margin: 0 0 7pt; }
   p:last-child { margin-bottom: 0; }
   strong { font-weight: 700; color: #0D0D0D; }
 
-  .h1   { font-size: 30pt; letter-spacing: -0.6pt; }
-  .h2   { font-size: 22pt; letter-spacing: -0.4pt; }
-  .h3   { font-size: 14pt; }
+  .h1   { font-size: 28pt; letter-spacing: -0.6pt; }
+  .h2   { font-size: 20pt; letter-spacing: -0.4pt; }
+  .h3   { font-size: 14pt; letter-spacing: -0.2pt; }
   .lead { font-size: 11pt; line-height: 1.65; color: #1A1A1A; }
   .small{ font-size: 8.5pt; line-height: 1.55; }
   .xs   { font-size: 7.5pt; line-height: 1.4; }
   .muted{ color: #6B7280; }
 
   .eyebrow {
-    font-size: 7.5pt;
-    letter-spacing: 2.8pt;
+    font-size: 8pt;
+    letter-spacing: 3pt;
     text-transform: uppercase;
     color: #F26522;
     font-weight: 700;
-  }
-  .eyebrow-muted {
-    font-size: 7.5pt;
-    letter-spacing: 2.8pt;
-    text-transform: uppercase;
-    color: #6B7280;
-    font-weight: 600;
+    display: block;
   }
   .accent-bar {
     display: block;
     width: 56pt;
     height: 3pt;
     background: #F26522;
-    margin: 12pt 0 16pt;
+    margin: 14pt 0 18pt;
   }
 
   /* ============================================================
@@ -111,35 +99,35 @@
     height: 29.7cm;
     position: relative;
     background:
-      radial-gradient(circle at 88% 12%, rgba(242,101,34,0.10) 0%, rgba(242,101,34,0) 42%),
-      radial-gradient(circle at 8% 92%, rgba(242,101,34,0.06) 0%, rgba(242,101,34,0) 38%),
-      linear-gradient(180deg, #FFFBF5 0%, #FFF5EC 100%);
+      radial-gradient(circle at 90% 10%, rgba(242,101,34,0.18) 0%, rgba(242,101,34,0) 38%),
+      radial-gradient(circle at 8% 96%, rgba(242,101,34,0.08) 0%, rgba(242,101,34,0) 42%),
+      linear-gradient(180deg, #FFFBF5 0%, #FFF5EC 60%, #FFF1E0 100%);
     overflow: hidden;
   }
   .cover::after {
     content: "";
     position: absolute; inset: 0;
     background-image:
-      linear-gradient(to right, rgba(13,13,13,0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(13,13,13,0.03) 1px, transparent 1px);
-    background-size: 36pt 36pt;
+      linear-gradient(to right, rgba(13,13,13,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(13,13,13,0.04) 1px, transparent 1px);
+    background-size: 40pt 40pt;
     pointer-events: none;
   }
   .cover-band-top {
     position: absolute; top: 0; left: 0; right: 0;
-    height: 18pt;
-    background: linear-gradient(90deg, #F26522 0%, #FF8447 100%);
+    height: 16pt;
+    background: linear-gradient(90deg, #F26522 0%, #FF8447 50%, #F26522 100%);
     z-index: 2;
   }
   .cover-band-bottom {
     position: absolute; bottom: 0; left: 0; right: 0;
-    height: 28pt;
+    height: 30pt;
     background: #0D0D0D;
     z-index: 2;
   }
   .cover-inner {
     position: relative; z-index: 3;
-    padding: 1.6cm 2.2cm 2cm;
+    padding: 1.4cm 2cm 1.6cm;
     height: 100%;
     display: flex; flex-direction: column;
   }
@@ -158,121 +146,204 @@
   .cover-spacer { flex: 1; }
   .cover-eyebrow {
     font-size: 9.5pt;
-    letter-spacing: 4pt;
+    letter-spacing: 4.5pt;
     text-transform: uppercase;
     color: #F26522;
     font-weight: 700;
   }
   .cover-display {
-    font-size: 64pt; font-weight: 800; line-height: 1; letter-spacing: -2pt;
+    font-size: 68pt; font-weight: 800; line-height: 0.95; letter-spacing: -2.4pt;
     color: #0D0D0D; margin-top: 14pt;
   }
   .cover-display .accent { color: #F26522; }
   .cover-sub {
-    margin-top: 22pt; font-size: 13pt; line-height: 1.5;
+    margin-top: 22pt; font-size: 13pt; line-height: 1.55;
     color: #1A1A1A; max-width: 380pt;
   }
+  .cover-stat-strip {
+    margin-top: 28pt; display: flex; gap: 8pt;
+  }
+  .cover-stat {
+    flex: 1; background: #FFFFFF; border: 1.5pt solid #F3E9D9;
+    border-radius: 6pt; padding: 12pt 14pt;
+  }
+  .cover-stat-label {
+    font-size: 7pt; letter-spacing: 2pt; text-transform: uppercase;
+    color: #6B7280; font-weight: 700;
+  }
+  .cover-stat-value {
+    font-size: 22pt; font-weight: 800; color: #F26522; line-height: 1;
+    margin-top: 4pt; letter-spacing: -0.5pt;
+  }
+  .cover-stat-sub {
+    font-size: 8pt; color: #6B7280; margin-top: 2pt;
+  }
   .cover-meta {
-    margin-top: 36pt; display: flex; gap: 32pt;
+    margin-top: 26pt; display: flex; gap: 32pt;
     background: #0D0D0D; color: #FFFBF5;
-    padding: 18pt 22pt; border-radius: 4pt;
+    padding: 16pt 20pt; border-radius: 4pt;
   }
   .cover-meta-cell .label {
-    font-size: 7.5pt; letter-spacing: 2.5pt; text-transform: uppercase;
+    font-size: 7pt; letter-spacing: 2.5pt; text-transform: uppercase;
     color: #F26522; font-weight: 700;
   }
   .cover-meta-cell .value {
-    font-size: 12pt; font-weight: 700; color: #FFFBF5; margin-top: 4pt;
+    font-size: 11.5pt; font-weight: 700; color: #FFFBF5; margin-top: 4pt;
   }
 
   /* ============================================================
-     INTRO
+     SECTIONS
   ============================================================ */
-  .section { string-set: section-name attr(data-section); page-break-before: always; }
+  .section { string-set: section-name attr(data-section); page-break-before: always; padding-top: 0.2cm; }
   .section:first-of-type { page-break-before: auto; }
 
-  /* ============================================================
-     PACKAGE CARDS (one full card per family, two per page when space allows)
-  ============================================================ */
-  .pkg {
-    margin-bottom: 18pt;
-    padding: 16pt 20pt;
-    border-radius: 8pt;
-    page-break-inside: avoid;
-    border: 1.5pt solid;
-    border-color: rgba(242,101,34,0.15);
-    background: #FFFFFF;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03);
-  }
-  .pkg-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    border-bottom: 1pt solid #F3E9D9;
-    padding-bottom: 10pt;
-    margin-bottom: 12pt;
-  }
-  .pkg-title {
-    font-size: 16pt; font-weight: 800; color: #0D0D0D; letter-spacing: -0.3pt;
-  }
-  .pkg-subtitle {
-    font-size: 9pt; color: #6B7280; margin-top: 3pt;
-  }
-  .pkg-kva {
-    flex-shrink: 0;
-    font-size: 11pt; font-weight: 800;
-    background: linear-gradient(135deg, #F26522 0%, #FF8447 100%);
-    color: #FFFFFF;
-    padding: 6pt 12pt;
-    border-radius: 999pt;
-    letter-spacing: 0.4pt;
-  }
-  .pkg-grid {
-    display: flex; gap: 14pt;
-    margin-bottom: 12pt;
-  }
-  .spec {
-    flex: 1;
-    background: #FFFBF5;
-    border: 1pt solid #F3E9D9;
-    border-radius: 4pt;
-    padding: 10pt 12pt;
-    text-align: center;
-  }
-  .spec-label {
-    font-size: 7pt; letter-spacing: 1.6pt; text-transform: uppercase;
-    color: #6B7280; font-weight: 700;
-  }
-  .spec-value {
-    font-size: 14pt; font-weight: 800; color: #0D0D0D; margin-top: 3pt;
-  }
-  .pkg-desc {
-    font-size: 9pt; color: #1A1A1A; line-height: 1.6;
-    margin-bottom: 10pt;
-  }
-  .pkg-suit {
-    font-size: 8pt; color: #6B7280;
-  }
-  .pkg-suit strong { color: #F26522; letter-spacing: 1.2pt; text-transform: uppercase; }
+  .section-head { margin-bottom: 18pt; }
+  .section-head .h1 { margin-top: 4pt; max-width: 14.5cm; }
+  .section-head .lead.muted { max-width: 14cm; }
 
   /* ============================================================
-     INTRO BLOCK (page 2)
+     INTRO HOW-TO-READ
   ============================================================ */
   .intro-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 14pt;
-    margin-top: 18pt;
+    gap: 12pt;
+    margin-top: 14pt;
   }
   .intro-card {
-    padding: 14pt;
-    background: #FFFBF5;
-    border: 1pt solid #F3E9D9;
+    padding: 16pt 14pt 14pt;
+    background: #FFFFFF;
+    border: 1.5pt solid #F3E9D9;
     border-radius: 6pt;
+    border-top: 4pt solid #F26522;
   }
-  .intro-card-title {
-    font-size: 10pt; font-weight: 700; color: #0D0D0D; margin-bottom: 4pt;
+  .intro-card-eyebrow {
+    font-size: 7pt; letter-spacing: 2.4pt; text-transform: uppercase;
+    color: #F26522; font-weight: 800;
+  }
+  .intro-card-key {
+    font-size: 22pt; font-weight: 800; color: #0D0D0D;
+    margin-top: 4pt; letter-spacing: -0.5pt;
   }
   .intro-card-body {
-    font-size: 8.5pt; color: #6B7280; line-height: 1.55;
+    font-size: 9pt; color: #1A1A1A; line-height: 1.55;
+    margin-top: 6pt;
+  }
+
+  .legend {
+    margin-top: 22pt;
+    background: #FFF7ED; border: 1.5pt solid #F3E9D9;
+    border-left: 4pt solid #F26522;
+    padding: 14pt 18pt; border-radius: 4pt;
+  }
+  .legend-title {
+    font-size: 9pt; font-weight: 800; color: #0D0D0D;
+    letter-spacing: -0.2pt; margin-bottom: 4pt;
+  }
+  .legend-body { font-size: 9pt; color: #1A1A1A; line-height: 1.55; }
+
+  /* ============================================================
+     FAMILY BLOCK
+  ============================================================ */
+  .family {
+    margin-bottom: 22pt;
+    background: #FFFFFF;
+    border: 1.5pt solid rgba(13,13,13,0.06);
+    border-radius: 8pt;
+    overflow: hidden;
+    page-break-inside: avoid;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 6px 18px rgba(0,0,0,0.04);
+  }
+  .family-header {
+    background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 100%);
+    color: #FFFBF5;
+    padding: 16pt 22pt 16pt 22pt;
+    border-bottom: 4pt solid #F26522;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .family-name {
+    font-size: 18pt; font-weight: 800; color: #FFFBF5;
+    letter-spacing: -0.4pt; line-height: 1.05;
+  }
+  .family-tagline {
+    font-size: 9.5pt; color: rgba(255,251,245,0.78);
+    margin-top: 6pt; line-height: 1.5; max-width: 12cm;
+  }
+  .family-kva-pill {
+    flex-shrink: 0;
+    font-size: 11pt; font-weight: 800; color: #FFFFFF;
+    background: linear-gradient(135deg, #F26522 0%, #FF8447 100%);
+    padding: 7pt 14pt;
+    border-radius: 999pt;
+    letter-spacing: 0.4pt;
+    border: 1.5pt solid rgba(255,255,255,0.15);
+  }
+
+  .family-body { padding: 16pt 22pt 18pt; }
+
+  .family-meta-row {
+    display: flex; gap: 14pt;
+    margin-bottom: 14pt;
+  }
+  .meta-cell {
+    flex: 1;
+    background: #FFFBF5; border: 1.5pt solid #F3E9D9;
+    border-radius: 4pt;
+    padding: 10pt 12pt;
+  }
+  .meta-cell-label {
+    font-size: 7pt; letter-spacing: 1.6pt; text-transform: uppercase;
+    color: #6B7280; font-weight: 800;
+  }
+  .meta-cell-value {
+    font-size: 12pt; font-weight: 700; color: #0D0D0D;
+    margin-top: 3pt;
+  }
+
+  .family-suit {
+    font-size: 9pt; color: #1A1A1A;
+    margin-bottom: 12pt; line-height: 1.55;
+  }
+  .family-suit strong { color: #F26522; letter-spacing: 1.2pt; text-transform: uppercase; font-size: 7.5pt; margin-right: 4pt; }
+
+  /* ---- Variants table ---- */
+  .variants-title {
+    font-size: 8pt; letter-spacing: 2.4pt; text-transform: uppercase;
+    color: #F26522; font-weight: 800;
+    margin-top: 4pt; margin-bottom: 8pt;
+  }
+  table.variants {
+    width: 100%; border-collapse: collapse;
+    border-radius: 4pt; overflow: hidden;
+    border: 1pt solid #EFE5D7;
+  }
+  table.variants th {
+    background: #0D0D0D;
+    color: #FFFBF5;
+    font-size: 7.5pt; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1.5pt;
+    padding: 7pt 10pt;
+    text-align: left;
+  }
+  table.variants th.right { text-align: right; }
+  table.variants td {
+    padding: 9pt 10pt;
+    border-bottom: 1pt solid #EFE5D7;
+    font-size: 9pt;
+    color: #1A1A1A;
+    background: #FFFFFF;
+    vertical-align: top;
+  }
+  table.variants tr:nth-child(even) td { background: #FFFBF5; }
+  table.variants tr:last-child td { border-bottom: none; }
+  table.variants td.right { text-align: right; tabular-nums; font-variant-numeric: tabular-nums; }
+  table.variants td.muted { color: #6B7280; font-size: 8.5pt; }
+  .variant-name { font-weight: 700; color: #0D0D0D; font-size: 9pt; }
+  .variant-pkva {
+    display: inline-block;
+    background: #FFF7ED; color: #F26522; font-weight: 800;
+    padding: 2pt 8pt; border-radius: 999pt;
+    font-size: 7.5pt; letter-spacing: 0.5pt;
   }
 
   /* ============================================================
@@ -283,52 +354,58 @@
     width: 21cm;
     min-height: 29.7cm;
     background:
-      radial-gradient(circle at 12% 88%, rgba(242,101,34,0.08) 0%, rgba(242,101,34,0) 38%),
+      radial-gradient(circle at 12% 86%, rgba(242,101,34,0.10) 0%, rgba(242,101,34,0) 38%),
       linear-gradient(180deg, #FFFBF5 0%, #FFF5EC 100%);
-    padding: 2cm;
+    padding: 1.6cm 2cm 1.6cm;
     page-break-before: always;
   }
-  .closing-inner { max-width: 16cm; margin: 0 auto; }
+  .closing-inner { max-width: 17cm; margin: 0 auto; }
   .cta-band {
-    background: linear-gradient(135deg, #F26522 0%, #FF8447 100%);
+    background: linear-gradient(135deg, #F26522 0%, #FF8447 50%, #FFA56C 100%);
     color: #FFFBF5;
     padding: 28pt 32pt;
     border-radius: 8pt;
     margin-top: 24pt;
     display: flex; justify-content: space-between; align-items: center;
-    box-shadow: 0 8px 24px -8px rgba(242,101,34,0.4);
+    box-shadow: 0 8pt 24pt -8pt rgba(242,101,34,0.4);
   }
-  .cta-title { font-size: 22pt; font-weight: 700; line-height: 1.15; }
+  .cta-eyebrow {
+    font-size: 8pt; letter-spacing: 2.5pt; text-transform: uppercase;
+    font-weight: 800; opacity: 0.92;
+  }
+  .cta-title { font-size: 22pt; font-weight: 800; line-height: 1.15; margin-top: 4pt; letter-spacing: -0.4pt; }
   .cta-sub { font-size: 11pt; margin-top: 6pt; opacity: 0.92; }
-  .cta-phone {
+  .cta-phone-eyebrow {
     text-align: right;
     font-size: 7.5pt; letter-spacing: 2.5pt; text-transform: uppercase; opacity: 0.85;
   }
   .cta-phone-num {
     font-size: 22pt; font-weight: 800; margin-top: 4pt; letter-spacing: -0.4pt;
+    text-align: right;
   }
   .closing-contact {
-    margin-top: 32pt;
+    margin-top: 28pt;
     background: #0D0D0D;
     color: #FFFBF5;
-    padding: 28pt 32pt;
+    padding: 26pt 30pt;
     border-radius: 8pt;
   }
   .closing-grid {
-    display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32pt;
+    display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28pt;
   }
   .closing-block-title {
-    font-size: 8pt; color: #F26522; letter-spacing: 2.4pt;
-    text-transform: uppercase; font-weight: 700; margin-bottom: 8pt;
+    font-size: 7.5pt; color: #F26522; letter-spacing: 2.4pt;
+    text-transform: uppercase; font-weight: 800; margin-bottom: 8pt;
   }
   .closing-line {
-    font-size: 11pt; line-height: 1.6; color: #FFFBF5;
+    font-size: 10.5pt; line-height: 1.6; color: #FFFBF5;
   }
   .closing-meta {
-    margin-top: 24pt; padding-top: 16pt;
-    border-top: 1pt solid rgba(255,255,255,0.12);
+    margin-top: 22pt; padding-top: 16pt;
+    border-top: 1pt solid rgba(255,255,255,0.14);
     font-size: 9pt; color: rgba(255,255,255,0.55);
     display: flex; justify-content: space-between;
+    letter-spacing: 0.4pt;
   }
 </style>
 </head>
@@ -347,11 +424,29 @@
     <div class="cover-spacer"></div>
 
     <div class="cover-eyebrow">Solar Package Catalogue</div>
-    <div class="cover-display">Power<br/><span class="accent">Sized.</span></div>
+    <div class="cover-display">Power.<br/><span class="accent">Sized.</span></div>
     <div class="cover-sub">
-      Seven Taqon Electrico solar packages — from a 3 kVA home back-up to a 20 kVA
-      enterprise installation. Every system below is sized from a real customer
-      load profile and installed by certified engineers.
+      Every Taqon Electrico solar package — from a 3 kVA home back-up to a 20 kVA
+      enterprise installation — engineered around your real loads, installed by
+      certified engineers, and backed by ongoing maintenance.
+    </div>
+
+    <div class="cover-stat-strip">
+      <div class="cover-stat">
+        <div class="cover-stat-label">Families</div>
+        <div class="cover-stat-value">{{ families|length }}</div>
+        <div class="cover-stat-sub">3 kVA → 20 kVA</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-label">Variants</div>
+        <div class="cover-stat-value">{{ total_variants }}</div>
+        <div class="cover-stat-sub">tunable to load</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-label">Brands</div>
+        <div class="cover-stat-value">8+</div>
+        <div class="cover-stat-sub">tier-1 hardware</div>
+      </div>
     </div>
 
     <div class="cover-meta">
@@ -363,10 +458,6 @@
         <div class="label">Reference</div>
         <div class="value">{{ ref_number }}</div>
       </div>
-      <div class="cover-meta-cell">
-        <div class="label">Catalogue</div>
-        <div class="value">{{ families|length }} families</div>
-      </div>
     </div>
 
     <div class="cover-spacer"></div>
@@ -375,72 +466,115 @@
 
 <!-- INTRO -->
 <section class="section" data-section="01 / How to read this catalogue">
-  <div class="eyebrow">01 &nbsp;/&nbsp; How to read this catalogue</div>
-  <h1 class="h1" style="margin-top: 6pt;">Sized for the way you actually live and work.</h1>
-  <span class="accent-bar"></span>
-  <p class="lead muted" style="max-width: 14cm;">
-    Each family on the following pages is a starting point — final specifications
-    come out of a free site survey and a load profile we build with you. The kVA
-    figure tells you the inverter class; battery and panel counts scale within each
-    family to match how many hours of back-up you need.
-  </p>
+  <div class="section-head">
+    <span class="eyebrow">01 &nbsp;/&nbsp; How to read this catalogue</span>
+    <h1 class="h1">Three numbers tell the whole story.</h1>
+    <span class="accent-bar"></span>
+    <p class="lead muted">
+      Each family on the following pages is a starting point — final specifications
+      come out of a free site survey and a load profile we build with you. The
+      three indicators below are the language we'll use throughout the document.
+    </p>
+  </div>
 
   <div class="intro-grid">
     <div class="intro-card">
-      <div class="intro-card-title">kVA</div>
-      <div class="intro-card-body">Inverter class — the peak instantaneous load the system can handle without tripping.</div>
+      <div class="intro-card-eyebrow">Inverter</div>
+      <div class="intro-card-key">kVA</div>
+      <div class="intro-card-body">The peak instantaneous load the system can handle without tripping. Decides which appliances can run together.</div>
     </div>
     <div class="intro-card">
-      <div class="intro-card-title">kWh</div>
-      <div class="intro-card-body">Battery storage — directly drives how many hours you stay on through an outage.</div>
+      <div class="intro-card-eyebrow">Battery</div>
+      <div class="intro-card-key">kWh</div>
+      <div class="intro-card-body">Stored energy. Directly drives how many hours you stay on through an outage at your normal nightly load.</div>
     </div>
     <div class="intro-card">
-      <div class="intro-card-title">Panels</div>
-      <div class="intro-card-body">Solar PV — sized to recharge the battery faster than you discharge it on a normal day.</div>
+      <div class="intro-card-eyebrow">Solar PV</div>
+      <div class="intro-card-key">Panels</div>
+      <div class="intro-card-body">Daily generation. Sized to recharge the battery faster than you discharge it on a sunny day.</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-title">A note on variants</div>
+    <div class="legend-body">
+      Inside each family, variants differ in panel count and battery capacity — the inverter is the same. So 'Home Luxury 1.0' and 'Home Luxury Performance' run on the same inverter, but Performance ships with more panels and a meatier battery for longer autonomy. Pricing follows specification; a real quote comes after a site survey.
     </div>
   </div>
 </section>
 
-<!-- FAMILY CARDS -->
+<!-- FAMILY PAGES -->
 <section class="section" data-section="02 / The families">
-  <div class="eyebrow">02 &nbsp;/&nbsp; The families</div>
-  <h1 class="h1" style="margin-top: 6pt;">Seven systems. One accountable team.</h1>
-  <span class="accent-bar"></span>
+  <div class="section-head">
+    <span class="eyebrow">02 &nbsp;/&nbsp; The families</span>
+    <h1 class="h1">Seven inverter classes. {{ total_variants }} variants in the catalogue.</h1>
+    <span class="accent-bar"></span>
+    <p class="lead muted">
+      Each block below opens with the family overview and the headline kVA, then
+      lists the live variants underneath with the panel and battery counts that
+      define them. Inverter brand is consistent within a family.
+    </p>
+  </div>
 
   {% for f in families %}
-  <div class="pkg">
-    <div class="pkg-header">
+  <div class="family">
+    <div class="family-header">
       <div>
-        <div class="pkg-title">{{ f.name }}</div>
+        <div class="family-name">{{ f.name }}</div>
         {% if f.short_description %}
-        <div class="pkg-subtitle">{{ f.short_description }}</div>
+        <div class="family-tagline">{{ f.short_description }}</div>
         {% endif %}
       </div>
-      <div class="pkg-kva">{{ f.kva }} kVA</div>
+      <div class="family-kva-pill">{{ f.kva }} kVA</div>
     </div>
 
-    <div class="pkg-grid">
-      <div class="spec">
-        <div class="spec-label">Inverter</div>
-        <div class="spec-value">{{ f.kva }} kVA</div>
+    <div class="family-body">
+      <div class="family-meta-row">
+        <div class="meta-cell">
+          <div class="meta-cell-label">Inverter brand</div>
+          <div class="meta-cell-value">{% if f.inverter_brand %}{{ f.inverter_brand }}{% else %}Tier-1{% endif %}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-cell-label">Variants</div>
+          <div class="meta-cell-value">{{ f.variant_count }} in catalogue</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-cell-label">Class</div>
+          <div class="meta-cell-value">{{ f.kva }} kVA</div>
+        </div>
       </div>
-      <div class="spec">
-        <div class="spec-label">Battery</div>
-        <div class="spec-value">{% if f.battery_kwh %}{{ f.battery_kwh }} kWh{% else %}Configurable{% endif %}</div>
-      </div>
-      <div class="spec">
-        <div class="spec-label">Solar PV</div>
-        <div class="spec-value">{% if f.system_size_kw %}{{ f.system_size_kw }} kWp{% else %}Sized to load{% endif %}</div>
-      </div>
+
+      {% if f.suitable_for %}
+      <p class="family-suit"><strong>Best for</strong>{{ f.suitable_for }}</p>
+      {% endif %}
+
+      {% if f.variants %}
+      <div class="variants-title">Variants in this family</div>
+      <table class="variants">
+        <thead>
+          <tr>
+            <th style="width: 36%;">Variant</th>
+            <th style="width: 12%;">Inverter</th>
+            <th style="width: 24%;">Battery</th>
+            <th style="width: 28%;">Solar PV</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in f.variants %}
+          <tr>
+            <td>
+              <span class="variant-name">{{ v.name }}</span>
+              {% if v.phase %}<br/><span class="muted xs">Phase: {{ v.phase }}</span>{% endif %}
+            </td>
+            <td><span class="variant-pkva">{{ v.inverter_kva }} kVA</span></td>
+            <td>{% if v.battery_label %}{{ v.battery_label }}{% else %}{{ v.battery_kwh|default:"—" }} kWh{% endif %}</td>
+            <td>{{ v.panel_label|default:"On site survey" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
     </div>
-
-    {% if f.description %}
-    <div class="pkg-desc">{{ f.description }}</div>
-    {% endif %}
-
-    {% if f.suitable_for %}
-    <div class="pkg-suit"><strong>Best for</strong> &middot; {{ f.suitable_for }}</div>
-    {% endif %}
   </div>
   {% empty %}
   <p class="muted small" style="text-align: center; padding: 24pt;">
@@ -452,10 +586,10 @@
 <!-- CLOSING / CTA -->
 <div class="closing">
   <div class="closing-inner">
-    <div class="eyebrow">03 &nbsp;/&nbsp; Next step</div>
-    <h1 class="h1" style="margin-top: 6pt;">Ready when you are.</h1>
+    <span class="eyebrow">03 &nbsp;/&nbsp; Next step</span>
+    <h1 class="h1" style="margin-top: 4pt;">Ready when you are.</h1>
     <span class="accent-bar"></span>
-    <p class="lead" style="max-width: 14cm;">
+    <p class="lead" style="max-width: 14.5cm;">
       Whether you're sizing your first home back-up system or commissioning a
       commercial-scale installation, our team is ready to help. Reach us through
       the channels below and we'll arrange a free consultation and site survey.
@@ -463,12 +597,12 @@
 
     <div class="cta-band">
       <div>
-        <div style="font-size: 8pt; letter-spacing: 2.5pt; text-transform: uppercase; font-weight: 700; opacity: 0.92;">Get a free site survey</div>
-        <div class="cta-title" style="margin-top: 6pt;">Talk to engineering today.</div>
+        <div class="cta-eyebrow">Get a free site survey</div>
+        <div class="cta-title">Talk to engineering today.</div>
         <div class="cta-sub">No obligation — quote based on your actual loads.</div>
       </div>
-      <div class="cta-phone">
-        Call us today
+      <div>
+        <div class="cta-phone-eyebrow">Call us today</div>
         <div class="cta-phone-num">{{ company.phone }}</div>
       </div>
     </div>

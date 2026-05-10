@@ -16,6 +16,7 @@ import {
   TAQON_ADDRESS,
   companyInfo,
 } from '../data/siteData';
+import { downloadsApi } from '../api/downloads';
 
 const todayStamp = () => {
   const d = new Date();
@@ -35,7 +36,7 @@ const todayStamp = () => {
  *                              [{ name, description, warranty }]
  * @param {Array}  appliances   Optional "what it can power" labels
  */
-export function openPackageBrochure(pkg, { family, includes = [], appliances = [] } = {}) {
+export function openPackageBrochure(pkg, { family, includes = [], appliances = [], surface = 'package_card' } = {}) {
   if (!pkg) return;
 
   const familyName = family?.name || pkg.family?.name || pkg.name || 'Solar Package';
@@ -332,6 +333,20 @@ export function openPackageBrochure(pkg, { family, includes = [], appliances = [
     win.document.write(brochureHtml);
     win.document.close();
   }
+
+  // Fire-and-forget tracking ping. We don't await it so a slow API
+  // never delays the print dialog appearing.
+  downloadsApi.track({
+    kind: 'package_brochure',
+    surface,
+    target_slug: pkg.slug || '',
+    target_label: familyName,
+    metadata: {
+      kva: kvaRating ? String(kvaRating) : '',
+      battery_kwh: batteryKwh ? String(batteryKwh) : '',
+      panel_count: panelCount || null,
+    },
+  });
 }
 
 /* Tiny HTML-escape so a package name containing & or < doesn't blow up

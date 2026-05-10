@@ -12,6 +12,7 @@ import SEO from '../../components/SEO';
 import { confirmExternalNavigation } from '../../components/ContentLink';
 import { toast } from 'sonner';
 import { useProduct } from '../../hooks/useQueries';
+import { downloadsApi } from '../../api/downloads';
 
 // Helper to extract image URL
 function getImageUrl(img) {
@@ -258,6 +259,18 @@ export default function ProductDetail() {
       brochureWindow.document.close();
       setTimeout(() => brochureWindow.print(), 500);
     }
+
+    // Fire-and-forget tracking ping
+    downloadsApi.track({
+      kind: 'product_brochure',
+      surface: 'product_detail',
+      target_slug: product.slug || '',
+      target_label: product.name || '',
+      metadata: {
+        brand: product.brand?.name || product.brand || '',
+        price: product.price ? String(product.price) : null,
+      },
+    });
   };
 
   // Build image gallery from API data

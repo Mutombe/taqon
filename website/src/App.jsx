@@ -120,6 +120,7 @@ const AdminBlogEditor = lazy(() => import('./features/admin/AdminBlogEditor'));
 const AdminMedia = lazy(() => import('./features/admin/AdminMedia'));
 const AdminFeatureFlags = lazy(() => import('./features/admin/AdminFeatureFlags'));
 const AdminInquiries = lazy(() => import('./features/admin/AdminInquiries'));
+const AdminDownloads = lazy(() => import('./features/admin/AdminDownloads'));
 
 // Customer Account Portal (lazy loaded)
 const AccountPortal = lazy(() => import('./features/account/AccountPortal'));
@@ -342,6 +343,7 @@ function AppContent() {
               <Route path="feature-flags" element={<AdminFeatureFlags />} />
               <Route path="inquiries" element={<AdminInquiries />} />
               <Route path="inquiries/:id" element={<AdminInquiries />} />
+              <Route path="downloads" element={<AdminDownloads />} />
             </Route>
           </Routes>
         </Suspense>

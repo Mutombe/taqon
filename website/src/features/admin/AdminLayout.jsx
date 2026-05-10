@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   SquaresFour, ChartBar, Package, ShoppingCart, SolarPanel,
   Article, Image, Users, List, X, CaretRight, SignOut,
-  Bell, MoonStars, Sun, FileText, Wallet, Lightning, ToggleRight, ChatCircle,
+  Bell, MoonStars, Sun, FileText, Wallet, Lightning, ToggleRight, ChatCircle, DownloadSimple,
 } from '@phosphor-icons/react';
 import useAuthStore from '../../stores/authStore';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -45,6 +45,7 @@ const NAV_SECTIONS = [
   {
     label: 'Platform',
     items: [
+      { to: '/admin/downloads', label: 'Downloads', icon: DownloadSimple },
       { to: '/admin/feature-flags', label: 'Feature Flags', icon: ToggleRight },
     ],
   },
@@ -201,6 +202,7 @@ const PAGE_TITLES = {
   '/admin/media': 'Media Library',
   '/admin/users': 'Users',
   '/admin/inquiries': 'Inquiries',
+  '/admin/downloads': 'Downloads',
   '/admin/feature-flags': 'Feature Flags',
 };
 

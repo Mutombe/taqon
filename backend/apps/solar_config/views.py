@@ -493,6 +493,29 @@ class InstantQuoteView(APIView):
         ext = 'pdf' if is_pdf else 'html'
         response = HttpResponse(pdf_bytes, content_type=content_type)
         response['Content-Disposition'] = f'attachment; filename="{ref_number}.{ext}"'
+
+        # Record the download — fire-and-forget; never breaks the response.
+        from apps.downloads.services import record_download
+        record_download(
+            request,
+            kind='instant_quote',
+            surface=request.data.get('source') or 'package_detail',
+            target_slug=package.slug,
+            target_label=package.family.name if package.family else package.name,
+            target_id=package.id,
+            customer_name=customer_name,
+            customer_email=customer_email,
+            file_size_bytes=len(pdf_bytes),
+            success=is_pdf,
+            failure_reason='' if is_pdf else 'renderer fell back to HTML',
+            metadata={
+                'ref_number': ref_number,
+                'tier_label': tier_label,
+                'distance_km': float(distance_km),
+                'system_size_kw': system_size_kw,
+                'grand_total': str(price.get('total', '')),
+            },
+        )
         return response
 
 
@@ -694,6 +717,19 @@ class BusinessProfileView(APIView):
         response['Content-Disposition'] = (
             f'attachment; filename="Taqon-Electrico-Company-Profile.{ext}"'
         )
+
+        from apps.downloads.services import record_download
+        record_download(
+            request,
+            kind='business_profile',
+            surface=request.GET.get('source', 'other'),
+            target_slug='company-profile',
+            target_label='Taqon Electrico Company Profile',
+            file_size_bytes=len(pdf_bytes),
+            success=is_pdf,
+            failure_reason='' if is_pdf else 'renderer fell back to HTML',
+            metadata={'ref_number': ref_number},
+        )
         return response
 
 
@@ -713,31 +749,70 @@ class PackagesCatalogueView(APIView):
         from django.utils import timezone
         import uuid
 
+        # Pull every active family with its full variant list. Each
+        # variant carries enough specs that the catalogue can render
+        # both the family overview and a per-variant breakdown table.
         families = []
         try:
             for f in PackageFamily.objects.filter(
                 is_active=True, is_deleted=False
-            ).prefetch_related('packages').order_by('kva_rating'):
-                cheapest = f.packages.filter(is_active=True, is_deleted=False).order_by('price').first()
+            ).prefetch_related('packages__items__component').order_by('kva_rating'):
+                variants = []
+                inverter_brand = ''
+                for p in f.packages.filter(is_active=True, is_deleted=False).order_by('price'):
+                    items = list(p.items.all()) if hasattr(p, 'items') else []
+                    inv_items = [i for i in items if i.component.category == 'inverter']
+                    bat_items = [i for i in items if i.component.category == 'battery']
+                    pan_items = [i for i in items if i.component.category == 'panel']
+                    inv_label = ''
+                    if inv_items:
+                        c = inv_items[0].component
+                        inv_label = f'{c.brand or ""} {c.name}'.strip()
+                        if not inverter_brand and c.brand:
+                            inverter_brand = c.brand
+                    bat_label = ''
+                    if bat_items:
+                        total_kwh = sum((i.component.capacity_kwh or 0) * i.quantity for i in bat_items)
+                        bat_label = f'{total_kwh:g} kWh' if total_kwh else (bat_items[0].component.name or '')
+                    pan_label = ''
+                    if pan_items:
+                        total_panels = sum(i.quantity for i in pan_items)
+                        watt = pan_items[0].component.wattage
+                        pan_label = f'{total_panels} × {watt} W' if watt else f'{total_panels} panels'
+                    variants.append({
+                        'name': p.name,
+                        'inverter_kva': str(p.inverter_kva).rstrip('0').rstrip('.') if p.inverter_kva else '',
+                        'inverter_label': inv_label,
+                        'battery_label': bat_label,
+                        'panel_label': pan_label,
+                        'battery_kwh': str(p.battery_capacity_kwh) if p.battery_capacity_kwh else '',
+                        'panel_count': p.panel_count or '',
+                        'phase': p.phase or '',
+                        'tier': p.tier or '',
+                    })
+
                 families.append({
                     'name': f.name,
                     'kva': str(f.kva_rating).rstrip('0').rstrip('.') if f.kva_rating else '',
                     'short_description': f.short_description or '',
                     'description': f.description or '',
                     'suitable_for': ', '.join(f.suitable_for) if isinstance(f.suitable_for, list) else (f.suitable_for or ''),
-                    'system_size_kw': str(cheapest.system_size_kw) if cheapest and cheapest.system_size_kw else '',
-                    'battery_kwh': str(cheapest.battery_capacity_kwh) if cheapest and cheapest.battery_capacity_kwh else '',
+                    'inverter_brand': inverter_brand,
+                    'variants': variants,
+                    'variant_count': len(variants),
                 })
         except Exception as exc:
             logger.warning('PackagesCatalogue: family lookup failed (%s)', exc)
 
         ref_number = f'CAT-{timezone.now().strftime("%Y%m%d")}-{uuid.uuid4().hex[:6].upper()}'
+        total_variants = sum(f['variant_count'] for f in families)
 
         context = {
             'generated_date': timezone.now().strftime('%d %B %Y'),
             'ref_number': ref_number,
             'year': timezone.now().strftime('%Y'),
             'families': families,
+            'total_variants': total_variants,
             'company': {
                 'name': 'TAQON ELECTRICO',
                 'tagline': 'Customer is King!',
@@ -757,6 +832,23 @@ class PackagesCatalogueView(APIView):
         response = HttpResponse(pdf_bytes, content_type=content_type)
         response['Content-Disposition'] = (
             f'attachment; filename="Taqon-Electrico-Packages-Catalogue.{ext}"'
+        )
+
+        from apps.downloads.services import record_download
+        record_download(
+            request,
+            kind='packages_catalogue',
+            surface=request.GET.get('source', 'packages_page'),
+            target_slug='packages-catalogue',
+            target_label='Taqon Electrico Packages Catalogue',
+            file_size_bytes=len(pdf_bytes),
+            success=is_pdf,
+            failure_reason='' if is_pdf else 'renderer fell back to HTML',
+            metadata={
+                'ref_number': ref_number,
+                'family_count': len(families),
+                'package_count': sum(len(f.get('packages', [])) for f in families),
+            },
         )
         return response
 
