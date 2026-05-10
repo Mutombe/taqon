@@ -19,6 +19,9 @@ urlpatterns = [
     # Business / Company Profile (public)
     path('business-profile/', views.BusinessProfileView.as_view(), name='business-profile'),
 
+    # Universal Packages Catalogue PDF (public)
+    path('packages-catalogue/', views.PackagesCatalogueView.as_view(), name='packages-catalogue'),
+
     # Package Price Calculator (public)
     path('packages/<slug:slug>/price/', views.PackagePriceView.as_view(), name='package-price'),
 

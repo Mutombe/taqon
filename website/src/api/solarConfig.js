@@ -27,6 +27,9 @@ export const solarConfigApi = {
   // Business / Company profile PDF (public)
   getBusinessProfile: () => api.get(`${BASE}/business-profile/`, { responseType: 'blob' }),
 
+  // Universal Packages Catalogue PDF (public, dynamic from DB)
+  getPackagesCatalogue: () => api.get(`${BASE}/packages-catalogue/`, { responseType: 'blob' }),
+
   // Package Price Calculator (public)
   getPackagePrice: (slug, params = {}) => api.get(`${BASE}/packages/${slug}/price/`, { params }),
 

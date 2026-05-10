@@ -697,6 +697,70 @@ class BusinessProfileView(APIView):
         return response
 
 
+class PackagesCatalogueView(APIView):
+    """
+    GET: Generate the universal Packages Catalogue PDF.
+
+    Pulls every active PackageFamily live, so the document automatically
+    reflects whatever's currently in the catalogue. Used by the
+    'Download Full Catalogue' CTA on /packages.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from django.http import HttpResponse
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+        import uuid
+
+        families = []
+        try:
+            for f in PackageFamily.objects.filter(
+                is_active=True, is_deleted=False
+            ).prefetch_related('packages').order_by('kva_rating'):
+                cheapest = f.packages.filter(is_active=True, is_deleted=False).order_by('price').first()
+                families.append({
+                    'name': f.name,
+                    'kva': str(f.kva_rating).rstrip('0').rstrip('.') if f.kva_rating else '',
+                    'short_description': f.short_description or '',
+                    'description': f.description or '',
+                    'suitable_for': ', '.join(f.suitable_for) if isinstance(f.suitable_for, list) else (f.suitable_for or ''),
+                    'system_size_kw': str(cheapest.system_size_kw) if cheapest and cheapest.system_size_kw else '',
+                    'battery_kwh': str(cheapest.battery_capacity_kwh) if cheapest and cheapest.battery_capacity_kwh else '',
+                })
+        except Exception as exc:
+            logger.warning('PackagesCatalogue: family lookup failed (%s)', exc)
+
+        ref_number = f'CAT-{timezone.now().strftime("%Y%m%d")}-{uuid.uuid4().hex[:6].upper()}'
+
+        context = {
+            'generated_date': timezone.now().strftime('%d %B %Y'),
+            'ref_number': ref_number,
+            'year': timezone.now().strftime('%Y'),
+            'families': families,
+            'company': {
+                'name': 'TAQON ELECTRICO',
+                'tagline': 'Customer is King!',
+                'address': '203 Sherwood Drive, Strathaven, Harare',
+                'phone': '+263 77 277 1036',
+                'email': 'info@taqon.co.zw',
+                'website': 'www.taqon.co.zw',
+            },
+        }
+
+        html_string = render_to_string('pdfs/packages_catalogue.html', context)
+        from apps.quotations.pdf import _render_pdf
+        pdf_bytes = _render_pdf(html_string)
+        is_pdf = pdf_bytes[:4] == b'%PDF'
+        content_type = 'application/pdf' if is_pdf else 'text/html'
+        ext = 'pdf' if is_pdf else 'html'
+        response = HttpResponse(pdf_bytes, content_type=content_type)
+        response['Content-Disposition'] = (
+            f'attachment; filename="Taqon-Electrico-Packages-Catalogue.{ext}"'
+        )
+        return response
+
+
 class PackagePriceView(APIView):
     """
     GET: Calculate price breakdown for a package with custom distance.

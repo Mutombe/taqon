@@ -10,6 +10,8 @@ import SEO from '../components/SEO';
 import { packagesDetailed } from '../data/packagesData';
 import { openPackageBrochure } from '../lib/packageBrochure';
 import SapphireFamilyCard from '../components/family-cards/SapphireFamilyCard';
+import { solarConfigApi } from '../api/solarConfig';
+import { toast } from 'sonner';
 
 // Entry-level family slugs that should render as the Sapphire identity
 // (humble horizontal layout, dawn-horizon motif). The legacy static
@@ -71,6 +73,37 @@ export default function Packages() {
             <p className="mt-4 text-white/60 text-lg max-w-xl">
               {autoLink('From starter systems to commercial powerhouses — find your perfect solar solution.')}
             </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const res = await solarConfigApi.getPackagesCatalogue();
+                    const contentType = res.headers['content-type'] || 'application/pdf';
+                    const ext = contentType.includes('html') ? 'html' : 'pdf';
+                    const blob = new Blob([res.data], { type: contentType });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Taqon-Electrico-Packages-Catalogue.${ext}`;
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    toast.success('Catalogue downloaded');
+                  } catch {
+                    toast.error('Could not generate catalogue');
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-5 py-3 bg-taqon-orange text-white rounded-xl font-semibold text-sm hover:bg-taqon-orange/90 transition-all shadow-sm hover:shadow-md"
+              >
+                <FileText size={16} weight="duotone" /> Download Full Catalogue
+              </button>
+              <Link
+                to="/get-recommendation"
+                className="inline-flex items-center gap-2 px-5 py-3 border border-white/20 text-white/90 rounded-xl font-semibold text-sm hover:bg-white/5 transition-all"
+              >
+                Not sure? Get a recommendation
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
