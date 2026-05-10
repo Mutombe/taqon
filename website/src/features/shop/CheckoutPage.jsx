@@ -24,6 +24,9 @@ import useCartStore from '../../stores/cartStore';
 import useAuthStore from '../../stores/authStore';
 import { toast } from 'sonner';
 import { PAYMENT_BRAND_LOGOS, PAYMENT_BRAND_LABELS } from '../../data/paymentBrands';
+import LocationPicker from '../../components/LocationPicker';
+import { calculateDeliveryFee } from '../../data/zimbabweAreas';
+import { getSavedLocation, saveLocation } from '../../data/locationSession';
 
 const STEPS = [
   { key: 'delivery', label: 'Delivery', icon: Truck },
@@ -49,15 +52,59 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Form state
-  const [deliveryType, setDeliveryType] = useState('delivery');
+  // Form state — hydrate location-related fields from session so the
+  // customer doesn't re-pick their area if they came in via the cart.
+  const savedLocation = getSavedLocation();
+  const [deliveryType, setDeliveryType] = useState(
+    savedLocation?.area === 'Free pickup from HQ' ? 'pickup' : 'delivery',
+  );
+  const [pickedLocation, setPickedLocation] = useState(() => {
+    if (!savedLocation) return null;
+    if (savedLocation.area === 'Free pickup from HQ') {
+      return { name: 'pickup', distanceKm: 0, deliveryFee: 0, isPickup: true };
+    }
+    return {
+      name: savedLocation.area,
+      distanceKm: savedLocation.distanceKm,
+      deliveryFee:
+        savedLocation.distanceKm != null
+          ? calculateDeliveryFee(savedLocation.distanceKm)
+          : null,
+      isPickup: false,
+    };
+  });
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState(savedLocation?.area || '');
   const [province, setProvince] = useState('');
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentPhone, setPaymentPhone] = useState('');
   const [customerNotes, setCustomerNotes] = useState('');
+
+  const handleLocationChange = (sel) => {
+    if (!sel) {
+      setPickedLocation(null);
+      return;
+    }
+    setPickedLocation({
+      name: sel.isPickup ? 'pickup' : sel.name,
+      distanceKm: sel.distance,
+      deliveryFee: sel.deliveryFee,
+      isPickup: !!sel.isPickup,
+    });
+    if (sel.isPickup) {
+      setDeliveryType('pickup');
+    } else {
+      setDeliveryType('delivery');
+      // Auto-fill city/province if the user hasn't typed something custom
+      if (!city || city === savedLocation?.area) setCity(sel.name);
+      if (!province || province === '') setProvince(sel.province);
+    }
+    saveLocation({
+      area: sel.isPickup ? 'Free pickup from HQ' : sel.name,
+      distanceKm: sel.distance,
+    });
+  };
 
   const { openAuthModal } = useAuthStore();
 
@@ -85,8 +132,16 @@ export default function CheckoutPage() {
     return () => clearTimeout(timer);
   }, [items, isAuthenticated, navigate]);
 
-  // Delivery fee
-  const deliveryFee = deliveryType === 'delivery' ? 15.0 : 0;
+  // Delivery fee — driven by the LocationPicker selection. Free for
+  // pickup; for delivery it's base + per-km from the selected area.
+  // Falls back to a Harare-CBD-ish estimate while no area is picked,
+  // so the totals strip never goes blank.
+  const deliveryFee =
+    deliveryType === 'pickup'
+      ? 0
+      : pickedLocation?.deliveryFee != null
+        ? pickedLocation.deliveryFee
+        : calculateDeliveryFee(10);
   const total = subtotal + deliveryFee;
 
   // Validation
@@ -353,6 +408,21 @@ export default function CheckoutPage() {
                         <span className="font-semibold text-sm">Pickup</span>
                         <span className="text-xs opacity-60">Collect from store</span>
                       </button>
+                    </div>
+
+                    {/* Searchable area picker — drives the delivery fee.
+                        Visible for both delivery and pickup so the customer
+                        always sees their selection and can flip easily. */}
+                    <div className="space-y-2 mb-5">
+                      <label className="block text-gray-700 dark:text-white/70 text-sm">
+                        <MapPin size={14} className="inline mr-1" />
+                        Delivery area
+                      </label>
+                      <LocationPicker
+                        value={pickedLocation?.name === 'pickup' ? 'pickup' : pickedLocation?.name}
+                        onChange={handleLocationChange}
+                        placeholder="Search for your area to see delivery cost"
+                      />
                     </div>
 
                     {/* Address fields (delivery only) */}

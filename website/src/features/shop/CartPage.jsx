@@ -14,6 +14,9 @@ import {
 } from '@phosphor-icons/react';
 import useCartStore from '../../stores/cartStore';
 import { CartPageSkeleton } from '../../components/Skeletons';
+import LocationPicker from '../../components/LocationPicker';
+import { calculateDeliveryFee } from '../../data/zimbabweAreas';
+import { getSavedLocation, saveLocation } from '../../data/locationSession';
 
 export default function CartPage() {
   const {
@@ -29,6 +32,40 @@ export default function CartPage() {
   } = useCartStore();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  // Hydrate location from session so the delivery fee on the cart page
+  // already reflects whatever the customer picked elsewhere (advisor,
+  // checkout, package quote modal). Stored as { name, distanceKm }.
+  const [location, setLocation] = useState(() => {
+    const saved = getSavedLocation();
+    if (!saved) return null;
+    if (saved.area === 'Free pickup from HQ' || saved.distanceKm === 0) {
+      return { name: 'pickup', distanceKm: 0, deliveryFee: 0, isPickup: true };
+    }
+    return {
+      name: saved.area,
+      distanceKm: saved.distanceKm ?? null,
+      deliveryFee: saved.distanceKm != null ? calculateDeliveryFee(saved.distanceKm) : null,
+      isPickup: false,
+    };
+  });
+
+  const handleLocationChange = (sel) => {
+    if (!sel) {
+      setLocation(null);
+      return;
+    }
+    setLocation({
+      name: sel.isPickup ? 'pickup' : sel.name,
+      distanceKm: sel.distance,
+      deliveryFee: sel.deliveryFee,
+      isPickup: !!sel.isPickup,
+    });
+    saveLocation({
+      area: sel.isPickup ? 'Free pickup from HQ' : sel.name,
+      distanceKm: sel.distance,
+    });
+  };
 
   useEffect(() => {
     fetchCart();
@@ -50,8 +87,21 @@ export default function CartPage() {
     setShowClearConfirm(false);
   };
 
-  const deliveryFee = subtotal > 0 ? 15.0 : 0;
+  // Delivery fee derived from picked location: free for pickup, computed
+  // from distance otherwise. Falls back to a sensible Harare CBD estimate
+  // until the customer picks an area, so the cart total isn't blank.
+  const deliveryFee =
+    subtotal === 0
+      ? 0
+      : location
+        ? location.deliveryFee
+        : calculateDeliveryFee(10); // shows ~$11 placeholder while unselected
   const total = subtotal + deliveryFee;
+  const deliveryLabel = location?.isPickup
+    ? 'Pickup (free)'
+    : location?.name
+      ? `Delivery to ${location.name}`
+      : 'Estimated delivery';
 
   return (
     <motion.div
@@ -274,10 +324,22 @@ export default function CartPage() {
                     )}
 
                     <div className="flex justify-between text-gray-600 dark:text-white/60">
-                      <span>Delivery</span>
-                      <span className="text-taqon-charcoal dark:text-white font-medium">
-                        ${deliveryFee.toFixed(2)}
+                      <span className="truncate pr-2">{deliveryLabel}</span>
+                      <span className="text-taqon-charcoal dark:text-white font-medium tabular-nums whitespace-nowrap">
+                        {deliveryFee === 0 ? 'Free' : `$${deliveryFee.toFixed(2)}`}
                       </span>
+                    </div>
+
+                    {/* Searchable location picker — drives the delivery line above */}
+                    <div className="pt-2">
+                      <p className="text-xs uppercase tracking-wider text-taqon-muted dark:text-white/45 font-semibold mb-2">
+                        Deliver to
+                      </p>
+                      <LocationPicker
+                        value={location?.name === 'pickup' ? 'pickup' : location?.name}
+                        onChange={handleLocationChange}
+                        placeholder="Select your area for delivery pricing"
+                      />
                     </div>
 
                     <div className="border-t border-warm-200 dark:border-white/10 pt-3 mt-3">
@@ -302,7 +364,7 @@ export default function CartPage() {
 
                   <div className="mt-4 flex items-start gap-2 text-gray-400 dark:text-white/30 text-xs">
                     <WarningCircle size={14} className="flex-shrink-0 mt-0.5" />
-                    <span>Tax and final delivery fees calculated at checkout.</span>
+                    <span>Delivery is computed from your selected area. Pickup from our Strathaven HQ is free.</span>
                   </div>
                 </motion.div>
               </div>

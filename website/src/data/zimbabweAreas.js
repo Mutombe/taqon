@@ -135,3 +135,47 @@ export function findNearestArea(coords, snapKm = 3) {
   }
   return { area: nearest, km: nearestKm, snapped: nearestKm <= snapKm };
 }
+
+/**
+ * Default delivery pricing — single source used everywhere a customer
+ * sees a delivery line: cart, checkout, location picker rows. Tweak
+ * here to roll out a price change everywhere at once.
+ */
+export const DELIVERY_PRICING = {
+  baseFee: 5,    // USD admin / handling charge applied even at 0 km
+  perKm: 0.65,   // USD per kilometre from Taqon HQ in Strathaven
+};
+
+/**
+ * Compute the delivery fee for a given distance from Taqon HQ.
+ * Returns an integer USD amount (rounded for clean line-item display).
+ */
+export function calculateDeliveryFee(distanceKm, { baseFee, perKm } = DELIVERY_PRICING) {
+  const base = baseFee ?? DELIVERY_PRICING.baseFee;
+  const rate = perKm ?? DELIVERY_PRICING.perKm;
+  if (distanceKm === null || distanceKm === undefined) return base;
+  const km = Math.max(0, parseFloat(distanceKm) || 0);
+  return base + Math.round(km * rate);
+}
+
+/**
+ * Group ZIMBABWE_AREAS by province for grouped rendering in the picker.
+ * Within each province, areas are sorted by distance (nearest first).
+ */
+export function groupAreasByProvince(areas = ZIMBABWE_AREAS) {
+  const groups = new Map();
+  for (const area of areas) {
+    if (!groups.has(area.province)) groups.set(area.province, []);
+    groups.get(area.province).push(area);
+  }
+  for (const list of groups.values()) {
+    list.sort((a, b) => a.distance - b.distance);
+  }
+  // Province order: Harare first, then alphabetical
+  const ordered = [];
+  if (groups.has('Harare')) ordered.push(['Harare', groups.get('Harare')]);
+  for (const [province, list] of [...groups].sort((a, b) => a[0].localeCompare(b[0]))) {
+    if (province !== 'Harare') ordered.push([province, list]);
+  }
+  return ordered;
+}
