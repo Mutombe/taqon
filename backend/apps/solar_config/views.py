@@ -763,30 +763,58 @@ class PackagesCatalogueView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    # In-process cache for the rendered PDF — 15 minutes is fresh enough
+    # for catalogue use (families change rarely) and avoids re-rendering
+    # for every visitor. First request after a deploy still has to do
+    # the work; the second is instant.
+    _CACHE_TTL_SECONDS = 60 * 15
+
+    def _cached_pdf(self):
+        from django.core.cache import cache
+        return cache.get('packages_catalogue_pdf_v2')
+
+    def _set_cached_pdf(self, pdf_bytes):
+        from django.core.cache import cache
+        cache.set('packages_catalogue_pdf_v2', pdf_bytes, self._CACHE_TTL_SECONDS)
+
     def _build(self, request):
         from django.http import HttpResponse
         from django.template.loader import render_to_string
         from django.utils import timezone
+        from django.db.models import Prefetch
         import uuid
 
-        # Pull every active family with its full variant list. Each
-        # variant carries enough specs that the catalogue can render
-        # both the family overview and a per-variant breakdown table.
-        # Wrapped per-package so one bad row never crashes the whole
-        # catalogue render — a 500 here breaks CORS too, which the
-        # browser surfaces as a misleading "blocked by CORS policy" error.
+        # Serve cached bytes if we have them. Saves the 9-15s WeasyPrint
+        # render on every subsequent request.
+        cached = self._cached_pdf()
+        if cached:
+            response = HttpResponse(cached, content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="Taqon-Electrico-Packages-Catalogue.pdf"'
+            self._track(request, len(cached), True, cache_hit=True)
+            return response
+
+        # Single, efficient query: families with their active packages
+        # already filtered & ordered, and each package's BoM items
+        # prefetched. Replaces an N+1 of ~30 queries.
+        active_pkg_qs = (
+            SolarPackageTemplate.objects
+            .filter(is_active=True, is_deleted=False)
+            .order_by('price')
+            .prefetch_related(Prefetch('items', queryset=PackageComponent.objects.select_related('component')))
+        )
+        family_qs = (
+            PackageFamily.objects
+            .filter(is_active=True, is_deleted=False)
+            .order_by('kva_rating')
+            .prefetch_related(Prefetch('packages', queryset=active_pkg_qs, to_attr='active_pkgs'))
+        )
+
         families = []
         try:
-            family_qs = (
-                PackageFamily.objects
-                .filter(is_active=True, is_deleted=False)
-                .prefetch_related('packages__items__component')
-                .order_by('kva_rating')
-            )
             for f in family_qs:
                 variants = []
                 inverter_brand = ''
-                for p in f.packages.filter(is_active=True, is_deleted=False).order_by('price'):
+                for p in f.active_pkgs:
                     try:
                         items = list(p.items.all()) if hasattr(p, 'items') else []
                     except Exception:
@@ -881,28 +909,43 @@ class PackagesCatalogueView(APIView):
         is_pdf = pdf_bytes[:4] == b'%PDF'
         content_type = 'application/pdf' if is_pdf else 'text/html'
         ext = 'pdf' if is_pdf else 'html'
+
+        # Cache only successful PDFs so a transient render failure
+        # doesn't get baked in for 15 minutes.
+        if is_pdf:
+            self._set_cached_pdf(pdf_bytes)
+
         response = HttpResponse(pdf_bytes, content_type=content_type)
         response['Content-Disposition'] = (
             f'attachment; filename="Taqon-Electrico-Packages-Catalogue.{ext}"'
         )
 
+        self._track(
+            request, len(pdf_bytes), is_pdf,
+            metadata={
+                'ref_number': ref_number,
+                'family_count': len(families),
+                'variant_count': total_variants,
+            },
+            failure_reason='' if is_pdf else 'renderer fell back to HTML',
+        )
+        return response
+
+    def _track(self, request, size, success, metadata=None, failure_reason='', cache_hit=False):
         from apps.downloads.services import record_download
+        md = dict(metadata or {})
+        md['cache_hit'] = cache_hit
         record_download(
             request,
             kind='packages_catalogue',
             surface=request.GET.get('source', 'packages_page'),
             target_slug='packages-catalogue',
             target_label='Taqon Electrico Packages Catalogue',
-            file_size_bytes=len(pdf_bytes),
-            success=is_pdf,
-            failure_reason='' if is_pdf else 'renderer fell back to HTML',
-            metadata={
-                'ref_number': ref_number,
-                'family_count': len(families),
-                'package_count': sum(len(f.get('packages', [])) for f in families),
-            },
+            file_size_bytes=size,
+            success=success,
+            failure_reason=failure_reason,
+            metadata=md,
         )
-        return response
 
 
 class PackagePriceView(APIView):

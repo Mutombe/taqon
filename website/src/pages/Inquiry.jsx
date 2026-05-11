@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, ArrowLeft, CheckCircle, Lightning, Drop, Television, Phone, EnvelopeSimple,
-  House, Snowflake, FireSimple, Article, ShieldCheck, SpinnerGap,
+  House, Snowflake, FireSimple, Article, ShieldCheck, SpinnerGap, CaretDown, Plus,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { inquiriesApi } from '../api/inquiries';
+import { solarConfigApi } from '../api/solarConfig';
 import LocationPicker from '../components/LocationPicker';
 import { calculateDeliveryFee } from '../data/zimbabweAreas';
 import { saveLocation, getSavedLocation } from '../data/locationSession';
@@ -56,19 +57,66 @@ export default function Inquiry() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Full appliance catalogue from the API — used to render the
+  // "See more" overflow underneath the 12 hardcoded fast picks.
+  const [allAppliances, setAllAppliances] = useState([]);
+  const [showAllAppliances, setShowAllAppliances] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    solarConfigApi.getAppliances()
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+        setAllAppliances(list);
+      })
+      .catch(() => { /* silent — the 12 fast picks still work without API */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Filter the API catalogue to the items NOT already in the fast-pick
+  // grid (matched case-insensitively on name), grouped by category for
+  // a scannable expand. Memoised so toggling doesn't recompute.
+  const overflowGroups = useMemo(() => {
+    const fastNames = new Set(COMMON_APPLIANCES.map((c) => c.label.toLowerCase()));
+    const filtered = allAppliances.filter((a) => !fastNames.has((a.name || '').toLowerCase()));
+    const groups = {};
+    for (const a of filtered) {
+      const cat = a.category || 'other';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(a);
+    }
+    // Stable category order (most-used rooms first)
+    const order = ['kitchen', 'lounge', 'bedroom', 'bathroom', 'laundry', 'office', 'outdoor', 'security', 'garage', 'other'];
+    return order.filter((k) => groups[k]?.length).map((k) => [k, groups[k]]);
+  }, [allAppliances]);
+
   const set = (k, v) => {
     setForm((f) => ({ ...f, [k]: v }));
     if (errors[k]) setErrors((e) => ({ ...e, [k]: '' }));
   };
 
-  const toggleAppliance = (key) => {
+  // Toggle an appliance in the form selection. Accepts either a
+  // fast-pick key (string) or an API appliance object (with a slug + name).
+  const toggleAppliance = (input) => {
+    const isApi = typeof input === 'object';
+    const key = isApi ? `api:${input.slug || input.id}` : input;
+    const name = isApi
+      ? input.name
+      : (COMMON_APPLIANCES.find((c) => c.key === input)?.label || input);
+
     setForm((f) => {
       const has = f.appliances.find((a) => a.key === key);
       if (has) {
         return { ...f, appliances: f.appliances.filter((a) => a.key !== key) };
       }
-      return { ...f, appliances: [...f.appliances, { key, quantity: 1 }] };
+      return { ...f, appliances: [...f.appliances, { key, name, quantity: 1 }] };
     });
+  };
+
+  const isAppliancePicked = (input) => {
+    const key = typeof input === 'object' ? `api:${input.slug || input.id}` : input;
+    return !!form.appliances.find((a) => a.key === key);
   };
 
   const handleLocationChange = (sel) => {
@@ -99,13 +147,14 @@ export default function Inquiry() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      // Map UI appliance keys to the label so admins read the friendly
-      // name in the dashboard. Quantity defaults to 1 — operators can
-      // refine when triaging.
-      const applianceLabels = form.appliances.map((a) => {
-        const meta = COMMON_APPLIANCES.find((c) => c.key === a.key);
-        return { name: meta?.label || a.key, quantity: a.quantity };
-      });
+      // Each selection already carries the friendly name (set when the
+      // user toggled it on), so the admin dashboard reads the human
+      // label directly. Quantity defaults to 1 — operators can refine
+      // when triaging.
+      const applianceLabels = form.appliances.map((a) => ({
+        name: a.name || a.key,
+        quantity: a.quantity,
+      }));
 
       await inquiriesApi.submit({
         name: form.name.trim(),
@@ -257,9 +306,10 @@ export default function Inquiry() {
               label="What needs to keep running?"
               hint="Tap everything you'd want powered through an outage. We'll size around it."
             >
+              {/* Fast-pick grid — the 12 most common loads with icons */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {COMMON_APPLIANCES.map((a) => {
-                  const isOn = !!form.appliances.find((x) => x.key === a.key);
+                  const isOn = isAppliancePicked(a.key);
                   const Icon = a.icon;
                   return (
                     <button
@@ -287,6 +337,69 @@ export default function Inquiry() {
                   );
                 })}
               </div>
+
+              {/* See-more affordance + overflow appliances grouped by room */}
+              {overflowGroups.length > 0 && (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllAppliances((v) => !v)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-taqon-orange hover:text-taqon-orange/80 transition-colors"
+                  >
+                    {showAllAppliances
+                      ? 'Show fewer appliances'
+                      : `See ${overflowGroups.reduce((n, [, list]) => n + list.length, 0)} more appliances`}
+                    <CaretDown
+                      size={12}
+                      weight="bold"
+                      className={`transition-transform ${showAllAppliances ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {showAllAppliances && (
+                      <motion.div
+                        key="overflow"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-4 space-y-4">
+                          {overflowGroups.map(([category, items]) => (
+                            <div key={category}>
+                              <p className="text-[10px] uppercase tracking-widest font-bold text-taqon-muted dark:text-white/45 mb-2">
+                                {category}
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {items.map((a) => {
+                                  const isOn = isAppliancePicked(a);
+                                  return (
+                                    <button
+                                      key={a.id || a.slug}
+                                      type="button"
+                                      onClick={() => toggleAppliance(a)}
+                                      className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all ${
+                                        isOn
+                                          ? 'border-taqon-orange bg-taqon-orange/10 text-taqon-orange'
+                                          : 'border-gray-200 dark:border-white/10 text-taqon-charcoal/80 dark:text-white/70 hover:border-taqon-orange/40 hover:text-taqon-orange'
+                                      }`}
+                                    >
+                                      {!isOn && <Plus size={10} weight="bold" />}
+                                      {a.name}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </Field>
 
             <Field label="Approximate monthly grid bill (optional)" hint="Helps us size the right system. USD per month.">
