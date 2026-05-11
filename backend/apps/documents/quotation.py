@@ -47,13 +47,12 @@ DEFAULT_BANK = [
 DEFAULT_CORRESPONDENT = 'Standard Chartered Bank, New York'
 
 DEFAULT_WARRANTIES = [
-    ('Sunsynk',     'HV Hybrid Inverters',      '5 Years'),
-    ('Growatt',     'Hybrid Inverters',         '5 Years'),
-    ('Pylontech',   'HV Lithium-Ion Batteries', '10 Years'),
-    ('Dyness',      'Lithium-Ion Batteries',    '10 Years'),
-    ('JA Solar',    'PV Panels',                '25 Years'),
-    ('Jinko Solar', 'PV Panels',                '25 Years'),
-    ('Taqon',       'Installation Workmanship', '1 Year'),
+    ('Sunsynk', 'Inverters',                '5 Years'),
+    ('Dyness',  'Batteries',                '5 Years'),
+    ('Must',    'Inverters',                '1 Year'),
+    ('Growatt', 'Inverters',                '1 Year'),
+    ('Solar Panels', 'PV Modules',          '25 Years'),
+    ('Taqon',   'Installation Workmanship', '1-3 Years'),
 ]
 
 
