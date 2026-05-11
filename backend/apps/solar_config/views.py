@@ -484,11 +484,40 @@ class InstantQuoteView(APIView):
         except Exception:
             pass  # Never fail the quote due to tracking
 
-        html_string = render_to_string('pdfs/instant_quote.html', context)
+        # ── Render the quote via ReportLab platypus (replaces the
+        # xhtml2pdf / WeasyPrint HTML path). Native flowable layout
+        # gives us predictable typography, fast renders, and brand-
+        # true colours straight from apps.documents.styles. ──
+        try:
+            from apps.documents.quotation import build_quotation_pdf
+            pdf_bytes = build_quotation_pdf(
+                package_name=context['package_name'],
+                ref_number=ref_number,
+                customer_name=customer_name,
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                customer_address=customer_address,
+                item_groups=item_groups,
+                material_total=context['material_total'],
+                labour_transport_total=context['labour_transport_total'],
+                grand_total=context['grand_total'],
+                inverter_kva=context['inverter_kva'],
+                battery_kwh=context['battery_kwh'],
+                panel_count=context['panel_count'],
+                tier_label=context['tier_label'],
+                system_size_kw=context['system_size_kw'],
+                usd_per_kw=context['usd_per_kw'],
+                usd_per_kwh=context['usd_per_kwh'],
+                distance_km=distance_km,
+            )
+            is_pdf = pdf_bytes[:4] == b'%PDF'
+        except Exception:
+            logger.exception('ReportLab quote build failed — falling back to HTML pipeline')
+            html_string = render_to_string('pdfs/instant_quote.html', context)
+            from apps.quotations.pdf import _render_pdf
+            pdf_bytes = _render_pdf(html_string)
+            is_pdf = pdf_bytes[:4] == b'%PDF'
 
-        from apps.quotations.pdf import _render_pdf
-        pdf_bytes = _render_pdf(html_string)
-        is_pdf = pdf_bytes[:4] == b'%PDF'
         content_type = 'application/pdf' if is_pdf else 'text/html'
         ext = 'pdf' if is_pdf else 'html'
         response = HttpResponse(pdf_bytes, content_type=content_type)
@@ -707,10 +736,28 @@ class BusinessProfileView(APIView):
             'testimonials': self.TESTIMONIALS,
         }
 
-        html_string = render_to_string('pdfs/business_profile.html', context)
-        from apps.quotations.pdf import _render_pdf
-        pdf_bytes = _render_pdf(html_string)
-        is_pdf = pdf_bytes[:4] == b'%PDF'
+        try:
+            from apps.documents.profile import build_profile_pdf
+            pdf_bytes = build_profile_pdf(
+                company=context['company'],
+                about_paragraph=context['about_paragraph'],
+                mission_paragraph=context['mission_paragraph'],
+                cta_paragraph=context['cta_paragraph'],
+                services=context['services'],
+                stats=context['stats'],
+                projects=context['projects'],
+                brands=context['brands'],
+                testimonials=context['testimonials'],
+                ref_number=ref_number,
+                generated_date=context['generated_date'],
+            )
+            is_pdf = pdf_bytes[:4] == b'%PDF'
+        except Exception:
+            logger.exception('ReportLab profile build failed — falling back to HTML pipeline')
+            html_string = render_to_string('pdfs/business_profile.html', context)
+            from apps.quotations.pdf import _render_pdf
+            pdf_bytes = _render_pdf(html_string)
+            is_pdf = pdf_bytes[:4] == b'%PDF'
         content_type = 'application/pdf' if is_pdf else 'text/html'
         ext = 'pdf' if is_pdf else 'html'
         response = HttpResponse(pdf_bytes, content_type=content_type)
@@ -771,11 +818,11 @@ class PackagesCatalogueView(APIView):
 
     def _cached_pdf(self):
         from django.core.cache import cache
-        return cache.get('packages_catalogue_pdf_v2')
+        return cache.get('packages_catalogue_pdf_v3')
 
     def _set_cached_pdf(self, pdf_bytes):
         from django.core.cache import cache
-        cache.set('packages_catalogue_pdf_v2', pdf_bytes, self._CACHE_TTL_SECONDS)
+        cache.set('packages_catalogue_pdf_v3', pdf_bytes, self._CACHE_TTL_SECONDS)
 
     def _build(self, request):
         from django.http import HttpResponse
@@ -903,10 +950,22 @@ class PackagesCatalogueView(APIView):
             },
         }
 
-        html_string = render_to_string('pdfs/packages_catalogue.html', context)
-        from apps.quotations.pdf import _render_pdf
-        pdf_bytes = _render_pdf(html_string)
-        is_pdf = pdf_bytes[:4] == b'%PDF'
+        try:
+            from apps.documents.catalogue import build_catalogue_pdf
+            pdf_bytes = build_catalogue_pdf(
+                families=families,
+                ref_number=ref_number,
+                generated_date=context['generated_date'],
+                family_count=len(families),
+                variant_count=total_variants,
+            )
+            is_pdf = pdf_bytes[:4] == b'%PDF'
+        except Exception:
+            logger.exception('ReportLab catalogue build failed — falling back to HTML pipeline')
+            html_string = render_to_string('pdfs/packages_catalogue.html', context)
+            from apps.quotations.pdf import _render_pdf
+            pdf_bytes = _render_pdf(html_string)
+            is_pdf = pdf_bytes[:4] == b'%PDF'
         content_type = 'application/pdf' if is_pdf else 'text/html'
         ext = 'pdf' if is_pdf else 'html'
 
