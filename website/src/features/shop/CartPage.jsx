@@ -122,7 +122,7 @@ export default function CartPage() {
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-taqon-dark/90 via-taqon-dark/70 to-taqon-dark/90" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-28 pb-8 lg:pt-36 lg:pb-10">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 pb-8 lg:pt-44 lg:pb-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

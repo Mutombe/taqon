@@ -86,7 +86,7 @@ export default function QuotationDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
       <div className="max-w-4xl mx-auto">
         <Link to="/account/quotations" className="inline-flex items-center gap-1 text-gray-500 dark:text-white/50 hover:text-taqon-charcoal dark:hover:text-white text-sm mb-6 transition-colors">
           <ArrowLeft size={16} /> Back to quotations

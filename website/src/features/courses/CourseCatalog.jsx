@@ -81,7 +81,7 @@ export default function CourseCatalog() {
         description="Learn solar energy skills with our professional courses — from beginner fundamentals to advanced installation techniques."
       />
 
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Hero */}
           <motion.div

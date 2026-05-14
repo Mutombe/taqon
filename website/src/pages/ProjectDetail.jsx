@@ -60,7 +60,7 @@ export default function ProjectDetail() {
           <div className="absolute inset-0 bg-gradient-to-t from-taqon-dark via-taqon-dark/70 to-taqon-dark/40" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pb-14 pt-32 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pb-14 pt-36 lg:pt-44 w-full">
           {/* Breadcrumb */}
           <motion.nav
             initial={{ opacity: 0, y: 10 }}

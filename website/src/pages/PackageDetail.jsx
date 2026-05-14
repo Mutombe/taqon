@@ -53,7 +53,7 @@ export default function PackageDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark">
-        <div className="bg-taqon-dark pt-24 pb-12">
+        <div className="bg-taqon-dark pt-36 lg:pt-44 pb-12">
           <div className="max-w-7xl mx-auto px-4 animate-pulse">
             <div className="h-4 bg-white/10 rounded w-24 mb-4" />
             <div className="h-10 bg-white/10 rounded-lg w-72 mb-3" />

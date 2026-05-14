@@ -314,7 +314,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
   return (
     <>
       {/* ── Hero Section ── */}
-      <section className="relative bg-taqon-dark pt-28 pb-16 lg:pt-36 lg:pb-20 overflow-hidden">
+      <section className="relative bg-taqon-dark pt-36 pb-16 lg:pt-44 lg:pb-20 overflow-hidden">
         <div className="absolute inset-0 dark-mesh" />
         {/* Gem-colored glow orb */}
         <div

@@ -53,7 +53,7 @@ export default function About() {
           <div className="absolute inset-0 bg-gradient-to-b from-taqon-dark/60 via-taqon-dark/80 to-taqon-dark" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-20 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 lg:pt-44 pb-20 w-full">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Text */}
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>

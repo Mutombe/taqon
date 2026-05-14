@@ -196,7 +196,7 @@ export default function Shop() {
       />
 
       {/* Hero */}
-      <section className="relative pt-24 pb-10 lg:pt-32 lg:pb-14 bg-taqon-dark overflow-hidden">
+      <section className="relative pt-36 pb-10 lg:pt-44 lg:pb-14 bg-taqon-dark overflow-hidden">
         <div className="absolute inset-0 dark-mesh" />
         <div className="absolute inset-0">
           <img

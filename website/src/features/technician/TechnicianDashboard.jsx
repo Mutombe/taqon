@@ -101,7 +101,7 @@ export default function TechnicianDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="space-y-3 mb-8">
             <SkeletonBox className="h-7 w-48 rounded-lg" />
@@ -135,7 +135,7 @@ export default function TechnicianDashboard() {
     <>
       <SEO title="Technician Dashboard" />
 
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <motion.div

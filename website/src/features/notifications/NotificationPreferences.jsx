@@ -85,7 +85,7 @@ export default function NotificationPreferences() {
     <>
       <SEO title="Notification Preferences" />
 
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-3 mb-2">

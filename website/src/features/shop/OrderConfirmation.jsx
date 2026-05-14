@@ -56,7 +56,7 @@ export default function OrderConfirmation() {
   if (loading) return <DetailPageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}

@@ -247,7 +247,7 @@ export function AccountGridSkeleton({ count = 10 }) {
 // Detail page skeleton (order detail, quotation detail, etc.)
 export function DetailPageSkeleton() {
   return (
-    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
       <div className="max-w-4xl mx-auto">
         <SkeletonBox className="h-4 w-24 rounded-md mb-6" />
         <SkeletonBox className="h-8 w-64 rounded-lg mb-2" />
@@ -300,7 +300,7 @@ export function DetailPageSkeleton() {
 // Generic page-level skeleton with heading area
 export function PageSkeleton({ lines = 3, cards = 0, cardColumns = 3 }) {
   return (
-    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="space-y-4 mb-8">
           <SkeletonBox className="h-8 w-48 rounded-lg" />

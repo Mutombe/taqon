@@ -60,7 +60,7 @@ export default function FAQPage() {
         description="Find answers to common questions about solar installations, pricing, warranties, and more."
       />
 
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <motion.div

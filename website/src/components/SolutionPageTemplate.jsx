@@ -81,7 +81,7 @@ export default function SolutionPageTemplate({ solution, allSolutions }) {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-taqon-dark/80 via-taqon-dark/70 to-taqon-dark" />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-20 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 lg:pt-44 pb-20 w-full">
           {/* Breadcrumb */}
           <motion.nav
             initial={{ opacity: 0, y: 10 }}

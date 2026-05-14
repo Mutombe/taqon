@@ -156,7 +156,7 @@ export default function Certifications() {
           <div className="absolute top-20 right-20 w-96 h-96 bg-taqon-orange/10 rounded-full blur-3xl" />
           <div className="absolute bottom-10 left-10 w-72 h-72 bg-taqon-gold/5 rounded-full blur-3xl" />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-20">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 lg:pt-44 pb-20">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">
               Trust & Credentials

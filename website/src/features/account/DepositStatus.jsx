@@ -154,7 +154,7 @@ export default function DepositStatus() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4 flex items-center justify-center">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4 flex items-center justify-center">
         <SpinnerGap size={28} className="text-taqon-orange animate-spin" />
       </div>
     );
@@ -162,7 +162,7 @@ export default function DepositStatus() {
 
   if (error || !deposit) {
     return (
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
         <div className="max-w-xl mx-auto text-center">
           <WarningCircle size={28} className="text-red-500 mx-auto mb-3" />
           <h1 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white mb-2">Deposit not found</h1>
@@ -182,7 +182,7 @@ export default function DepositStatus() {
   return (
     <>
       <SEO title="Deposit Status" />
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-28 pb-16 px-4">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
         <div className="max-w-xl mx-auto">
           <Link to="/account" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-taqon-charcoal dark:hover:text-white mb-5 transition-colors">
             <ArrowLeft size={14} /> Back to account

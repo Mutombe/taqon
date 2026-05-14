@@ -320,7 +320,7 @@ export default function ProductDetail() {
             loading="eager"
           />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-28 pb-6 lg:pt-36 lg:pb-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 pb-6 lg:pt-44 lg:pb-8">
           {loading ? (
             <div className="h-4 bg-white/10 rounded w-64 animate-pulse" />
           ) : product ? (

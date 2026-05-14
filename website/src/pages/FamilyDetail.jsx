@@ -14,7 +14,7 @@ export default function FamilyDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark">
-        <div className="bg-taqon-dark pt-28 pb-12">
+        <div className="bg-taqon-dark pt-36 lg:pt-44 pb-12">
           <div className="max-w-7xl mx-auto px-4 animate-pulse">
             <div className="h-4 bg-white/10 rounded w-24 mb-4" />
             <div className="h-5 bg-white/10 rounded-full w-28 mb-4" />
@@ -43,7 +43,7 @@ export default function FamilyDetail() {
       />
 
       {/* Hero with gem-accented header */}
-      <section className="relative bg-taqon-dark pt-28 pb-14 overflow-hidden">
+      <section className="relative bg-taqon-dark pt-36 lg:pt-44 pb-14 overflow-hidden">
         <div className="absolute inset-0 dark-mesh" />
 
         {/* Gem-colored ambient glow */}

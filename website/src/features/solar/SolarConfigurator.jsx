@@ -441,7 +441,7 @@ export default function SolarConfigurator() {
             loading="eager"
           />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-12">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 lg:pt-44 pb-12">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">
               System Builder

@@ -126,7 +126,7 @@ export default function AreaLanding() {
           className="absolute bottom-[20%] left-[8%] w-4 h-4 bg-taqon-orange/30 rounded-full hidden lg:block"
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-16 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 lg:pt-44 pb-16 w-full">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 bg-taqon-orange/10 border border-taqon-orange/20 rounded-full px-4 py-1.5 mb-6">
               <MapPin size={14} className="text-taqon-orange" />

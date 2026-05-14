@@ -39,7 +39,7 @@ export default function Projects() {
           <div className="absolute inset-0 bg-gradient-to-b from-taqon-dark/60 via-taqon-dark/80 to-taqon-dark" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-16 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 lg:pt-44 pb-16 w-full">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

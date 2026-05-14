@@ -2086,7 +2086,7 @@ export default function SolarAdvisor() {
       />
 
       {/* ─── Hero ─── */}
-      <section className="relative bg-taqon-dark pt-24 pb-6 lg:pt-32 lg:pb-10 overflow-hidden">
+      <section className="relative bg-taqon-dark pt-36 pb-6 lg:pt-44 lg:pb-10 overflow-hidden">
         <div className="absolute inset-0 dark-mesh" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>

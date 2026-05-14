@@ -6,7 +6,7 @@ import { SkeletonBox } from './Skeletons';
  */
 export default function PageLoader() {
   return (
-    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Heading area */}
         <div className="space-y-3 mb-10">

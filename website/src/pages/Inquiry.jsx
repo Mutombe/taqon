@@ -186,7 +186,7 @@ export default function Inquiry() {
           title="Thanks — we'll be in touch"
           description="Your Taqon Electrico inquiry has been received."
         />
-        <section className="min-h-[80vh] bg-taqon-cream dark:bg-taqon-dark flex items-center justify-center px-4 pt-24 pb-16">
+        <section className="min-h-[80vh] bg-taqon-cream dark:bg-taqon-dark flex items-center justify-center px-4 pt-36 lg:pt-44 pb-16">
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -238,7 +238,7 @@ export default function Inquiry() {
       {/* Hero */}
       <section className="relative bg-taqon-dark overflow-hidden">
         <div className="absolute inset-0 dark-mesh" />
-        <div className="relative z-10 max-w-4xl mx-auto px-4 pt-32 pb-12 lg:pt-40 lg:pb-14">
+        <div className="relative z-10 max-w-4xl mx-auto px-4 pt-36 pb-12 lg:pt-44 lg:pb-14">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.2em]">Free recommendation</span>
             <h1 className="mt-3 text-3xl lg:text-5xl font-bold font-syne text-white leading-tight">

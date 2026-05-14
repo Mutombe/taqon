@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import FeatureGate from './components/FeatureGate';
 import { ScrollProgress, BackToTop } from './components/ScrollElements';
 import FloatingCart from './components/FloatingCart';
+import ShareButton from './components/ShareButton';
 import { PrivacyModal, CookieModal, CookieConsent } from './components/Modals';
 import AuthModal from './features/auth/components/AuthModal';
 import PageLoader from './components/PageLoader';
@@ -357,6 +358,7 @@ function AppContent() {
       )}
 
       {!isAdminRoute && !isSolarAdvisor && <BackToTop />}
+      {!isAdminRoute && !isSolarAdvisor && <ShareButton />}
       {!isAdminRoute && !isSolarAdvisor && <FloatingCart />}
       <CookieConsent onOpenCookies={() => setCookiesOpen(true)} />
       <AuthModal />

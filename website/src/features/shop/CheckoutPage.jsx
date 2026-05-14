@@ -285,7 +285,7 @@ export default function CheckoutPage() {
       className="min-h-screen bg-taqon-cream dark:bg-taqon-dark"
     >
       {/* Header */}
-      <section className="pt-32 pb-6 lg:pt-40 lg:pb-8">
+      <section className="pt-36 pb-6 lg:pt-44 lg:pb-8">
         <div className="max-w-4xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

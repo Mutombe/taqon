@@ -95,7 +95,7 @@ export default function Packages() {
         <div className="absolute inset-0">
           <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=1920&q=80" alt="" className="w-full h-full object-cover opacity-30" loading="eager" />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-16">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 lg:pt-44 pb-16">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">Solar Packages</span>
             <h1 className="mt-3 text-4xl lg:text-6xl font-bold font-syne text-white">

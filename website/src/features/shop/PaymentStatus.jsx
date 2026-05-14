@@ -80,7 +80,7 @@ export default function PaymentStatus() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16">
         <div className="max-w-lg mx-auto px-4 animate-pulse">
           <div className="rounded-2xl bg-white dark:bg-taqon-charcoal border border-gray-200 dark:border-white/10 p-8">
             <div className="w-16 h-16 bg-gray-200 dark:bg-white/10 rounded-full mx-auto mb-6" />
@@ -100,7 +100,7 @@ export default function PaymentStatus() {
 
   if (!payment) {
     return (
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4 text-center">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4 text-center">
         <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
         <h1 className="text-2xl font-bold font-syne text-taqon-charcoal dark:text-white mb-2">Payment Not Found</h1>
         <Link to="/account/orders" className="text-taqon-orange hover:underline text-sm">
@@ -115,7 +115,7 @@ export default function PaymentStatus() {
   const isTerminal = ['paid', 'failed', 'cancelled', 'refunded'].includes(payment.status);
 
   return (
-    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+    <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}

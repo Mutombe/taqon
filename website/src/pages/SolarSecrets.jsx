@@ -22,7 +22,7 @@ export default function SolarSecrets() {
         <div className="absolute inset-0">
           <img src="/kadoma-24kva-1.jpg" alt="" className="w-full h-full object-cover opacity-30" loading="eager" />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-32 pb-16">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-36 lg:pt-44 pb-16">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center gap-2 mb-4">
               <Lightbulb size={20} className="text-taqon-orange" />

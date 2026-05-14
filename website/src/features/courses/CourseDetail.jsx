@@ -81,7 +81,7 @@ export default function CourseDetail() {
     <>
       <SEO title={course.title} description={course.short_description || course.subtitle} />
 
-      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-32 pb-16 px-4">
+      <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark pt-36 lg:pt-44 pb-16 px-4">
         <div className="max-w-5xl mx-auto">
           {/* Back */}
           <Link to="/courses" className="inline-flex items-center gap-2 text-gray-400 hover:text-taqon-charcoal dark:text-white text-sm mb-6 transition-colors">

@@ -186,20 +186,6 @@ export default function Footer({ onOpenPrivacy, onOpenCookies }) {
           </div>
         </div>
       </div>
-      <div className="relative border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 py-4 text-center">
-          <p className="text-white/20 text-xs">
-            Built by{' '}
-            <a
-              href="https://bitstudio.co.zw"
-              onClick={(e) => confirmExternalNavigation('https://bitstudio.co.zw', e)}
-              className="text-white/30 hover:text-taqon-orange transition-colors cursor-pointer"
-            >
-              Bit Studio
-            </a>
-          </p>
-        </div>
-      </div>
     </footer>
   );
 }

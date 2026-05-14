@@ -10,7 +10,8 @@ import useCartStore from '../stores/cartStore';
  * Stack (bottom up, mobile):
  *   Tidio chat      ~ bottom:20px
  *   WhatsApp        bottom:100px
- *   Floating Cart   bottom:180px
+ *   Share           bottom:170px
+ *   Floating Cart   bottom:240px
  */
 export default function FloatingCart() {
   const { pathname } = useLocation();
@@ -29,7 +30,7 @@ export default function FloatingCart() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 10 }}
           transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-          className="fixed z-[60] bottom-[180px] right-[20px] md:bottom-[210px] md:right-[24px]"
+          className="fixed z-[60] bottom-[240px] right-[20px] md:bottom-[270px] md:right-[24px]"
         >
           <Link
             to="/cart"

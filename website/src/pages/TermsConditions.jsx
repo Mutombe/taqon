@@ -6,7 +6,7 @@ export default function TermsConditions() {
     <>
       <SEO title="Terms & Conditions" description="Terms and conditions for using Taqon Electrico services." />
 
-      <section className="relative bg-taqon-dark pt-28 pb-12">
+      <section className="relative bg-taqon-dark pt-36 lg:pt-44 pb-12">
         <div className="absolute inset-0 dark-mesh" />
         <div className="relative max-w-4xl mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
