@@ -818,11 +818,11 @@ class PackagesCatalogueView(APIView):
 
     def _cached_pdf(self):
         from django.core.cache import cache
-        return cache.get('packages_catalogue_pdf_v3')
+        return cache.get('packages_catalogue_pdf_v4')
 
     def _set_cached_pdf(self, pdf_bytes):
         from django.core.cache import cache
-        cache.set('packages_catalogue_pdf_v3', pdf_bytes, self._CACHE_TTL_SECONDS)
+        cache.set('packages_catalogue_pdf_v4', pdf_bytes, self._CACHE_TTL_SECONDS)
 
     def _build(self, request):
         from django.http import HttpResponse
@@ -906,6 +906,15 @@ class PackagesCatalogueView(APIView):
                     except Exception:
                         pass
 
+                    # Format price as 'USD 3,115' — the catalogue is a
+                    # marketing doc so we round to the dollar.
+                    price_str = ''
+                    try:
+                        if p.price is not None:
+                            price_str = f'USD {int(round(float(p.price))):,}'
+                    except Exception:
+                        pass
+
                     variants.append({
                         'name': p.name,
                         'inverter_kva': str(p.inverter_kva).rstrip('0').rstrip('.') if p.inverter_kva else '',
@@ -916,6 +925,7 @@ class PackagesCatalogueView(APIView):
                         'panel_count': p.panel_count or '',
                         'phase': p.phase or '',
                         'tier': p.tier or '',
+                        'price': price_str,
                     })
 
                 families.append({

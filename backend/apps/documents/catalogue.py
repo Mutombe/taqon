@@ -81,6 +81,10 @@ _VARIANT_VALUE = ParagraphStyle(
     'VariantValue', fontName='Helvetica', fontSize=8.5,
     textColor=INK, leading=11,
 )
+_VARIANT_PRICE = ParagraphStyle(
+    'VariantPrice', fontName='Helvetica-Bold', fontSize=14,
+    textColor=ORANGE, leading=17,
+)
 _BIG_NUMBER = ParagraphStyle(
     'BigNumber', fontName='Helvetica-Bold', fontSize=34,
     textColor=ORANGE, leading=36, alignment=TA_LEFT,
@@ -411,6 +415,7 @@ def _variant_card(variant):
     battery_label = variant.get('battery_label') or '—'
     panel_label = variant.get('panel_label') or '—'
     phase = variant.get('phase') or ''
+    price = (variant.get('price') or '').strip()
 
     inv_chunk = inverter_label
     if inverter_kva and inverter_kva not in inverter_label:
@@ -421,6 +426,9 @@ def _variant_card(variant):
         header.append(Paragraph(f'TIER · {tier.upper()}', _VARIANT_TIER))
         header.append(Spacer(1, 2))
     header.append(Paragraph(name, _VARIANT_NAME))
+    if price:
+        header.append(Spacer(1, 4))
+        header.append(Paragraph(price, _VARIANT_PRICE))
 
     def kv(label, value):
         return [
