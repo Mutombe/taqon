@@ -187,11 +187,11 @@ export default function Home() {
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
-                to="/projects"
+                to="/packages"
                 className="group inline-flex items-center justify-center gap-2 bg-white/10 text-white px-8 py-4 rounded-full text-base font-semibold hover:bg-white/15 transition-all backdrop-blur-sm border border-white/10"
               >
                 <Play size={18} />
-                View Our Projects
+                View Our Packages
               </Link>
             </motion.div>
 

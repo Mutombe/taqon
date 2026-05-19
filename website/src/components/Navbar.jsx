@@ -738,12 +738,15 @@ export default function Navbar() {
                 Get a Quote
               </Link>
 
-              {/* Mobile toggle */}
+              {/* Mobile toggle — always-on orange pill so it stays visible
+                  on every page, regardless of scroll state, nav background,
+                  or whatever the device's icon-rendering quirks are. */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className={`lg:hidden p-2.5 rounded-full transition-all ${actionBtnClass}`}
+                aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full bg-taqon-orange text-white shadow-md shadow-taqon-orange/30 hover:brightness-110 active:scale-95 transition-all"
               >
-                {mobileOpen ? <X size={22} /> : <List size={22} />}
+                {mobileOpen ? <X size={20} weight="bold" /> : <List size={20} weight="bold" />}
               </button>
             </div>
           </div>
