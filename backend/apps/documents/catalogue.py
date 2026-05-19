@@ -304,6 +304,12 @@ def _sizing_guide():
         ),
         Spacer(1, 14),
         grid,
+        Spacer(1, 22),
+        Paragraph('STANDARD INCLUSIONS', STYLES['Eyebrow']),
+        AccentBar(),
+        Paragraph('What every install ships with.', _FAMILY_TITLE),
+        Spacer(1, 10),
+        _inclusions_strip(),
     ]
     return items
 
@@ -400,8 +406,9 @@ def _family_spread(family, *, index):
         items.append(_variant_grid(variants))
         items.append(Spacer(1, 10))
 
-    # Standard inclusions — always relevant, fills bottom of every family page
-    items.append(_inclusions_strip())
+    # Standard inclusions appear once on the sizing-guide page rather than
+    # repeated on every family spread — kept the layout dense without
+    # orphaning the band when a family has 3+ variants.
 
     items.append(PageBreak())
     return items

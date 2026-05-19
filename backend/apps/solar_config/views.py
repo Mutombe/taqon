@@ -818,11 +818,11 @@ class PackagesCatalogueView(APIView):
 
     def _cached_pdf(self):
         from django.core.cache import cache
-        return cache.get('packages_catalogue_pdf_v4')
+        return cache.get('packages_catalogue_pdf_v5')
 
     def _set_cached_pdf(self, pdf_bytes):
         from django.core.cache import cache
-        cache.set('packages_catalogue_pdf_v4', pdf_bytes, self._CACHE_TTL_SECONDS)
+        cache.set('packages_catalogue_pdf_v5', pdf_bytes, self._CACHE_TTL_SECONDS)
 
     def _build(self, request):
         from django.http import HttpResponse
