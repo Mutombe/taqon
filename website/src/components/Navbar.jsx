@@ -616,18 +616,18 @@ export default function Navbar() {
 
             {/* ── Right Actions ───────────────────────────────────────────── */}
             <div className="flex items-center gap-1">
-              {/* Search */}
+              {/* Search — desktop only; mobile users search from the drawer */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className={`p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
+                className={`hidden lg:inline-flex p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
               >
                 <MagnifyingGlass size={18} />
               </button>
 
-              {/* Saves */}
+              {/* Saves — desktop only; in the drawer on mobile */}
               <Link
                 to="/saves"
-                className={`relative p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
+                className={`relative hidden lg:inline-flex p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
                 aria-label="Saved items"
               >
                 <Heart size={18} weight="duotone" />
@@ -652,17 +652,19 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Theme toggle */}
+              {/* Theme toggle — desktop only; in the drawer on mobile */}
               <button
                 onClick={toggleTheme}
-                className={`p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
+                className={`hidden lg:inline-flex p-2.5 rounded-full transition-all duration-300 ${actionBtnClass}`}
                 aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               >
                 {theme === 'dark' ? <Sun size={18} weight="duotone" /> : <Moon size={18} weight="duotone" />}
               </button>
 
-              {/* Notification bell */}
-              <NotificationBell />
+              {/* Notification bell — desktop only */}
+              <div className="hidden lg:block">
+                <NotificationBell />
+              </div>
 
               {/* Auth: Sign In or User Menu */}
               {isAuthenticated ? (
@@ -738,15 +740,15 @@ export default function Navbar() {
                 Get a Quote
               </Link>
 
-              {/* Mobile toggle — always-on orange pill so it stays visible
-                  on every page, regardless of scroll state, nav background,
-                  or whatever the device's icon-rendering quirks are. */}
+              {/* Mobile toggle — secondary icons are hidden on mobile (they
+                  live in the drawer) so this button always has room and is
+                  never clipped at the edge of narrow screens. */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full bg-taqon-orange text-white shadow-md shadow-taqon-orange/30 hover:brightness-110 active:scale-95 transition-all"
+                className={`lg:hidden p-2.5 rounded-full transition-all ${actionBtnClass}`}
               >
-                {mobileOpen ? <X size={20} weight="bold" /> : <List size={20} weight="bold" />}
+                {mobileOpen ? <X size={24} weight="bold" /> : <List size={24} weight="bold" />}
               </button>
             </div>
           </div>
@@ -1000,6 +1002,35 @@ export default function Navbar() {
 
               {/* Mobile bottom section */}
               <div className="mt-auto pt-8 border-t border-white/10 space-y-3">
+                {/* Quick utilities — search / saved / theme are hidden from
+                    the top nav on mobile so the menu button always fits;
+                    surfaced here instead. */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setMobileOpen(false); setSearchOpen(true); }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 transition-all text-sm font-medium"
+                  >
+                    <MagnifyingGlass size={18} /> Search
+                  </button>
+                  <Link
+                    to="/saves"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 transition-all text-sm font-medium"
+                  >
+                    <Heart size={18} weight="duotone" /> Saved
+                    {savesCount > 0 && (
+                      <span className="min-w-[18px] h-[18px] bg-taqon-orange text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                        {savesCount > 99 ? '99+' : savesCount}
+                      </span>
+                    )}
+                  </Link>
+                  <button
+                    onClick={toggleTheme}
+                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                    className="flex items-center justify-center py-3 px-4 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 transition-all"
+                  >
+                    {theme === 'dark' ? <Sun size={18} weight="duotone" /> : <Moon size={18} weight="duotone" />}
+                  </button>
+                </div>
                 {isAuthenticated ? (
                   <>
                     <div className="flex items-center gap-3 px-4 py-2 text-white/70">
