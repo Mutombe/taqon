@@ -1,0 +1,611 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ doc_title|default:"Taqon Electrico Product Catalog" }}</title>
+<style>
+  /* ───────────────────────── PAGE GEOMETRY ───────────────────────── */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif;
+    color: #0D0D0D;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ───────────────────────── BRAND TOKENS ───────────────────────── */
+  :root {
+    --orange: #F26522;
+    --orange-deep: #D04F12;
+    --orange-soft: #FFE8D9;
+    --ink: #0D0D0D;
+    --charcoal: #1A1A1A;
+    --cream: #FFFBF5;
+    --muted: #6B7280;
+    --hairline: #EAE2D5;
+  }
+
+  /* A4 inner working area: 210 x 297 mm */
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
+    page-break-after: always;
+    background: #ffffff;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* ╔══════════════════════════════════════════════════════════════╗
+     ║                       COVER PAGE                              ║
+     ╚══════════════════════════════════════════════════════════════╝ */
+  .cover { background: #ffffff; }
+  .cover .logo {
+    position: absolute;
+    top: 14mm;
+    left: 14mm;
+    height: 13mm;
+    z-index: 10;
+  }
+  .cover .hero-house {
+    position: absolute;
+    top: 28mm;
+    left: 0;
+    width: 165mm;
+    height: 165mm;
+    object-fit: cover;
+    object-position: center;
+    border-bottom-right-radius: 4mm;
+  }
+  .cover .collage {
+    position: absolute;
+    top: 36mm;
+    right: 8mm;
+    width: 58mm;
+    height: 174mm;
+    background: var(--orange);
+    border-radius: 6mm;
+    padding: 5mm 4mm;
+    z-index: 5;
+    box-sizing: border-box;
+  }
+  .cover .collage img {
+    display: block;
+    width: 100%;
+    height: 52mm;
+    object-fit: cover;
+    border-radius: 4mm;
+    margin-bottom: 3.5mm;
+  }
+  .cover .collage img:last-child { margin-bottom: 0; }
+  .cover .brand-pill {
+    position: absolute;
+    left: 14mm;
+    top: 218mm;
+    background: var(--orange);
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 9.5pt;
+    letter-spacing: 0.04em;
+    padding: 3mm 7mm;
+    border-radius: 50px;
+  }
+  .cover .title {
+    position: absolute;
+    left: 12mm;
+    top: 228mm;
+    font-family: 'Syne', 'Helvetica Neue', sans-serif;
+    font-weight: 300;
+    font-size: 52pt;
+    line-height: 0.95;
+    color: #1A1A1A;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .cover .title .script {
+    display: block;
+    font-family: 'Dancing Script', 'Brush Script MT', cursive;
+    font-style: italic;
+    font-weight: 700;
+    color: var(--orange);
+    font-size: 52pt;
+    margin-top: -3mm;
+    margin-left: 14mm;
+  }
+  .cover .disclaimer {
+    position: absolute;
+    bottom: 8mm;
+    left: 14mm;
+    right: 14mm;
+    font-size: 6pt;
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  /* ╔══════════════════════════════════════════════════════════════╗
+     ║                      CONTENT PAGE                             ║
+     ╚══════════════════════════════════════════════════════════════╝ */
+  .content {
+    background-color: #ffffff;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* Each content page hosts two package blocks: top + bottom */
+  .pack {
+    position: absolute;
+    left: 0;
+    width: 210mm;
+    height: 142mm;
+    box-sizing: border-box;
+  }
+  .pack.top    { top: 6mm; }
+  .pack.bottom { top: 152mm; }
+
+  /* Photo composite — panels behind, inverter front-left, battery front-right */
+  .shot {
+    position: absolute;
+    width: 92mm;
+    height: 110mm;
+  }
+  .pack.top .shot      { top: 6mm;  left: 6mm;  }
+  .pack.bottom .shot   { top: 6mm;  right: 6mm; }
+  .shot .panels {
+    position: absolute;
+    top: 0;
+    left: 20mm;
+    width: 60mm;
+    height: 70mm;
+    object-fit: contain;
+  }
+  .shot .inverter {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 48mm;
+    height: 70mm;
+    object-fit: contain;
+    filter: drop-shadow(0 1mm 2mm rgba(0,0,0,0.08));
+  }
+  .shot .battery {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 42mm;
+    height: 60mm;
+    object-fit: contain;
+    filter: drop-shadow(0 1mm 2mm rgba(0,0,0,0.08));
+  }
+
+  /* Dark name block — black rectangle. The orange price-flag overlaps
+     the inner 18mm of this block (flag at left/right:52mm, block 70mm
+     wide); to keep text from sliding *under* the flag we give each side
+     an extra padding-toward-the-orange of 19mm. */
+  .name-block {
+    position: absolute;
+    width: 70mm;
+    height: 48mm;
+    background: #0D0D0D;
+    color: #fff;
+    box-sizing: border-box;
+  }
+  .pack.top    .name-block { left: 0;  bottom: 18mm; text-align: left;  padding: 8mm 19mm 8mm 9mm; }
+  .pack.bottom .name-block { right: 0; bottom: 18mm; text-align: right; padding: 8mm 9mm 8mm 19mm; }
+  .name-block .home {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 10pt;
+    margin: 0 0 2.5mm 0;
+  }
+  .name-block .name {
+    font-family: 'Syne', 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 11pt;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 4mm 0;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .name-block .phase {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: 9pt;
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  /* Orange price flag — protrudes from the name block */
+  .price-flag {
+    position: absolute;
+    width: 46mm;
+    height: 48mm;
+    background: var(--orange);
+    color: #fff;
+    padding: 9mm 6mm;
+    box-sizing: border-box;
+    text-align: center;
+  }
+  .pack.top    .price-flag { left: 52mm;  bottom: 14mm; }
+  .pack.bottom .price-flag { right: 52mm; bottom: 14mm; }
+  .price-flag .starts {
+    font-family: 'Outfit', sans-serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 9pt;
+    opacity: 0.95;
+    margin: 0 0 3mm 0;
+  }
+  .price-flag .amount {
+    font-family: 'Syne', 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 22pt;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  /* Thin orange underline under the flag */
+  .price-flag::after {
+    content: '';
+    position: absolute;
+    left: 7mm;
+    right: 7mm;
+    bottom: -2mm;
+    height: 0.6mm;
+    background: var(--orange);
+  }
+
+  /* Specs panel — Components + Includes */
+  .specs {
+    position: absolute;
+    width: 88mm;
+    box-sizing: border-box;
+  }
+  .pack.top    .specs { top: 8mm;  right: 8mm; }
+  .pack.bottom .specs { top: 8mm;  left: 8mm; }
+
+  .specs h3 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 13pt;
+    color: var(--orange);
+    margin: 0 0 4mm 0;
+    letter-spacing: 0.01em;
+  }
+  .specs .components { margin-bottom: 7mm; }
+  .specs ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .specs .components li {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 9pt;
+    color: var(--ink);
+    padding-left: 6mm;
+    position: relative;
+    margin-bottom: 2.2mm;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .specs .components li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6mm;
+    width: 4mm;
+    height: 4mm;
+    background: var(--orange);
+    border-radius: 50%;
+  }
+  .specs .components li::after {
+    content: '';
+    position: absolute;
+    left: 1.1mm;
+    top: 1.7mm;
+    width: 1.8mm;
+    height: 0.9mm;
+    border-left: 0.5mm solid #fff;
+    border-bottom: 0.5mm solid #fff;
+    transform: rotate(-45deg);
+  }
+  .specs .includes li {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    font-size: 9pt;
+    color: var(--ink);
+    padding-left: 5mm;
+    position: relative;
+    margin-bottom: 1.6mm;
+  }
+  .specs .includes li::before {
+    content: '';
+    position: absolute;
+    left: 0.5mm;
+    top: 1.8mm;
+    width: 1.6mm;
+    height: 1.6mm;
+    background: var(--ink);
+    border-radius: 50%;
+  }
+
+  /* Page separator hairline between top and bottom packs */
+  .pack.top::after {
+    content: '';
+    position: absolute;
+    left: 14mm;
+    right: 14mm;
+    bottom: 0;
+    height: 0.3mm;
+    background: var(--hairline);
+  }
+
+  /* ╔══════════════════════════════════════════════════════════════╗
+     ║                       CLOSING PAGE                            ║
+     ╚══════════════════════════════════════════════════════════════╝ */
+  .closing { background: #fff; }
+  .closing .brand-pill {
+    position: absolute;
+    top: 22mm;
+    right: 22mm;
+    background: #0D0D0D;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 9.5pt;
+    letter-spacing: 0.04em;
+    padding: 3mm 7mm;
+    border-radius: 50px;
+  }
+  .closing .title {
+    position: absolute;
+    top: 40mm;
+    left: 22mm;
+    right: 22mm;
+    font-family: 'Syne', sans-serif;
+    font-weight: 300;
+    font-size: 38pt;
+    line-height: 1.0;
+    color: #1A1A1A;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .closing .title .script {
+    font-family: 'Dancing Script', cursive;
+    font-style: italic;
+    font-weight: 700;
+    color: var(--orange);
+    font-size: 44pt;
+    margin-left: 4mm;
+  }
+  .closing .contact {
+    position: absolute;
+    top: 90mm;
+    left: 22mm;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .closing .contact li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4.5mm;
+    font-family: 'Outfit', sans-serif;
+    font-size: 11pt;
+    color: var(--ink);
+  }
+  .closing .contact .ico {
+    width: 8mm;
+    height: 8mm;
+    border-radius: 50%;
+    background: var(--orange);
+    margin-right: 5mm;
+    flex-shrink: 0;
+    position: relative;
+  }
+  /* Simple geometric glyphs for each contact icon — no emoji deps */
+  .closing .contact .ico-phone::before {
+    content: '';
+    position: absolute;
+    top: 2mm; left: 2mm; width: 4mm; height: 4mm;
+    border: 1mm solid #fff;
+    border-radius: 50%;
+    background: transparent;
+  }
+  .closing .contact .ico-web::before {
+    content: '';
+    position: absolute;
+    top: 2mm; left: 2mm; width: 4mm; height: 4mm;
+    border: 0.6mm solid #fff;
+    border-radius: 50%;
+  }
+  .closing .contact .ico-web::after {
+    content: '';
+    position: absolute;
+    top: 2mm; left: 4mm; width: 0; height: 4mm;
+    border-left: 0.6mm solid #fff;
+  }
+  .closing .contact .ico-mail::before {
+    content: '';
+    position: absolute;
+    top: 2.5mm; left: 1.5mm; width: 5mm; height: 3mm;
+    border: 0.6mm solid #fff;
+  }
+  .closing .contact .ico-pin::before {
+    content: '';
+    position: absolute;
+    top: 1.8mm; left: 2.5mm; width: 3mm; height: 3mm;
+    border: 0.8mm solid #fff;
+    border-radius: 50%;
+  }
+  .closing .contact .ico-pin::after {
+    content: '';
+    position: absolute;
+    bottom: 1.4mm; left: 3.5mm; width: 1mm; height: 2mm;
+    background: #fff;
+    border-radius: 0.3mm;
+  }
+  .closing .collage-box {
+    position: absolute;
+    top: 88mm;
+    right: 18mm;
+    width: 70mm;
+    height: 72mm;
+    background: var(--orange);
+    border-radius: 6mm;
+    padding: 5mm;
+    box-sizing: border-box;
+  }
+  .closing .collage-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4mm;
+  }
+  .closing .hero-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 210mm;
+    height: 110mm;
+    object-fit: cover;
+    object-position: center bottom;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ COVER ══════════════════════════ -->
+<section class="page cover">
+  {% if images.logo %}<img class="logo" src="{{ images.logo }}" alt=""/>{% endif %}
+  {% if images.hero_house %}<img class="hero-house" src="{{ images.hero_house }}" alt=""/>{% endif %}
+  <div class="collage">
+    {% if images.collage_a %}<img src="{{ images.collage_a }}" alt=""/>{% endif %}
+    {% if images.collage_b %}<img src="{{ images.collage_b }}" alt=""/>{% endif %}
+    {% if images.collage_c %}<img src="{{ images.collage_c }}" alt=""/>{% endif %}
+  </div>
+  <div class="brand-pill">TAQON ELECTRICO</div>
+  <h1 class="title">Product<span class="script">Catalog</span></h1>
+  <p class="disclaimer">*Products and specifications are subject to change without notice. Images are representative only.<br/>
+  *Prices, specifications, and availability of products are subject to change without notice.</p>
+</section>
+
+<!-- ════════════════════════ CONTENT PAGES ════════════════════════ -->
+{% for pair in variant_pairs %}
+<section class="page content" style="background-image: url('{{ images.bg_blocks }}');">
+  {% with top=pair.0 %}
+  <div class="pack top">
+    <div class="shot">
+      {% if top.panels_image %}<img class="panels"   src="{{ top.panels_image }}" alt=""/>{% endif %}
+      {% if top.inverter_image %}<img class="inverter" src="{{ top.inverter_image }}" alt=""/>{% endif %}
+      {% if top.battery_image %}<img class="battery"  src="{{ top.battery_image }}" alt=""/>{% endif %}
+    </div>
+    <div class="name-block">
+      <p class="home">Home</p>
+      <h2 class="name">{{ top.display_name|safe }}</h2>
+      <p class="phase">{{ top.phase_text }}</p>
+    </div>
+    <div class="price-flag">
+      <p class="starts">Starts From</p>
+      <p class="amount">{{ top.price }}</p>
+    </div>
+    <div class="specs">
+      <div class="components">
+        <h3>Components</h3>
+        <ul>
+          <li>INVERTER: {{ top.inverter_spec }}</li>
+          <li>BATTERY : {{ top.battery_spec }}</li>
+          <li>PANELS : {{ top.panel_spec }}</li>
+          <li>PHASE: {{ top.phase_short }}</li>
+        </ul>
+      </div>
+      <div class="includes">
+        <h3>Includes</h3>
+        <ul>
+          <li>Hybrid Mppt Inverter</li>
+          <li>Lithium-Ion Battery Bank</li>
+          <li>Mono Perc Pv Panels</li>
+          <li>Galvanised Mounting</li>
+          <li>Tinned Copper Cabling</li>
+          <li>Taqon-Certified Installers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endwith %}
+
+  {% if pair.1 %}
+  {% with bot=pair.1 %}
+  <div class="pack bottom">
+    <div class="shot">
+      {% if bot.panels_image %}<img class="panels"   src="{{ bot.panels_image }}" alt=""/>{% endif %}
+      {% if bot.inverter_image %}<img class="inverter" src="{{ bot.inverter_image }}" alt=""/>{% endif %}
+      {% if bot.battery_image %}<img class="battery"  src="{{ bot.battery_image }}" alt=""/>{% endif %}
+    </div>
+    <div class="name-block">
+      <p class="home">Home</p>
+      <h2 class="name">{{ bot.display_name|safe }}</h2>
+      <p class="phase">{{ bot.phase_text }}</p>
+    </div>
+    <div class="price-flag">
+      <p class="starts">Starts From</p>
+      <p class="amount">{{ bot.price }}</p>
+    </div>
+    <div class="specs">
+      <div class="components">
+        <h3>Components</h3>
+        <ul>
+          <li>INVERTER: {{ bot.inverter_spec }}</li>
+          <li>BATTERY : {{ bot.battery_spec }}</li>
+          <li>PANELS : {{ bot.panel_spec }}</li>
+          <li>PHASE: {{ bot.phase_short }}</li>
+        </ul>
+      </div>
+      <div class="includes">
+        <h3>Includes</h3>
+        <ul>
+          <li>Hybrid Mppt Inverter</li>
+          <li>Lithium-Ion Battery Bank</li>
+          <li>Mono Perc Pv Panels</li>
+          <li>Galvanised Mounting</li>
+          <li>Tinned Copper Cabling</li>
+          <li>Taqon-Certified Installers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endwith %}
+  {% endif %}
+</section>
+{% endfor %}
+
+<!-- ══════════════════════════ CLOSING ══════════════════════════ -->
+<section class="page closing">
+  <div class="brand-pill">TAQON ELECTRICO</div>
+  <h1 class="title">Get Solar for<br/>Your Home <span class="script">Now</span></h1>
+  <ul class="contact">
+    <li><span class="ico ico-phone"></span>+263 77 277 1036</li>
+    <li><span class="ico ico-web"></span>www.taqon.co.zw</li>
+    <li><span class="ico ico-mail"></span>info@taqon.co.zw</li>
+    <li><span class="ico ico-pin"></span>203 Sherwood Drive, Strathaven, Harare</li>
+  </ul>
+  {% if images.closing_box %}
+  <div class="collage-box">
+    <img src="{{ images.closing_box }}" alt=""/>
+  </div>
+  {% endif %}
+  {% if images.closing_hero %}<img class="hero-bottom" src="{{ images.closing_hero }}" alt=""/>{% endif %}
+</section>
+
+</body>
+</html>

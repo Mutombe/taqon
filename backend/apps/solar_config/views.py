@@ -818,11 +818,11 @@ class PackagesCatalogueView(APIView):
 
     def _cached_pdf(self):
         from django.core.cache import cache
-        return cache.get('packages_catalogue_pdf_v5')
+        return cache.get('packages_catalogue_pdf_v6')
 
     def _set_cached_pdf(self, pdf_bytes):
         from django.core.cache import cache
-        cache.set('packages_catalogue_pdf_v5', pdf_bytes, self._CACHE_TTL_SECONDS)
+        cache.set('packages_catalogue_pdf_v6', pdf_bytes, self._CACHE_TTL_SECONDS)
 
     def _build(self, request):
         from django.http import HttpResponse
@@ -960,22 +960,38 @@ class PackagesCatalogueView(APIView):
             },
         }
 
+        # Primary path: Canva-faithful designer catalogue via WeasyPrint.
+        # Falls back to ReportLab editorial catalogue, then HTML template
+        # if both fail.
+        pdf_bytes = None
+        is_pdf = False
         try:
-            from apps.documents.catalogue import build_catalogue_pdf
-            pdf_bytes = build_catalogue_pdf(
+            from apps.documents.catalogue_canva import build_canva_catalogue_pdf
+            pdf_bytes = build_canva_catalogue_pdf(
                 families=families,
                 ref_number=ref_number,
                 generated_date=context['generated_date'],
-                family_count=len(families),
-                variant_count=total_variants,
             )
             is_pdf = pdf_bytes[:4] == b'%PDF'
         except Exception:
-            logger.exception('ReportLab catalogue build failed — falling back to HTML pipeline')
-            html_string = render_to_string('pdfs/packages_catalogue.html', context)
-            from apps.quotations.pdf import _render_pdf
-            pdf_bytes = _render_pdf(html_string)
-            is_pdf = pdf_bytes[:4] == b'%PDF'
+            logger.exception('Canva catalogue build failed — falling back to ReportLab')
+        if not is_pdf:
+            try:
+                from apps.documents.catalogue import build_catalogue_pdf
+                pdf_bytes = build_catalogue_pdf(
+                    families=families,
+                    ref_number=ref_number,
+                    generated_date=context['generated_date'],
+                    family_count=len(families),
+                    variant_count=total_variants,
+                )
+                is_pdf = pdf_bytes[:4] == b'%PDF'
+            except Exception:
+                logger.exception('ReportLab catalogue build failed — falling back to HTML pipeline')
+                html_string = render_to_string('pdfs/packages_catalogue.html', context)
+                from apps.quotations.pdf import _render_pdf
+                pdf_bytes = _render_pdf(html_string)
+                is_pdf = pdf_bytes[:4] == b'%PDF'
         content_type = 'application/pdf' if is_pdf else 'text/html'
         ext = 'pdf' if is_pdf else 'html'
 
