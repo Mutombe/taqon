@@ -4,6 +4,7 @@ import { packagesDetailed, getPackageBySlug } from '../data/packagesData';
 import PackageDetailTemplate from '../components/PackageDetailTemplate';
 import SEO from '../components/SEO';
 import { usePackageDetail, usePackagePrice, useFamilyDetail } from '../hooks/useQueries';
+import { getSavedLocation } from '../data/locationSession';
 
 // Legacy /packages/:slug URLs that pre-date the DB-driven catalogue.
 // Each maps to a real package slug so the page (and downstream features
@@ -36,8 +37,16 @@ export default function PackageDetail() {
   // React Query: package detail and price load in parallel (both only need slug).
   // Family detail depends on family_slug from the package response, so it uses
   // `enabled` to start as soon as that data is available — no manual waterfall.
+  // Seed the priced distance from any area the customer already picked
+  // (Solar Advisor / inquiry / a prior quote) so the headline price and the
+  // deposit total reflect their location instead of a flat Harare default.
+  const baseDistanceKm = (() => {
+    const n = parseFloat(getSavedLocation()?.distanceKm);
+    return Number.isFinite(n) && n >= 0 ? n : 10;
+  })();
+
   const { data: apiPackage, isLoading: pkgLoading } = usePackageDetail(slug);
-  const { data: priceBreakdown } = usePackagePrice(slug, { distance_km: 10 });
+  const { data: priceBreakdown } = usePackagePrice(slug, { distance_km: baseDistanceKm });
   const { data: familyData } = useFamilyDetail(apiPackage?.family_slug);
 
   const siblings = familyData?.packages || [];
@@ -104,6 +113,9 @@ export default function PackageDetail() {
       _apiData: apiPackage,
       _priceBreakdown: priceBreakdown,
       _siblings: siblings,
+      // Distance the displayed total was priced at — the deposit modal uses
+      // this as its baseline so its adjustment math stays consistent.
+      _baseDistanceKm: baseDistanceKm,
     };
 
     return (

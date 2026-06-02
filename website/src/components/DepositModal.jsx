@@ -13,6 +13,8 @@ import {
 } from '../data/depositTerms';
 import { PAYMENT_BRAND_LOGOS, PAYMENT_BRAND_LABELS } from '../data/paymentBrands';
 import { getSavedLocation, saveLocation } from '../data/locationSession';
+import { DELIVERY_PRICING } from '../data/zimbabweAreas';
+import LocationPicker from './LocationPicker';
 
 const DEPOSIT_PERCENT = 20;
 
@@ -49,15 +51,34 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
 
   const [method, setMethod] = useState('');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [address, setAddress] = useState(() => getSavedLocation()?.area || '');
+  // Installation area drives transport (distance_km), which the backend folds
+  // into the package total before computing the deposit. A free-text box left
+  // this at the Harare default — so an out-of-town deposit was under-computed.
+  const baseDistanceKm = Number.isFinite(parseFloat(distanceKm)) ? parseFloat(distanceKm) : 10;
+  const [location, setLocation] = useState(() => {
+    const s = getSavedLocation();
+    const n = parseFloat(s?.distanceKm);
+    return { area: s?.area || '', distanceKm: Number.isFinite(n) ? n : baseDistanceKm };
+  });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showFullTerms, setShowFullTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const depositAmount = useMemo(() => {
-    const total = parseFloat(packageTotal || 0);
-    return total > 0 ? (total * DEPOSIT_PERCENT / 100) : 0;
-  }, [packageTotal]);
+  const effectiveDistance = location.distanceKm != null ? location.distanceKm : baseDistanceKm;
+
+  // packageTotal arrives computed at baseDistanceKm. Transport is the only
+  // distance-dependent term ($perKm/km), so adjust for the chosen area — the
+  // same number the backend will recompute from distance_km.
+  const adjustedTotal = useMemo(() => {
+    const base = parseFloat(packageTotal || 0);
+    const delta = (effectiveDistance - baseDistanceKm) * DELIVERY_PRICING.perKm;
+    return Math.max(0, base + delta);
+  }, [packageTotal, effectiveDistance, baseDistanceKm]);
+
+  const depositAmount = useMemo(
+    () => (adjustedTotal > 0 ? (adjustedTotal * DEPOSIT_PERCENT / 100) : 0),
+    [adjustedTotal],
+  );
 
   const selectedMethod = PAYMENT_METHODS.find((m) => m.key === method);
   const requiresPhone = selectedMethod?.type === 'mobile';
@@ -83,22 +104,22 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
       toast.error('Phone number is required for mobile money.');
       return;
     }
-    if (!address.trim()) {
-      toast.error('Please enter the installation location.');
+    if (!location.area || location.distanceKm == null) {
+      toast.error('Please select your installation area so we can price transport.');
       return;
     }
-    saveLocation({ area: address.trim(), distanceKm });
+    saveLocation({ area: location.area, distanceKm: effectiveDistance });
 
     setSubmitting(true);
     try {
       const { data } = await paymentsApi.initiateDeposit({
         package_slug: pkg.slug,
         tier_label: tierLabel || pkg.tier || '',
-        distance_km: distanceKm || 10,
+        distance_km: effectiveDistance,
         customer_name: customerName,
         customer_email: user?.email || '',
         customer_phone: phone.trim() || user?.phone || '',
-        customer_address: address.trim(),
+        customer_address: location.area,
         method,
         phone: requiresPhone ? phone.trim() : '',
         terms_accepted: true,
@@ -199,7 +220,7 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
             </p>
             <div className="flex justify-between text-[13px] mb-1.5">
               <span className="text-gray-500 dark:text-white/50">Estimated total</span>
-              <span className="text-taqon-charcoal dark:text-white tabular-nums">{fmtUSD(packageTotal)}</span>
+              <span className="text-taqon-charcoal dark:text-white tabular-nums">{fmtUSD(adjustedTotal)}</span>
             </div>
             <div className="flex justify-between text-[13px] pt-2 border-t border-gray-200 dark:border-white/10">
               <span className="text-gray-500 dark:text-white/50">Deposit required ({DEPOSIT_PERCENT}%)</span>
@@ -233,20 +254,29 @@ export default function DepositModal({ pkg, tierLabel, packageTotal, distanceKm,
             </p>
           </div>
 
-          {/* Installation location — pre-filled from any prior pick */}
+          {/* Installation area — drives transport in the total + deposit */}
           <div className="mb-4">
             <label className="block text-[12px] text-gray-500 dark:text-white/50 mb-1.5">
-              Installation location *
+              Installation area *
             </label>
-            <input
-              type="text"
-              required
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="e.g. Borrowdale, Harare"
-              className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[13px] text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none"
+            <LocationPicker
+              value={location.area}
+              onChange={(sel) =>
+                setLocation(
+                  sel
+                    ? { area: sel.name, distanceKm: parseFloat(sel.distance) }
+                    : { area: '', distanceKm: null },
+                )
+              }
+              showPrice={false}
+              allowPickup={false}
+              placeholder="Select your installation area"
             />
-            <p className="mt-1 text-[11px] text-gray-400 dark:text-white/40">Pre-filled if you've already chosen an area in the Solar Advisor.</p>
+            <p className="mt-1 text-[11px] text-gray-400 dark:text-white/40">
+              {location.distanceKm != null
+                ? `Total includes transport for ${effectiveDistance} km from Harare.`
+                : 'Pick your area so transport is priced correctly for your location.'}
+            </p>
           </div>
 
           {/* Payment method — brand logo grid */}

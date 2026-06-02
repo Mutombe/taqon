@@ -33,6 +33,7 @@ import useAuthStore from '../stores/authStore';
 import DepositModal from './DepositModal';
 import { getSavedLocation, saveLocation } from '../data/locationSession';
 import { openPackageBrochure } from '../lib/packageBrochure';
+import LocationPicker from './LocationPicker';
 
 // Icon map for the includes section
 const iconMap = {
@@ -57,18 +58,21 @@ function QuoteModal({ pkg, gem, onClose }) {
       name: name || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      address: savedLocation?.area || '',
+      detail: '',  // optional street / landmark for the installer
     };
   });
+  // The installation AREA drives transport (distance_km). A free-text box
+  // used to leave this at the 10 km Harare default — so Bulawayo was billed
+  // Harare's transport. Selecting an area now sets the real distance.
+  const [location, setLocation] = useState(() => ({
+    area: savedLocation?.area || '',
+    distanceKm: savedLocation?.distanceKm != null ? parseFloat(savedLocation.distanceKm) : null,
+  }));
   const [generating, setGenerating] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const pkgSlug = pkg._apiData?.slug || pkg.slug;
   const pkgName = pkg._apiData?.family?.name || pkg._apiData?.name || pkg.name;
-  // Distance precedence: saved advisor session → API package value → 10 km
-  const distanceKm = parseFloat(
-    savedLocation?.distanceKm ?? pkg._apiData?.distance_km ?? 10
-  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,20 +80,21 @@ function QuoteModal({ pkg, gem, onClose }) {
       toast.error('Name and email are required');
       return;
     }
-    if (!form.address.trim()) {
-      toast.error('Please enter the installation location.');
+    if (!location.area || location.distanceKm == null) {
+      toast.error('Please select your installation area so we can price transport.');
       return;
     }
-    saveLocation({ area: form.address.trim(), distanceKm });
+    const fullAddress = [form.detail.trim(), location.area].filter(Boolean).join(', ');
+    saveLocation({ area: location.area, distanceKm: location.distanceKm });
     setGenerating(true);
     try {
       const res = await solarConfigApi.getInstantQuote({
         package_slug: pkgSlug,
-        distance_km: distanceKm,
+        distance_km: location.distanceKm,
         customer_name: form.name,
         customer_email: form.email,
         customer_phone: form.phone,
-        customer_address: form.address,
+        customer_address: fullAddress,
         tier_label: pkg._apiData?.tier || pkg.tier || 'Standard',
       });
       const contentType = res.headers['content-type'] || 'application/pdf';
@@ -110,7 +115,7 @@ function QuoteModal({ pkg, gem, onClose }) {
         name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
-        message: `Instant quote requested from package detail page for ${pkgName}. Address: ${form.address || 'N/A'}`,
+        message: `Instant quote requested from package detail page for ${pkgName}. Location: ${fullAddress} (${location.distanceKm} km from Harare).`,
         property_type: 'residential',
         roof_type: 'pitched',
         monthly_bill: 0,
@@ -228,24 +233,41 @@ function QuoteModal({ pkg, gem, onClose }) {
             </div>
             <div>
               <label className="block text-xs font-semibold text-taqon-muted dark:text-white/60 uppercase tracking-wider mb-1.5">
-                Installation location *
+                Installation area *
+              </label>
+              <LocationPicker
+                value={location.area}
+                onChange={(sel) =>
+                  setLocation(
+                    sel
+                      ? { area: sel.name, distanceKm: parseFloat(sel.distance) }
+                      : { area: '', distanceKm: null },
+                  )
+                }
+                showPrice={false}
+                allowPickup={false}
+                placeholder="Select your installation area"
+              />
+              <p className="mt-1 text-[11px] text-taqon-muted dark:text-white/40">
+                {location.distanceKm != null
+                  ? `Transport priced for ${location.distanceKm} km from Harare.`
+                  : 'Pick your area so transport is priced correctly for your location.'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-taqon-muted dark:text-white/60 uppercase tracking-wider mb-1.5">
+                Street / landmark <span className="normal-case text-taqon-muted/70">(optional)</span>
               </label>
               <div className="relative">
                 <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-taqon-muted" />
                 <input
                   type="text"
-                  required
-                  value={form.address}
-                  onChange={(e) => set('address', e.target.value)}
-                  placeholder="e.g. Borrowdale, Harare"
+                  value={form.detail}
+                  onChange={(e) => set('detail', e.target.value)}
+                  placeholder="e.g. 12 Quendon Rd, near the clinic"
                   className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-taqon-charcoal dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-taqon-orange/30 focus:border-taqon-orange outline-none transition-all"
                 />
               </div>
-              <p className="mt-1 text-[11px] text-taqon-muted dark:text-white/40">
-                {savedLocation?.distanceKm
-                  ? `Using ${savedLocation.distanceKm} km from Harare (from your Solar Advisor selection).`
-                  : "Pre-filled if you've already chosen an area in the Solar Advisor."}
-              </p>
             </div>
           </div>
 
@@ -942,7 +964,7 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
             }}
             tierLabel={pkg._apiData.tier || ''}
             packageTotal={parseFloat(priceBreakdown?.total || 0)}
-            distanceKm={parseFloat(pkg._apiData?.distance_km || 10)}
+            distanceKm={parseFloat(pkg._baseDistanceKm ?? pkg._apiData?.distance_km ?? 10)}
             onClose={() => setDepositModalOpen(false)}
           />
         )}
