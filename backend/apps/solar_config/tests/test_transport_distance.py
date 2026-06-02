@@ -60,3 +60,41 @@ class TransportDistanceTests(TestCase):
 
         frontend_adjusted = base['total'] + (area_km - base_km) * per_km
         self.assertEqual(frontend_adjusted, recomputed['total'])
+
+    def test_quotation_lines_reconcile_to_total(self):
+        """The itemised quote lines the customer sees — Materials (incl.
+        sundries) + Labour + Transport — must sum exactly to the grand
+        Total, with a non-zero transport component."""
+        price = calculate_price(self.package, distance_km=72)
+        materials_line = price['material'] + price['sundries']
+        labour_line = price['labour']
+        transport_line = price['transport']
+
+        self.assertGreater(transport_line, Decimal('0'))
+        self.assertEqual(
+            materials_line + labour_line + transport_line,
+            price['total'],
+        )
+
+    def test_quotation_pdf_renders_with_split_lines(self):
+        """The ReportLab builder accepts separate labour/transport totals
+        and produces a valid PDF."""
+        from apps.documents.quotation import build_quotation_pdf
+
+        price = calculate_price(self.package, distance_km=72)
+        pdf = build_quotation_pdf(
+            package_name='Home Luxury 5kVA',
+            ref_number='TQ-TEST-0001',
+            customer_name='Test Customer',
+            customer_email='test@example.com',
+            item_groups=[{
+                'label': 'Inverters',
+                'items': [{'num': 1, 'name': '5kVA Hybrid', 'qty': 1}],
+            }],
+            material_total=f"{float(price['material']) + float(price['sundries']):,.2f}",
+            labour_total=f"{float(price['labour']):,.2f}",
+            transport_total=f"{float(price['transport']):,.2f}",
+            grand_total=f"{float(price['total']):,.2f}",
+            distance_km=72,
+        )
+        self.assertEqual(pdf[:4], b'%PDF')

@@ -439,10 +439,15 @@ class InstantQuoteView(APIView):
             'panel_count': package.panel_count or '',
             'tier_label': tier_label or package.tier or '',
             'item_groups': item_groups,
-            'material_total': f'{float(price["material"]):,.2f}',
+            # Fold the small sundries (consumables, 0.5%) into Materials so the
+            # itemised lines (Materials + Labour + Transport) reconcile exactly
+            # to the grand Total — no silent gap for the customer to puzzle over.
+            'material_total': f'{float(price["material"]) + float(price["sundries"]):,.2f}',
             'sundries_total': f'{float(price["sundries"]):,.2f}',
-            # Labour + transport are merged on the PDF for simpler customer-facing display
-            'labour_transport_total': f'{float(price["labour"]) + float(price["transport"]):,.2f}',
+            # Labour and Transport are shown as separate lines so transport is
+            # always visible and verifiable per location.
+            'labour_total': f'{float(price["labour"]):,.2f}',
+            'transport_total': f'{float(price["transport"]):,.2f}',
             'grand_total': f'{float(price["total"]):,.2f}',
             'distance_km': int(distance_km),
             # Non-itemized template extras — leave VAT-related fields blank
@@ -499,7 +504,8 @@ class InstantQuoteView(APIView):
                 customer_address=customer_address,
                 item_groups=item_groups,
                 material_total=context['material_total'],
-                labour_transport_total=context['labour_transport_total'],
+                labour_total=context['labour_total'],
+                transport_total=context['transport_total'],
                 grand_total=context['grand_total'],
                 inverter_kva=context['inverter_kva'],
                 battery_kwh=context['battery_kwh'],

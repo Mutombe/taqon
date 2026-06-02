@@ -248,7 +248,7 @@ def _items_table(item_groups):
     return tbl
 
 
-def _indicators_and_totals(*, material_total, labour_transport_total, grand_total,
+def _indicators_and_totals(*, material_total, labour_total, transport_total, grand_total,
                            system_size_kw, usd_per_kw, usd_per_kwh, distance_km):
     """Bottom strip: indicators on the left, totals stack on the right."""
     from reportlab.lib.styles import ParagraphStyle
@@ -298,11 +298,16 @@ def _indicators_and_totals(*, material_total, labour_transport_total, grand_tota
     grand_val = ParagraphStyle('gval', fontName='Helvetica-Bold', fontSize=18,
                                leading=22, textColor=ORANGE, alignment=TA_RIGHT)
 
+    # Materials, Labour and Transport are itemised separately so the
+    # customer can verify each — and so the three component lines add up
+    # exactly to the Total (sundries are folded into Materials upstream).
     totals_rows = [
         [Paragraph('Materials', total_lbl),
          Paragraph(f'USD {material_total}', total_val)],
-        [Paragraph('Labour and Transport', total_lbl),
-         Paragraph(f'USD {labour_transport_total}', total_val)],
+        [Paragraph('Labour', total_lbl),
+         Paragraph(f'USD {labour_total}', total_val)],
+        [Paragraph('Transport', total_lbl),
+         Paragraph(f'USD {transport_total}', total_val)],
         [Paragraph('Total', grand_lbl),
          Paragraph(f'USD {grand_total}', grand_val)],
     ]
@@ -310,10 +315,10 @@ def _indicators_and_totals(*, material_total, labour_transport_total, grand_tota
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0),
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('LINEBELOW', (0, 0), (-1, 1), 0.4, HAIRLINE),
-        ('LINEABOVE', (0, 2), (-1, 2), 1.5, INK),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LINEBELOW', (0, 0), (-1, 2), 0.4, HAIRLINE),
+        ('LINEABOVE', (0, 3), (-1, 3), 1.5, INK),
     ]))
 
     outer = Table([[left, right]], colWidths=[97 * mm, 77 * mm],
@@ -425,7 +430,8 @@ def build_quotation_pdf(*,
                         customer_address='',
                         item_groups,
                         material_total,
-                        labour_transport_total,
+                        labour_total,
+                        transport_total,
                         grand_total,
                         inverter_kva='',
                         battery_kwh='',
@@ -484,7 +490,8 @@ def build_quotation_pdf(*,
     # ── Indicators + totals ──
     story.append(_indicators_and_totals(
         material_total=material_total,
-        labour_transport_total=labour_transport_total,
+        labour_total=labour_total,
+        transport_total=transport_total,
         grand_total=grand_total,
         system_size_kw=system_size_kw,
         usd_per_kw=usd_per_kw,
