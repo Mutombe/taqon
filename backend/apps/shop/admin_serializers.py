@@ -3,6 +3,46 @@ Admin-only serializers for writable Product, Category, and Brand CRUD.
 """
 from rest_framework import serializers
 from .models import Category, Brand, Product
+from .serializers import (
+    CategoryCompactSerializer,
+    BrandCompactSerializer,
+    ProductImageSerializer,
+)
+
+
+class AdminProductDetailSerializer(serializers.ModelSerializer):
+    """Full read serializer for the admin edit form.
+
+    The admin product form needs every editable field pre-populated when
+    opening an existing product — the public ProductDetailSerializer omits
+    admin-only fields (is_active, cost_price, low_stock_threshold, …), and
+    the compact ProductListSerializer omits content fields (description,
+    specifications, …). Feeding the edit form from either of those left
+    fields blank, and saving then wiped the real values. This serializer
+    returns the complete, authoritative picture for editing.
+    """
+    category = CategoryCompactSerializer(read_only=True)
+    brand = BrandCompactSerializer(read_only=True)
+    primary_image = ProductImageSerializer(read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'name', 'slug', 'sku',
+            'category', 'brand',
+            'description', 'short_description',
+            'price', 'compare_at_price', 'cost_price', 'currency',
+            'is_on_sale',
+            'stock_quantity', 'low_stock_threshold',
+            'weight', 'warranty_period',
+            'specifications',
+            'is_active', 'is_featured',
+            'meta_title', 'meta_description',
+            'primary_image', 'images',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = fields
 
 
 class AdminProductCreateUpdateSerializer(serializers.ModelSerializer):

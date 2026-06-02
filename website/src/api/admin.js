@@ -22,6 +22,7 @@ export const adminApi = {
 
   // Products (backend uses slug for lookups)
   getAdminProducts: (params) => api.get('/shop/admin/products/', { params }),
+  getAdminProduct: (slug) => api.get(`/shop/admin/products/${slug}/`),
   createProduct: (data) => api.post('/shop/admin/products/create/', data),
   updateProduct: (slug, data) => api.patch(`/shop/admin/products/${slug}/`, data),
   deleteProduct: (slug) => api.delete(`/shop/admin/products/${slug}/delete/`),

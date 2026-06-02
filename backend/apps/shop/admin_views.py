@@ -19,12 +19,12 @@ from apps.core.permissions import IsAdmin
 from .models import Product, ProductImage, Category, Brand
 from .serializers import (
     ProductListSerializer,
-    ProductDetailSerializer,
     ProductImageSerializer,
     CategorySerializer,
     BrandSerializer,
 )
 from .admin_serializers import (
+    AdminProductDetailSerializer,
     AdminProductCreateUpdateSerializer,
     AdminCategoryCreateUpdateSerializer,
     AdminBrandCreateUpdateSerializer,
@@ -143,7 +143,7 @@ class AdminProductUpdateView(generics.RetrieveUpdateAPIView):
     def get_serializer_class(self):
         if self.request.method in ('PUT', 'PATCH'):
             return AdminProductCreateUpdateSerializer
-        return ProductDetailSerializer
+        return AdminProductDetailSerializer
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)

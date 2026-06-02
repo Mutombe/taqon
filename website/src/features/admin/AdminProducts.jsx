@@ -104,9 +104,10 @@ function SpecEditor({ value, onChange }) {
   );
 }
 
-function ImageUploadArea({ images, onUpload, onDelete, productSlug }) {
+function ImageUploadArea({ images, onUpload, onDelete, onSetPrimary, productSlug }) {
   const fileRef = useRef();
   const [uploading, setUploading] = useState(false);
+  const [busyId, setBusyId] = useState(null);
 
   const handleFiles = async (files) => {
     if (!productSlug) {
@@ -131,8 +132,29 @@ function ImageUploadArea({ images, onUpload, onDelete, productSlug }) {
     }
   };
 
+  const handleSetPrimary = async (imgId) => {
+    if (!productSlug || !onSetPrimary) return;
+    setBusyId(imgId);
+    try {
+      await adminApi.setProductImagePrimary(productSlug, imgId);
+      onSetPrimary(imgId);
+      toast.success('Primary image updated');
+    } catch {
+      toast.error('Could not set primary image');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const srcOf = (img) => img.image || img.image_url || img.url;
+
   return (
     <div className="space-y-3">
+      {!productSlug && (
+        <p className="text-xs text-[var(--text-muted)] italic">
+          Save the product first, then you can upload images.
+        </p>
+      )}
       <div
         onClick={() => fileRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
@@ -153,19 +175,37 @@ function ImageUploadArea({ images, onUpload, onDelete, productSlug }) {
         />
       </div>
       {images.length > 0 && (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {images.map((img) => (
-            <div key={img.id} className="relative group rounded-lg overflow-hidden aspect-square bg-[var(--bg-tertiary)]">
-              <img src={img.image || img.url} alt="" className="w-full h-full object-cover" />
-              <button
-                type="button"
-                onClick={() => onDelete(img.id)}
-                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-              >
-                <Trash size={18} className="text-red-400" />
-              </button>
+            <div
+              key={img.id}
+              className={`relative group rounded-lg overflow-hidden aspect-square bg-[var(--bg-tertiary)] border-2 transition-colors ${
+                img.is_primary ? 'border-taqon-orange' : 'border-transparent'
+              }`}
+            >
+              <img src={srcOf(img)} alt={img.alt_text || ''} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity">
+                {!img.is_primary && (
+                  <button
+                    type="button"
+                    onClick={() => handleSetPrimary(img.id)}
+                    disabled={busyId === img.id}
+                    className="flex items-center gap-1 text-[10px] font-medium text-white bg-taqon-orange/90 hover:bg-taqon-orange px-2 py-1 rounded-md disabled:opacity-60"
+                  >
+                    {busyId === img.id ? <CircleNotch size={11} className="animate-spin" /> : <Star size={11} weight="fill" />}
+                    Set primary
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onDelete(img.id)}
+                  className="flex items-center gap-1 text-[10px] font-medium text-red-300 bg-black/40 hover:bg-red-500/20 px-2 py-1 rounded-md"
+                >
+                  <Trash size={11} /> Delete
+                </button>
+              </div>
               {img.is_primary && (
-                <span className="absolute top-1 left-1 bg-taqon-orange text-white text-[9px] px-1 rounded">Primary</span>
+                <span className="absolute top-1 left-1 bg-taqon-orange text-white text-[9px] px-1.5 py-0.5 rounded font-medium">Primary</span>
               )}
             </div>
           ))}
@@ -175,34 +215,66 @@ function ImageUploadArea({ images, onUpload, onDelete, productSlug }) {
   );
 }
 
+function buildForm(p) {
+  if (!p) return EMPTY_FORM;
+  return {
+    name: p.name || '',
+    sku: p.sku || '',
+    category: p.category?.id || p.category || '',
+    brand: p.brand?.id || p.brand || '',
+    price: p.price ?? '',
+    compare_at_price: p.compare_at_price ?? '',
+    is_on_sale: p.is_on_sale || false,
+    description: p.description || '',
+    short_description: p.short_description || '',
+    stock_quantity: p.stock_quantity ?? '',
+    warranty_period: p.warranty_period || '',
+    specifications: typeof p.specifications === 'object' && p.specifications !== null
+      ? JSON.stringify(p.specifications)
+      : p.specifications || '{}',
+    is_active: p.is_active ?? true,
+    is_featured: p.is_featured || false,
+  };
+}
+
 function ProductModal({ product, categories, brands, onClose, onSaved }) {
-  const [form, setForm] = useState(product ? {
-    name: product.name || '',
-    sku: product.sku || '',
-    category: product.category?.id || product.category || '',
-    brand: product.brand?.id || product.brand || '',
-    price: product.price || '',
-    compare_at_price: product.compare_at_price || '',
-    is_on_sale: product.is_on_sale || false,
-    description: product.description || '',
-    short_description: product.short_description || '',
-    stock_quantity: product.stock_quantity ?? '',
-    warranty_period: product.warranty_period || '',
-    specifications: typeof product.specifications === 'object'
-      ? JSON.stringify(product.specifications)
-      : product.specifications || '{}',
-    is_active: product.is_active ?? true,
-    is_featured: product.is_featured || false,
-  } : EMPTY_FORM);
+  const [form, setForm] = useState(() => buildForm(product));
   const [images, setImages] = useState(product?.images || []);
   const [saving, setSaving] = useState(false);
   const [savedSlug, setSavedSlug] = useState(product?.slug || null);
+  // When editing, the list row is a compact projection that omits most
+  // editable fields (description, specifications, warranty, images, …).
+  // Fetch the authoritative detail so the form is fully populated — and
+  // so saving can't silently blank fields the form never received.
+  const [loadingDetail, setLoadingDetail] = useState(!!product?.slug);
+  // Bump on detail load to force the SpecEditor (which holds internal
+  // state) to remount with the freshly-loaded specifications.
+  const [formVersion, setFormVersion] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!product?.slug) { setLoadingDetail(false); return; }
+    (async () => {
+      try {
+        const { data } = await adminApi.getAdminProduct(product.slug);
+        if (cancelled) return;
+        setForm(buildForm(data));
+        setImages(data.images || []);
+        setFormVersion((v) => v + 1);
+      } catch {
+        if (!cancelled) toast.error('Could not load full product details');
+      } finally {
+        if (!cancelled) setLoadingDetail(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [product?.slug]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.price) {
+    if (!form.name.trim() || form.price === '') {
       toast.error('Name and price are required');
       return;
     }
@@ -211,6 +283,12 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
       let specs = {};
       try { specs = JSON.parse(form.specifications || '{}'); } catch {}
       const payload = { ...form, specifications: specs };
+      // Empty numeric / FK strings would be rejected by DRF — drop them so
+      // a partial update doesn't 400. Text fields keep '' so they can be
+      // intentionally cleared.
+      ['compare_at_price', 'stock_quantity', 'category', 'brand'].forEach((k) => {
+        if (payload[k] === '' || payload[k] === undefined) delete payload[k];
+      });
 
       let saved;
       if (savedSlug) {
@@ -225,7 +303,15 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
       }
       onSaved(saved);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Failed to save product');
+      const data = err?.response?.data;
+      // Surface the first field error so the admin knows what to fix.
+      let msg = data?.detail;
+      if (!msg && data && typeof data === 'object') {
+        const firstKey = Object.keys(data)[0];
+        const val = data[firstKey];
+        msg = `${firstKey}: ${Array.isArray(val) ? val[0] : val}`;
+      }
+      toast.error(msg || 'Failed to save product');
     } finally {
       setSaving(false);
     }
@@ -235,10 +321,24 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
     if (!savedSlug) return;
     try {
       await adminApi.deleteProductImage(savedSlug, imgId);
-      setImages((imgs) => imgs.filter((i) => i.id !== imgId));
+      setImages((imgs) => {
+        const remaining = imgs.filter((i) => i.id !== imgId);
+        // If we removed the primary, the backend promotes the next image —
+        // mirror that locally so the badge stays in sync.
+        if (!remaining.some((i) => i.is_primary) && remaining.length) {
+          remaining[0] = { ...remaining[0], is_primary: true };
+        }
+        return remaining;
+      });
+      onSaved();  // refresh list thumbnails
     } catch {
       toast.error('Failed to delete image');
     }
+  };
+
+  const handleSetPrimary = (imgId) => {
+    setImages((imgs) => imgs.map((i) => ({ ...i, is_primary: i.id === imgId })));
+    onSaved();  // refresh list thumbnail
   };
 
   return (
@@ -265,6 +365,12 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
               <X size={18} />
             </button>
           </div>
+
+          {loadingDetail && (
+            <div className="flex items-center gap-2 px-6 py-3 text-sm text-[var(--text-muted)] border-b border-[var(--card-border)]">
+              <CircleNotch size={15} className="animate-spin" /> Loading product details…
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {/* Basic info */}
@@ -347,7 +453,7 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
             {/* Specifications */}
             <div className="space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Specifications</h3>
-              <SpecEditor value={form.specifications} onChange={(v) => set('specifications', v)} />
+              <SpecEditor key={`spec-${formVersion}`} value={form.specifications} onChange={(v) => set('specifications', v)} />
             </div>
 
             {/* Toggles */}
@@ -378,8 +484,9 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
               <ImageUploadArea
                 images={images}
                 productSlug={savedSlug}
-                onUpload={(img) => setImages((imgs) => [...imgs, img])}
+                onUpload={(img) => { setImages((imgs) => [...imgs, img]); onSaved(); }}
                 onDelete={handleDeleteImage}
+                onSetPrimary={handleSetPrimary}
               />
             </div>
 
@@ -394,7 +501,7 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
               </button>
               <button
                 type="submit"
-                disabled={saving}
+                disabled={saving || loadingDetail}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2 transition-colors"
               >
                 {saving ? <CircleNotch size={16} className="animate-spin" /> : null}
