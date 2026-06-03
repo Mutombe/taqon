@@ -78,6 +78,21 @@ class InternalAccountExclusionTests(TestCase):
         self.assertEqual(resp.status_code, 201)
         self.assertEqual(Inquiry.objects.filter(email=CUSTOMER).count(), 1)
 
+    # ── download log (record_download) ─────────────────────────────
+    def test_internal_download_log_skipped(self):
+        from apps.downloads.services import record_download
+        from apps.downloads.models import Download
+        before = Download.objects.count()
+        record_download(None, kind='instant_quote', customer_email=INTERNAL)
+        self.assertEqual(Download.objects.count(), before)  # not logged
+
+    def test_customer_download_log_recorded(self):
+        from apps.downloads.services import record_download
+        from apps.downloads.models import Download
+        before = Download.objects.count()
+        record_download(None, kind='instant_quote', customer_email=CUSTOMER)
+        self.assertEqual(Download.objects.count(), before + 1)
+
     # ── instant-quote downloads ────────────────────────────────────
     def _download(self, email):
         return self.client.post('/api/v1/solar-config/instant-quote/', {

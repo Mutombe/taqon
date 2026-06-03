@@ -24,8 +24,15 @@ def record_download(request, *, kind, surface='other',
                     metadata=None):
     """Persist a Download row. Never raises — tracking failures must
     not break the actual download response.
+
+    Downloads by internal / test accounts are not recorded, so admin
+    testing does not pollute the Downloads log.
     """
     try:
+        from apps.core.constants import is_internal_actor
+        if is_internal_actor(request, customer_email):
+            return
+
         user = getattr(request, 'user', None) if request else None
         if user is not None and not getattr(user, 'is_authenticated', False):
             user = None
