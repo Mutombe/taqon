@@ -10,7 +10,10 @@ import AnimatedSection from '../components/AnimatedSection';
 import CommentSection from '../components/CommentSection';
 import { confirmExternalNavigation } from '../components/ContentLink';
 import SEO from '../components/SEO';
-import { blogPosts } from '../data/blogData';
+import { useBlogPost } from '../hooks/useQueries';
+import { normalizeBlogPost } from '../api/blog';
+
+const FALLBACK_IMG = '/chisipiti-10kva-2.jpg';
 
 function ShareButtons({ title, url }) {
   const encodedUrl = encodeURIComponent(url);
@@ -99,7 +102,8 @@ export default function BlogPost() {
   const { slug } = useParams();
   const [activeHeading, setActiveHeading] = useState('');
 
-  const post = blogPosts.find((p) => p.slug === slug);
+  const { data, isLoading, isError } = useBlogPost(slug);
+  const post = useMemo(() => normalizeBlogPost(data), [data]);
 
   const headings = useMemo(() => {
     if (!post) return [];
@@ -124,12 +128,7 @@ export default function BlogPost() {
     return html;
   }, [post, headings]);
 
-  const relatedPosts = useMemo(() => {
-    if (!post) return [];
-    return post.relatedPosts
-      .map((id) => blogPosts.find((p) => p.id === id))
-      .filter(Boolean);
-  }, [post]);
+  const relatedPosts = useMemo(() => post?.relatedPosts || [], [post]);
 
   useEffect(() => {
     if (headings.length === 0) return;
@@ -162,8 +161,23 @@ export default function BlogPost() {
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
+  // Loading state — wait for the fetch before deciding it is missing.
+  if (isLoading) {
+    return (
+      <section className="min-h-screen bg-taqon-cream dark:bg-taqon-dark">
+        <div className="min-h-[50vh] bg-taqon-dark/90 animate-pulse" />
+        <div className="max-w-4xl mx-auto px-4 py-12 space-y-4">
+          <div className="h-8 w-2/3 bg-gray-200 dark:bg-white/10 rounded animate-pulse" />
+          <div className="h-4 w-full bg-gray-200 dark:bg-white/10 rounded animate-pulse" />
+          <div className="h-4 w-5/6 bg-gray-200 dark:bg-white/10 rounded animate-pulse" />
+          <div className="h-4 w-3/4 bg-gray-200 dark:bg-white/10 rounded animate-pulse" />
+        </div>
+      </section>
+    );
+  }
+
   // 404 state
-  if (!post) {
+  if (isError || !post) {
     return (
       <>
         <SEO title="Article Not Found" description="The article you are looking for could not be found." />
@@ -201,8 +215,9 @@ export default function BlogPost() {
       <section className="relative min-h-[50vh] lg:min-h-[60vh] flex items-end bg-taqon-dark overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={post.image}
+            src={post.image || FALLBACK_IMG}
             alt={post.title}
+            onError={(e) => { if (e.currentTarget.src !== window.location.origin + FALLBACK_IMG) e.currentTarget.src = FALLBACK_IMG; }}
             className="w-full h-full object-cover opacity-40"
             loading="eager"
           />
@@ -323,8 +338,9 @@ export default function BlogPost() {
                     <div className="bg-taqon-cream dark:bg-taqon-dark rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 hover:border-taqon-orange/20 hover:shadow-lg transition-all duration-500 h-full flex flex-col">
                       <div className="aspect-[16/10] overflow-hidden">
                         <img
-                          src={related.image}
+                          src={related.image || FALLBACK_IMG}
                           alt={related.title}
+                          onError={(e) => { if (e.currentTarget.src !== window.location.origin + FALLBACK_IMG) e.currentTarget.src = FALLBACK_IMG; }}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           loading="lazy"
                         />

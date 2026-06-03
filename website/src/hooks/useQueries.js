@@ -19,6 +19,7 @@ import { quotationsApi } from '../api/quotations';
 import { paymentsApi } from '../api/payments';
 import { authApi } from '../api/auth';
 import { adminApi } from '../api/admin';
+import { blogApi } from '../api/blog';
 
 // ─── Cache time presets (ms) ───────────────────────────────────────────
 const STATIC = { staleTime: 30 * 60_000, gcTime: 60 * 60_000 };   // 30min stale, 1hr gc — rarely changes
@@ -439,6 +440,34 @@ export function useAdminBlogCategories() {
   return useQuery({
     queryKey: ['adminBlogCategories'],
     queryFn: () => adminApi.getBlogCategories().then(r => r.data),
+    ...STATIC,
+  });
+}
+
+// ─── Public blog (database-backed) ─────────────────────────────────────
+export function useBlogPosts(params) {
+  return useQuery({
+    queryKey: ['blogPosts', params],
+    queryFn: () => blogApi.getPosts(params).then(r => r.data),
+    ...SEMI,
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useBlogPost(slug) {
+  return useQuery({
+    queryKey: ['blogPost', slug],
+    queryFn: () => blogApi.getPost(slug).then(r => r.data),
+    ...SEMI,
+    enabled: !!slug,
+    retry: false,  // a 404 means the post does not exist — show Not Found, don't retry
+  });
+}
+
+export function useBlogCategories() {
+  return useQuery({
+    queryKey: ['blogCategories'],
+    queryFn: () => blogApi.getCategories().then(r => r.data),
     ...STATIC,
   });
 }

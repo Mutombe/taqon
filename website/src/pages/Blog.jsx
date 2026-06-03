@@ -5,18 +5,33 @@ import { Link } from 'react-router-dom';
 import { MagnifyingGlass, Calendar, Clock, ArrowRight, CaretLeft, CaretRight, Tag, Heart } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import SEO from '../components/SEO';
-import { blogPosts } from '../data/blogData';
+import { useBlogPosts } from '../hooks/useQueries';
+import { normalizeBlogPost } from '../api/blog';
 import useSavesStore from '../stores/savesStore';
 
 const POSTS_PER_PAGE = 6;
-
-const categories = ['All', 'Education', 'Technology', 'Guide', 'Maintenance', 'News', 'Tips'];
+// Real installation photo used when a post's image is missing/broken.
+const FALLBACK_IMG = '/chisipiti-10kva-2.jpg';
 
 export default function Blog() {
   const [activeCategory, setActiveCategory] = useState('All');
   const { toggleBlog, likedBlogs } = useSavesStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Database-backed: every published post, newest first. Pulled in one page
+  // (the blog is small) and filtered/paginated client-side below.
+  const { data, isLoading } = useBlogPosts({ page_size: 100 });
+  const blogPosts = useMemo(() => {
+    const raw = data?.results || (Array.isArray(data) ? data : []);
+    return raw.map(normalizeBlogPost);
+  }, [data]);
+
+  // Category tabs are derived from the posts that actually exist.
+  const categories = useMemo(
+    () => ['All', ...Array.from(new Set(blogPosts.map((p) => p.category).filter(Boolean)))],
+    [blogPosts],
+  );
 
   const filtered = useMemo(() => {
     let posts = [...blogPosts];
@@ -33,7 +48,7 @@ export default function Blog() {
       );
     }
     return posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [activeCategory, searchQuery]);
+  }, [blogPosts, activeCategory, searchQuery]);
 
   const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE);
   const paginatedPosts = filtered.slice(
@@ -136,15 +151,32 @@ export default function Blog() {
             </div>
           </div>
 
+          {/* Loading skeletons */}
+          {isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white dark:bg-taqon-charcoal rounded-3xl overflow-hidden border border-gray-100 dark:border-white/10">
+                  <div className="aspect-[16/10] bg-gray-200 dark:bg-white/10 animate-pulse" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-5 w-3/4 bg-gray-200 dark:bg-white/10 rounded animate-pulse" />
+                    <div className="h-4 w-full bg-gray-200 dark:bg-white/10 rounded animate-pulse" />
+                    <div className="h-4 w-5/6 bg-gray-200 dark:bg-white/10 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Featured Post */}
-          {currentPage === 1 && featuredPost && (
+          {!isLoading && currentPage === 1 && featuredPost && (
             <AnimatedSection className="mb-10">
               <Link to={`/blog/${featuredPost.slug}`} className="group block">
                 <div className="grid lg:grid-cols-2 gap-6 bg-white dark:bg-taqon-charcoal rounded-3xl overflow-hidden border border-gray-100 dark:border-white/10 hover:border-taqon-orange/20 hover:shadow-xl hover:shadow-taqon-orange/5 transition-all duration-500">
                   <div className="aspect-[16/10] lg:aspect-auto overflow-hidden">
                     <img
-                      src={featuredPost.image}
+                      src={featuredPost.image || FALLBACK_IMG}
                       alt={featuredPost.title}
+                      onError={(e) => { if (e.currentTarget.src !== window.location.origin + FALLBACK_IMG) e.currentTarget.src = FALLBACK_IMG; }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       loading="eager"
                     />
@@ -199,8 +231,9 @@ export default function Blog() {
                     <div className="bg-white dark:bg-taqon-charcoal rounded-3xl overflow-hidden border border-gray-100 dark:border-white/10 hover:border-taqon-orange/20 hover:shadow-xl hover:shadow-taqon-orange/5 transition-all duration-500 h-full flex flex-col">
                       <div className="relative aspect-[16/10] overflow-hidden">
                         <img
-                          src={post.image}
+                          src={post.image || FALLBACK_IMG}
                           alt={post.title}
+                          onError={(e) => { if (e.currentTarget.src !== window.location.origin + FALLBACK_IMG) e.currentTarget.src = FALLBACK_IMG; }}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           loading="lazy"
                         />
@@ -241,7 +274,7 @@ export default function Blog() {
           </motion.div>
 
           {/* Empty State */}
-          {filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && (
             <div className="text-center py-20">
               <Tag size={48} className="text-taqon-muted/30 mx-auto mb-4" />
               <h3 className="text-xl font-bold font-syne text-taqon-charcoal dark:text-white">
