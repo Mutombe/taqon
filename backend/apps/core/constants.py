@@ -1,6 +1,50 @@
 """
 Shared constants for the Taqon Electrico platform.
 """
+import os
+
+# ── Internal / test accounts ──────────────────────────────────────────
+# Activity from these accounts (quote downloads, inquiries, advisor
+# sessions) is NOT recorded, so admin testing does not pollute the
+# customer analytics. Extend at runtime without a deploy via the
+# INTERNAL_TEST_EMAILS env var (comma-separated).
+INTERNAL_TEST_EMAILS = frozenset({
+    'admin@taqon.co.zw',
+    'smutombe98@gmail.com',
+    'simbarashemutombe1@gmail.com',
+    'publish@bgfi.global',
+    'mcdonaldmatiki@gmail.com',
+})
+
+
+def _internal_email_set():
+    extra = {
+        e.strip().lower()
+        for e in os.environ.get('INTERNAL_TEST_EMAILS', '').split(',')
+        if e.strip()
+    }
+    return INTERNAL_TEST_EMAILS | extra
+
+
+def is_internal_email(email):
+    """True if the given email belongs to an internal / test account."""
+    if not email:
+        return False
+    return email.strip().lower() in _internal_email_set()
+
+
+def is_internal_actor(request=None, email=None):
+    """True if this request/email is internal testing and should not be
+    recorded. Matches on the supplied email and, when present, the
+    authenticated user's email (covers logged-in admin testing on public
+    endpoints)."""
+    if is_internal_email(email):
+        return True
+    user = getattr(request, 'user', None) if request is not None else None
+    if user is not None and getattr(user, 'is_authenticated', False):
+        return is_internal_email(getattr(user, 'email', ''))
+    return False
+
 
 ZIMBABWE_PROVINCES = [
     ('harare', 'Harare'),

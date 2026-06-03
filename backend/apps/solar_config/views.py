@@ -204,9 +204,12 @@ class RecommendView(APIView):
         result = recommend_packages(selections, distance_km=distance_km, preferences=preferences)
 
         # Track session — store full appliance selection so admin can
-        # see exactly what the customer picked.
+        # see exactly what the customer picked. Skipped for internal /
+        # test accounts (logged-in admin) so admin testing is not recorded.
+        from apps.core.constants import is_internal_actor
         session_id = None
-        try:
+        if not is_internal_actor(request):
+          try:
             from .models import RecommendationSession
             tiers = result.get('tiers', {})
             appliances_snapshot = [
@@ -234,7 +237,7 @@ class RecommendView(APIView):
                 appliances=appliances_snapshot,
             )
             session_id = str(session.id)
-        except Exception:
+          except Exception:
             pass  # Never fail the recommendation due to tracking
 
         # Serialize response
@@ -461,33 +464,45 @@ class InstantQuoteView(APIView):
             'warranties': [],            # template uses default Taqon warranty block
         }
 
-        # Track download + link to advisor session if provided
-        try:
-            from .models import InstantQuoteDownload, RecommendationSession
-            session = None
-            appliances_snapshot = []
-            if session_id:
-                try:
-                    session = RecommendationSession.objects.get(pk=session_id)
-                    appliances_snapshot = session.appliances or []
-                except (RecommendationSession.DoesNotExist, ValueError, TypeError):
-                    session = None
+        # Track download + link to advisor session if provided. Internal /
+        # test accounts are not recorded (and any advisor session that led
+        # to this test download is cleaned up) so admin testing does not
+        # pollute the analytics.
+        from apps.core.constants import is_internal_actor
+        if is_internal_actor(request, customer_email):
+            try:
+                from .models import RecommendationSession
+                if session_id:
+                    RecommendationSession.objects.filter(pk=session_id).delete()
+            except Exception:
+                pass
+        else:
+            try:
+                from .models import InstantQuoteDownload, RecommendationSession
+                session = None
+                appliances_snapshot = []
+                if session_id:
+                    try:
+                        session = RecommendationSession.objects.get(pk=session_id)
+                        appliances_snapshot = session.appliances or []
+                    except (RecommendationSession.DoesNotExist, ValueError, TypeError):
+                        session = None
 
-            InstantQuoteDownload.objects.create(
-                package=package,
-                package_name=package.family.name if package.family else package.name,
-                tier_label=tier_label,
-                distance_km=distance_km,
-                total_price=price['total'],
-                customer_name=customer_name,
-                customer_email=customer_email,
-                customer_phone=customer_phone,
-                customer_address=customer_address,
-                session=session,
-                appliances=appliances_snapshot,
-            )
-        except Exception:
-            pass  # Never fail the quote due to tracking
+                InstantQuoteDownload.objects.create(
+                    package=package,
+                    package_name=package.family.name if package.family else package.name,
+                    tier_label=tier_label,
+                    distance_km=distance_km,
+                    total_price=price['total'],
+                    customer_name=customer_name,
+                    customer_email=customer_email,
+                    customer_phone=customer_phone,
+                    customer_address=customer_address,
+                    session=session,
+                    appliances=appliances_snapshot,
+                )
+            except Exception:
+                pass  # Never fail the quote due to tracking
 
         # ── Render the quote via ReportLab platypus (replaces the
         # xhtml2pdf / WeasyPrint HTML path). Native flowable layout

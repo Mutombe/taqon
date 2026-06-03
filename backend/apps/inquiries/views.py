@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from apps.core.pagination import StandardPagination
 from apps.core.permissions import IsAdmin
+from apps.core.constants import is_internal_actor
 
 from .models import Inquiry
 from .serializers import (
@@ -21,6 +22,18 @@ class PublicInquiryView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        # Internal / test accounts are not recorded (and the admin
+        # notification email is not fired) so admin testing does not
+        # pollute the inquiries pipeline. The form still gets a success
+        # response so the test flow behaves normally.
+        if is_internal_actor(request, serializer.validated_data.get('email')):
+            return Response(
+                {
+                    'id': None,
+                    'detail': "Thanks — we'll be in touch within one business day.",
+                },
+                status=status.HTTP_201_CREATED,
+            )
         inquiry = serializer.save()
         # post_save signal fires the admin notification email — see
         # apps/inquiries/signals.py.
