@@ -47,6 +47,7 @@ urlpatterns = [
     path('admin/products/create/', admin_views.AdminProductCreateView.as_view(), name='admin-product-create'),
     path('admin/products/<slug:slug>/', admin_views.AdminProductUpdateView.as_view(), name='admin-product-detail'),
     path('admin/products/<slug:slug>/delete/', admin_views.AdminProductDeleteView.as_view(), name='admin-product-delete'),
+    path('admin/products/<slug:slug>/duplicate/', admin_views.AdminProductDuplicateView.as_view(), name='admin-product-duplicate'),
     path('admin/products/<slug:slug>/images/', admin_views.AdminProductImageUploadView.as_view(), name='admin-product-image-upload'),
     path('admin/products/<slug:slug>/images/<uuid:image_id>/delete/', admin_views.AdminProductImageDeleteView.as_view(), name='admin-product-image-delete'),
     path('admin/products/<slug:slug>/images/<uuid:image_id>/set-primary/', admin_views.AdminProductImageSetPrimaryView.as_view(), name='admin-product-image-set-primary'),

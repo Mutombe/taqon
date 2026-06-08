@@ -167,6 +167,82 @@ class AdminProductDeleteView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema(tags=['Admin'])
+class AdminProductDuplicateView(APIView):
+    """Admin view: duplicate a product into a new inactive draft.
+
+    Copies every field plus the images (the underlying image files are
+    duplicated so the two products are fully independent). The copy starts
+    inactive with zero stock and no reviews, and gets a unique name/slug/SKU,
+    so a half-finished duplicate can never leak onto the storefront before
+    it's reviewed and activated.
+    """
+    permission_classes = [IsAdmin]
+
+    def post(self, request, slug):
+        try:
+            src = (
+                Product.objects
+                .prefetch_related('images')
+                .get(slug=slug, is_deleted=False)
+            )
+        except Product.DoesNotExist:
+            return Response(
+                {'detail': 'Product not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # SKU is unique and required — derive a free one from the source.
+        base_sku = f'{src.sku or "SKU"}-COPY'
+        new_sku = base_sku
+        n = 2
+        while Product.objects.filter(sku=new_sku).exists():
+            new_sku = f'{base_sku}-{n}'
+            n += 1
+
+        with transaction.atomic():
+            dup = Product.objects.get(pk=src.pk)
+            dup.pk = None
+            dup._state.adding = True
+            dup.name = f'{src.name} (Copy)'
+            dup.slug = ''            # Product.save() generates a unique slug
+            dup.sku = new_sku
+            dup.is_active = False    # land as a draft
+            dup.is_featured = False
+            dup.stock_quantity = 0
+            dup.average_rating = 0
+            dup.total_reviews = 0
+            dup.created_by = request.user
+            dup.save()
+
+            # Copy images, duplicating the stored file for each so deleting
+            # an image on one product never affects the other.
+            from django.core.files.base import ContentFile
+            for img in src.images.all():
+                new_img = ProductImage(
+                    product=dup,
+                    alt_text=img.alt_text,
+                    is_primary=img.is_primary,
+                    order=img.order,
+                    image_url=img.image_url,
+                )
+                if img.image:
+                    try:
+                        img.image.open('rb')
+                        content = img.image.read()
+                        img.image.close()
+                        new_img.image.save(
+                            os.path.basename(img.image.name),
+                            ContentFile(content), save=False,
+                        )
+                    except Exception:
+                        logger.exception('Duplicate: failed to copy image file')
+                new_img.save()
+
+        serializer = AdminProductDetailSerializer(dup, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 # ══════════════════════════════════════════════
 # Admin Product Image Management
 # ══════════════════════════════════════════════

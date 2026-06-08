@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, MagnifyingGlass, Pencil, Trash, X, UploadSimple,
   Package, CheckCircle, XCircle, Star, Tag, CircleNotch,
-  Funnel, CaretLeft, CaretRight, Image as ImageIcon,
+  Funnel, CaretLeft, CaretRight, Image as ImageIcon, Copy,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -597,6 +597,21 @@ export default function AdminProducts() {
 
   const handleSaved = () => { invalidateProducts(); };
 
+  const [duplicatingId, setDuplicatingId] = useState(null);
+  const handleDuplicate = async (product) => {
+    setDuplicatingId(product.id);
+    try {
+      const { data } = await adminApi.duplicateProduct(product.slug);
+      toast.success('Duplicated as a draft — edit and activate it');
+      invalidateProducts();
+      setModalProduct(data);  // open the new copy in the editor straight away
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Failed to duplicate product');
+    } finally {
+      setDuplicatingId(null);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -779,12 +794,24 @@ export default function AdminProducts() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => setModalProduct(product)}
+                            title="Edit"
                             className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-taqon-orange transition-colors"
                           >
                             <Pencil size={15} />
                           </button>
                           <button
+                            onClick={() => handleDuplicate(product)}
+                            disabled={duplicatingId === product.id}
+                            title="Duplicate"
+                            className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-taqon-orange transition-colors disabled:opacity-50"
+                          >
+                            {duplicatingId === product.id
+                              ? <CircleNotch size={15} className="animate-spin" />
+                              : <Copy size={15} />}
+                          </button>
+                          <button
                             onClick={() => setDeleteTarget(product)}
+                            title="Delete"
                             className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors"
                           >
                             <Trash size={15} />

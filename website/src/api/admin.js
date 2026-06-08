@@ -25,6 +25,7 @@ export const adminApi = {
   getAdminProduct: (slug) => api.get(`/shop/admin/products/${slug}/`),
   createProduct: (data) => api.post('/shop/admin/products/create/', data),
   updateProduct: (slug, data) => api.patch(`/shop/admin/products/${slug}/`, data),
+  duplicateProduct: (slug) => api.post(`/shop/admin/products/${slug}/duplicate/`),
   deleteProduct: (slug) => api.delete(`/shop/admin/products/${slug}/delete/`),
   uploadProductImage: (slug, formData) => api.post(`/shop/admin/products/${slug}/images/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteProductImage: (slug, imageId) => api.delete(`/shop/admin/products/${slug}/images/${imageId}/delete/`),
