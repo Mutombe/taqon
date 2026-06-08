@@ -36,4 +36,7 @@ export const shopApi = {
   getOrders: (params) => api.get('/shop/orders/', { params }),
   getOrder: (orderNumber) => api.get(`/shop/orders/${orderNumber}/`),
   cancelOrder: (orderNumber) => api.post(`/shop/orders/${orderNumber}/cancel/`),
+
+  // Public media gallery
+  getGallery: (params) => api.get('/shop/gallery/', { params }),
 };

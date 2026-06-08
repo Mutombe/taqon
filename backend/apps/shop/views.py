@@ -980,3 +980,34 @@ class AdminOrderStatusUpdateView(APIView):
             .get(pk=order.pk)
         )
         return Response(OrderSerializer(order).data)
+
+
+# ══════════════════════════════════════════════
+# Public Gallery
+# ══════════════════════════════════════════════
+
+@extend_schema(
+    tags=['Shop'],
+    parameters=[OpenApiParameter('search', str, description='Search by name or source')],
+)
+class GalleryView(APIView):
+    """Public gallery — every image shown on a public page (active products,
+    published posts, public uploads), minus any individually hidden URLs."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from .library import aggregate_library
+        items = aggregate_library(
+            request=request, public_only=True,
+            search=request.query_params.get('search', ''),
+        )
+        try:
+            page = max(1, int(request.query_params.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            size = min(120, max(1, int(request.query_params.get('page_size', 60))))
+        except (TypeError, ValueError):
+            size = 60
+        start = (page - 1) * size
+        return Response({'count': len(items), 'results': items[start:start + size]})

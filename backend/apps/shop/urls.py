@@ -58,8 +58,12 @@ urlpatterns = [
     path('admin/brands/', admin_views.AdminBrandListCreateView.as_view(), name='admin-brand-list'),
     path('admin/brands/<slug:slug>/', admin_views.AdminBrandUpdateView.as_view(), name='admin-brand-detail'),
 
-    # Admin — Media Management
+    # Admin — Media library
     path('admin/media/', admin_views.AdminMediaListView.as_view(), name='admin-media-list'),
     path('admin/media/upload/', admin_views.AdminMediaUploadView.as_view(), name='admin-media-upload'),
-    path('admin/media/<uuid:image_id>/delete/', admin_views.AdminMediaDeleteView.as_view(), name='admin-media-delete'),
+    path('admin/media/<str:item_id>/delete/', admin_views.AdminMediaDeleteView.as_view(), name='admin-media-delete'),
+    path('admin/gallery/hide/', admin_views.AdminGalleryHideView.as_view(), name='admin-gallery-hide'),
+
+    # Public gallery
+    path('gallery/', views.GalleryView.as_view(), name='public-gallery'),
 ]

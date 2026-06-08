@@ -24,6 +24,7 @@ const footerLinks = {
   quickLinks: [
     { label: 'About Us', path: '/about' },
     { label: 'Our Projects', path: '/projects' },
+    { label: 'Gallery', path: '/gallery' },
     { label: 'Blog', path: '/blog' },
     { label: 'Certifications', path: '/certifications' },
     { label: 'Contact Us', path: '/contact' },

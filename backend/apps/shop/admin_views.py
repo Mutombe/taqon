@@ -16,7 +16,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from apps.core.pagination import StandardPagination
 from apps.core.permissions import IsAdmin
 
-from .models import Product, ProductImage, Category, Brand
+from .models import Product, ProductImage, Category, Brand, MediaAsset, GalleryHidden
 from .serializers import (
     ProductListSerializer,
     ProductImageSerializer,
@@ -484,44 +484,42 @@ class AdminBrandUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
 @extend_schema(
     tags=['Admin'],
-    parameters=[
-        OpenApiParameter('product', str, description='Filter by product slug'),
-        OpenApiParameter('is_primary', bool, description='Filter by primary status'),
-    ],
+    parameters=[OpenApiParameter('search', str, description='Search by name or source')],
 )
-class AdminMediaListView(generics.ListAPIView):
-    """Admin view: list all product images as media library."""
+class AdminMediaListView(APIView):
+    """Admin view: the full media library — a deduplicated pool of every image
+    on the site (standalone uploads + product images + blog images) so an admin
+    can reuse one instead of re-uploading."""
     permission_classes = [IsAdmin]
-    serializer_class = ProductImageSerializer
-    pagination_class = StandardPagination
 
-    def get_queryset(self):
-        qs = ProductImage.objects.select_related('product').all()
-
-        product_slug = self.request.query_params.get('product')
-        if product_slug:
-            qs = qs.filter(product__slug=product_slug)
-
-        is_primary = self.request.query_params.get('is_primary')
-        if is_primary is not None:
-            qs = qs.filter(is_primary=is_primary.lower() == 'true')
-
-        return qs.order_by('-created_at')
+    def get(self, request):
+        from .library import aggregate_library
+        items = aggregate_library(
+            request=request, public_only=False,
+            search=request.query_params.get('search', ''),
+        )
+        try:
+            page = max(1, int(request.query_params.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            size = min(200, max(1, int(request.query_params.get('page_size', 48))))
+        except (TypeError, ValueError):
+            size = 48
+        start = (page - 1) * size
+        return Response({'count': len(items), 'results': items[start:start + size]})
 
 
 @extend_schema(tags=['Admin'])
 class AdminMediaUploadView(APIView):
-    """Admin view: upload a standalone media file and return its URL."""
+    """Admin view: upload a standalone image into the library (or attach it to
+    a product when product_slug is provided)."""
     permission_classes = [IsAdmin]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        """
-        Upload a file. If product_slug is provided, attach it to that product.
-        Otherwise returns a standalone URL (stored as image_url on a temp ProductImage).
-        """
         product_slug = request.data.get('product_slug')
-        image_file = request.FILES.get('file')
+        image_file = request.FILES.get('file') or request.FILES.get('image')
 
         if not image_file:
             return Response(
@@ -548,51 +546,65 @@ class AdminMediaUploadView(APIView):
             serializer = ProductImageSerializer(img, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        # Standalone upload — store temporarily against first product
-        # (real production would use a dedicated media model)
-        from django.core.files.storage import default_storage
-        file_name = f"uploads/{image_file.name}"
-        saved_path = default_storage.save(file_name, image_file)
-        file_url = request.build_absolute_uri(
-            f'{request.scheme}://{request.get_host()}/media/{saved_path}'
+        # Standalone library upload → MediaAsset row (reusable).
+        asset = MediaAsset.objects.create(
+            file=image_file,
+            name=request.data.get('name') or getattr(image_file, 'name', '') or 'Image',
+            alt_text=request.data.get('alt_text', ''),
+            file_size=getattr(image_file, 'size', None),
+            uploaded_by=request.user,
+            is_public=str(request.data.get('is_public', '')).lower() == 'true',
         )
-
         return Response({
-            'url': f'/media/{saved_path}',
-            'absolute_url': file_url,
-            'file_name': os.path.basename(saved_path),
+            'id': f'asset-{asset.pk}',
+            'url': asset.src,
+            'name': asset.name,
+            'kind': 'upload',
         }, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(tags=['Admin'])
 class AdminMediaDeleteView(APIView):
-    """Admin view: delete a product image (media item) by ID."""
+    """Admin view: delete a library item. Standalone uploads are removed
+    outright; product/blog images can't be deleted from the library (they
+    belong to their product/post) — hide them from the gallery instead."""
     permission_classes = [IsAdmin]
 
-    def delete(self, request, image_id):
-        try:
-            image = ProductImage.objects.get(pk=image_id)
-        except ProductImage.DoesNotExist:
-            return Response(
-                {'detail': 'Media item not found.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        product = image.product
-        was_primary = image.is_primary
-
-        if image.image:
+    def delete(self, request, item_id):
+        if item_id.startswith('asset-'):
             try:
-                image.image.delete(save=False)
-            except Exception:
-                pass
+                asset = MediaAsset.objects.get(pk=item_id[len('asset-'):])
+            except (MediaAsset.DoesNotExist, ValueError):
+                return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            if asset.file:
+                try:
+                    asset.file.delete(save=False)
+                except Exception:
+                    pass
+            asset.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        image.delete()
+        return Response(
+            {'detail': 'This image belongs to a product or blog post. '
+                       'Hide it from the gallery, or remove it from its product/post.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-        if was_primary and product:
-            next_image = product.images.order_by('order').first()
-            if next_image:
-                next_image.is_primary = True
-                next_image.save(update_fields=['is_primary'])
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+@extend_schema(tags=['Admin'])
+class AdminGalleryHideView(APIView):
+    """Admin view: hide a specific image URL from the public gallery (POST)
+    or unhide it (DELETE). The image stays on its product/post."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        url = (request.data.get('url') or '').strip()
+        if not url:
+            return Response({'detail': 'url is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        GalleryHidden.objects.get_or_create(url=url, defaults={'hidden_by': request.user})
+        return Response({'url': url, 'is_hidden': True})
+
+    def delete(self, request):
+        url = (request.data.get('url') or request.query_params.get('url') or '').strip()
+        GalleryHidden.objects.filter(url=url).delete()
+        return Response({'url': url, 'is_hidden': False})

@@ -490,6 +490,15 @@ export function useAdminMedia(params) {
   });
 }
 
+export function useGallery(params) {
+  return useQuery({
+    queryKey: ['gallery', params],
+    queryFn: () => shopApi.getGallery(params).then(r => r.data),
+    ...SEMI,
+    placeholderData: (prev) => prev,
+  });
+}
+
 export function useAdminUserAnalytics(params) {
   return useQuery({
     queryKey: ['adminUserAnalytics', params],

@@ -3,12 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CaretLeft, CircleNotch, UploadSimple, X, FloppyDisk, Globe,
-  Tag, Clock, Image as ImageIcon,
+  Tag, Clock, Image as ImageIcon, Images,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
 import { SkeletonBox } from '../../components/Skeletons';
+import LibraryPicker from '../../components/LibraryPicker';
 import { useAdminBlogPost, useAdminBlogCategories } from '../../hooks/useQueries';
 
 function slugify(str) {
@@ -82,6 +83,8 @@ export default function AdminBlogEditor() {
   const [slugManual, setSlugManual] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [libraryUrl, setLibraryUrl] = useState(null);
+  const [showLibrary, setShowLibrary] = useState(false);
 
   const [form, setForm] = useState({
     title: '',
@@ -146,7 +149,15 @@ export default function AdminBlogEditor() {
   const handleImageChange = (file) => {
     if (!file) return;
     setImageFile(file);
+    setLibraryUrl(null);
     const url = URL.createObjectURL(file);
+    setImagePreview(url);
+  };
+
+  const handlePickFromLibrary = (url) => {
+    if (!url) return;
+    setImageFile(null);
+    setLibraryUrl(url);
     setImagePreview(url);
   };
 
@@ -169,6 +180,8 @@ export default function AdminBlogEditor() {
         meta_title: form.meta_title,
         meta_description: form.meta_description,
       };
+      // Reused a library image (a URL) rather than uploading a new file.
+      if (libraryUrl && !imageFile) payload.image_url = libraryUrl;
 
       // If there's an image file, use FormData
       let data;
@@ -372,7 +385,7 @@ export default function AdminBlogEditor() {
                 <img src={imagePreview} alt="" className="w-full h-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => { setImagePreview(null); setImageFile(null); }}
+                  onClick={() => { setImagePreview(null); setImageFile(null); setLibraryUrl(null); }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
                 >
                   <X size={14} />
@@ -396,13 +409,23 @@ export default function AdminBlogEditor() {
               className="hidden"
               onChange={(e) => handleImageChange(e.target.files[0])}
             />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="w-full text-xs text-taqon-orange hover:underline transition-colors text-center"
-            >
-              {imagePreview ? 'Change image' : 'Upload image'}
-            </button>
+            <div className="flex items-center justify-center gap-3 mt-1">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="text-xs text-taqon-orange hover:underline transition-colors"
+              >
+                {imagePreview ? 'Change image' : 'Upload image'}
+              </button>
+              <span className="text-[var(--text-muted)] text-xs">·</span>
+              <button
+                type="button"
+                onClick={() => setShowLibrary(true)}
+                className="flex items-center gap-1 text-xs text-taqon-orange hover:underline transition-colors"
+              >
+                <Images size={13} /> Library
+              </button>
+            </div>
           </div>
 
           {/* Publish Settings */}
@@ -471,6 +494,12 @@ export default function AdminBlogEditor() {
           </div>
         </div>
       </form>
+      {showLibrary && (
+        <LibraryPicker
+          onSelect={handlePickFromLibrary}
+          onClose={() => setShowLibrary(false)}
+        />
+      )}
     </div>
   );
 }

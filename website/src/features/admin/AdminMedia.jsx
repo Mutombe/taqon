@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UploadSimple, Trash, MagnifyingGlass, X, CircleNotch,
-  Image as ImageIcon, FileImage, ArrowsOut,
+  Image as ImageIcon, FileImage, ArrowsOut, EyeSlash, Eye,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -134,9 +134,12 @@ function UploadZone({ onUpload, uploading }) {
   );
 }
 
-function MediaCard({ item, onPreview, onDelete }) {
+const KIND_LABEL = { product: 'Product', blog: 'Blog', upload: 'Upload' };
+
+function MediaCard({ item, onPreview, onDelete, onToggleHidden }) {
   const [showActions, setShowActions] = useState(false);
   const src = item.image || item.url || item.file || item.thumbnail;
+  const isUpload = item.kind === 'upload' || !item.kind;
 
   return (
     <motion.div
@@ -151,11 +154,28 @@ function MediaCard({ item, onPreview, onDelete }) {
       {/* Thumbnail */}
       <div className="aspect-square bg-[var(--bg-tertiary)] overflow-hidden relative">
         {src ? (
-          <img src={src} alt={item.name || item.filename} className="w-full h-full object-cover" loading="lazy" />
+          <img
+            src={src}
+            alt={item.name || item.filename}
+            className={`w-full h-full object-cover ${item.is_hidden ? 'opacity-40 grayscale' : ''}`}
+            loading="lazy"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <FileImage size={32} className="text-[var(--text-muted)] opacity-40" />
           </div>
+        )}
+
+        {/* Kind badge */}
+        {item.kind && (
+          <span className="absolute top-1.5 left-1.5 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">
+            {KIND_LABEL[item.kind] || item.kind}
+          </span>
+        )}
+        {item.is_hidden && (
+          <span className="absolute top-1.5 right-1.5 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-medium flex items-center gap-1">
+            <EyeSlash size={10} /> Hidden
+          </span>
         )}
 
         {/* Hover actions overlay */}
@@ -174,13 +194,23 @@ function MediaCard({ item, onPreview, onDelete }) {
               >
                 <ArrowsOut size={16} />
               </button>
-              <button
-                onClick={() => onDelete(item)}
-                className="w-9 h-9 rounded-xl bg-red-500/80 hover:bg-red-500 flex items-center justify-center text-white transition-colors"
-                title="Delete"
-              >
-                <Trash size={16} />
-              </button>
+              {isUpload ? (
+                <button
+                  onClick={() => onDelete(item)}
+                  className="w-9 h-9 rounded-xl bg-red-500/80 hover:bg-red-500 flex items-center justify-center text-white transition-colors"
+                  title="Delete"
+                >
+                  <Trash size={16} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => onToggleHidden(item)}
+                  className="w-9 h-9 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+                  title={item.is_hidden ? 'Show in public gallery' : 'Hide from public gallery'}
+                >
+                  {item.is_hidden ? <Eye size={16} /> : <EyeSlash size={16} />}
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -195,9 +225,9 @@ function MediaCard({ item, onPreview, onDelete }) {
           <span className="text-xs text-[var(--text-muted)]">{formatBytes(item.size)}</span>
           <span className="text-xs text-[var(--text-muted)]">{formatDate(item.created_at)}</span>
         </div>
-        {item.product && (
-          <p className="text-xs text-taqon-orange truncate mt-0.5" title={item.product?.name || item.product}>
-            {item.product?.name || item.product}
+        {(item.source || item.product) && (
+          <p className="text-xs text-taqon-orange truncate mt-0.5" title={item.source || item.product?.name || item.product}>
+            {item.source || item.product?.name || item.product}
           </p>
         )}
       </div>
@@ -276,6 +306,26 @@ export default function AdminMedia() {
     }
   };
 
+  // Product/blog images can't be deleted from here (they belong to live
+  // content) — only hidden from the public gallery.
+  const handleToggleHidden = async (item) => {
+    const url = item.url || item.image || item.file;
+    if (!url) return;
+    try {
+      if (item.is_hidden) {
+        await adminApi.unhideGalleryImage(url);
+        toast.success('Image will show in the public gallery');
+      } else {
+        await adminApi.hideGalleryImage(url);
+        toast.success('Image hidden from the public gallery');
+      }
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ['gallery'] });
+    } catch {
+      toast.error('Could not update visibility');
+    }
+  };
+
   const filtered = search
     ? media.filter((m) => (m.name || m.filename || '').toLowerCase().includes(search.toLowerCase()))
     : media;
@@ -336,6 +386,7 @@ export default function AdminMedia() {
                   item={item}
                   onPreview={setPreviewItem}
                   onDelete={setDeleteTarget}
+                  onToggleHidden={handleToggleHidden}
                 />
               ))}
             </AnimatePresence>

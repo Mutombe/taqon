@@ -333,3 +333,64 @@ class OrderStatusHistory(TimeStampedModel):
 
     def __str__(self):
         return f"{self.order.order_number}: {self.old_status} → {self.new_status}"
+
+
+# ══════════════════════════════════════════════
+# Media Library
+# ══════════════════════════════════════════════
+
+class MediaAsset(TimeStampedModel):
+    """A reusable image in the central media library.
+
+    Standalone uploads (added straight to the Media tab) live here as rows;
+    images that already belong to products/blog posts are aggregated into the
+    library view at query time, so the library is a single pool you can pull
+    from instead of re-uploading. Optionally surfaced on the public gallery.
+    """
+    file = models.ImageField(upload_to='library/', blank=True, null=True)
+    # External or relative URL alternative to an uploaded file.
+    url = models.CharField(max_length=500, blank=True)
+    name = models.CharField(max_length=255, blank=True)
+    alt_text = models.CharField(max_length=255, blank=True)
+    tags = models.JSONField(default=list, blank=True)
+    file_size = models.PositiveIntegerField(null=True, blank=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='media_assets',
+    )
+    # Show standalone uploads on the public gallery too (off by default —
+    # product/blog images appear there automatically via aggregation).
+    is_public = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def src(self):
+        if self.file:
+            try:
+                return self.file.url
+            except Exception:
+                return ''
+        return self.url or ''
+
+    def __str__(self):
+        return self.name or self.src or f'Asset {self.pk}'
+
+
+class GalleryHidden(TimeStampedModel):
+    """A specific image URL hidden from the public gallery. Lets an admin
+    pull any aggregated image (a product or blog photo) off the public
+    gallery without deleting it from its product/post."""
+    url = models.CharField(max_length=500, unique=True, db_index=True)
+    hidden_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='hidden_gallery_images',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Gallery hidden images'
+
+    def __str__(self):
+        return self.url

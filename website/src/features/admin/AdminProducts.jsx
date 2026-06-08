@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, MagnifyingGlass, Pencil, Trash, X, UploadSimple,
   Package, CheckCircle, XCircle, Star, Tag, CircleNotch,
-  Funnel, CaretLeft, CaretRight, Image as ImageIcon, Copy,
+  Funnel, CaretLeft, CaretRight, Image as ImageIcon, Copy, Images,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
 import { SkeletonBox } from '../../components/Skeletons';
+import LibraryPicker from '../../components/LibraryPicker';
 import { useAdminProducts, useCategories, useBrands } from '../../hooks/useQueries';
 
 const EMPTY_FORM = {
@@ -138,7 +139,7 @@ function SpecEditor({ value, onChange }) {
 // Presentational image area. The modal owns the data and decides whether a
 // picked file is staged (new product, not saved yet) or uploaded immediately
 // (existing product). Staged images preview instantly via an object URL.
-function ImageUploadArea({ images, onAddFiles, onDelete, onSetPrimary, uploading, isNew }) {
+function ImageUploadArea({ images, onAddFiles, onDelete, onSetPrimary, onPickLibrary, uploading, isNew }) {
   const fileRef = useRef();
   const srcOf = (img) => img.preview || img.image || img.image_url || img.url;
 
@@ -173,6 +174,13 @@ function ImageUploadArea({ images, onAddFiles, onDelete, onSetPrimary, uploading
           onChange={(e) => { pick(e.target.files); e.target.value = ''; }}
         />
       </div>
+      <button
+        type="button"
+        onClick={onPickLibrary}
+        className="flex items-center justify-center gap-2 w-full py-2 rounded-xl border border-[var(--card-border)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-taqon-orange transition-colors"
+      >
+        <Images size={16} /> Choose from library
+      </button>
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {images.map((img) => (
@@ -247,6 +255,7 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
   const [images, setImages] = useState(product?.images || []);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
   const [savedSlug, setSavedSlug] = useState(product?.slug || null);
   // When editing, the list row is a compact projection that omits most
   // editable fields (description, specifications, warranty, images, …).
@@ -361,6 +370,34 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
     }
   };
 
+  // Reuse an existing image from the library (a URL). Attach to the product
+  // now if it exists, otherwise stage it (uploaded after create).
+  const handleAddFromLibrary = async (url) => {
+    if (!url) return;
+    if (savedSlug) {
+      setUploading(true);
+      try {
+        const fd = new FormData();
+        fd.append('image_urls', url);
+        const { data } = await adminApi.uploadProductImage(savedSlug, fd);
+        setImages((imgs) => [...imgs, ...(Array.isArray(data) ? data : [data])]);
+        onSaved();
+      } catch {
+        toast.error('Failed to add image');
+      } finally {
+        setUploading(false);
+      }
+    } else {
+      setImages((imgs) => [...imgs, {
+        id: `staged-url-${imgs.length}-${url.slice(-16)}`,
+        image_url: url,
+        _staged: true,
+        _url: url,
+        is_primary: imgs.length === 0,
+      }]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) { toast.error('Product name is required'); return; }
@@ -394,8 +431,16 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
           setUploading(true);
           const createdRows = [];
           for (const s of staged) {
-            try { createdRows.push(...await uploadFile(data.slug, s.file)); }
-            catch { /* skip a failed image, keep the rest */ }
+            try {
+              if (s._url) {
+                const fd = new FormData();
+                fd.append('image_urls', s._url);
+                const { data: r } = await adminApi.uploadProductImage(data.slug, fd);
+                createdRows.push(...(Array.isArray(r) ? r : [r]));
+              } else {
+                createdRows.push(...await uploadFile(data.slug, s.file));
+              }
+            } catch { /* skip a failed image, keep the rest */ }
           }
           // Honour a non-first primary choice.
           const primaryIdx = staged.findIndex((s) => s.is_primary);
@@ -588,6 +633,7 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
                 onAddFiles={handleAddFiles}
                 onDelete={handleDeleteImage}
                 onSetPrimary={handleSetPrimary}
+                onPickLibrary={() => setShowLibrary(true)}
               />
             </div>
 
@@ -612,6 +658,13 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
           </form>
         </motion.div>
       </motion.div>
+      {showLibrary && (
+        <LibraryPicker
+          multiple
+          onSelect={handleAddFromLibrary}
+          onClose={() => setShowLibrary(false)}
+        />
+      )}
     </AnimatePresence>
   );
 }

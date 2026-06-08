@@ -77,7 +77,9 @@ export const adminApi = {
   // Media
   getMedia: (params) => api.get('/shop/admin/media/', { params }),
   uploadMedia: (formData) => api.post('/shop/admin/media/upload/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  deleteMedia: (imageId) => api.delete(`/shop/admin/media/${imageId}/delete/`),
+  deleteMedia: (itemId) => api.delete(`/shop/admin/media/${itemId}/delete/`),
+  hideGalleryImage: (url) => api.post('/shop/admin/gallery/hide/', { url }),
+  unhideGalleryImage: (url) => api.delete('/shop/admin/gallery/hide/', { data: { url } }),
 
   // Categories & Brands (for product form dropdowns)
   getCategories: () => api.get('/shop/categories/'),
