@@ -46,7 +46,12 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
 
 
 class AdminProductCreateUpdateSerializer(serializers.ModelSerializer):
-    """Writable serializer for admin product create/update operations."""
+    """Writable serializer for admin product create/update operations.
+
+    slug and sku are optional on input — the slug is generated from the name
+    by Product.save(), and a unique sku is generated here when left blank, so
+    the admin only has to fill name, category and price to create a product.
+    """
 
     class Meta:
         model = Product
@@ -62,8 +67,29 @@ class AdminProductCreateUpdateSerializer(serializers.ModelSerializer):
             'is_active', 'is_featured',
             'meta_title', 'meta_description',
         ]
+        extra_kwargs = {
+            'slug': {'required': False, 'allow_blank': True},
+            'sku': {'required': False, 'allow_blank': True},
+        }
+
+    @staticmethod
+    def _unique_sku(name):
+        import re
+        base = re.sub(r'[^A-Z0-9]+', '-', (name or 'PROD').upper()).strip('-')[:24] or 'PROD'
+        candidate, i = base, 2
+        while Product.objects.filter(sku=candidate).exists():
+            candidate = f'{base}-{i}'
+            i += 1
+        return candidate
+
+    def create(self, validated_data):
+        if not validated_data.get('sku'):
+            validated_data['sku'] = self._unique_sku(validated_data.get('name', ''))
+        return super().create(validated_data)
 
     def validate_sku(self, value):
+        if not value:
+            return value  # auto-generated on create; left unchanged on update
         instance = self.instance
         qs = Product.objects.filter(sku=value, is_deleted=False)
         if instance:

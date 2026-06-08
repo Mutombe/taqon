@@ -17,6 +17,37 @@ const EMPTY_FORM = {
   warranty_period: '', specifications: '{}', is_active: true, is_featured: false,
 };
 
+// ── Draft autosave (new-product form only) ─────────────────────────────
+// Survives a power cut / closed laptop: the in-progress NEW product form is
+// persisted to localStorage as you type and offered back next time. (Pending
+// image files can't be serialised, so the draft restores text fields only.)
+const DRAFT_KEY = 'taqon-product-draft';
+const loadDraft = () => {
+  try { const s = localStorage.getItem(DRAFT_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
+};
+const saveDraft = (form) => {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(form)); } catch { /* quota / private mode */ }
+};
+const clearDraft = () => {
+  try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+};
+const draftHasContent = (f) =>
+  !!f && (f.name?.trim() || f.description?.trim() || f.short_description?.trim() || f.price !== '');
+
+// The API wraps field errors as { error, details: { field: [msg] } }. Dig out
+// a human message so the toast says what's actually wrong, not "Validation failed".
+function firstApiError(data, fallback) {
+  if (!data) return fallback;
+  if (typeof data === 'string') return data;
+  const errs = (data.details && typeof data.details === 'object') ? data.details : data;
+  if (errs.detail) return errs.detail;
+  if (typeof errs === 'object') {
+    const k = Object.keys(errs).find((key) => key !== 'code' && key !== 'status_code' && key !== 'error');
+    if (k) { const v = errs[k]; return `${k}: ${Array.isArray(v) ? v[0] : v}`; }
+  }
+  return data.error || fallback;
+}
+
 function StatusBadge({ active }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -104,61 +135,29 @@ function SpecEditor({ value, onChange }) {
   );
 }
 
-function ImageUploadArea({ images, onUpload, onDelete, onSetPrimary, productSlug }) {
+// Presentational image area. The modal owns the data and decides whether a
+// picked file is staged (new product, not saved yet) or uploaded immediately
+// (existing product). Staged images preview instantly via an object URL.
+function ImageUploadArea({ images, onAddFiles, onDelete, onSetPrimary, uploading, isNew }) {
   const fileRef = useRef();
-  const [uploading, setUploading] = useState(false);
-  const [busyId, setBusyId] = useState(null);
+  const srcOf = (img) => img.preview || img.image || img.image_url || img.url;
 
-  const handleFiles = async (files) => {
-    if (!productSlug) {
-      toast.error('Save the product first, then upload images.');
-      return;
-    }
-    setUploading(true);
-    try {
-      for (const file of Array.from(files)) {
-        const fd = new FormData();
-        fd.append('images', file);
-        const { data } = await adminApi.uploadProductImage(productSlug, fd);
-        // Response is an array of images
-        const uploaded = Array.isArray(data) ? data : [data];
-        uploaded.forEach((img) => onUpload(img));
-      }
-      toast.success('Images uploaded');
-    } catch {
-      toast.error('Image upload failed');
-    } finally {
-      setUploading(false);
-    }
+  const pick = (files) => {
+    const arr = Array.from(files || []);
+    if (arr.length) onAddFiles(arr);
   };
-
-  const handleSetPrimary = async (imgId) => {
-    if (!productSlug || !onSetPrimary) return;
-    setBusyId(imgId);
-    try {
-      await adminApi.setProductImagePrimary(productSlug, imgId);
-      onSetPrimary(imgId);
-      toast.success('Primary image updated');
-    } catch {
-      toast.error('Could not set primary image');
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const srcOf = (img) => img.image || img.image_url || img.url;
 
   return (
     <div className="space-y-3">
-      {!productSlug && (
+      {isNew && (
         <p className="text-xs text-[var(--text-muted)] italic">
-          Save the product first, then you can upload images.
+          Add images now — they’ll upload automatically when you create the product.
         </p>
       )}
       <div
         onClick={() => fileRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
+        onDrop={(e) => { e.preventDefault(); pick(e.dataTransfer.files); }}
         className="border-2 border-dashed border-[var(--input-border)] rounded-xl p-6 text-center cursor-pointer hover:border-taqon-orange/50 transition-colors"
       >
         <UploadSimple size={28} className="mx-auto text-[var(--text-muted)] mb-2" />
@@ -171,7 +170,7 @@ function ImageUploadArea({ images, onUpload, onDelete, onSetPrimary, productSlug
           accept="image/*"
           multiple
           className="hidden"
-          onChange={(e) => handleFiles(e.target.files)}
+          onChange={(e) => { pick(e.target.files); e.target.value = ''; }}
         />
       </div>
       {images.length > 0 && (
@@ -188,17 +187,15 @@ function ImageUploadArea({ images, onUpload, onDelete, onSetPrimary, productSlug
                 {!img.is_primary && (
                   <button
                     type="button"
-                    onClick={() => handleSetPrimary(img.id)}
-                    disabled={busyId === img.id}
-                    className="flex items-center gap-1 text-[10px] font-medium text-white bg-taqon-orange/90 hover:bg-taqon-orange px-2 py-1 rounded-md disabled:opacity-60"
+                    onClick={() => onSetPrimary(img)}
+                    className="flex items-center gap-1 text-[10px] font-medium text-white bg-taqon-orange/90 hover:bg-taqon-orange px-2 py-1 rounded-md"
                   >
-                    {busyId === img.id ? <CircleNotch size={11} className="animate-spin" /> : <Star size={11} weight="fill" />}
-                    Set primary
+                    <Star size={11} weight="fill" /> Set primary
                   </button>
                 )}
                 <button
                   type="button"
-                  onClick={() => onDelete(img.id)}
+                  onClick={() => onDelete(img)}
                   className="flex items-center gap-1 text-[10px] font-medium text-red-300 bg-black/40 hover:bg-red-500/20 px-2 py-1 rounded-md"
                 >
                   <Trash size={11} /> Delete
@@ -238,9 +235,18 @@ function buildForm(p) {
 }
 
 function ProductModal({ product, categories, brands, onClose, onSaved }) {
-  const [form, setForm] = useState(() => buildForm(product));
+  const isNew = !product;
+  // New product: offer back any saved draft. Existing product: start from it.
+  const restoredDraft = isNew ? loadDraft() : null;
+  const [form, setForm] = useState(() =>
+    (isNew && draftHasContent(restoredDraft)) ? { ...EMPTY_FORM, ...restoredDraft } : buildForm(product),
+  );
+  const [draftBanner, setDraftBanner] = useState(isNew && draftHasContent(restoredDraft));
+  // images: server images {id, image, is_primary, …} and/or staged ones
+  // {id:'staged-*', file, preview, _staged, is_primary} awaiting create.
   const [images, setImages] = useState(product?.images || []);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [savedSlug, setSavedSlug] = useState(product?.slug || null);
   // When editing, the list row is a compact projection that omits most
   // editable fields (description, specifications, warranty, images, …).
@@ -250,6 +256,15 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
   // Bump on detail load to force the SpecEditor (which holds internal
   // state) to remount with the freshly-loaded specifications.
   const [formVersion, setFormVersion] = useState(0);
+
+  // Autosave the new-product form as a draft (debounced) so a power cut or
+  // closed laptop never loses the work. Only while it hasn't been created yet.
+  useEffect(() => {
+    if (!isNew || savedSlug) return undefined;
+    if (!draftHasContent(form)) return undefined;
+    const t = setTimeout(() => saveDraft(form), 500);
+    return () => clearTimeout(t);
+  }, [form, isNew, savedSlug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -272,21 +287,95 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.name.trim() || form.price === '') {
-      toast.error('Name and price are required');
+  // Upload one File to the given product slug, return the created image rows.
+  const uploadFile = async (slug, file) => {
+    const fd = new FormData();
+    fd.append('images', file);
+    const { data } = await adminApi.uploadProductImage(slug, fd);
+    return Array.isArray(data) ? data : [data];
+  };
+
+  // Picked files: upload now (existing product) or stage with an instant
+  // preview (new product, uploaded after it's created).
+  const handleAddFiles = async (files) => {
+    if (savedSlug) {
+      setUploading(true);
+      try {
+        for (const file of files) {
+          const created = await uploadFile(savedSlug, file);
+          setImages((imgs) => [...imgs, ...created]);
+        }
+        onSaved();
+      } catch {
+        toast.error('Image upload failed');
+      } finally {
+        setUploading(false);
+      }
+    } else {
+      setImages((imgs) => {
+        const staged = files.map((file, i) => ({
+          id: `staged-${Date.now()}-${i}-${Math.round(file.size)}`,
+          file,
+          preview: URL.createObjectURL(file),
+          _staged: true,
+          is_primary: imgs.length === 0 && i === 0,
+        }));
+        return [...imgs, ...staged];
+      });
+    }
+  };
+
+  const handleDeleteImage = async (img) => {
+    if (img._staged) {
+      if (img.preview) URL.revokeObjectURL(img.preview);
+      setImages((imgs) => {
+        const remaining = imgs.filter((i) => i.id !== img.id);
+        if (!remaining.some((i) => i.is_primary) && remaining.length) {
+          remaining[0] = { ...remaining[0], is_primary: true };
+        }
+        return remaining;
+      });
       return;
     }
+    if (!savedSlug) return;
+    try {
+      await adminApi.deleteProductImage(savedSlug, img.id);
+      setImages((imgs) => {
+        const remaining = imgs.filter((i) => i.id !== img.id);
+        if (!remaining.some((i) => i.is_primary) && remaining.length) {
+          remaining[0] = { ...remaining[0], is_primary: true };
+        }
+        return remaining;
+      });
+      onSaved();
+    } catch {
+      toast.error('Failed to delete image');
+    }
+  };
+
+  const handleSetPrimary = async (img) => {
+    setImages((imgs) => imgs.map((i) => ({ ...i, is_primary: i.id === img.id })));
+    if (!img._staged && savedSlug) {
+      try { await adminApi.setProductImagePrimary(savedSlug, img.id); } catch { /* visual only */ }
+      onSaved();
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) { toast.error('Product name is required'); return; }
+    if (form.price === '' || form.price === null) { toast.error('Price is required'); return; }
+    if (!form.category) { toast.error('Please choose a category'); return; }
+    let specs = {};
+    try { specs = JSON.parse(form.specifications || '{}'); }
+    catch { toast.error('Specifications has invalid JSON'); return; }
+
     setSaving(true);
     try {
-      let specs = {};
-      try { specs = JSON.parse(form.specifications || '{}'); } catch {}
       const payload = { ...form, specifications: specs };
-      // Empty numeric / FK strings would be rejected by DRF — drop them so
-      // a partial update doesn't 400. Text fields keep '' so they can be
-      // intentionally cleared.
-      ['compare_at_price', 'stock_quantity', 'category', 'brand'].forEach((k) => {
+      // Drop empty optional numeric/FK fields so DRF doesn't reject them.
+      // (category is validated above; slug/sku are auto-generated server-side.)
+      ['sku', 'compare_at_price', 'stock_quantity', 'brand'].forEach((k) => {
         if (payload[k] === '' || payload[k] === undefined) delete payload[k];
       });
 
@@ -295,50 +384,43 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
         const { data } = await adminApi.updateProduct(savedSlug, payload);
         saved = data;
         toast.success('Product updated');
+        onSaved(saved);
       } else {
         const { data } = await adminApi.createProduct(payload);
         saved = data;
-        setSavedSlug(data.slug);
-        toast.success('Product created — you can now upload images');
+        // Upload any staged images to the freshly-created product.
+        const staged = images.filter((i) => i._staged);
+        if (staged.length) {
+          setUploading(true);
+          const createdRows = [];
+          for (const s of staged) {
+            try { createdRows.push(...await uploadFile(data.slug, s.file)); }
+            catch { /* skip a failed image, keep the rest */ }
+          }
+          // Honour a non-first primary choice.
+          const primaryIdx = staged.findIndex((s) => s.is_primary);
+          if (primaryIdx > 0 && createdRows[primaryIdx]) {
+            try { await adminApi.setProductImagePrimary(data.slug, createdRows[primaryIdx].id); } catch { /* ignore */ }
+          }
+          setUploading(false);
+        }
+        clearDraft();
+        toast.success('Product created');
+        onSaved(saved);
+        onClose();  // done — back to the list
       }
-      onSaved(saved);
     } catch (err) {
-      const data = err?.response?.data;
-      // Surface the first field error so the admin knows what to fix.
-      let msg = data?.detail;
-      if (!msg && data && typeof data === 'object') {
-        const firstKey = Object.keys(data)[0];
-        const val = data[firstKey];
-        msg = `${firstKey}: ${Array.isArray(val) ? val[0] : val}`;
-      }
-      toast.error(msg || 'Failed to save product');
+      toast.error(firstApiError(err?.response?.data, 'Failed to save product'));
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteImage = async (imgId) => {
-    if (!savedSlug) return;
-    try {
-      await adminApi.deleteProductImage(savedSlug, imgId);
-      setImages((imgs) => {
-        const remaining = imgs.filter((i) => i.id !== imgId);
-        // If we removed the primary, the backend promotes the next image —
-        // mirror that locally so the badge stays in sync.
-        if (!remaining.some((i) => i.is_primary) && remaining.length) {
-          remaining[0] = { ...remaining[0], is_primary: true };
-        }
-        return remaining;
-      });
-      onSaved();  // refresh list thumbnails
-    } catch {
-      toast.error('Failed to delete image');
-    }
-  };
-
-  const handleSetPrimary = (imgId) => {
-    setImages((imgs) => imgs.map((i) => ({ ...i, is_primary: i.id === imgId })));
-    onSaved();  // refresh list thumbnail
+  const discardDraft = () => {
+    clearDraft();
+    setDraftBanner(false);
+    setForm(buildForm(null));
+    setFormVersion((v) => v + 1);
   };
 
   return (
@@ -372,6 +454,19 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
             </div>
           )}
 
+          {draftBanner && (
+            <div className="flex items-center justify-between gap-3 px-6 py-2.5 bg-taqon-orange/10 border-b border-taqon-orange/20 text-sm">
+              <span className="text-[var(--text-secondary)]">Restored your unsaved draft.</span>
+              <button
+                type="button"
+                onClick={discardDraft}
+                className="text-xs font-medium text-taqon-orange hover:underline"
+              >
+                Discard draft
+              </button>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {/* Basic info */}
             <div className="space-y-4">
@@ -383,11 +478,16 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">SKU</label>
-                  <input className="auth-input w-full" value={form.sku} onChange={(e) => set('sku', e.target.value)} />
+                  <input className="auth-input w-full" value={form.sku} onChange={(e) => set('sku', e.target.value)} placeholder="Auto-generated if blank" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Category</label>
-                  <select className="auth-input w-full" value={form.category} onChange={(e) => set('category', e.target.value)}>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Category *</label>
+                  <select
+                    className={`auth-input w-full ${!form.category ? 'border-red-400/50' : ''}`}
+                    value={form.category}
+                    onChange={(e) => set('category', e.target.value)}
+                    required
+                  >
                     <option value="">Select category</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
@@ -483,8 +583,9 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Images</h3>
               <ImageUploadArea
                 images={images}
-                productSlug={savedSlug}
-                onUpload={(img) => { setImages((imgs) => [...imgs, img]); onSaved(); }}
+                isNew={!savedSlug}
+                uploading={uploading}
+                onAddFiles={handleAddFiles}
                 onDelete={handleDeleteImage}
                 onSetPrimary={handleSetPrimary}
               />
@@ -501,11 +602,11 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
               </button>
               <button
                 type="submit"
-                disabled={saving || loadingDetail}
+                disabled={saving || uploading || loadingDetail}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2 transition-colors"
               >
-                {saving ? <CircleNotch size={16} className="animate-spin" /> : null}
-                {savedSlug ? 'Save Changes' : 'Create Product'}
+                {(saving || uploading) ? <CircleNotch size={16} className="animate-spin" /> : null}
+                {uploading ? 'Uploading images…' : savedSlug ? 'Save Changes' : 'Create Product'}
               </button>
             </div>
           </form>
