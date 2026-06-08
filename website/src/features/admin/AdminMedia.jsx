@@ -344,10 +344,10 @@ export default function AdminMedia() {
           {hasMore && !search && (
             <div className="text-center pt-2">
               <button
-                onClick={() => { setPage((p) => p + 1); fetchMedia(false); }}
+                onClick={() => setPage((p) => p + 1)}
                 className="px-6 py-2.5 rounded-xl border border-[var(--card-border)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
               >
-                Load more
+                Next page
               </button>
             </div>
           )}
