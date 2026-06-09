@@ -59,6 +59,13 @@ function buildHtml(template, { title, description, url, image, w, h }) {
 }
 
 async function writeRoute(route, html) {
+  // Flat file (e.g. dist/shop/<slug>.html): Render's clean-URL handling serves
+  // this for the BARE path /shop/<slug> — matched before the SPA catch-all
+  // rewrite, which is what a shared link actually uses.
+  const flat = join(DIST, `${route}.html`);
+  await mkdir(dirname(flat), { recursive: true });
+  await writeFile(flat, html, 'utf8');
+  // Directory index too — covers /shop/<slug>/ and /shop/<slug>/index.html.
   const dir = join(DIST, route);
   await mkdir(dir, { recursive: true });
   await writeFile(join(dir, 'index.html'), html, 'utf8');
