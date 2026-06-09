@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart, Heart, Star, CaretRight, Minus, Plus,
@@ -94,6 +94,19 @@ function StockBadge({ stock }) {
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Normalise to the trailing-slash URL (/shop/<slug>/). Render's static host
+  // serves the prerendered, product-specific Open Graph page for that form
+  // (the bare /shop/<slug> falls through to the SPA shell with generic tags),
+  // so keeping the address bar — and therefore every copied/shared link — on
+  // the slash form makes link previews show the right product image. React
+  // Router ignores the trailing slash when matching, so nothing re-fetches.
+  useEffect(() => {
+    if (!location.pathname.endsWith('/')) {
+      navigate(`${location.pathname}/${location.search}${location.hash}`, { replace: true });
+    }
+  }, [location.pathname, location.search, location.hash, navigate]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [descExpanded, setDescExpanded] = useState(false);
@@ -305,7 +318,7 @@ export default function ProductDetail() {
         <SEO
           title={product.meta_title || product.name}
           description={product.meta_description || product.short_description || product.description?.slice(0, 160)}
-          canonical={`https://www.taqon.co.zw/shop/${product.slug}`}
+          canonical={`https://www.taqon.co.zw/shop/${product.slug}/`}
           image={uniqueImages[0]}
         />
       )}

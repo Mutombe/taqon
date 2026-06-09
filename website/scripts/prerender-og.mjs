@@ -122,7 +122,9 @@ async function main() {
       const html = buildHtml(template, {
         title: `${p.name} | Taqon Electrico`,
         description,
-        url: `${SITE}/shop/${p.slug}`,
+        // Trailing slash — the form the app canonicalises to and that Render
+        // serves this prerendered file from.
+        url: `${SITE}/shop/${p.slug}/`,
         image: img,
         w: 1200, h: 1200,
       });
