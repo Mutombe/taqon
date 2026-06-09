@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/fav.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#F26522" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Taqon Electrico" />
-    <link rel="apple-touch-icon" href="/fav.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
     <link rel="manifest" href="/manifest.json" />
     <!-- Preconnect to Google Fonts (eliminates DNS+TLS round trips ~100-300ms) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,6 +18,22 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap" />
     <title>Taqon Electrico — Zimbabwe's Premier Solar & Electrical Company</title>
     <meta name="description" content="Taqon Electrico provides professional solar installations, electrical maintenance, and renewable energy solutions in Harare, Zimbabwe. ZERA recommended solar company." />
+    <!-- Social link preview (Open Graph + Twitter). These are the site-wide
+         defaults seen by crawlers that don't run JS (WhatsApp, Facebook, X).
+         Per-product and per-page images are injected at build time by
+         scripts/prerender-og.mjs, and at runtime by the SEO component. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Taqon Electrico" />
+    <meta property="og:title" content="Taqon Electrico — Zimbabwe's Premier Solar & Electrical Company" />
+    <meta property="og:description" content="Professional solar installations, electrical maintenance, and renewable energy solutions in Zimbabwe. Get an automated quote with our Solar Advisor." />
+    <meta property="og:url" content="https://www.taqon.co.zw/" />
+    <meta property="og:image" content="https://www.taqon.co.zw/downloads/taqon-robot.jpeg" />
+    <meta property="og:image:width" content="627" />
+    <meta property="og:image:height" content="627" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Taqon Electrico — Zimbabwe's Premier Solar & Electrical Company" />
+    <meta name="twitter:description" content="Professional solar installations and renewable energy solutions in Zimbabwe. Get an automated quote with our Solar Advisor." />
+    <meta name="twitter:image" content="https://www.taqon.co.zw/downloads/taqon-robot.jpeg" />
     <!-- iOS safety net: ensures a readable cream background before Tailwind
          loads, so older iPhones never show a black screen during load. -->
     <style>

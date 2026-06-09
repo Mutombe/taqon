@@ -306,6 +306,7 @@ export default function ProductDetail() {
           title={product.meta_title || product.name}
           description={product.meta_description || product.short_description || product.description?.slice(0, 160)}
           canonical={`https://www.taqon.co.zw/shop/${product.slug}`}
+          image={uniqueImages[0]}
         />
       )}
 

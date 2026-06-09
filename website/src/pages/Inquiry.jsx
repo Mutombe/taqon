@@ -233,6 +233,7 @@ export default function Inquiry() {
         title="Get a Quote — Taqon Electrico"
         description="Tell us about your home or business and we'll size a solar system around your real loads. Fast, no obligation."
         canonical="https://www.taqon.co.zw/get-recommendation"
+        image="/downloads/taqon-robot.jpeg"
       />
 
       {/* Hero */}

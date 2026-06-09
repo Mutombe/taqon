@@ -2083,6 +2083,7 @@ export default function SolarAdvisor() {
         description="Find your perfect solar package. Select your appliances and get personalized recommendations with transparent pricing."
         keywords="solar advisor, solar recommendation, solar calculator Zimbabwe, find solar package"
         canonical="https://www.taqon.co.zw/solar-advisor"
+        image="/downloads/taqon-robot.jpeg"
       />
 
       {/* ─── Hero ─── */}
