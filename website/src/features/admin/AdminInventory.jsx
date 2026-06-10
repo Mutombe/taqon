@@ -28,10 +28,10 @@ function firstApiError(data, fallback) {
 }
 
 /* ─────────────────────────── shared modal shell ─────────────────────────── */
-function Drawer({ title, onClose, children }) {
+function Drawer({ title, onClose, children, zClass = 'z-50' }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-end"
+      className={`fixed inset-0 ${zClass} bg-black/60 backdrop-blur-sm flex items-start justify-end`}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
       <motion.div initial={{ x: 400 }} animate={{ x: 0 }} exit={{ x: 400 }} transition={{ type: 'spring', damping: 28, stiffness: 280 }}
         className="w-full max-w-md h-full bg-[var(--bg-secondary)] border-l border-[var(--card-border)] overflow-y-auto">
@@ -50,47 +50,6 @@ function Field({ label, children }) {
     <div>
       <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">{label}</label>
       {children}
-    </div>
-  );
-}
-
-/* Select with a just-in-time "+ add" — create a supplier/category without
-   leaving the modal you're in. onCreate(name) must return {id, name} or null. */
-function SelectWithAdd({ value, onChange, options, onCreate, addLabel = 'Add new', placeholder = 'New name' }) {
-  const [extra, setExtra] = useState([]);
-  const [adding, setAdding] = useState(false);
-  const [name, setName] = useState('');
-  const [busy, setBusy] = useState(false);
-  const all = [...options, ...extra.filter((e) => !options.some((o) => o.id === e.id))];
-
-  const create = async () => {
-    if (!name.trim()) return;
-    setBusy(true);
-    try {
-      const created = await onCreate(name.trim());
-      if (created?.id) { setExtra((x) => [...x, created]); onChange(created.id); }
-      setName(''); setAdding(false);
-    } finally { setBusy(false); }
-  };
-
-  if (adding) {
-    return (
-      <div className="flex gap-1.5">
-        <input autoFocus className="auth-input flex-1 text-sm py-1.5" placeholder={placeholder} value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); create(); } if (e.key === 'Escape') { setAdding(false); setName(''); } }} />
-        <button type="button" onClick={create} disabled={busy} className="px-2.5 rounded-lg bg-taqon-orange text-white flex items-center disabled:opacity-50"><Check size={14} /></button>
-        <button type="button" onClick={() => { setAdding(false); setName(''); }} className="px-2.5 rounded-lg border border-[var(--card-border)] text-[var(--text-muted)] flex items-center"><X size={14} /></button>
-      </div>
-    );
-  }
-  return (
-    <div className="flex gap-1.5">
-      <select className="auth-input flex-1 text-sm" value={value} onChange={(e) => onChange(e.target.value)}>
-        {all.length === 0 && <option value="">—</option>}
-        {all.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-      </select>
-      <button type="button" onClick={() => setAdding(true)} className="px-2.5 rounded-lg border border-[var(--card-border)] text-taqon-orange hover:bg-taqon-orange/10 flex items-center" title={addLabel}><PlusIcon size={14} /></button>
     </div>
   );
 }
@@ -159,32 +118,96 @@ function Combobox({ value, onChange, options = [], searchFn, onPick, onCreate, p
   );
 }
 
-// Inline creators used by SelectWithAdd (toast + cache invalidation handled here).
-function makeSupplierCreator(qc) {
-  return async (name) => {
-    try {
-      const { data } = await adminApi.createSupplier({ name });
-      toast.success('Supplier added');
-      qc.invalidateQueries({ queryKey: ['invSuppliers'] });
-      return { id: data.id, name: data.name };
-    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add supplier')); return null; }
-  };
+/* Supplier picker: type-ahead + "Create …" opens the FULL supplier modal; on
+   save it autofills the chosen supplier and you move on. value=id, text=name. */
+function SupplierField({ suppliers, value, text, onChange, placeholder }) {
+  const qc = useQueryClient();
+  const [creating, setCreating] = useState(null);
+  return (
+    <>
+      <Combobox
+        value={text}
+        onChange={(t) => onChange('', t)}
+        options={suppliers}
+        onPick={(o) => onChange(o.id, o.name)}
+        onCreate={(name) => setCreating(name)}
+        placeholder={placeholder || 'Search or add a supplier…'}
+      />
+      <AnimatePresence>
+        {creating != null && (
+          <SupplierModal
+            supplier={null}
+            initialName={creating}
+            zClass="z-[60]"
+            onClose={() => setCreating(null)}
+            onSaved={(created) => {
+              if (created?.id) onChange(created.id, created.name);
+              qc.invalidateQueries({ queryKey: ['invSuppliersAll'] });
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
 }
-function makeCategoryCreator(qc) {
-  return async (name) => {
+
+/* Minimal full modal for creating a material category (used by JIT). */
+function CategoryCreateModal({ initialName = '', onClose, onSaved, zClass }) {
+  const [form, setForm] = useState({ name: initialName, description: '' });
+  const [saving, setSaving] = useState(false);
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) { toast.error('Name is required'); return; }
+    setSaving(true);
     try {
-      const { data } = await adminApi.createMaterialCategory({ name });
+      const { data } = await adminApi.createMaterialCategory(form);
       toast.success('Category added');
-      qc.invalidateQueries({ queryKey: ['invCats'] });
-      return { id: data.id, name: data.name };
-    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add category')); return null; }
+      onSaved(data); onClose();
+    } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to add category')); }
+    finally { setSaving(false); }
   };
+  return (
+    <Drawer title="Add Category" onClose={onClose} zClass={zClass}>
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Name *"><input autoFocus className="auth-input w-full text-sm" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Roofing" /></Field>
+        <Field label="Description"><textarea rows={2} className="auth-input w-full text-sm resize-y" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} /></Field>
+        <button type="submit" disabled={saving} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2">{saving ? <CircleNotch size={15} className="animate-spin" /> : null}Add Category</button>
+      </form>
+    </Drawer>
+  );
+}
+
+/* Category picker: select + "+" opens the full category modal; autofills on save. */
+function CategoryField({ categories, value, onChange }) {
+  const qc = useQueryClient();
+  const [creating, setCreating] = useState(null);
+  return (
+    <>
+      <div className="flex gap-1.5">
+        <select className="auth-input flex-1 text-sm" value={value} onChange={(e) => onChange(e.target.value)}>
+          {categories.length === 0 && <option value="">—</option>}
+          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        <button type="button" onClick={() => setCreating('')} className="px-2.5 rounded-lg border border-[var(--card-border)] text-taqon-orange hover:bg-taqon-orange/10 flex items-center" title="Add category"><PlusIcon size={14} /></button>
+      </div>
+      <AnimatePresence>
+        {creating != null && (
+          <CategoryCreateModal
+            initialName={creating}
+            zClass="z-[60]"
+            onClose={() => setCreating(null)}
+            onSaved={(created) => { if (created?.id) onChange(created.id); qc.invalidateQueries({ queryKey: ['invCats'] }); }}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
 }
 
 /* ─────────────────────────── Supplier modal ─────────────────────────── */
-function SupplierModal({ supplier, onClose, onSaved }) {
+function SupplierModal({ supplier, initialName = '', onClose, onSaved, zClass }) {
   const [form, setForm] = useState(() => ({
-    name: supplier?.name || '', contact_person: supplier?.contact_person || '', phone: supplier?.phone || '',
+    name: supplier?.name || initialName || '', contact_person: supplier?.contact_person || '', phone: supplier?.phone || '',
     email: supplier?.email || '', address: supplier?.address || '', website: supplier?.website || '',
     notes: supplier?.notes || '', is_active: supplier?.is_active ?? true,
   }));
@@ -198,15 +221,16 @@ function SupplierModal({ supplier, onClose, onSaved }) {
     if (!form.name.trim()) { toast.error('Name is required'); return; }
     setSaving(true);
     try {
-      if (supplier?.slug) await adminApi.updateSupplier(supplier.slug, form);
-      else await adminApi.createSupplier(form);
-      toast.success(supplier ? 'Supplier updated' : 'Supplier added');
-      onSaved(); onClose();
+      const { data } = supplier?.slug
+        ? await adminApi.updateSupplier(supplier.slug, form)
+        : await adminApi.createSupplier(form);
+      toast.success(supplier?.slug ? 'Supplier updated' : 'Supplier added');
+      onSaved(data); onClose();
     } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to save supplier')); }
     finally { setSaving(false); }
   };
   return (
-    <Drawer title={supplier ? 'Edit Supplier' : 'Add Supplier'} onClose={onClose}>
+    <Drawer title={supplier?.slug ? 'Edit Supplier' : 'Add Supplier'} onClose={onClose} zClass={zClass}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Name *">
           <Combobox value={form.name} onChange={(t) => set('name', t)} options={allSuppliers} onPick={(o) => set('name', o.name)} placeholder="Supplier name" />
@@ -267,7 +291,7 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Category *">
-            <SelectWithAdd value={form.category} onChange={(v) => set('category', v)} options={categories} onCreate={makeCategoryCreator(qc)} addLabel="Add category" placeholder="New category" />
+            <CategoryField categories={categories} value={form.category} onChange={(v) => set('category', v)} />
           </Field>
           <Field label="Unit"><input className="auth-input w-full text-sm" value={form.unit} onChange={(e) => set('unit', e.target.value)} placeholder="each, m, roll…" /></Field>
         </div>
@@ -375,14 +399,7 @@ function QuickPriceModal({ material, suppliers, onClose, onSaved }) {
       </div>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Supplier *">
-          <Combobox
-            value={supplierText}
-            onChange={(t) => { setSupplierText(t); setSupplier(''); }}
-            options={suppliers}
-            onPick={(o) => { setSupplier(o.id); setSupplierText(o.name); }}
-            onCreate={async (name) => { const c = await makeSupplierCreator(qc)(name); if (c) { setSupplier(c.id); setSupplierText(c.name); } }}
-            placeholder="Search or add a supplier…"
-          />
+          <SupplierField suppliers={suppliers} value={supplier} text={supplierText} onChange={(id, name) => { setSupplier(id); setSupplierText(name); }} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Price (USD) *"><input type="number" step="0.01" className="auth-input w-full text-sm" value={price} onChange={(e) => setPrice(e.target.value)} /></Field>
@@ -452,14 +469,7 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
     <Drawer title="Log Prices" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Supplier *">
-          <Combobox
-            value={supplierText}
-            onChange={(t) => { setSupplierText(t); setSupplier(''); }}
-            options={suppliers}
-            onPick={(o) => { setSupplier(o.id); setSupplierText(o.name); }}
-            onCreate={async (name) => { const c = await makeSupplierCreator(qc)(name); if (c) { setSupplier(c.id); setSupplierText(c.name); } }}
-            placeholder="Search or add a supplier…"
-          />
+          <SupplierField suppliers={suppliers} value={supplier} text={supplierText} onChange={(id, name) => { setSupplier(id); setSupplierText(name); }} />
         </Field>
 
         {/* Optional quotation document */}
@@ -503,7 +513,7 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
                 <div className="flex gap-1.5 items-center">
                   <input type="number" step="0.01" className="auth-input w-24 text-sm py-1.5" placeholder="Price" value={r.price} onChange={(e) => setRow(i, 'price', e.target.value)} />
                   <input className="auth-input w-20 text-sm py-1.5" placeholder="unit" value={r.unit} onChange={(e) => setRow(i, 'unit', e.target.value)} />
-                  <div className="flex-1"><SelectWithAdd value={r.category} onChange={(v) => setRow(i, 'category', v)} options={categories} onCreate={makeCategoryCreator(qc)} addLabel="Add category" placeholder="New category" /></div>
+                  <div className="flex-1"><CategoryField categories={categories} value={r.category} onChange={(v) => setRow(i, 'category', v)} /></div>
                 </div>
                 <p className="text-[10px] text-[var(--text-muted)]">If the material is new it’s created under the chosen category; if it exists, the category is ignored.</p>
               </div>
