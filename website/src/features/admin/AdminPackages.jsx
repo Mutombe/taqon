@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Pencil, Trash, X, SolarPanel, CircleNotch,
@@ -272,7 +273,7 @@ function ComponentPickerModal({ category, categoryLabel, excludeIds = [], onSele
 }
 
 /* ─── Package components, grouped by category, with swap / add / remove / qty ─── */
-function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }) {
+export function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }) {
   const [items, setItems] = useState(initialItems || []);
   const [saving, setSaving] = useState(null);
   const [picker, setPicker] = useState(null); // { category, label, swapItemId }
@@ -403,7 +404,7 @@ function Field({ label, children, hint, span = 1 }) {
 }
 
 /* ─── Package Edit Modal ─── */
-function PackageModal({ pkg, onClose, onSaved, onCascadeChange }) {
+export function PackageModal({ pkg, onClose, onSaved, onCascadeChange }) {
   const [form, setForm] = useState(() => {
     if (!pkg) return EMPTY_FORM;
     return {
@@ -796,6 +797,7 @@ function DeleteModal({ pkg, onConfirm, onCancel, deleting }) {
 
 /* ─── Package Card ─── */
 function PackageCard({ pkg, onEdit, onDelete }) {
+  const navigate = useNavigate();
   const tier = TIER_CONFIG[pkg.tier] || TIER_CONFIG.starter;
   const itemCount = pkg.items?.length || 0;
 
@@ -805,7 +807,9 @@ function PackageCard({ pkg, onEdit, onDelete }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className={`relative bg-[var(--card-bg)] border rounded-2xl p-5 flex flex-col gap-3 ${
+      onClick={() => navigate(`/admin/packages/${pkg.slug}`)}
+      role="button"
+      className={`relative bg-[var(--card-bg)] border rounded-2xl p-5 flex flex-col gap-3 cursor-pointer hover:border-taqon-orange/40 transition-colors ${
         pkg.is_popular ? 'border-taqon-orange/40 shadow-lg shadow-taqon-orange/10' : 'border-[var(--card-border)]'
       }`}
     >
@@ -834,10 +838,10 @@ function PackageCard({ pkg, onEdit, onDelete }) {
           )}
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
-          <button onClick={() => onEdit(pkg)} className="p-1.5 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-taqon-orange transition-colors">
+          <button onClick={(e) => { e.stopPropagation(); onEdit(pkg); }} className="p-1.5 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-taqon-orange transition-colors" title="Quick edit">
             <Pencil size={14} />
           </button>
-          <button onClick={() => onDelete(pkg)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors">
+          <button onClick={(e) => { e.stopPropagation(); onDelete(pkg); }} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors" title="Delete">
             <Trash size={14} />
           </button>
         </div>
