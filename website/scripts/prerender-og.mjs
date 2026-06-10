@@ -1,21 +1,25 @@
 /**
- * Post-build Open Graph prerenderer.
+ * Post-build SEO + Open Graph prerenderer.
  *
- * The site is a client-side SPA, so social crawlers (WhatsApp, Facebook, X)
- * that don't run JavaScript only ever see the static index.html. This script
- * runs after `vite build` and writes per-route copies of index.html with the
- * right OG/Twitter tags baked in, so a shared link shows the correct image:
- *   - each product → its own photo + name
- *   - solar advisor / inquiry → the Taqon robot image
- * The generated files load the same JS bundle, so real users still get the
- * full SPA; only the <head> meta differs (which is all the crawler reads).
+ * The site is a client-side SPA, so crawlers that don't run JavaScript only see
+ * the static index.html. After `vite build` this script writes per-route copies
+ * of index.html with rich, keyword-heavy SEO baked into the <head> (and a
+ * crawlable <noscript> fallback in the body):
+ *   - each PRODUCT → its own title, meta description, keyword bank, Product
+ *     structured data (with brand + price offer) and OG image, so products get
+ *     indexed individually
+ *   - solar advisor / inquiry → the Taqon robot promo image
+ * It also writes a sitemap.xml (home + key pages + every product + locations),
+ * robots.txt, and injects a Product ItemList into the homepage.
  *
- * It never fails the build: if the API is unreachable, products are skipped
- * and the static default (robot image) still applies site-wide.
+ * It never fails the build: if the API is unreachable, products are skipped.
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  homepageKeywords, productKeywords, LOCATIONS,
+} from './seo-data.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
@@ -27,16 +31,17 @@ const esc = (s = '') =>
   String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
     .replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// Replace the content of a single <meta property|name="key"> tag.
 function setMeta(html, key, value) {
   const attr = key.startsWith('og:') ? 'property' : 'name';
   const re = new RegExp(`(<meta ${attr}="${key}" content=")[^"]*(")`);
   if (re.test(html)) return html.replace(re, `$1${esc(value)}$2`);
-  // Tag not present in template — inject before </head>.
   return html.replace('</head>', `    <meta ${attr}="${key}" content="${esc(value)}" />\n  </head>`);
 }
 
-function buildHtml(template, { title, description, url, image, w, h }) {
+const injectHead = (html, s) => (s ? html.replace('</head>', `${s}\n  </head>`) : html);
+const injectBody = (html, s) => (s ? html.replace('</body>', `${s}\n  </body>`) : html);
+
+function buildHtml(template, { title, description, url, image, w, h, keywords, headExtra, bodyExtra }) {
   let html = template;
   if (title) {
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
@@ -48,28 +53,102 @@ function buildHtml(template, { title, description, url, image, w, h }) {
     html = setMeta(html, 'og:description', description);
     html = setMeta(html, 'twitter:description', description);
   }
-  if (url) html = setMeta(html, 'og:url', url);
+  if (keywords) html = setMeta(html, 'keywords', keywords);
+  if (url) {
+    html = setMeta(html, 'og:url', url);
+    // canonical
+    if (/<link rel="canonical"/.test(html)) {
+      html = html.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${esc(url)}$2`);
+    } else {
+      html = injectHead(html, `    <link rel="canonical" href="${esc(url)}" />`);
+    }
+  }
   if (image) {
     html = setMeta(html, 'og:image', image);
     html = setMeta(html, 'twitter:image', image);
     html = setMeta(html, 'og:image:width', String(w || 1200));
     html = setMeta(html, 'og:image:height', String(h || 630));
   }
+  if (headExtra) html = injectHead(html, headExtra);
+  if (bodyExtra) html = injectBody(html, bodyExtra);
   return html;
 }
 
 async function writeRoute(route, html) {
-  // Flat file (e.g. dist/shop/<slug>.html): Render's clean-URL handling serves
-  // this for the BARE path /shop/<slug> — matched before the SPA catch-all
-  // rewrite, which is what a shared link actually uses.
   const flat = join(DIST, `${route}.html`);
   await mkdir(dirname(flat), { recursive: true });
   await writeFile(flat, html, 'utf8');
-  // Directory index too — covers /shop/<slug>/ and /shop/<slug>/index.html.
   const dir = join(DIST, route);
   await mkdir(dir, { recursive: true });
   await writeFile(join(dir, 'index.html'), html, 'utf8');
 }
+
+function productJsonLd(p, url, img, description) {
+  const brand = p.brand?.name || p.brand || '';
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: p.name,
+    url,
+    description,
+    ...(img ? { image: [img] } : {}),
+    ...(p.sku ? { sku: p.sku } : {}),
+    ...(p.category?.name ? { category: p.category.name } : {}),
+    ...(brand ? { brand: { '@type': 'Brand', name: brand } } : {}),
+    offers: {
+      '@type': 'Offer',
+      url,
+      priceCurrency: 'USD',
+      ...(p.price != null ? { price: String(p.price) } : {}),
+      availability: (p.in_stock ?? true) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: 'Taqon Electrico' },
+      areaServed: 'Zimbabwe',
+    },
+  };
+  return `    <script type="application/ld+json">${JSON.stringify(ld)}</script>`;
+}
+
+function productNoscript(p, url, img, description) {
+  const brand = p.brand?.name || p.brand || '';
+  return `<noscript><article>` +
+    `<h1>${esc(p.name)}</h1>` +
+    (img ? `<img src="${esc(img)}" alt="${esc(p.name)} — Taqon Electrico Zimbabwe" width="320" />` : '') +
+    `<p>${esc(description)}</p>` +
+    (brand ? `<p>Brand: ${esc(brand)}</p>` : '') +
+    (p.price != null ? `<p>Price: USD ${esc(String(p.price))}</p>` : '') +
+    `<p><a href="${esc(url)}">${esc(p.name)} — buy in Zimbabwe from Taqon Electrico, Harare</a></p>` +
+    `</article></noscript>`;
+}
+
+function sitemapXml(urls) {
+  const today = new Date().toISOString().slice(0, 10);
+  const body = urls.map((u) => {
+    const loc = typeof u === 'string' ? u : u.loc;
+    const priority = typeof u === 'string' ? '0.6' : (u.priority || '0.6');
+    return `  <url><loc>${esc(loc)}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${priority}</priority></url>`;
+  }).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+}
+
+const STATIC_PAGES = [
+  { loc: `${SITE}/`, priority: '1.0' },
+  { loc: `${SITE}/shop`, priority: '0.9' },
+  { loc: `${SITE}/packages`, priority: '0.9' },
+  { loc: `${SITE}/solutions`, priority: '0.8' },
+  { loc: `${SITE}/solar-advisor`, priority: '0.8' },
+  { loc: `${SITE}/about`, priority: '0.6' },
+  { loc: `${SITE}/contact`, priority: '0.6' },
+  { loc: `${SITE}/blog`, priority: '0.7' },
+  { loc: `${SITE}/gallery`, priority: '0.6' },
+  { loc: `${SITE}/financing`, priority: '0.5' },
+  { loc: `${SITE}/certifications`, priority: '0.5' },
+  ...[
+    'solar-installations', 'electrical-maintenance', 'solar-system-maintenance',
+    'borehole-pump-installations', 'electrical-hardware', 'lighting-solutions',
+    'solar-geysers', 'gas-geysers',
+  ].map((s) => ({ loc: `${SITE}/solutions/${s}`, priority: '0.7' })),
+  ...LOCATIONS.map((c) => ({ loc: `${SITE}/solar-installation/${c.toLowerCase()}`, priority: '0.6' })),
+];
 
 async function main() {
   let template;
@@ -82,64 +161,94 @@ async function main() {
 
   let count = 0;
 
-  // Static, brand-image routes (solar advisor + inquiry family).
   const robotRoutes = [
-    { route: 'solar-advisor', title: 'Solar Advisor | Taqon Electrico',
-      description: 'Find your perfect solar package. Pick your appliances and get a personalised recommendation with transparent pricing.' },
-    { route: 'inquiry', title: 'Get a Quote | Taqon Electrico',
-      description: "Tell us about your home or business and we'll size a solar system around your real loads. Fast, no obligation." },
-    { route: 'get-quote', title: 'Get a Quote | Taqon Electrico',
-      description: "Tell us about your home or business and we'll size a solar system around your real loads. Fast, no obligation." },
-    { route: 'get-recommendation', title: 'Get a Recommendation | Taqon Electrico',
-      description: "Tell us about your home or business and we'll size a solar system around your real loads. Fast, no obligation." },
+    { route: 'solar-advisor', title: 'Solar Advisor | Taqon Electrico Zimbabwe',
+      description: 'Find your perfect solar package in Zimbabwe. Pick your appliances and get a personalised solar recommendation with transparent pricing from Taqon Electrico, Harare.' },
+    { route: 'inquiry', title: 'Get a Solar Quote | Taqon Electrico Zimbabwe',
+      description: "Tell us about your home or business and we'll size a solar system around your real loads. Fast, no obligation. Solar installers in Harare, Zimbabwe." },
+    { route: 'get-quote', title: 'Get a Solar Quote | Taqon Electrico Zimbabwe',
+      description: "Tell us about your home or business and we'll size a solar system around your real loads. Fast, no obligation. Solar installers in Harare, Zimbabwe." },
+    { route: 'get-recommendation', title: 'Get a Solar Recommendation | Taqon Electrico Zimbabwe',
+      description: "Tell us about your home or business and we'll size a solar system around your real loads. Fast, no obligation. Solar installers in Harare, Zimbabwe." },
   ];
   for (const r of robotRoutes) {
-    const html = buildHtml(template, {
+    await writeRoute(r.route, buildHtml(template, {
       title: r.title, description: r.description,
       url: `${SITE}/${r.route}`, image: ROBOT, w: 627, h: 627,
-    });
-    await writeRoute(r.route, html);
+    }));
     count++;
   }
 
-  // Per-product routes — each shows its own photo.
+  const sitemapUrls = [...STATIC_PAGES];
+
   try {
-    // Cap the wait so a cold backend (Render free tier) can't hang the deploy.
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 45000);
-    const res = await fetch(`${API}/api/v1/shop/products/?page_size=200`, {
+    const res = await fetch(`${API}/api/v1/shop/products/?page_size=500`, {
       headers: { Accept: 'application/json' },
       signal: ctrl.signal,
     }).finally(() => clearTimeout(timer));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const products = data.results || data || [];
+    const itemList = [];
+
     for (const p of products) {
       if (!p.slug) continue;
       const img = p.primary_image?.image || p.primary_image?.image_url || ROBOT;
-      const bits = [p.brand?.name, p.category?.name].filter(Boolean).join(' · ');
-      const description = `${p.name}${bits ? ` — ${bits}` : ''}. Quality solar equipment from Taqon Electrico, Zimbabwe.`;
-      const html = buildHtml(template, {
-        title: `${p.name} | Taqon Electrico`,
+      const brand = p.brand?.name || p.brand || '';
+      const cat = p.category?.name || p.category || 'Solar equipment';
+      const url = `${SITE}/shop/${p.slug}/`;
+      const description =
+        `Buy the ${p.name}${brand ? ` (${brand})` : ''} in Zimbabwe. ${cat} supplied and installed by ` +
+        `Taqon Electrico — Zimbabwe's trusted solar company in Harare. Best ${cat.toLowerCase()} price, ` +
+        `fast delivery and professional installation across Zimbabwe.`;
+
+      await writeRoute(`shop/${p.slug}`, buildHtml(template, {
+        title: `${p.name} | Taqon Electrico Zimbabwe`,
         description,
-        // Trailing slash — the form the app canonicalises to and that Render
-        // serves this prerendered file from.
-        url: `${SITE}/shop/${p.slug}/`,
+        keywords: productKeywords(p).join(', '),
+        url,
         image: img,
         w: 1200, h: 1200,
-      });
-      await writeRoute(`shop/${p.slug}`, html);
+        headExtra: productJsonLd(p, url, img, description),
+        bodyExtra: productNoscript(p, url, img, description),
+      }));
       count++;
+      sitemapUrls.push({ loc: url, priority: '0.7' });
+      itemList.push({ name: p.name, url });
+    }
+
+    // Inject a Product ItemList into the homepage so the catalogue is discoverable.
+    if (itemList.length) {
+      const ld = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: 'Taqon Electrico Solar Products',
+        itemListElement: itemList.map((it, i) => ({
+          '@type': 'ListItem', position: i + 1, name: it.name, url: it.url,
+        })),
+      };
+      let home = await readFile(join(DIST, 'index.html'), 'utf8');
+      home = injectHead(home, `    <script type="application/ld+json">${JSON.stringify(ld)}</script>`);
+      await writeFile(join(DIST, 'index.html'), home, 'utf8');
     }
     console.log(`[prerender-og] wrote ${products.length} product pages.`);
   } catch (err) {
-    console.warn(`[prerender-og] product fetch failed (${err.message}) — products will use the site default image.`);
+    console.warn(`[prerender-og] product fetch failed (${err.message}) — products skipped.`);
   }
 
-  console.log(`[prerender-og] done — ${count} routes prerendered.`);
+  // sitemap.xml + robots.txt
+  await writeFile(join(DIST, 'sitemap.xml'), sitemapXml(sitemapUrls), 'utf8');
+  await writeFile(
+    join(DIST, 'robots.txt'),
+    `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`,
+    'utf8',
+  );
+
+  console.log(`[prerender-og] done — ${count} routes prerendered, sitemap has ${sitemapUrls.length} URLs.`);
 }
 
 main().catch((err) => {
-  // Never break the deploy over link previews.
   console.warn('[prerender-og] non-fatal error:', err.message);
 });
