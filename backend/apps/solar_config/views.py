@@ -1,7 +1,7 @@
 import logging
 
 from django.db import transaction
-from django.db.models import Prefetch, Count
+from django.db.models import Prefetch, Count, Q
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -23,6 +23,7 @@ from .models import (
 )
 from .serializers import (
     SolarComponentSerializer,
+    AdminSolarComponentSerializer,
     SolarComponentListSerializer,
     SolarPackageTemplateSerializer,
     SolarPackageListSerializer,
@@ -1752,13 +1753,35 @@ class ConvertConfigToQuoteView(APIView):
 # ══════════════════════════════════════════════
 
 class AdminComponentListView(generics.ListAPIView):
-    """Admin: list all components including inactive."""
+    """Admin: list all components (including inactive), with search + category
+    filter and a summary of which packages each one feeds into."""
     permission_classes = [IsAdmin]
-    serializer_class = SolarComponentSerializer
+    serializer_class = AdminSolarComponentSerializer
     pagination_class = StandardPagination
 
     def get_queryset(self):
-        return SolarComponent.objects.filter(is_deleted=False)
+        qs = (
+            SolarComponent.objects.filter(is_deleted=False)
+            .select_related('product')
+            .prefetch_related(
+                Prefetch(
+                    'package_uses',
+                    queryset=PackageComponent.objects.select_related('package'),
+                ),
+            )
+        )
+        category = self.request.query_params.get('category')
+        if category:
+            qs = qs.filter(category=category)
+
+        search = (self.request.query_params.get('search') or '').strip()
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search)
+                | Q(brand__icontains=search)
+                | Q(model_number__icontains=search)
+            )
+        return qs
 
 
 class AdminPackageListView(generics.ListAPIView):
@@ -1868,12 +1891,21 @@ class AdminComponentUpdateView(generics.RetrieveUpdateAPIView):
     lookup_field = 'slug'
 
     def get_queryset(self):
-        return SolarComponent.objects.filter(is_deleted=False)
+        return (
+            SolarComponent.objects.filter(is_deleted=False)
+            .select_related('product')
+            .prefetch_related(
+                Prefetch(
+                    'package_uses',
+                    queryset=PackageComponent.objects.select_related('package'),
+                ),
+            )
+        )
 
     def get_serializer_class(self):
         if self.request.method in ('PUT', 'PATCH'):
             return AdminSolarComponentCreateUpdateSerializer
-        return SolarComponentSerializer
+        return AdminSolarComponentSerializer
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -1891,7 +1923,17 @@ class AdminComponentDeleteView(APIView):
                 {'detail': 'Component not found.'},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        # Remove it from any packages first, then recalculate those packages, so
+        # none is left referencing a deleted component (no ghost line items).
+        affected = list(
+            SolarPackageTemplate.objects
+            .filter(items__component=component, is_deleted=False)
+            .distinct()
+        )
+        component.package_uses.all().delete()
         component.soft_delete(user=request.user)
+        for package in affected:
+            package.recalculate_price()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

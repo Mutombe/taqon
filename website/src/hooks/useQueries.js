@@ -490,6 +490,15 @@ export function useAdminMedia(params) {
   });
 }
 
+export function useAdminComponents(params) {
+  return useQuery({
+    queryKey: ['adminComponents', params],
+    queryFn: () => adminApi.getAdminComponents(params).then(r => r.data),
+    ...DYNAMIC,
+    placeholderData: (prev) => prev,
+  });
+}
+
 export function useGallery(params) {
   return useQuery({
     queryKey: ['gallery', params],

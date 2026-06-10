@@ -37,6 +37,41 @@ class SolarComponentListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class AdminSolarComponentSerializer(serializers.ModelSerializer):
+    """Admin read view — full fields plus where the component is used so an
+    admin can see the blast radius before editing a price/spec."""
+
+    product_name = serializers.CharField(source='product.name', read_only=True, default=None)
+    used_in_packages = serializers.SerializerMethodField()
+    package_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SolarComponent
+        fields = [
+            'id', 'name', 'slug', 'category', 'brand', 'model_number',
+            'description', 'image_url', 'price', 'currency',
+            'product', 'product_name',
+            'wattage', 'voltage', 'capacity_ah', 'capacity_kwh',
+            'efficiency', 'warranty_years', 'weight_kg',
+            'compatible_voltages', 'specifications',
+            'shop_visible', 'is_active', 'is_featured', 'sort_order',
+            'used_in_packages', 'package_count',
+        ]
+        read_only_fields = fields
+
+    def _live_uses(self, obj):
+        return [pu for pu in obj.package_uses.all() if pu.package and not pu.package.is_deleted]
+
+    def get_used_in_packages(self, obj):
+        return [
+            {'name': pu.package.name, 'slug': pu.package.slug, 'quantity': pu.quantity}
+            for pu in self._live_uses(obj)
+        ]
+
+    def get_package_count(self, obj):
+        return len(self._live_uses(obj))
+
+
 # ── Appliances ──
 
 class ApplianceSerializer(serializers.ModelSerializer):
@@ -345,8 +380,13 @@ class AdminSolarComponentCreateUpdateSerializer(serializers.ModelSerializer):
             'shop_visible', 'xlsx_row_key',
             'is_active', 'is_featured', 'sort_order',
         ]
+        # Slug auto-generates from the name in the model's save() — admins
+        # shouldn't have to supply it when creating.
+        extra_kwargs = {'slug': {'required': False, 'allow_blank': True}}
 
     def validate_slug(self, value):
+        if not value:
+            return value
         instance = self.instance
         qs = SolarComponent.objects.filter(slug=value, is_deleted=False)
         if instance:

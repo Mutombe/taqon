@@ -55,6 +55,10 @@ export const adminApi = {
 
   // Solar components & families (for dropdowns)
   getAdminComponents: (params) => api.get('/solar-config/admin/components/', { params }),
+  getAdminComponent: (slug) => api.get(`/solar-config/admin/components/${slug}/`),
+  createComponent: (data) => api.post('/solar-config/admin/components/create/', data),
+  updateComponent: (slug, data) => api.patch(`/solar-config/admin/components/${slug}/`, data),
+  deleteComponent: (slug) => api.delete(`/solar-config/admin/components/${slug}/delete/`),
   getAdminFamilies: (params) => api.get('/solar-config/admin/families/', { params }),
 
   // Appliances (CRUD)
