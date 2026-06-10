@@ -381,6 +381,12 @@ export const solutionsData = [
       { value: '24/7', label: 'Hot Water Availability' },
       { value: '5+', label: 'Years Experience' },
     ],
+    brands: [
+      { name: 'Suntask', logo: '/brands/suntask.png' },
+      { name: 'Ecosolar', logo: '/brands/ecosolar.png' },
+      { name: 'Electrosales', logo: null },
+      { name: 'Solara', logo: null },
+    ],
     relatedSolutions: ['solar-installations', 'gas-geysers', 'solar-system-maintenance'],
     ctaText: 'Stop paying to heat water with grid power — ask us about a solar geyser today.',
     ctaPhone: '+263 77 277 1036',
@@ -435,6 +441,10 @@ export const solutionsData = [
       { value: '0kW', label: 'Grid Power Needed' },
       { value: '24/7', label: 'Works In Load-Shedding' },
       { value: '100%', label: 'Safety Compliance' },
+    ],
+    brands: [
+      { name: 'Powerite', logo: null },
+      { name: 'Electrosales', logo: null },
     ],
     relatedSolutions: ['solar-geysers', 'solar-installations', 'electrical-hardware'],
     ctaText: 'Get instant hot water that works through every power cut — ask about a gas geyser today.',

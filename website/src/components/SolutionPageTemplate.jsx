@@ -280,6 +280,41 @@ export default function SolutionPageTemplate({ solution, allSolutions }) {
         </section>
       )}
 
+      {/* ─── Brands we supply & install ─── */}
+      {solution.brands?.length > 0 && (
+        <section className="py-16 lg:py-20 bg-white dark:bg-taqon-charcoal border-t border-gray-100 dark:border-white/10">
+          <div className="max-w-6xl mx-auto px-4">
+            <AnimatedSection variant="fadeUp">
+              <div className="text-center mb-10">
+                <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">
+                  Brands
+                </span>
+                <h2 className="mt-3 text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
+                  Brands We Supply &amp; Install
+                </h2>
+              </div>
+            </AnimatedSection>
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
+              {solution.brands.map((brand) => (
+                <div key={brand.name} className="flex items-center justify-center" title={brand.name}>
+                  {brand.logo ? (
+                    <img
+                      src={brand.logo}
+                      alt={`${brand.name} — supplied and installed by Taqon Electrico in Zimbabwe`}
+                      className="h-9 lg:h-11 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+                    />
+                  ) : (
+                    <span className="text-lg lg:text-xl font-bold font-syne text-taqon-charcoal/70 dark:text-white/60">
+                      {brand.name}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ─── Shop By Category ─── */}
       <section className="py-20 lg:py-28 bg-taqon-cream dark:bg-taqon-dark">
         <div className="max-w-7xl mx-auto px-4">

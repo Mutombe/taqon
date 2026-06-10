@@ -20,13 +20,24 @@ import { services, stats, testimonials, companyInfo, videoTestimonials } from '.
 
 const serviceIcons = { Sun, Zap: Lightning, Droplets: Drop, Lightbulb, Wrench, Package: Shield };
 
+// Equipment brands we specialise in (logos tuned to invert cleanly in dark mode).
+// `keepColor` logos have their own background, so they sit on a white chip and
+// skip the invert treatment.
 const brandLogos = [
   { name: 'Jinko Solar', logo: '/jinko.png', href: 'https://www.jinkosolar.com' },
   { name: 'Pylontech', logo: '/pylontech.png', href: 'https://www.pylontech.com.cn' },
   { name: 'Dyness', logo: '/Dyness.png', href: 'https://www.dyness.com' },
   { name: 'Sigenergy', logo: '/sigenergy.png', href: 'https://www.sigenergy.com' },
   { name: 'Sunsynk', logo: '/sunsynk.png', href: 'https://www.sunsynk.com' },
-  { name: 'Victron Energy', logo: null, href: 'https://www.victronenergy.com' },
+  { name: 'Victron Energy', logo: '/brands/victron.png', href: 'https://www.victronenergy.com', keepColor: true },
+];
+
+// Local suppliers & trade partners we work with.
+const partnerBrands = [
+  { name: 'Halsteds', logo: '/brands/halsted.png', keepColor: true },
+  { name: 'Cafca', logo: null },
+  { name: 'Electrosales', logo: null },
+  { name: 'Flint Electrical', logo: '/brands/flint.png', keepColor: true },
 ];
 
 const heroImages = [
@@ -225,16 +236,18 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-taqon-cream dark:from-taqon-dark to-transparent" />
       </section>
 
-      {/* ===== BRANDS MARQUEE ===== */}
-      {/* Vision: Continuous scrolling marquee of partner brand logos on a clean background */}
+      {/* ===== BRANDS ===== */}
+      {/* Vision: a scrolling marquee of the equipment brands we specialise in,
+          plus a static row of local suppliers/partners we work with. */}
       <section className="py-10 bg-taqon-cream dark:bg-taqon-dark border-b border-gray-100 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-4 mb-6">
-          <h2 className="text-center text-xs uppercase tracking-[0.2em] text-taqon-muted font-medium">Trusted brands we work with</h2>
-          {/* Crawlable, accessible list of the brands we stock — so searches for
-              these brand names in Zimbabwe surface Taqon Electrico. */}
+          <h2 className="text-center text-xs uppercase tracking-[0.2em] text-taqon-muted font-medium">Brands we specialise in</h2>
+          {/* Crawlable, accessible list — so searches for these brand names in
+              Zimbabwe surface Taqon Electrico. */}
           <p className="sr-only">
             Taqon Electrico is an authorised supplier and installer of leading solar and energy
-            brands in Zimbabwe, including {brandLogos.map((b) => b.name).join(', ')}.
+            brands in Zimbabwe, including {brandLogos.map((b) => b.name).join(', ')}. We also work
+            with local suppliers and trade partners including {partnerBrands.map((b) => b.name).join(', ')}.
           </p>
         </div>
         <div className="overflow-hidden">
@@ -247,15 +260,39 @@ export default function Home() {
                 className="flex-shrink-0 px-10 py-3 flex items-center justify-center cursor-pointer"
               >
                 {brand.logo ? (
-                  <img
-                    src={brand.logo}
-                    alt={`${brand.name} — solar brand supplied and installed by Taqon Electrico in Zimbabwe`}
-                    className="h-10 lg:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300 dark:brightness-0 dark:invert dark:opacity-40 dark:hover:opacity-80"
-                  />
+                  brand.keepColor ? (
+                    <span className="bg-white rounded-lg px-3 py-2 flex items-center justify-center shadow-sm">
+                      <img src={brand.logo} alt={`${brand.name} — supplied and installed by Taqon Electrico in Zimbabwe`} className="h-8 lg:h-9 w-auto object-contain" />
+                    </span>
+                  ) : (
+                    <img
+                      src={brand.logo}
+                      alt={`${brand.name} — solar brand supplied and installed by Taqon Electrico in Zimbabwe`}
+                      className="h-10 lg:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300 dark:brightness-0 dark:invert dark:opacity-40 dark:hover:opacity-80"
+                    />
+                  )
                 ) : (
                   <span className="text-xl font-bold text-taqon-charcoal/20 dark:text-white/15 font-syne whitespace-nowrap hover:text-taqon-orange/50 transition-colors">{brand.name}</span>
                 )}
               </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Local suppliers & trade partners — static row */}
+        <div className="max-w-5xl mx-auto px-4 mt-10">
+          <p className="text-center text-xs uppercase tracking-[0.2em] text-taqon-muted font-medium mb-6">Trusted partners we work with</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+            {partnerBrands.map((brand) => (
+              <div key={brand.name} className="flex items-center justify-center" title={brand.name}>
+                {brand.logo ? (
+                  <span className="bg-white rounded-lg px-3 py-2 flex items-center justify-center shadow-sm">
+                    <img src={brand.logo} alt={`${brand.name} — trade partner of Taqon Electrico in Zimbabwe`} className="h-7 lg:h-8 w-auto object-contain" />
+                  </span>
+                ) : (
+                  <span className="text-lg font-bold font-syne text-taqon-charcoal/40 dark:text-white/30">{brand.name}</span>
+                )}
+              </div>
             ))}
           </div>
         </div>
