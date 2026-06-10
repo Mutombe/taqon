@@ -56,6 +56,7 @@ class MaterialCrudTests(_Base):
             'category': str(self.cat.id), 'name': '2.5mm Twin & Earth Cable', 'unit': 'roll',
         }, format='json')
         self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertIn('id', resp.json())  # needed so a duplicate can attach copied prices
         self.assertTrue(Material.objects.filter(name='2.5mm Twin & Earth Cable').exists())
 
     def test_category_filter_and_search(self):

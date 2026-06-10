@@ -123,7 +123,8 @@ class MaterialSerializer(serializers.ModelSerializer):
 class MaterialWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
-        fields = ['name', 'slug', 'category', 'specification', 'brand', 'unit', 'notes', 'is_active']
+        fields = ['id', 'name', 'slug', 'category', 'specification', 'brand', 'unit', 'notes', 'is_active']
+        read_only_fields = ['id']
         extra_kwargs = {'slug': {'required': False, 'allow_blank': True}}
 
 

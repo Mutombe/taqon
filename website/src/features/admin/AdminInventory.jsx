@@ -275,9 +275,24 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
     if (!form.category) { toast.error('Choose a category'); return; }
     setSaving(true);
     try {
-      if (material?.slug) await adminApi.updateMaterial(material.slug, form);
-      else await adminApi.createMaterial(form);
-      toast.success(material?.slug ? 'Material updated' : 'Material added');
+      if (material?.slug) {
+        await adminApi.updateMaterial(material.slug, form);
+        toast.success('Material updated');
+      } else {
+        const { data } = await adminApi.createMaterial(form);
+        // When duplicating, carry over the source material's supplier prices so
+        // the copy keeps the original's supplier(s) — not an arbitrary default.
+        const sourcePrices = material?.prices || [];
+        let copied = 0;
+        for (const p of sourcePrices) {
+          if (!p.supplier || p.price == null) continue;
+          try {
+            await adminApi.setSupplierPrice({ supplier: p.supplier, material: data.id, price: p.price, currency: p.currency, note: p.note || '' });
+            copied += 1;
+          } catch { /* skip a price that fails, keep the rest */ }
+        }
+        toast.success(copied ? `Material added with ${copied} supplier price${copied > 1 ? 's' : ''}` : 'Material added');
+      }
       onSaved(); onClose();
     } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to save material')); }
     finally { setSaving(false); }
