@@ -20,26 +20,25 @@ import { services, stats, testimonials, companyInfo, videoTestimonials } from '.
 
 const serviceIcons = { Sun, Zap: Lightning, Droplets: Drop, Lightbulb, Wrench, Package: Shield };
 
-// Equipment brands we specialise in (logos tuned to invert cleanly in dark mode).
-// `keepColor` logos have their own background, so they sit on a white chip and
-// skip the invert treatment.
+// Equipment brands we specialise in. All logos are transparent PNGs and get
+// the same treatment as the rest of the wall.
 const brandLogos = [
   { name: 'Jinko Solar', logo: '/jinko.png', href: 'https://www.jinkosolar.com' },
   { name: 'Pylontech', logo: '/pylontech.png', href: 'https://www.pylontech.com.cn' },
   { name: 'Dyness', logo: '/Dyness.png', href: 'https://www.dyness.com' },
   { name: 'Sigenergy', logo: '/sigenergy.png', href: 'https://www.sigenergy.com' },
   { name: 'Sunsynk', logo: '/sunsynk.png', href: 'https://www.sunsynk.com' },
-  { name: 'Victron Energy', logo: '/brands/victron.png', href: 'https://www.victronenergy.com', keepColor: true },
-  { name: 'Suntask Solar Geysers', logo: '/brands/suntask.png', keepColor: true },
-  { name: 'Ecosolar', logo: '/brands/ecosolar.png', keepColor: true },
+  { name: 'Victron Energy', logo: '/brands/victron.png', href: 'https://www.victronenergy.com' },
+  { name: 'Suntask Solar Geysers', logo: '/brands/suntask.png' },
+  { name: 'Ecosolar', logo: '/brands/ecosolar.png' },
 ];
 
 // Local suppliers & trade partners we work with.
 const partnerBrands = [
-  { name: 'Halsteds', logo: '/brands/halsted.png', keepColor: true },
+  { name: 'Halsteds', logo: '/brands/halsted.png' },
+  { name: 'Electrosales', logo: '/brands/electrosales.png' },
+  { name: 'Flint Electrical', logo: '/brands/flint.png' },
   { name: 'Cafca', logo: null },
-  { name: 'Electrosales', logo: null },
-  { name: 'Flint Electrical', logo: '/brands/flint.png', keepColor: true },
 ];
 
 const heroImages = [
@@ -256,19 +255,13 @@ export default function Home() {
           <div className="flex animate-marquee items-center">
             {[...brandLogos, ...brandLogos, ...brandLogos].map((brand, i) => {
               const inner = brand.logo ? (
-                brand.keepColor ? (
-                  <span className="bg-white rounded-lg px-3 py-2 flex items-center justify-center shadow-sm">
-                    <img src={brand.logo} alt={`${brand.name} — supplied and installed by Taqon Electrico in Zimbabwe`} className="h-8 lg:h-9 w-auto object-contain" />
-                  </span>
-                ) : (
-                  <img
-                    src={brand.logo}
-                    alt={`${brand.name} — solar brand supplied and installed by Taqon Electrico in Zimbabwe`}
-                    className="h-10 lg:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300 dark:brightness-0 dark:invert dark:opacity-40 dark:hover:opacity-80"
-                  />
-                )
+                <img
+                  src={brand.logo}
+                  alt={`${brand.name} — solar brand supplied and installed by Taqon Electrico in Zimbabwe`}
+                  className="h-10 lg:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300 dark:brightness-0 dark:invert dark:opacity-40 dark:hover:opacity-80"
+                />
               ) : (
-                <span className="text-xl font-bold text-taqon-charcoal/20 dark:text-white/15 font-syne whitespace-nowrap hover:text-taqon-orange/50 transition-colors">{brand.name}</span>
+                <span className="text-xl font-bold text-taqon-charcoal/30 dark:text-white/25 font-syne whitespace-nowrap hover:text-taqon-orange/50 transition-colors">{brand.name}</span>
               );
               return brand.href ? (
                 <a
@@ -293,13 +286,15 @@ export default function Home() {
           <p className="text-center text-xs uppercase tracking-[0.2em] text-taqon-muted font-medium mb-6">Trusted partners we work with</p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
             {partnerBrands.map((brand) => (
-              <div key={brand.name} className="flex items-center justify-center" title={brand.name}>
+              <div key={brand.name} className="flex items-center justify-center px-2" title={brand.name}>
                 {brand.logo ? (
-                  <span className="bg-white rounded-lg px-3 py-2 flex items-center justify-center shadow-sm">
-                    <img src={brand.logo} alt={`${brand.name} — trade partner of Taqon Electrico in Zimbabwe`} className="h-7 lg:h-8 w-auto object-contain" />
-                  </span>
+                  <img
+                    src={brand.logo}
+                    alt={`${brand.name} — trade partner of Taqon Electrico in Zimbabwe`}
+                    className="h-10 lg:h-12 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300"
+                  />
                 ) : (
-                  <span className="text-lg font-bold font-syne text-taqon-charcoal/40 dark:text-white/30">{brand.name}</span>
+                  <span className="text-lg font-bold font-syne text-taqon-charcoal/30 dark:text-white/25">{brand.name}</span>
                 )}
               </div>
             ))}

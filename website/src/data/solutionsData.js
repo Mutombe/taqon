@@ -411,7 +411,7 @@ export const solutionsData = [
     brands: [
       { name: 'Suntask', logo: '/brands/suntask.png' },
       { name: 'Ecosolar', logo: '/brands/ecosolar.png' },
-      { name: 'Electrosales', logo: null },
+      { name: 'Electrosales', logo: '/brands/electrosales.png' },
       { name: 'Solara', logo: null },
     ],
     relatedSolutions: ['solar-installations', 'gas-geysers', 'solar-system-maintenance'],
@@ -471,7 +471,7 @@ export const solutionsData = [
     ],
     brands: [
       { name: 'Powerite', logo: null },
-      { name: 'Electrosales', logo: null },
+      { name: 'Electrosales', logo: '/brands/electrosales.png' },
     ],
     relatedSolutions: ['solar-geysers', 'solar-installations', 'electrical-hardware'],
     ctaText: 'Get instant hot water that works through every power cut — ask about a gas geyser today.',
