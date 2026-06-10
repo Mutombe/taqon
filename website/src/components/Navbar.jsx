@@ -5,7 +5,7 @@ import {
   List, X, MagnifyingGlass, Bag, CaretDown, CaretRight, Phone, MapPin,
   User, SignOut, Package, Gear, SquaresFour, Sun, Moon,
   Wrench, Lightning, SolarPanel, Drop, HardDrives, Lamp,
-  Calculator, BatteryFull, Gauge, LinkSimple, Toolbox, Lightbulb, ArrowRight, Star, Heart,
+  Calculator, BatteryFull, Gauge, LinkSimple, Toolbox, Lightbulb, ArrowRight, Star, Heart, Flame,
 } from '@phosphor-icons/react';
 import { companyInfo, services, packages, products, solarTips, faqs } from '../data/siteData';
 import logoImg from '../assets/taqon-electrico-logo.jpg';
@@ -35,6 +35,8 @@ const navLinks = [
       { path: '/solutions/electrical-maintenance', label: 'Electrical Maintenance', desc: 'Home & commercial electrical services', icon: Lightning },
       { path: '/solutions/solar-installations', label: 'Solar Installations', desc: 'Complete system design & installation', icon: SolarPanel },
       { path: '/solutions/borehole-pump-installations', label: 'Borehole Pump Installations', desc: 'Solar-powered water solutions', icon: Drop },
+      { path: '/solutions/solar-geysers', label: 'Solar Geysers', desc: 'Free hot water from the sun', icon: Sun },
+      { path: '/solutions/gas-geysers', label: 'Gas Geysers', desc: 'Instant on-demand hot water', icon: Flame },
       { path: '/solutions/electrical-hardware', label: 'Electrical Hardware', desc: 'Premium equipment supply', icon: HardDrives },
       { path: '/solutions/lighting-solutions', label: 'Lighting Solutions', desc: 'Custom lighting design & install', icon: Lamp },
     ],

@@ -9,6 +9,7 @@ import {
   Wrench,
   Package,
   Calculator,
+  Flame,
   ArrowRight,
   Phone,
   WhatsappLogo,
@@ -19,7 +20,7 @@ import { autoLink, confirmExternalNavigation } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { solutionsData } from '../data/solutionsData';
 
-const iconMap = { Sun, Lightning, Drop, Lightbulb, Wrench, Package, Calculator };
+const iconMap = { Sun, Lightning, Drop, Lightbulb, Wrench, Package, Calculator, Flame };
 
 export default function Solutions() {
   // Separate solutions: exclude solar-calculator redirect for the grid

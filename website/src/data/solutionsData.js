@@ -331,6 +331,116 @@ export const solutionsData = [
     ctaPhone: '+263 77 277 1036',
   },
   {
+    slug: 'solar-geysers',
+    title: 'Solar Geyser Installation',
+    subtitle: 'Free Hot Water From the Zimbabwean Sun',
+    heroDescription:
+      'Slash your electricity bill by heating your water with the sun. Our solar geysers deliver reliable, round-the-clock hot water for your home or business — without drawing on the grid.',
+    icon: 'Sun',
+    image: '/solar-panel-installtion-harare-5.jpg',
+    fullDescription: [
+      'A solar geyser uses the abundant Zimbabwean sun to heat your water, replacing the single biggest electricity consumer in most homes. Water heating typically accounts for up to 40% of a household electricity bill, so switching to solar delivers immediate, lasting savings while protecting you from load-shedding and rising tariffs.',
+      'Taqon Electrico supplies and installs both thermosiphon (passive) and pumped (active) solar geyser systems, in direct and indirect configurations to suit Zimbabwe’s water quality and climate. Whether you need a compact 100-litre unit for a small household or a 300-litre-plus system for a lodge or guesthouse, we size and install the right solution.',
+      'Every installation is carried out by qualified technicians, properly plumbed and electrically backed up so you always have hot water — even on cloudy days. We also service and retrofit existing geysers with solar collectors to get you saving without replacing your whole system.',
+    ],
+    bulletPoints: [
+      'Supply and installation of solar geysers (100L–300L+)',
+      'Thermosiphon (passive) and pumped (active) systems',
+      'Direct and indirect (closed-loop) configurations',
+      'Electric or heat-pump backup for cloudy days',
+      'Retrofitting solar collectors to existing geysers',
+      'High-pressure and low-pressure system options',
+      'Servicing, descaling and element replacement',
+      'Workmanship and manufacturer warranties',
+    ],
+    howItWorks: [
+      {
+        title: 'Hot Water Assessment',
+        description:
+          'We assess your household size, hot water demand, roof orientation and existing plumbing to recommend the right geyser capacity and type.',
+      },
+      {
+        title: 'System Sizing & Quote',
+        description:
+          'You receive a transparent quote covering the collector, tank, mounting, plumbing and backup — sized to your real usage with no guesswork.',
+      },
+      {
+        title: 'Professional Installation',
+        description:
+          'Our certified team installs and plumbs the system, mounts the collector for maximum sun exposure, and wires the backup safely.',
+      },
+      {
+        title: 'Commission & Handover',
+        description:
+          'We pressure-test, commission the system, and walk you through operation and maintenance so you start saving from day one.',
+      },
+    ],
+    stats: [
+      { value: 'Up to 40%', label: 'Of Your Power Bill Saved' },
+      { value: '100–300L+', label: 'System Sizes' },
+      { value: '24/7', label: 'Hot Water Availability' },
+      { value: '5+', label: 'Years Experience' },
+    ],
+    relatedSolutions: ['solar-installations', 'gas-geysers', 'solar-system-maintenance'],
+    ctaText: 'Stop paying to heat water with grid power — ask us about a solar geyser today.',
+    ctaPhone: '+263 77 277 1036',
+  },
+  {
+    slug: 'gas-geysers',
+    title: 'Gas Geyser Installation',
+    subtitle: 'Instant Hot Water, On Demand',
+    heroDescription:
+      'Endless on-demand hot water without electricity. Our certified team supplies and installs LP gas geysers for homes, lodges and businesses across Zimbabwe.',
+    icon: 'Flame',
+    image: '/taqon-solar-system-panels-hardware.jpg',
+    fullDescription: [
+      'A gas geyser heats water instantly as it flows, so you never run out and never wait for a tank to warm up. Running on LP gas, it works straight through load-shedding and is one of the most cost-effective ways to guarantee hot water in a Zimbabwean home or business.',
+      'Taqon Electrico supplies and installs the full range of LPG instant water heaters — from compact units for a single bathroom to high-flow models that serve multiple outlets at once. We pair every unit with correctly sized gas piping, regulators and safe ventilation for trouble-free, code-compliant operation.',
+      'Gas geysers pair beautifully with solar: many of our clients run a solar geyser as their primary supply and a gas geyser as instant backup, so they enjoy free hot water on sunny days and instant hot water any time. Our team will advise on the best combination for your needs.',
+    ],
+    bulletPoints: [
+      'Supply and installation of LP gas geysers',
+      'Instant, tankless on-demand hot water',
+      'Low-flow to high-flow models (multiple bathrooms)',
+      'Correctly sized gas piping, regulators and fittings',
+      'Safe ventilation and flue installation',
+      'Works right through load-shedding',
+      'Ideal as backup to a solar geyser',
+      'Servicing, repairs and safety checks',
+    ],
+    howItWorks: [
+      {
+        title: 'Site & Demand Survey',
+        description:
+          'We assess how many outlets you need to run, your gas supply, and ventilation to recommend the right flow rate and unit.',
+      },
+      {
+        title: 'Clear Quote',
+        description:
+          'You get a complete quote covering the geyser, gas piping, regulator, mounting and ventilation — no hidden extras.',
+      },
+      {
+        title: 'Certified Installation',
+        description:
+          'Our technicians mount the unit, run and pressure-test the gas line, fit safe ventilation, and connect your water supply.',
+      },
+      {
+        title: 'Safety Check & Handover',
+        description:
+          'We leak-test, commission the geyser, and show you safe operation before handing over a fully working system.',
+      },
+    ],
+    stats: [
+      { value: 'Instant', label: 'On-Demand Hot Water' },
+      { value: '0kW', label: 'Grid Power Needed' },
+      { value: '24/7', label: 'Works In Load-Shedding' },
+      { value: '100%', label: 'Safety Compliance' },
+    ],
+    relatedSolutions: ['solar-geysers', 'solar-installations', 'electrical-hardware'],
+    ctaText: 'Get instant hot water that works through every power cut — ask about a gas geyser today.',
+    ctaPhone: '+263 77 277 1036',
+  },
+  {
     slug: 'solar-calculator',
     title: 'Solar Calculator',
     subtitle: 'Calculate Your Solar Savings',

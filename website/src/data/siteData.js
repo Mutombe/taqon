@@ -172,6 +172,26 @@ export const services = [
     features: ["Solar panels", "Batteries & inverters", "Borehole pumps", "Cabling & accessories"],
     image: "https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=800&q=80",
   },
+  {
+    id: 7,
+    title: "Solar Geysers",
+    slug: "solar-geysers",
+    shortDesc: "Free hot water from the sun — cut up to 40% off your power bill.",
+    description: "Supply and installation of solar geysers for homes and businesses. Reliable, round-the-clock hot water heated by the Zimbabwean sun, with electric or heat-pump backup for cloudy days.",
+    icon: "Sun",
+    features: ["100L–300L+ systems", "Passive & pumped systems", "Backup for cloudy days", "Retrofit existing geysers"],
+    image: "/solar-panel-installtion-harare-5.jpg",
+  },
+  {
+    id: 8,
+    title: "Gas Geysers",
+    slug: "gas-geysers",
+    shortDesc: "Instant, on-demand hot water that works right through load-shedding.",
+    description: "Supply and installation of LP gas geysers for homes, lodges and businesses. Endless tankless hot water with safe gas piping and ventilation — perfect as a standalone or as backup to a solar geyser.",
+    icon: "Flame",
+    features: ["Instant tankless hot water", "Low to high-flow models", "Safe gas piping & venting", "Works in load-shedding"],
+    image: "/taqon-solar-system-panels-hardware.jpg",
+  },
 ];
 
 // Packages data
