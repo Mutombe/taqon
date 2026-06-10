@@ -5,7 +5,7 @@ import {
   SquaresFour, ChartBar, Package, ShoppingCart, SolarPanel,
   Article, Image, Users, List, X, CaretRight, SignOut,
   Bell, MoonStars, Sun, FileText, Wallet, Lightning, ToggleRight, ChatCircle, DownloadSimple,
-  Cube,
+  Cube, Buildings,
 } from '@phosphor-icons/react';
 import useAuthStore from '../../stores/authStore';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -25,6 +25,7 @@ const NAV_SECTIONS = [
       { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
       { to: '/admin/packages', label: 'Packages', icon: SolarPanel },
       { to: '/admin/components', label: 'Components', icon: Cube },
+      { to: '/admin/inventory', label: 'Inventory', icon: Buildings },
       { to: '/admin/appliances', label: 'Appliances', icon: Lightning },
       { to: '/admin/quotations', label: 'Quotations', icon: FileText },
       { to: '/admin/deposits', label: 'Deposits', icon: Wallet },
@@ -197,6 +198,7 @@ const PAGE_TITLES = {
   '/admin/orders': 'Orders',
   '/admin/packages': 'Packages',
   '/admin/components': 'Components & Accessories',
+  '/admin/inventory': 'Supplier Inventory & Pricing',
   '/admin/appliances': 'Appliances',
   '/admin/quotations': 'Quotations',
   '/admin/deposits': 'Package Deposits',

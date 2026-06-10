@@ -88,4 +88,30 @@ export const adminApi = {
   // Categories & Brands (for product form dropdowns)
   getCategories: () => api.get('/shop/categories/'),
   getBrands: () => api.get('/shop/brands/'),
+
+  // ── Supplier inventory & pricing (admin-only) ──
+  getInventorySummary: () => api.get('/inventory/summary/'),
+  getMaterialCategories: () => api.get('/inventory/categories/'),
+  createMaterialCategory: (data) => api.post('/inventory/categories/', data),
+
+  getSuppliers: (params) => api.get('/inventory/suppliers/', { params }),
+  createSupplier: (data) => api.post('/inventory/suppliers/', data),
+  updateSupplier: (slug, data) => api.patch(`/inventory/suppliers/${slug}/`, data),
+  deleteSupplier: (slug) => api.delete(`/inventory/suppliers/${slug}/`),
+
+  getMaterials: (params) => api.get('/inventory/materials/', { params }),
+  getMaterial: (slug) => api.get(`/inventory/materials/${slug}/`),
+  createMaterial: (data) => api.post('/inventory/materials/', data),
+  updateMaterial: (slug, data) => api.patch(`/inventory/materials/${slug}/`, data),
+  deleteMaterial: (slug) => api.delete(`/inventory/materials/${slug}/`),
+
+  setSupplierPrice: (data) => api.post('/inventory/prices/', data),
+  updateSupplierPrice: (id, data) => api.patch(`/inventory/prices/${id}/`, data),
+  deleteSupplierPrice: (id) => api.delete(`/inventory/prices/${id}/`),
+
+  getPriceHistory: (params) => api.get('/inventory/price-history/', { params }),
+
+  getQuotations: (params) => api.get('/inventory/quotations/', { params }),
+  uploadQuotation: (formData) => api.post('/inventory/quotations/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteQuotation: (id) => api.delete(`/inventory/quotations/${id}/`),
 };
