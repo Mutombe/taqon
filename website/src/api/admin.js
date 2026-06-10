@@ -106,6 +106,7 @@ export const adminApi = {
   deleteMaterial: (slug) => api.delete(`/inventory/materials/${slug}/`),
 
   setSupplierPrice: (data) => api.post('/inventory/prices/', data),
+  batchPrices: (formData) => api.post('/inventory/prices/batch/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   updateSupplierPrice: (id, data) => api.patch(`/inventory/prices/${id}/`, data),
   deleteSupplierPrice: (id) => api.delete(`/inventory/prices/${id}/`),
 

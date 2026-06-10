@@ -148,54 +148,118 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
   );
 }
 
-/* ─────────────────────────── Set-price modal ─────────────────────────── */
-function SetPriceModal({ material, suppliers, onClose, onSaved }) {
-  const [form, setForm] = useState({ supplier: suppliers[0]?.id || '', price: '', quoted_at: '', source_quotation: '', note: '' });
+/* ─────────────────────── Log Prices drawer (the entry point) ─────────────────────── */
+// Supplier-centric batch entry. A quotation document is OPTIONAL — leave it off
+// for prices a supplier simply told you. Materials can be typed in and created
+// inline. Every line becomes that supplier's price for the material.
+function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
+  const [supplier, setSupplier] = useState(suppliers[0]?.id || '');
+  const [attachQuote, setAttachQuote] = useState(false);
+  const [meta, setMeta] = useState({ title: '', reference: '', quote_date: '' });
+  const [file, setFile] = useState(null);
+  const [rows, setRows] = useState([{ name: '', category: categories[0]?.id || '', price: '', unit: '' }]);
   const [saving, setSaving] = useState(false);
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const { data: quotes } = useQuery({
-    queryKey: ['invQuotes', form.supplier],
-    queryFn: () => adminApi.getQuotations({ supplier: form.supplier, page_size: 100 }).then((r) => r.data),
-    enabled: !!form.supplier,
-  });
-  const quotations = quotes?.results || quotes || [];
+
+  const { data: matData } = useQuery({ queryKey: ['invAllMaterials'], queryFn: () => adminApi.getMaterials({ page_size: 500 }).then((r) => r.data) });
+  const materials = matData?.results || matData || [];
+  const matchOf = (name) => materials.find((m) => m.name.toLowerCase() === (name || '').trim().toLowerCase());
+
+  const setRow = (i, k, v) => setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, [k]: v } : r)));
+  const addRow = () => setRows((rs) => [...rs, { name: '', category: categories[0]?.id || '', price: '', unit: '' }]);
+  const removeRow = (i) => setRows((rs) => rs.filter((_, idx) => idx !== i));
+
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.supplier) { toast.error('Choose a supplier'); return; }
-    if (form.price === '') { toast.error('Enter a price'); return; }
+    if (!supplier) { toast.error('Choose a supplier'); return; }
+    const items = rows
+      .filter((r) => r.name.trim() && r.price !== '')
+      .map((r) => ({ material_name: r.name.trim(), category: matchOf(r.name) ? undefined : r.category, price: r.price, unit: r.unit }));
+    if (!items.length) { toast.error('Add at least one material with a price'); return; }
     setSaving(true);
     try {
-      await adminApi.setSupplierPrice({
-        supplier: form.supplier, material: material.id, price: form.price,
-        quoted_at: form.quoted_at || null, source_quotation: form.source_quotation || null, note: form.note,
-      });
-      toast.success('Price logged');
+      const fd = new FormData();
+      fd.append('supplier', supplier);
+      fd.append('items', JSON.stringify(items));
+      if (attachQuote) {
+        if (meta.title) fd.append('quotation_title', meta.title);
+        if (meta.reference) fd.append('reference', meta.reference);
+        if (meta.quote_date) fd.append('quote_date', meta.quote_date);
+        if (file) fd.append('quotation_file', file);
+      }
+      const { data } = await adminApi.batchPrices(fd);
+      toast.success(`${data.created} added · ${data.updated} updated`);
       onSaved(); onClose();
-    } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to log price')); }
+    } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to log prices')); }
     finally { setSaving(false); }
   };
+
   return (
-    <Drawer title={`Log price — ${material.name}`} onClose={onClose}>
+    <Drawer title="Log Prices" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Supplier *">
-          <select className="auth-input w-full text-sm" value={form.supplier} onChange={(e) => set('supplier', e.target.value)}>
-            {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          {suppliers.length === 0 ? (
+            <p className="text-xs text-amber-600 dark:text-amber-400">Add a supplier first (Suppliers tab), then come back.</p>
+          ) : (
+            <select className="auth-input w-full text-sm" value={supplier} onChange={(e) => setSupplier(e.target.value)}>
+              {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          )}
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Price (USD) *"><input type="number" step="0.01" className="auth-input w-full text-sm" value={form.price} onChange={(e) => set('price', e.target.value)} /></Field>
-          <Field label="Quoted on"><input type="date" className="auth-input w-full text-sm" value={form.quoted_at} onChange={(e) => set('quoted_at', e.target.value)} /></Field>
+
+        {/* Optional quotation document */}
+        <div className="rounded-xl border border-[var(--card-border)] p-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={attachQuote} onChange={(e) => setAttachQuote(e.target.checked)} className="accent-taqon-orange" />
+            <span className="text-sm text-[var(--text-secondary)]">Attach a quotation document</span>
+          </label>
+          {attachQuote && (
+            <div className="mt-3 space-y-2">
+              <input className="auth-input w-full text-sm" placeholder="Quote title" value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />
+              <div className="grid grid-cols-2 gap-2">
+                <input className="auth-input w-full text-sm" placeholder="Reference" value={meta.reference} onChange={(e) => setMeta({ ...meta, reference: e.target.value })} />
+                <input type="date" className="auth-input w-full text-sm" value={meta.quote_date} onChange={(e) => setMeta({ ...meta, quote_date: e.target.value })} />
+              </div>
+              <input type="file" accept=".pdf,image/*,.xls,.xlsx,.csv,.doc,.docx" className="text-sm text-[var(--text-secondary)]" onChange={(e) => setFile(e.target.files[0])} />
+            </div>
+          )}
+          <p className="text-[11px] text-[var(--text-muted)] mt-2">Leave unchecked for prices a supplier just told you (verbal / WhatsApp).</p>
         </div>
-        <Field label="From quotation (optional)">
-          <select className="auth-input w-full text-sm" value={form.source_quotation} onChange={(e) => set('source_quotation', e.target.value)}>
-            <option value="">— none —</option>
-            {quotations.map((q) => <option key={q.id} value={q.id}>{q.title}</option>)}
-          </select>
-        </Field>
-        <Field label="Note"><input className="auth-input w-full text-sm" value={form.note} onChange={(e) => set('note', e.target.value)} /></Field>
-        <p className="text-[11px] text-[var(--text-muted)]">Logging a price for a supplier already priced on this material updates it and records the change in the price log.</p>
-        <button type="submit" disabled={saving} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
-          {saving ? <CircleNotch size={15} className="animate-spin" /> : null}Log price
+
+        {/* Line items */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Items</p>
+          <datalist id="material-options">{materials.map((m) => <option key={m.id} value={m.name} />)}</datalist>
+          <div className="space-y-2">
+            {rows.map((r, i) => {
+              const m = matchOf(r.name);
+              const isNew = r.name.trim() && !m;
+              return (
+                <div key={i} className="rounded-xl bg-[var(--bg-tertiary)]/40 p-2 space-y-1.5">
+                  <div className="flex gap-1.5">
+                    <input list="material-options" className="auth-input flex-1 text-sm py-1.5" placeholder="Material (type to search or add new)" value={r.name} onChange={(e) => setRow(i, 'name', e.target.value)} />
+                    {rows.length > 1 && <button type="button" onClick={() => removeRow(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg"><X size={14} /></button>}
+                  </div>
+                  <div className="flex gap-1.5 items-center">
+                    <input type="number" step="0.01" className="auth-input w-24 text-sm py-1.5" placeholder="Price" value={r.price} onChange={(e) => setRow(i, 'price', e.target.value)} />
+                    <input className="auth-input w-20 text-sm py-1.5" placeholder="unit" value={r.unit} onChange={(e) => setRow(i, 'unit', e.target.value)} />
+                    {isNew ? (
+                      <select className="auth-input flex-1 text-sm py-1.5" value={r.category} onChange={(e) => setRow(i, 'category', e.target.value)} title="Category for the new material">
+                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    ) : m ? (
+                      <span className="text-[10px] text-[var(--text-muted)] px-1 truncate">{m.category_name}</span>
+                    ) : null}
+                  </div>
+                  {isNew && <p className="text-[10px] text-taqon-orange">New — will be created under the chosen category.</p>}
+                </div>
+              );
+            })}
+          </div>
+          <button type="button" onClick={addRow} className="mt-2 text-xs text-taqon-orange hover:underline flex items-center gap-1"><Plus size={12} /> Add item</button>
+        </div>
+
+        <button type="submit" disabled={saving || !suppliers.length} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+          {saving ? <CircleNotch size={15} className="animate-spin" /> : null}Log prices
         </button>
       </form>
     </Drawer>
@@ -250,7 +314,7 @@ function QuotationModal({ suppliers, onClose, onSaved }) {
 }
 
 /* ─────────────────────────── Material row ─────────────────────────── */
-function MaterialRow({ material, onSetPrice, onEdit, onDelete }) {
+function MaterialRow({ material, onEdit, onDelete }) {
   const [open, setOpen] = useState(false);
   const prices = material.prices || [];
   return (
@@ -271,7 +335,6 @@ function MaterialRow({ material, onSetPrice, onEdit, onDelete }) {
           ) : <span className="text-[var(--text-muted)]">No prices</span>}
         </div>
         <div className="flex items-center gap-1 justify-start md:justify-end">
-          <button onClick={() => onSetPrice(material)} className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-taqon-orange hover:bg-taqon-orange/10 flex items-center gap-1" title="Log a supplier price"><CurrencyDollar size={14} /> Price</button>
           <button onClick={() => onEdit(material)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10" title="Edit"><Pencil size={14} /></button>
           <button onClick={() => onDelete(material)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10" title="Delete"><Trash size={14} /></button>
         </div>
@@ -298,6 +361,48 @@ function MaterialRow({ material, onSetPrice, onEdit, onDelete }) {
                   ))}
                 </div>
               )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ─────────────────────────── Quotation row ─────────────────────────── */
+function QuotationRow({ quotation, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const items = quotation.items || [];
+  return (
+    <div className="border-b border-[var(--card-border)] last:border-0">
+      <div className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-[var(--bg-tertiary)]/40">
+        <button onClick={() => setOpen((o) => !o)} className="min-w-0 text-left flex items-start gap-2">
+          <CaretDown size={13} className={`mt-1 flex-shrink-0 text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-[var(--text-primary)] truncate">{quotation.title}</p>
+            <p className="text-xs text-[var(--text-muted)] truncate">{quotation.supplier_name} · {fmtDate(quotation.quote_date)}{quotation.reference ? ` · ${quotation.reference}` : ''} · {quotation.item_count} item{quotation.item_count === 1 ? '' : 's'}</p>
+          </div>
+        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {quotation.file_url && <a href={quotation.file_url} target="_blank" rel="noreferrer" className="px-2.5 py-1.5 rounded-lg text-xs text-taqon-orange hover:bg-taqon-orange/10 flex items-center gap-1"><FilePdf size={14} /> Open</a>}
+          <button onClick={onDelete} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10"><Trash size={14} /></button>
+        </div>
+      </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="px-5 pb-3 pl-10">
+              {items.length === 0 ? <p className="text-xs text-[var(--text-muted)] py-1">No priced items linked to this quotation.</p>
+                : (
+                  <div className="rounded-xl border border-[var(--card-border)] overflow-hidden">
+                    {items.map((it) => (
+                      <div key={it.id} className="flex items-center justify-between px-4 py-2 text-sm border-b border-[var(--card-border)] last:border-0">
+                        <span className="text-[var(--text-secondary)]">{it.material}</span>
+                        <span className="font-semibold text-[var(--text-primary)]">{money(it.price, it.currency)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
           </motion.div>
         )}
@@ -410,6 +515,12 @@ export default function AdminInventory() {
           </h1>
           <p className="text-sm text-[var(--text-muted)] mt-0.5">Log materials and supplier prices, compare suppliers, and track every price change. Admin-only.</p>
         </div>
+        <button
+          onClick={() => setModal({ type: 'logprices' })}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 transition-colors"
+        >
+          <CurrencyDollar size={16} weight="bold" /> Log Prices
+        </button>
       </div>
 
       {/* Summary cards */}
@@ -496,7 +607,7 @@ export default function AdminInventory() {
           </div>
           {materialsQ.isLoading ? <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <SkeletonBox key={i} className="h-10 w-full rounded-xl" />)}</div>
             : materials.length === 0 ? <div className="text-center py-14 text-[var(--text-muted)]"><Cube size={36} className="mx-auto opacity-40 mb-2" />No materials {search || category ? 'match your filters' : 'yet'}</div>
-            : materials.map((m) => <MaterialRow key={m.id} material={m} onSetPrice={(mat) => setModal({ type: 'price', data: mat })} onEdit={(mat) => setModal({ type: 'material', data: mat })} onDelete={(mat) => del(() => adminApi.deleteMaterial(mat.slug), 'Material')} />)}
+            : materials.map((m) => <MaterialRow key={m.id} material={m} onEdit={(mat) => setModal({ type: 'material', data: mat })} onDelete={(mat) => del(() => adminApi.deleteMaterial(mat.slug), 'Material')} />)}
         </div>
       )}
 
@@ -527,16 +638,7 @@ export default function AdminInventory() {
           {quotesQ.isLoading ? <div className="p-5 space-y-3">{Array.from({ length: 4 }).map((_, i) => <SkeletonBox key={i} className="h-10 w-full rounded-xl" />)}</div>
             : quotations.length === 0 ? <div className="text-center py-14 text-[var(--text-muted)]"><FileArrowUp size={36} className="mx-auto opacity-40 mb-2" />No quotations uploaded</div>
             : quotations.map((q) => (
-              <div key={q.id} className="flex items-center justify-between gap-4 px-5 py-3 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--bg-tertiary)]/40">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">{q.title}</p>
-                  <p className="text-xs text-[var(--text-muted)] truncate">{q.supplier_name} · {fmtDate(q.quote_date)}{q.reference ? ` · ${q.reference}` : ''}{q.total_amount ? ` · ${money(q.total_amount, q.currency)}` : ''}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {q.file_url && <a href={q.file_url} target="_blank" rel="noreferrer" className="px-2.5 py-1.5 rounded-lg text-xs text-taqon-orange hover:bg-taqon-orange/10 flex items-center gap-1"><FilePdf size={14} /> Open</a>}
-                  <button onClick={() => del(() => adminApi.deleteQuotation(q.id), 'Quotation')} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10"><Trash size={14} /></button>
-                </div>
-              </div>
+              <QuotationRow key={q.id} quotation={q} onDelete={() => del(() => adminApi.deleteQuotation(q.id), 'Quotation')} />
             ))}
         </div>
       )}
@@ -611,7 +713,7 @@ export default function AdminInventory() {
       <AnimatePresence>
         {modal?.type === 'supplier' && <SupplierModal supplier={modal.data} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'material' && <MaterialModal material={modal.data} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
-        {modal?.type === 'price' && <SetPriceModal material={modal.data} suppliers={suppliers} onClose={() => setModal(null)} onSaved={refresh} />}
+        {modal?.type === 'logprices' && <LogPricesDrawer suppliers={suppliers} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'quotation' && <QuotationModal suppliers={suppliers} onClose={() => setModal(null)} onSaved={refresh} />}
       </AnimatePresence>
     </div>

@@ -143,14 +143,29 @@ class PriceHistorySerializer(serializers.ModelSerializer):
 class SupplierQuotationSerializer(serializers.ModelSerializer):
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     file_url = serializers.SerializerMethodField()
+    items = serializers.SerializerMethodField()
+    item_count = serializers.SerializerMethodField()
 
     class Meta:
         model = SupplierQuotation
         fields = [
             'id', 'supplier', 'supplier_name', 'title', 'file', 'file_url',
-            'reference', 'quote_date', 'total_amount', 'currency', 'notes', 'created_at',
+            'reference', 'quote_date', 'total_amount', 'currency', 'notes',
+            'items', 'item_count', 'created_at',
         ]
-        read_only_fields = ['id', 'supplier_name', 'file_url', 'created_at']
+        read_only_fields = ['id', 'supplier_name', 'file_url', 'items', 'item_count', 'created_at']
+
+    def _items(self, obj):
+        return [p for p in obj.priced_items.all() if not p.is_deleted]
+
+    def get_items(self, obj):
+        return [
+            {'id': str(p.id), 'material': p.material.name, 'price': p.price, 'currency': p.currency}
+            for p in sorted(self._items(obj), key=lambda p: p.material.name)
+        ]
+
+    def get_item_count(self, obj):
+        return len(self._items(obj))
 
     def get_file_url(self, obj):
         if not obj.file:

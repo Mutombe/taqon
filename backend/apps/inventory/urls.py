@@ -22,6 +22,7 @@ urlpatterns = [
 
     # Supplier prices (with history logging)
     path('prices/', views.SupplierPriceListCreateView.as_view(), name='price-list'),
+    path('prices/batch/', views.BatchPriceView.as_view(), name='price-batch'),
     path('prices/<uuid:pk>/', views.SupplierPriceDetailView.as_view(), name='price-detail'),
 
     # Price update logs

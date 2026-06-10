@@ -39,6 +39,83 @@ MATERIAL_FIELDS = ['name', 'category_id', 'specification', 'brand', 'unit', 'is_
 QUOTATION_FIELDS = ['title', 'reference', 'quote_date', 'total_amount']
 
 
+def apply_price(request, *, supplier, material, price, currency='USD',
+                source_quotation=None, note='', quoted_at=None):
+    """Upsert the current price for (supplier, material) and, when it changes,
+    append a PriceHistory row and an audit entry. Returns (obj, created)."""
+    existing = SupplierPrice.objects.filter(
+        supplier=supplier, material=material, is_deleted=False,
+    ).first()
+    previous = existing.price if existing else None
+    user = getattr(request, 'user', None)
+    if existing:
+        existing.price = price
+        if currency:
+            existing.currency = currency
+        if source_quotation is not None:
+            existing.source_quotation = source_quotation
+        if note:
+            existing.note = note
+        if quoted_at:
+            existing.quoted_at = quoted_at
+        existing.updated_by = user
+        existing.save()
+        obj, created = existing, False
+    else:
+        obj = SupplierPrice.objects.create(
+            supplier=supplier, material=material, price=price, currency=currency or 'USD',
+            source_quotation=source_quotation, note=note or '', quoted_at=quoted_at,
+            created_by=user,
+        )
+        created = True
+
+    if previous is None or Decimal(str(previous)) != Decimal(str(obj.price)):
+        PriceHistory.record(
+            supplier=obj.supplier, material=obj.material, price=obj.price,
+            previous_price=previous, currency=obj.currency,
+            source_quotation=obj.source_quotation, note=obj.note, user=user,
+        )
+        summary = (f'Price set to {obj.currency} {obj.price}' if previous is None
+                   else f'Price {obj.currency} {previous} → {obj.price}')
+        audit.log(request, action='created' if previous is None else 'updated',
+                  target_type='price', target_name=f'{obj.material.name} @ {obj.supplier.name}',
+                  target_id=obj.id, summary=summary)
+    return obj, created
+
+
+def resolve_material(request, *, material_id=None, name=None, category=None,
+                     specification='', brand='', unit=''):
+    """Return an existing Material (by id or name), or create one inline.
+
+    For a new material a category is used if given, else the first category.
+    """
+    if material_id:
+        return Material.objects.filter(pk=material_id, is_deleted=False).first()
+    name = (name or '').strip()
+    if not name:
+        return None
+
+    # Match an existing material by name only — so a category passed for a new
+    # material can never spawn a duplicate of one that already exists.
+    found = Material.objects.filter(name__iexact=name, is_deleted=False).first()
+    if found:
+        return found
+
+    cat_obj = None
+    if category:
+        cat_obj = (MaterialCategory.objects.filter(pk=category).first() if _is_uuid(category)
+                   else MaterialCategory.objects.filter(slug=category).first())
+    if not cat_obj:
+        cat_obj = MaterialCategory.objects.order_by('sort_order').first()
+    obj = Material.objects.create(
+        name=name, category=cat_obj, specification=specification or '',
+        brand=brand or '', unit=unit or '', created_by=getattr(request, 'user', None),
+    )
+    audit.log(request, action='created', target_type='material', target_name=obj.name,
+              target_id=obj.id, summary=f'Material added under {cat_obj.name} (from a price entry)')
+    return obj
+
+
 # ── Categories ──────────────────────────────────────────────────────────────
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -215,37 +292,91 @@ class SupplierPriceListCreateView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-        existing = SupplierPrice.objects.filter(
-            supplier=data['supplier'], material=data['material'], is_deleted=False,
-        ).first()
+        d = serializer.validated_data
+        obj, _ = apply_price(
+            request, supplier=d['supplier'], material=d['material'], price=d['price'],
+            currency=d.get('currency', 'USD'), source_quotation=d.get('source_quotation'),
+            note=d.get('note', ''), quoted_at=d.get('quoted_at'),
+        )
+        return Response(SupplierPriceSerializer(obj).data, status=status.HTTP_201_CREATED)
 
-        previous = existing.price if existing else None
-        if existing:
-            for field in ('price', 'currency', 'source_quotation', 'note', 'quoted_at'):
-                if field in data:
-                    setattr(existing, field, data[field])
-            existing.updated_by = request.user
-            existing.save()
-            obj = existing
+
+class BatchPriceView(APIView):
+    """Log several priced materials for one supplier in a single action.
+
+    The quotation document is OPTIONAL — pass an existing `quotation` id, or
+    `quotation_title`/`quotation_file` to create one, or neither for prices a
+    supplier simply told you (verbal / WhatsApp). Each item may reference an
+    existing material by `material` (id) or create one inline via
+    `material_name` (+ optional `category`).
+    """
+    permission_classes = [IsAdmin]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def post(self, request):
+        import json
+
+        sup_id = request.data.get('supplier')
+        supplier = (Supplier.objects.filter(pk=sup_id, is_deleted=False).first()
+                    if sup_id and _is_uuid(sup_id) else None)
+        if not supplier:
+            return Response({'detail': 'A valid supplier is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        items = request.data.get('items')
+        if isinstance(items, str):
+            try:
+                items = json.loads(items)
+            except (ValueError, TypeError):
+                items = []
+        if not items:
+            return Response({'detail': 'Add at least one priced item.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Optional quotation document.
+        quote = None
+        q_id = request.data.get('quotation')
+        if q_id and _is_uuid(q_id):
+            quote = SupplierQuotation.objects.filter(pk=q_id, is_deleted=False).first()
         else:
-            obj = serializer.save(created_by=request.user)
+            q_title = (request.data.get('quotation_title') or '').strip()
+            q_file = request.FILES.get('quotation_file')
+            if q_title or q_file:
+                quote = SupplierQuotation.objects.create(
+                    supplier=supplier, title=q_title or f'{supplier.name} pricing',
+                    file=q_file, reference=request.data.get('reference', ''),
+                    quote_date=request.data.get('quote_date') or None,
+                    total_amount=request.data.get('total_amount') or None,
+                    created_by=request.user,
+                )
+                audit.log(request, action='created', target_type='quotation', target_name=quote.title,
+                          target_id=quote.id, summary=f'Quotation uploaded for {supplier.name}')
 
-        if previous is None or Decimal(str(previous)) != Decimal(str(obj.price)):
-            PriceHistory.record(
-                supplier=obj.supplier, material=obj.material, price=obj.price,
-                previous_price=previous, currency=obj.currency,
-                source_quotation=obj.source_quotation, note=obj.note, user=request.user,
+        created = updated = 0
+        out = []
+        for it in items:
+            price = it.get('price')
+            if price in (None, ''):
+                continue
+            material = resolve_material(
+                request, material_id=it.get('material'), name=it.get('material_name'),
+                category=it.get('category'), specification=it.get('specification', ''),
+                brand=it.get('brand', ''), unit=it.get('unit', ''),
             )
-            summary = (f'Price set to {obj.currency} {obj.price}' if previous is None
-                       else f'Price {obj.currency} {previous} → {obj.price}')
-            audit.log(
-                request, action='created' if previous is None else 'updated',
-                target_type='price', target_name=f'{obj.material.name} @ {obj.supplier.name}',
-                target_id=obj.id, summary=summary,
+            if not material:
+                continue
+            obj, was_created = apply_price(
+                request, supplier=supplier, material=material, price=price,
+                source_quotation=quote, note=it.get('note', ''),
+                quoted_at=it.get('quoted_at') or (quote.quote_date if quote else None),
             )
-        out = SupplierPriceSerializer(obj).data
-        return Response(out, status=status.HTTP_201_CREATED)
+            created += int(was_created)
+            updated += int(not was_created)
+            out.append(SupplierPriceSerializer(obj).data)
+
+        return Response({
+            'created': created, 'updated': updated,
+            'quotation_id': str(quote.id) if quote else None,
+            'prices': out,
+        }, status=status.HTTP_201_CREATED)
 
 
 class SupplierPriceDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -308,7 +439,9 @@ class QuotationListCreateView(generics.ListCreateAPIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
-        qs = SupplierQuotation.objects.filter(is_deleted=False).select_related('supplier')
+        qs = SupplierQuotation.objects.filter(is_deleted=False).select_related('supplier').prefetch_related(
+            Prefetch('priced_items', queryset=SupplierPrice.objects.filter(is_deleted=False).select_related('material')),
+        )
         if self.request.query_params.get('supplier'):
             qs = qs.filter(supplier_id=self.request.query_params['supplier'])
         return qs
@@ -326,7 +459,9 @@ class QuotationDetailView(generics.RetrieveUpdateDestroyAPIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
-        return SupplierQuotation.objects.filter(is_deleted=False).select_related('supplier')
+        return SupplierQuotation.objects.filter(is_deleted=False).select_related('supplier').prefetch_related(
+            Prefetch('priced_items', queryset=SupplierPrice.objects.filter(is_deleted=False).select_related('material')),
+        )
 
     def perform_update(self, serializer):
         before = audit.snapshot(serializer.instance, QUOTATION_FIELDS)

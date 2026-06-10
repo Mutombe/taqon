@@ -165,3 +165,43 @@ class AuditTrailTests(_Base):
         self.set_price(self.supA, 10)
         self.assertEqual(c.get(f'{BASE}audit/?target_type=supplier').json()['count'], 1)
         self.assertEqual(c.get(f'{BASE}audit/?target_type=price').json()['count'], 1)
+
+
+class BatchPriceTests(_Base):
+    def test_batch_without_quotation_logs_verbal_prices(self):
+        resp = self.admin_client().post(f'{BASE}prices/batch/', {
+            'supplier': str(self.supA.id),
+            'items': [
+                {'material': str(self.material.id), 'price': '3.20'},
+                {'material_name': 'Cement 32.5N', 'category': 'construction', 'price': '11.50', 'unit': 'bag'},
+            ],
+        }, format='json')
+        self.assertEqual(resp.status_code, 201, resp.content)
+        body = resp.json()
+        self.assertEqual(body['created'], 2)
+        self.assertIsNone(body['quotation_id'])  # no document — verbal prices
+        self.assertTrue(Material.objects.filter(name='Cement 32.5N').exists())  # inline create
+        self.assertEqual(SupplierPrice.objects.filter(supplier=self.supA, is_deleted=False).count(), 2)
+
+    def test_batch_with_quotation_links_items(self):
+        resp = self.admin_client().post(f'{BASE}prices/batch/', {
+            'supplier': str(self.supB.id),
+            'quotation_title': 'June Quote',
+            'items': [{'material': str(self.material.id), 'price': '4.00'}],
+        }, format='json')
+        self.assertEqual(resp.status_code, 201, resp.content)
+        qid = resp.json()['quotation_id']
+        self.assertIsNotNone(qid)
+        detail = self.admin_client().get(f'{BASE}quotations/{qid}/').json()
+        self.assertEqual(detail['item_count'], 1)
+        self.assertEqual(detail['items'][0]['material'], self.material.name)
+
+    def test_batch_requires_supplier_and_items(self):
+        c = self.admin_client()
+        self.assertEqual(c.post(f'{BASE}prices/batch/', {'items': []}, format='json').status_code, 400)
+        self.assertEqual(c.post(f'{BASE}prices/batch/', {'supplier': str(self.supA.id), 'items': []}, format='json').status_code, 400)
+
+    def test_batch_admin_only(self):
+        c = APIClient(); c.force_authenticate(self.customer)
+        r = c.post(f'{BASE}prices/batch/', {'supplier': str(self.supA.id), 'items': [{'material': str(self.material.id), 'price': '1'}]}, format='json')
+        self.assertEqual(r.status_code, 403)
