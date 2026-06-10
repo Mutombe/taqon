@@ -7,7 +7,9 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from apps.solar_config.models import SolarComponent, SolarPackageTemplate, PackageComponent
+from apps.solar_config.models import (
+    SolarComponent, SolarPackageTemplate, PackageComponent, PackageChangeLog,
+)
 
 User = get_user_model()
 
@@ -18,6 +20,14 @@ def items_url(slug):
 
 def item_url(slug, item_id):
     return f'/api/v1/solar-config/admin/packages/{slug}/items/{item_id}/'
+
+
+def changelog_url(slug):
+    return f'/api/v1/solar-config/admin/packages/{slug}/changelog/'
+
+
+def revert_url(slug, log_id):
+    return f'/api/v1/solar-config/admin/packages/{slug}/changelog/{log_id}/revert/'
 
 
 class _Base(TestCase):
@@ -107,3 +117,67 @@ class PackageItemsApiTests(_Base):
         self.assertEqual(add.status_code, 201, add.content)
         self.pkg.refresh_from_db()
         self.assertEqual(float(self.pkg.battery_capacity_kwh), 10.24)  # 5.12 x 2
+
+
+class ChangeLogAndRevertTests(_Base):
+    def test_changes_are_logged(self):
+        added = self.add_item(self.inv5).json()
+        c = self.admin_client()
+        c.patch(item_url(self.pkg.slug, added['id']), {'component_id': str(self.inv8.id)}, format='json')
+        actions = list(PackageChangeLog.objects.filter(package=self.pkg).values_list('action', flat=True))
+        self.assertIn('added', actions)
+        self.assertIn('swapped', actions)
+        # The trail endpoint returns them.
+        feed = c.get(changelog_url(self.pkg.slug)).json()
+        self.assertEqual(feed['count'], 2)
+
+    def test_revert_swap_restores_original(self):
+        added = self.add_item(self.inv5).json()
+        c = self.admin_client()
+        c.patch(item_url(self.pkg.slug, added['id']), {'component_id': str(self.inv8.id)}, format='json')
+        swap_log = PackageChangeLog.objects.get(package=self.pkg, action='swapped')
+        resp = c.post(revert_url(self.pkg.slug, swap_log.id))
+        self.assertEqual(resp.status_code, 200, resp.content)
+        # Item is back to the 5kVA inverter, kVA recalculated.
+        self.assertTrue(PackageComponent.objects.filter(package=self.pkg, component=self.inv5).exists())
+        self.assertFalse(PackageComponent.objects.filter(package=self.pkg, component=self.inv8).exists())
+        self.pkg.refresh_from_db()
+        self.assertEqual(float(self.pkg.inverter_kva), 5.0)
+        swap_log.refresh_from_db()
+        self.assertTrue(swap_log.reverted)
+
+    def test_revert_add_removes_it(self):
+        added = self.add_item(self.panel).json()
+        add_log = PackageChangeLog.objects.get(package=self.pkg, action='added')
+        resp = self.admin_client().post(revert_url(self.pkg.slug, add_log.id))
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertFalse(PackageComponent.objects.filter(pk=added['id']).exists())
+
+    def test_revert_remove_readds(self):
+        added = self.add_item(self.inv5, qty=2).json()
+        c = self.admin_client()
+        c.delete(item_url(self.pkg.slug, added['id']))
+        rm_log = PackageChangeLog.objects.get(package=self.pkg, action='removed')
+        resp = c.post(revert_url(self.pkg.slug, rm_log.id))
+        self.assertEqual(resp.status_code, 200, resp.content)
+        item = PackageComponent.objects.get(package=self.pkg, component=self.inv5)
+        self.assertEqual(item.quantity, 2)
+
+    def test_revert_quantity_restores(self):
+        added = self.add_item(self.panel, qty=2).json()
+        c = self.admin_client()
+        c.patch(item_url(self.pkg.slug, added['id']), {'quantity': 6}, format='json')
+        qlog = PackageChangeLog.objects.get(package=self.pkg, action='quantity')
+        c.post(revert_url(self.pkg.slug, qlog.id))
+        self.assertEqual(PackageComponent.objects.get(pk=added['id']).quantity, 2)
+
+    def test_double_revert_rejected(self):
+        added = self.add_item(self.panel).json()
+        log = PackageChangeLog.objects.get(package=self.pkg, action='added')
+        c = self.admin_client()
+        self.assertEqual(c.post(revert_url(self.pkg.slug, log.id)).status_code, 200)
+        self.assertEqual(c.post(revert_url(self.pkg.slug, log.id)).status_code, 400)
+
+    def test_changelog_admin_only(self):
+        c = APIClient(); c.force_authenticate(self.customer)
+        self.assertEqual(c.get(changelog_url(self.pkg.slug)).status_code, 403)

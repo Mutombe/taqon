@@ -4,6 +4,7 @@ from .models import (
     SolarConfiguration, ConfigurationItem,
     PackageFamily, Appliance,
     InstantQuoteDownload, RecommendationSession,
+    PackageChangeLog,
 )
 
 
@@ -327,6 +328,30 @@ class AdminPackageItemSerializer(serializers.Serializer):
     component_id = serializers.UUIDField()
     quantity = serializers.IntegerField(min_value=1, default=1)
     notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class PackageChangeLogSerializer(serializers.ModelSerializer):
+    action_display = serializers.CharField(source='get_action_display', read_only=True)
+    component_name = serializers.CharField(source='component.name', read_only=True, default=None)
+    from_component_name = serializers.CharField(source='from_component.name', read_only=True, default=None)
+    actor_name = serializers.SerializerMethodField()
+    can_revert = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PackageChangeLog
+        fields = [
+            'id', 'action', 'action_display', 'component_name', 'from_component_name',
+            'from_quantity', 'to_quantity', 'summary', 'actor_name',
+            'reverted', 'reverted_at', 'can_revert', 'created_at',
+        ]
+        read_only_fields = fields
+
+    def get_actor_name(self, obj):
+        u = obj.actor
+        return (getattr(u, 'full_name', '') or u.email) if u else None
+
+    def get_can_revert(self, obj):
+        return not obj.reverted
 
 
 # ── Admin Package Create/Update ──

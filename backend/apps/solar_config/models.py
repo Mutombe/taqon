@@ -352,6 +352,50 @@ class PackageComponent(TimeStampedModel):
         return self.component.price * self.quantity
 
 
+class PackageChangeLog(TimeStampedModel):
+    """A revertible record of every component change made to a package — adds,
+    swaps, quantity changes and removals — so edits can be tracked and undone."""
+
+    ACTION_CHOICES = [
+        ('added', 'Added'),
+        ('swapped', 'Swapped'),
+        ('quantity', 'Quantity changed'),
+        ('removed', 'Removed'),
+    ]
+
+    package = models.ForeignKey(SolarPackageTemplate, on_delete=models.CASCADE, related_name='change_log')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    # The component acted on (add/remove/qty), or the NEW component for a swap.
+    component = models.ForeignKey(SolarComponent, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    # The previous component for a swap.
+    from_component = models.ForeignKey(SolarComponent, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    from_quantity = models.PositiveIntegerField(null=True, blank=True)
+    to_quantity = models.PositiveIntegerField(null=True, blank=True)
+    summary = models.CharField(max_length=400, blank=True)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='package_changes',
+    )
+    reverted = models.BooleanField(default=False)
+    reverted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['package', '-created_at'])]
+
+    def __str__(self):
+        return f'{self.get_action_display()} — {self.summary}'
+
+    @staticmethod
+    def record(*, package, action, actor=None, component=None, from_component=None,
+               from_quantity=None, to_quantity=None, summary=''):
+        return PackageChangeLog.objects.create(
+            package=package, action=action, actor=actor, component=component,
+            from_component=from_component, from_quantity=from_quantity,
+            to_quantity=to_quantity, summary=summary or '',
+        )
+
+
 class SolarConfiguration(TimeStampedModel):
     """
     A user's saved solar system configuration (custom build).

@@ -54,6 +54,8 @@ export const adminApi = {
   updatePackageItem: (slug, itemId, data) => api.patch(`/solar-config/admin/packages/${slug}/items/${itemId}/`, data),
   removePackageItem: (slug, itemId) => api.delete(`/solar-config/admin/packages/${slug}/items/${itemId}/`),
   recalculatePackage: (slug, data) => api.post(`/solar-config/admin/packages/${slug}/recalculate/`, data),
+  getPackageChangelog: (slug, params) => api.get(`/solar-config/admin/packages/${slug}/changelog/`, { params }),
+  revertPackageChange: (slug, logId) => api.post(`/solar-config/admin/packages/${slug}/changelog/${logId}/revert/`),
 
   // Solar components & families (for dropdowns)
   getAdminComponents: (params) => api.get('/solar-config/admin/components/', { params }),

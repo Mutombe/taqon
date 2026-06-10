@@ -61,6 +61,8 @@ urlpatterns = [
     path('admin/packages/<slug:slug>/items/', views.AdminPackageItemsView.as_view(), name='admin-package-items'),
     path('admin/packages/<slug:slug>/items/<uuid:item_id>/', views.AdminPackageItemDetailView.as_view(), name='admin-package-item-detail'),
     path('admin/packages/<slug:slug>/recalculate/', views.AdminPackageRecalculateView.as_view(), name='admin-package-recalculate'),
+    path('admin/packages/<slug:slug>/changelog/', views.AdminPackageChangeLogView.as_view(), name='admin-package-changelog'),
+    path('admin/packages/<slug:slug>/changelog/<uuid:log_id>/revert/', views.AdminPackageChangeRevertView.as_view(), name='admin-package-change-revert'),
 
     # Admin — Configurations
     path('admin/configurations/', views.AdminConfigurationListView.as_view(), name='admin-config-list'),

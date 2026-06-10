@@ -20,6 +20,7 @@ from .models import (
     Appliance,
     InstantQuoteDownload,
     RecommendationSession,
+    PackageChangeLog,
 )
 from .serializers import (
     SolarComponentSerializer,
@@ -44,6 +45,7 @@ from .serializers import (
     AdminApplianceCreateUpdateSerializer,
     AdminPackageFamilyCreateUpdateSerializer,
     AdminPackageItemSerializer,
+    PackageChangeLogSerializer,
     InstantQuoteDownloadSerializer,
     InstantQuoteDownloadDetailSerializer,
     RecommendationSessionSerializer,
@@ -2122,12 +2124,25 @@ class AdminPackageItemsView(APIView):
         except SolarComponent.DoesNotExist:
             return Response({'detail': 'Component not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+        existing = PackageComponent.objects.filter(package=pkg, component=component).first()
+        old_qty = existing.quantity if existing else None
         item, created = PackageComponent.objects.update_or_create(
             package=pkg,
             component=component,
             defaults={'quantity': quantity, 'notes': notes},
         )
         pkg.recalculate_price()
+        if created:
+            PackageChangeLog.record(
+                package=pkg, action='added', actor=request.user, component=component,
+                to_quantity=quantity, summary=f'Added {component.name} ×{quantity}',
+            )
+        elif old_qty is not None and int(quantity) != old_qty:
+            PackageChangeLog.record(
+                package=pkg, action='quantity', actor=request.user, component=component,
+                from_quantity=old_qty, to_quantity=quantity,
+                summary=f'{component.name} quantity {old_qty} → {quantity}',
+            )
         return Response(
             PackageComponentSerializer(item).data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
@@ -2153,6 +2168,9 @@ class AdminPackageItemDetailView(APIView):
         notes = request.data.get('notes')
         new_component_id = request.data.get('component_id')
 
+        old_component = item.component
+        old_quantity = item.quantity
+
         if quantity is not None:
             if int(quantity) < 1:
                 return Response({'detail': 'Quantity must be at least 1.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2161,6 +2179,7 @@ class AdminPackageItemDetailView(APIView):
         if notes is not None:
             item.notes = notes
 
+        swapped_to = None
         if new_component_id:
             try:
                 new_component = SolarComponent.objects.get(pk=new_component_id, is_deleted=False)
@@ -2169,10 +2188,25 @@ class AdminPackageItemDetailView(APIView):
             # Check for duplicate
             if PackageComponent.objects.filter(package=item.package, component=new_component).exclude(pk=item.pk).exists():
                 return Response({'detail': 'This component is already in the package.'}, status=status.HTTP_400_BAD_REQUEST)
-            item.component = new_component
+            if new_component.id != old_component.id:
+                item.component = new_component
+                swapped_to = new_component
 
         item.save()
         item.package.recalculate_price()
+
+        if swapped_to is not None:
+            PackageChangeLog.record(
+                package=item.package, action='swapped', actor=request.user,
+                from_component=old_component, component=swapped_to,
+                summary=f'Swapped {old_component.name} → {swapped_to.name}',
+            )
+        elif quantity is not None and int(quantity) != old_quantity:
+            PackageChangeLog.record(
+                package=item.package, action='quantity', actor=request.user,
+                component=item.component, from_quantity=old_quantity, to_quantity=int(quantity),
+                summary=f'{item.component.name} quantity {old_quantity} → {quantity}',
+            )
         return Response(PackageComponentSerializer(item).data)
 
     def delete(self, request, slug, item_id):
@@ -2187,8 +2221,15 @@ class AdminPackageItemDetailView(APIView):
             return Response({'detail': 'Item not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         pkg = item.package
+        removed_component = item.component
+        removed_qty = item.quantity
         item.delete()
         pkg.recalculate_price()
+        PackageChangeLog.record(
+            package=pkg, action='removed', actor=request.user,
+            component=removed_component, from_quantity=removed_qty,
+            summary=f'Removed {removed_component.name} ×{removed_qty}',
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -2211,6 +2252,74 @@ class AdminPackageRecalculateView(APIView):
             'labour_cost': str(pkg.labour_cost),
             'transport_cost': str(pkg.transport_cost),
         })
+
+
+class AdminPackageChangeLogView(generics.ListAPIView):
+    """Admin: the revertible trail of component changes for a package."""
+    permission_classes = [IsAdmin]
+    serializer_class = PackageChangeLogSerializer
+    pagination_class = StandardPagination
+
+    def get_queryset(self):
+        return PackageChangeLog.objects.filter(package__slug=self.kwargs['slug']).select_related(
+            'component', 'from_component', 'actor',
+        )
+
+
+class AdminPackageChangeRevertView(APIView):
+    """Admin: undo a single logged change, re-applying the inverse to the package
+    and recalculating. Safe: refuses if the current state makes the revert
+    ambiguous (e.g. the swapped component is no longer present)."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request, slug, log_id):
+        from django.utils import timezone
+        try:
+            log = PackageChangeLog.objects.select_related(
+                'package', 'component', 'from_component',
+            ).get(pk=log_id, package__slug=slug)
+        except PackageChangeLog.DoesNotExist:
+            return Response({'detail': 'Change not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if log.reverted:
+            return Response({'detail': 'This change was already reverted.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        pkg = log.package
+
+        if log.action == 'added':
+            if log.component:
+                PackageComponent.objects.filter(package=pkg, component=log.component).delete()
+
+        elif log.action == 'removed':
+            if not log.component:
+                return Response({'detail': 'The removed component is no longer available.'}, status=status.HTTP_400_BAD_REQUEST)
+            PackageComponent.objects.update_or_create(
+                package=pkg, component=log.component, defaults={'quantity': log.from_quantity or 1},
+            )
+
+        elif log.action == 'quantity':
+            item = PackageComponent.objects.filter(package=pkg, component=log.component).first()
+            if not item:
+                return Response({'detail': 'That component is no longer in the package.'}, status=status.HTTP_400_BAD_REQUEST)
+            item.quantity = log.from_quantity or 1
+            item.save()
+
+        elif log.action == 'swapped':
+            item = PackageComponent.objects.filter(package=pkg, component=log.component).first()
+            if not item:
+                return Response({'detail': 'The swapped-in component is no longer in the package, so this swap can’t be undone.'}, status=status.HTTP_400_BAD_REQUEST)
+            if not log.from_component:
+                return Response({'detail': 'The original component is no longer available.'}, status=status.HTTP_400_BAD_REQUEST)
+            if PackageComponent.objects.filter(package=pkg, component=log.from_component).exclude(pk=item.pk).exists():
+                return Response({'detail': 'Cannot undo: the original component is already in the package.'}, status=status.HTTP_400_BAD_REQUEST)
+            item.component = log.from_component
+            item.save()
+
+        pkg.recalculate_price()
+        log.reverted = True
+        log.reverted_at = timezone.now()
+        log.save(update_fields=['reverted', 'reverted_at', 'updated_at'])
+        return Response({'status': 'reverted'})
 
 
 # ── Admin: Instant Quotes & Advisor Sessions ──
