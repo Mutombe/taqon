@@ -623,6 +623,7 @@ function MaterialRow({ material, onAddPrice, onDuplicate, onEdit, onDelete }) {
                       </span>
                       <span className="flex items-center gap-3">
                         {p.quotation_title && <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-1"><FilePdf size={11} />{p.quotation_title}</span>}
+                        <span className="text-[10px] text-[var(--text-muted)] whitespace-nowrap" title="Last updated">{fmtDate(p.updated_at)}</span>
                         <span className="font-semibold text-[var(--text-primary)]">{money(p.price, p.currency)}</span>
                       </span>
                     </div>
