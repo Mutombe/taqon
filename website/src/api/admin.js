@@ -110,6 +110,7 @@ export const adminApi = {
   deleteSupplierPrice: (id) => api.delete(`/inventory/prices/${id}/`),
 
   getPriceHistory: (params) => api.get('/inventory/price-history/', { params }),
+  getInventoryAudit: (params) => api.get('/inventory/audit/', { params }),
 
   getQuotations: (params) => api.get('/inventory/quotations/', { params }),
   uploadQuotation: (formData) => api.post('/inventory/quotations/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),

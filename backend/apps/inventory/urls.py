@@ -27,6 +27,9 @@ urlpatterns = [
     # Price update logs
     path('price-history/', views.PriceHistoryListView.as_view(), name='price-history'),
 
+    # Unified audit trail
+    path('audit/', views.AuditLogListView.as_view(), name='audit-log'),
+
     # Supplier quotations (uploads)
     path('quotations/', views.QuotationListCreateView.as_view(), name='quotation-list'),
     path('quotations/<uuid:pk>/', views.QuotationDetailView.as_view(), name='quotation-detail'),

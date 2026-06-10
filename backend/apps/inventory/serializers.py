@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from .models import (
     MaterialCategory, Supplier, Material, SupplierPrice,
-    PriceHistory, SupplierQuotation,
+    PriceHistory, SupplierQuotation, AuditLog,
 )
 
 
@@ -161,3 +161,23 @@ class SupplierQuotationSerializer(serializers.ModelSerializer):
         except Exception:
             return None
         return request.build_absolute_uri(url) if request else url
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    actor_name = serializers.SerializerMethodField()
+    action_display = serializers.CharField(source='get_action_display', read_only=True)
+    target_type_display = serializers.CharField(source='get_target_type_display', read_only=True)
+
+    class Meta:
+        model = AuditLog
+        fields = [
+            'id', 'action', 'action_display', 'target_type', 'target_type_display',
+            'target_name', 'target_id', 'summary', 'changes', 'actor_name', 'created_at',
+        ]
+        read_only_fields = fields
+
+    def get_actor_name(self, obj):
+        u = obj.actor
+        if not u:
+            return None
+        return getattr(u, 'full_name', '') or u.email

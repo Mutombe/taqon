@@ -6,7 +6,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from apps.inventory.models import (
-    MaterialCategory, Supplier, Material, SupplierPrice, PriceHistory,
+    MaterialCategory, Supplier, Material, SupplierPrice, PriceHistory, AuditLog,
 )
 
 User = get_user_model()
@@ -125,3 +125,43 @@ class SummaryAndQuotationTests(_Base):
         }, format='multipart')
         self.assertEqual(resp.status_code, 201, resp.content)
         self.assertTrue(resp.json()['file_url'])
+
+
+class AuditTrailTests(_Base):
+    def test_audit_endpoint_is_admin_only(self):
+        c = APIClient(); c.force_authenticate(self.customer)
+        self.assertEqual(c.get(f'{BASE}audit/').status_code, 403)
+        self.assertIn(APIClient().get(f'{BASE}audit/').status_code, (401, 403))
+
+    def test_creating_supplier_writes_audit(self):
+        self.admin_client().post(f'{BASE}suppliers/', {'name': 'Cafca'}, format='json')
+        entry = AuditLog.objects.filter(target_type='supplier', action='created', target_name='Cafca').first()
+        self.assertIsNotNone(entry)
+        self.assertEqual(entry.actor, self.admin)
+
+    def test_updating_material_records_field_diff(self):
+        c = self.admin_client()
+        c.patch(f'{BASE}materials/{self.material.slug}/', {'brand': 'Marley'}, format='json')
+        entry = AuditLog.objects.filter(target_type='material', action='updated').order_by('-created_at').first()
+        self.assertIsNotNone(entry)
+        self.assertIn('brand', entry.changes)
+        self.assertEqual(entry.changes['brand']['to'], 'Marley')
+
+    def test_price_change_writes_audit(self):
+        self.set_price(self.supA, 10)
+        self.set_price(self.supA, 12)
+        entries = AuditLog.objects.filter(target_type='price')
+        self.assertEqual(entries.count(), 2)
+        self.assertEqual(entries.filter(action='updated').count(), 1)
+
+    def test_delete_writes_audit(self):
+        c = self.admin_client()
+        c.delete(f'{BASE}materials/{self.material.slug}/')
+        self.assertTrue(AuditLog.objects.filter(target_type='material', action='deleted').exists())
+
+    def test_audit_feed_filters_by_target_type(self):
+        c = self.admin_client()
+        c.post(f'{BASE}suppliers/', {'name': 'NewSup'}, format='json')
+        self.set_price(self.supA, 10)
+        self.assertEqual(c.get(f'{BASE}audit/?target_type=supplier').json()['count'], 1)
+        self.assertEqual(c.get(f'{BASE}audit/?target_type=price').json()['count'], 1)

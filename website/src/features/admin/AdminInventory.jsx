@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Buildings, Cube, Plus, MagnifyingGlass, X, CircleNotch, Pencil, Trash,
-  CaretDown, ClockCounterClockwise, FileArrowUp,
+  CaretDown, ClockCounterClockwise, FileArrowUp, ClipboardText,
   CurrencyDollar, FilePdf, ArrowDown, ArrowUp,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import { SkeletonBox } from '../../components/Skeletons';
 
 const money = (v, cur = 'USD') => (v == null || v === '' ? '—' : `${cur === 'USD' ? '$' : cur + ' '}${parseFloat(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
+const fmtDateTime = (d) => (d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—');
 
 function firstApiError(data, fallback) {
   if (!data) return fallback;
@@ -311,13 +312,29 @@ const TABS = [
   { key: 'suppliers', label: 'Suppliers', icon: Buildings },
   { key: 'quotations', label: 'Quotations', icon: FileArrowUp },
   { key: 'logs', label: 'Price Logs', icon: ClockCounterClockwise },
+  { key: 'audit', label: 'Audit Trail', icon: ClipboardText },
 ];
+
+// The "categories of things being tracked" in the audit trail.
+const AUDIT_TYPES = [
+  { key: 'supplier', label: 'Suppliers' },
+  { key: 'material', label: 'Materials' },
+  { key: 'price', label: 'Prices' },
+  { key: 'quotation', label: 'Quotations' },
+  { key: 'category', label: 'Categories' },
+];
+const ACTION_STYLE = {
+  created: 'bg-green-500/15 text-green-600 dark:text-green-400',
+  updated: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+  deleted: 'bg-red-500/15 text-red-600 dark:text-red-400',
+};
 
 export default function AdminInventory() {
   const qc = useQueryClient();
   const [tab, setTab] = useState('materials');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [auditType, setAuditType] = useState('');
   const [modal, setModal] = useState(null); // { type, data }
 
   const summaryQ = useQuery({ queryKey: ['invSummary'], queryFn: () => adminApi.getInventorySummary().then((r) => r.data) });
@@ -357,12 +374,22 @@ export default function AdminInventory() {
   const logsQ = useQuery({ queryKey: ['invLogs', logParams], queryFn: () => adminApi.getPriceHistory(logParams).then((r) => r.data), enabled: tab === 'logs' });
   const logs = logsQ.data?.results || logsQ.data || [];
 
+  const auditParams = useMemo(() => {
+    const p = { page_size: 100 };
+    if (search && tab === 'audit') p.search = search;
+    if (auditType) p.target_type = auditType;
+    return p;
+  }, [search, auditType, tab]);
+  const auditQ = useQuery({ queryKey: ['invAudit', auditParams], queryFn: () => adminApi.getInventoryAudit(auditParams).then((r) => r.data), enabled: tab === 'audit' });
+  const auditEntries = auditQ.data?.results || auditQ.data || [];
+
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['invSummary'] });
     qc.invalidateQueries({ queryKey: ['invMaterials'] });
     qc.invalidateQueries({ queryKey: ['invSuppliers'] });
     qc.invalidateQueries({ queryKey: ['invQuotations'] });
     qc.invalidateQueries({ queryKey: ['invLogs'] });
+    qc.invalidateQueries({ queryKey: ['invAudit'] });
   };
 
   const del = async (fn, label) => {
@@ -439,9 +466,17 @@ export default function AdminInventory() {
               ))}
             </>
           )}
+          {tab === 'audit' && (
+            <>
+              <button onClick={() => setAuditType('')} className={`px-3 py-1.5 rounded-full text-xs font-medium ${!auditType ? 'bg-taqon-orange text-white' : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'}`}>All</button>
+              {AUDIT_TYPES.map((t) => (
+                <button key={t.key} onClick={() => setAuditType(t.key)} className={`px-3 py-1.5 rounded-full text-xs font-medium ${auditType === t.key ? 'bg-taqon-orange text-white' : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'}`}>{t.label}</button>
+              ))}
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
-          {(tab === 'materials' || tab === 'suppliers' || tab === 'logs') && (
+          {(tab === 'materials' || tab === 'suppliers' || tab === 'logs' || tab === 'audit') && (
             <div className="relative w-full sm:w-56">
               <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input className="auth-input w-full pl-9 text-sm" placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -532,6 +567,43 @@ export default function AdminInventory() {
                 </div>
               );
             })}
+        </div>
+      )}
+
+      {/* ── Audit Trail tab ── */}
+      {tab === 'audit' && (
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden">
+          {auditQ.isLoading ? <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <SkeletonBox key={i} className="h-10 w-full rounded-xl" />)}</div>
+            : auditEntries.length === 0 ? <div className="text-center py-14 text-[var(--text-muted)]"><ClipboardText size={36} className="mx-auto opacity-40 mb-2" />No activity logged yet</div>
+            : auditEntries.map((a) => (
+              <div key={a.id} className="px-5 py-3 border-b border-[var(--card-border)] last:border-0">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex items-start gap-2.5">
+                    <span className={`mt-0.5 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${ACTION_STYLE[a.action] || 'bg-gray-500/15 text-[var(--text-muted)]'}`}>{a.action_display}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm text-[var(--text-primary)]">
+                        <span className="text-[var(--text-muted)]">{a.target_type_display}: </span>
+                        <span className="font-medium">{a.target_name}</span>
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">{a.summary}</p>
+                      {a.changes && Object.keys(a.changes).length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {Object.entries(a.changes).map(([field, c]) => (
+                            <span key={field} className="text-[10px] bg-[var(--bg-tertiary)] rounded px-1.5 py-0.5 text-[var(--text-secondary)]">
+                              {field}: <span className="line-through opacity-60">{c.from ?? '—'}</span> → {c.to ?? '—'}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs text-[var(--text-secondary)]">{a.actor_name || 'System'}</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">{fmtDateTime(a.created_at)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
         </div>
       )}
 

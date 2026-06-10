@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     MaterialCategory, Supplier, Material, SupplierPrice,
-    PriceHistory, SupplierQuotation,
+    PriceHistory, SupplierQuotation, AuditLog,
 )
 
 
@@ -49,3 +49,11 @@ class SupplierQuotationAdmin(admin.ModelAdmin):
     list_display = ('title', 'supplier', 'reference', 'quote_date', 'total_amount')
     list_filter = ('supplier',)
     search_fields = ('title', 'reference')
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ('action', 'target_type', 'target_name', 'actor', 'created_at')
+    list_filter = ('target_type', 'action')
+    search_fields = ('target_name', 'summary')
+    readonly_fields = ('created_at',)

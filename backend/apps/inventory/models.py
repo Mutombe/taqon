@@ -193,3 +193,51 @@ class PriceHistory(TimeStampedModel):
             currency=currency, source_quotation=source_quotation,
             note=note or '', recorded_by=user,
         )
+
+
+class AuditLog(TimeStampedModel):
+    """A unified trail of who changed what (and when) across the inventory module
+    — suppliers, materials, prices, quotations, and categories."""
+
+    ACTION_CHOICES = [
+        ('created', 'Created'),
+        ('updated', 'Updated'),
+        ('deleted', 'Deleted'),
+    ]
+    TARGET_CHOICES = [
+        ('supplier', 'Supplier'),
+        ('material', 'Material'),
+        ('price', 'Supplier Price'),
+        ('quotation', 'Quotation'),
+        ('category', 'Category'),
+    ]
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='inventory_audit_logs',
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    target_type = models.CharField(max_length=20, choices=TARGET_CHOICES, db_index=True)
+    target_name = models.CharField(max_length=300)
+    target_id = models.CharField(max_length=64, blank=True)
+    summary = models.CharField(max_length=400, blank=True)
+    # Field-level diff: {field: {"from": ..., "to": ...}}
+    changes = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['target_type', '-created_at']),
+            models.Index(fields=['action', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_action_display()} {self.target_type} "{self.target_name}"'
+
+    @staticmethod
+    def record(*, actor, action, target_type, target_name, target_id='', summary='', changes=None):
+        return AuditLog.objects.create(
+            actor=actor, action=action, target_type=target_type,
+            target_name=str(target_name)[:300], target_id=str(target_id or ''),
+            summary=summary or '', changes=changes or {},
+        )

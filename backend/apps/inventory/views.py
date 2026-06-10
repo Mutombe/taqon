@@ -23,15 +23,20 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from apps.core.pagination import StandardPagination
 from apps.core.permissions import IsAdmin
 
+from . import audit
 from .models import (
     MaterialCategory, Supplier, Material, SupplierPrice,
-    PriceHistory, SupplierQuotation,
+    PriceHistory, SupplierQuotation, AuditLog,
 )
 from .serializers import (
     MaterialCategorySerializer, SupplierSerializer, MaterialSerializer,
     MaterialWriteSerializer, SupplierPriceSerializer, PriceHistorySerializer,
-    SupplierQuotationSerializer,
+    SupplierQuotationSerializer, AuditLogSerializer,
 )
+
+SUPPLIER_FIELDS = ['name', 'contact_person', 'phone', 'email', 'address', 'website', 'is_active']
+MATERIAL_FIELDS = ['name', 'category_id', 'specification', 'brand', 'unit', 'is_active']
+QUOTATION_FIELDS = ['title', 'reference', 'quote_date', 'total_amount']
 
 
 # ── Categories ──────────────────────────────────────────────────────────────
@@ -46,12 +51,29 @@ class CategoryListCreateView(generics.ListCreateAPIView):
             material_count=Count('materials', filter=Q(materials__is_deleted=False)),
         )
 
+    def perform_create(self, serializer):
+        obj = serializer.save()
+        audit.log(self.request, action='created', target_type='category',
+                  target_name=obj.name, target_id=obj.id, summary='Category created')
+
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdmin]
     serializer_class = MaterialCategorySerializer
     lookup_field = 'slug'
     queryset = MaterialCategory.objects.all()
+
+    def perform_update(self, serializer):
+        before = audit.snapshot(serializer.instance, ['name', 'description', 'sort_order'])
+        obj = serializer.save()
+        audit.log(self.request, action='updated', target_type='category',
+                  target_name=obj.name, target_id=obj.id, summary='Category updated',
+                  changes=audit.diff(before, obj, ['name', 'description', 'sort_order']))
+
+    def perform_destroy(self, instance):
+        audit.log(self.request, action='deleted', target_type='category',
+                  target_name=instance.name, target_id=instance.id, summary='Category deleted')
+        instance.delete()
 
 
 # ── Suppliers ───────────────────────────────────────────────────────────────
@@ -74,7 +96,9 @@ class SupplierListCreateView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        obj = serializer.save(created_by=self.request.user)
+        audit.log(self.request, action='created', target_type='supplier',
+                  target_name=obj.name, target_id=obj.id, summary='Supplier added')
 
 
 class SupplierDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -86,9 +110,15 @@ class SupplierDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Supplier.objects.filter(is_deleted=False)
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        before = audit.snapshot(serializer.instance, SUPPLIER_FIELDS)
+        obj = serializer.save(updated_by=self.request.user)
+        audit.log(self.request, action='updated', target_type='supplier',
+                  target_name=obj.name, target_id=obj.id, summary='Supplier updated',
+                  changes=audit.diff(before, obj, SUPPLIER_FIELDS))
 
     def perform_destroy(self, instance):
+        audit.log(self.request, action='deleted', target_type='supplier',
+                  target_name=instance.name, target_id=instance.id, summary='Supplier deleted')
         instance.soft_delete(user=self.request.user)
 
 
@@ -124,7 +154,10 @@ class MaterialListCreateView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        obj = serializer.save(created_by=self.request.user)
+        audit.log(self.request, action='created', target_type='material',
+                  target_name=obj.name, target_id=obj.id,
+                  summary=f'Material added under {obj.category.name}')
 
 
 class MaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -147,9 +180,15 @@ class MaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        before = audit.snapshot(serializer.instance, MATERIAL_FIELDS)
+        obj = serializer.save(updated_by=self.request.user)
+        audit.log(self.request, action='updated', target_type='material',
+                  target_name=obj.name, target_id=obj.id, summary='Material updated',
+                  changes=audit.diff(before, obj, MATERIAL_FIELDS))
 
     def perform_destroy(self, instance):
+        audit.log(self.request, action='deleted', target_type='material',
+                  target_name=instance.name, target_id=instance.id, summary='Material deleted')
         instance.soft_delete(user=self.request.user)
 
 
@@ -198,6 +237,13 @@ class SupplierPriceListCreateView(generics.ListCreateAPIView):
                 previous_price=previous, currency=obj.currency,
                 source_quotation=obj.source_quotation, note=obj.note, user=request.user,
             )
+            summary = (f'Price set to {obj.currency} {obj.price}' if previous is None
+                       else f'Price {obj.currency} {previous} → {obj.price}')
+            audit.log(
+                request, action='created' if previous is None else 'updated',
+                target_type='price', target_name=f'{obj.material.name} @ {obj.supplier.name}',
+                target_id=obj.id, summary=summary,
+            )
         out = SupplierPriceSerializer(obj).data
         return Response(out, status=status.HTTP_201_CREATED)
 
@@ -218,8 +264,14 @@ class SupplierPriceDetailView(generics.RetrieveUpdateDestroyAPIView):
                 previous_price=old_price, currency=obj.currency,
                 source_quotation=obj.source_quotation, note=obj.note, user=self.request.user,
             )
+            audit.log(self.request, action='updated', target_type='price',
+                      target_name=f'{obj.material.name} @ {obj.supplier.name}', target_id=obj.id,
+                      summary=f'Price {obj.currency} {old_price} → {obj.price}')
 
     def perform_destroy(self, instance):
+        audit.log(self.request, action='deleted', target_type='price',
+                  target_name=f'{instance.material.name} @ {instance.supplier.name}', target_id=instance.id,
+                  summary='Price removed')
         instance.soft_delete(user=self.request.user)
 
 
@@ -262,7 +314,10 @@ class QuotationListCreateView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        obj = serializer.save(created_by=self.request.user)
+        audit.log(self.request, action='created', target_type='quotation',
+                  target_name=obj.title, target_id=obj.id,
+                  summary=f'Quotation uploaded for {obj.supplier.name}')
 
 
 class QuotationDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -274,10 +329,38 @@ class QuotationDetailView(generics.RetrieveUpdateDestroyAPIView):
         return SupplierQuotation.objects.filter(is_deleted=False).select_related('supplier')
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        before = audit.snapshot(serializer.instance, QUOTATION_FIELDS)
+        obj = serializer.save(updated_by=self.request.user)
+        audit.log(self.request, action='updated', target_type='quotation',
+                  target_name=obj.title, target_id=obj.id, summary='Quotation updated',
+                  changes=audit.diff(before, obj, QUOTATION_FIELDS))
 
     def perform_destroy(self, instance):
+        audit.log(self.request, action='deleted', target_type='quotation',
+                  target_name=instance.title, target_id=instance.id, summary='Quotation deleted')
         instance.soft_delete(user=self.request.user)
+
+
+# ── Audit trail ─────────────────────────────────────────────────────────────
+
+class AuditLogListView(generics.ListAPIView):
+    """Unified who-changed-what feed across the inventory module."""
+    permission_classes = [IsAdmin]
+    serializer_class = AuditLogSerializer
+    pagination_class = StandardPagination
+
+    def get_queryset(self):
+        qs = AuditLog.objects.select_related('actor')
+        target_type = self.request.query_params.get('target_type')
+        if target_type:
+            qs = qs.filter(target_type=target_type)
+        action = self.request.query_params.get('action')
+        if action:
+            qs = qs.filter(action=action)
+        search = (self.request.query_params.get('search') or '').strip()
+        if search:
+            qs = qs.filter(Q(target_name__icontains=search) | Q(summary__icontains=search))
+        return qs
 
 
 # ── Summary / dashboard ─────────────────────────────────────────────────────
