@@ -167,6 +167,36 @@ class AuditTrailTests(_Base):
         self.assertEqual(c.get(f'{BASE}audit/?target_type=price').json()['count'], 1)
 
 
+class CategoryTests(_Base):
+    def test_add_category(self):
+        resp = self.admin_client().post(f'{BASE}categories/', {'name': 'Roofing'}, format='json')
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertTrue(MaterialCategory.objects.filter(name='Roofing').exists())
+
+    def test_rename_category(self):
+        cat = MaterialCategory.objects.create(name='Tools', slug='tools')
+        resp = self.admin_client().patch(f'{BASE}categories/{cat.slug}/', {'name': 'Hand Tools'}, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        cat.refresh_from_db()
+        self.assertEqual(cat.name, 'Hand Tools')
+
+    def test_delete_empty_category(self):
+        cat = MaterialCategory.objects.create(name='Spare', slug='spare')
+        resp = self.admin_client().delete(f'{BASE}categories/{cat.slug}/')
+        self.assertEqual(resp.status_code, 204)
+        self.assertFalse(MaterialCategory.objects.filter(slug='spare').exists())
+
+    def test_cannot_delete_category_with_materials(self):
+        # self.cat (Plumbing) has self.material
+        resp = self.admin_client().delete(f'{BASE}categories/{self.cat.slug}/')
+        self.assertEqual(resp.status_code, 400)
+        self.assertTrue(MaterialCategory.objects.filter(pk=self.cat.pk).exists())
+
+    def test_category_endpoints_admin_only(self):
+        c = APIClient(); c.force_authenticate(self.customer)
+        self.assertEqual(c.post(f'{BASE}categories/', {'name': 'X'}, format='json').status_code, 403)
+
+
 class BatchPriceTests(_Base):
     def test_batch_without_quotation_logs_verbal_prices(self):
         resp = self.admin_client().post(f'{BASE}prices/batch/', {

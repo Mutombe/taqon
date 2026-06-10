@@ -93,6 +93,8 @@ export const adminApi = {
   getInventorySummary: () => api.get('/inventory/summary/'),
   getMaterialCategories: () => api.get('/inventory/categories/'),
   createMaterialCategory: (data) => api.post('/inventory/categories/', data),
+  updateMaterialCategory: (slug, data) => api.patch(`/inventory/categories/${slug}/`, data),
+  deleteMaterialCategory: (slug) => api.delete(`/inventory/categories/${slug}/`),
 
   getSuppliers: (params) => api.get('/inventory/suppliers/', { params }),
   createSupplier: (data) => api.post('/inventory/suppliers/', data),

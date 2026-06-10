@@ -148,6 +148,12 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
                   changes=audit.diff(before, obj, ['name', 'description', 'sort_order']))
 
     def perform_destroy(self, instance):
+        from rest_framework.exceptions import ValidationError
+        in_use = instance.materials.filter(is_deleted=False).count()
+        if in_use:
+            raise ValidationError(
+                f'This category still has {in_use} material(s). Move or delete them first.'
+            )
         audit.log(self.request, action='deleted', target_type='category',
                   target_name=instance.name, target_id=instance.id, summary='Category deleted')
         instance.delete()

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Buildings, Cube, Plus, MagnifyingGlass, X, CircleNotch, Pencil, Trash,
   CaretDown, ClockCounterClockwise, FileArrowUp, ClipboardText,
-  CurrencyDollar, FilePdf, ArrowDown, ArrowUp,
+  CurrencyDollar, FilePdf, ArrowDown, ArrowUp, Tag,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -144,6 +144,50 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
           {saving ? <CircleNotch size={15} className="animate-spin" /> : null}{material ? 'Save' : 'Add Material'}
         </button>
       </form>
+    </Drawer>
+  );
+}
+
+/* ─────────────────────────── Categories manager ─────────────────────────── */
+function CategoriesModal({ categories, onClose, onSaved }) {
+  const [newName, setNewName] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const rename = async (cat, name) => {
+    if (!name.trim() || name.trim() === cat.name) return;
+    try { await adminApi.updateMaterialCategory(cat.slug, { name: name.trim() }); toast.success('Category renamed'); onSaved(); }
+    catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to rename')); }
+  };
+  const add = async () => {
+    if (!newName.trim()) return;
+    setBusy(true);
+    try { await adminApi.createMaterialCategory({ name: newName.trim() }); setNewName(''); toast.success('Category added'); onSaved(); }
+    catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add')); }
+    finally { setBusy(false); }
+  };
+  const remove = async (cat) => {
+    try { await adminApi.deleteMaterialCategory(cat.slug); toast.success('Category deleted'); onSaved(); }
+    catch (e) { toast.error(firstApiError(e?.response?.data, 'Cannot delete')); }
+  };
+
+  return (
+    <Drawer title="Material Categories" onClose={onClose}>
+      <div className="space-y-2">
+        {categories.map((c) => (
+          <div key={c.id} className="flex items-center gap-2">
+            <input defaultValue={c.name} onBlur={(e) => rename(c, e.target.value)} className="auth-input flex-1 text-sm py-1.5" />
+            <span className="text-xs text-[var(--text-muted)] w-16 text-right flex-shrink-0">{c.material_count ?? 0} items</span>
+            <button onClick={() => remove(c)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 flex-shrink-0" title={c.material_count ? 'Move or delete its materials first' : 'Delete'}><Trash size={14} /></button>
+          </div>
+        ))}
+        {categories.length === 0 && <p className="text-xs text-[var(--text-muted)]">No categories yet.</p>}
+      </div>
+      <div className="flex gap-2 mt-4 pt-4 border-t border-[var(--card-border)]">
+        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New category name" className="auth-input flex-1 text-sm"
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
+        <button onClick={add} disabled={busy || !newName.trim()} className="px-4 py-2 rounded-xl bg-taqon-orange text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-1"><Plus size={14} /> Add</button>
+      </div>
+      <p className="text-[11px] text-[var(--text-muted)] mt-3">Rename by editing a name and clicking away. A category can only be deleted once it has no materials.</p>
     </Drawer>
   );
 }
@@ -490,6 +534,8 @@ export default function AdminInventory() {
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['invSummary'] });
+    qc.invalidateQueries({ queryKey: ['invCats'] });
+    qc.invalidateQueries({ queryKey: ['invAllMaterials'] });
     qc.invalidateQueries({ queryKey: ['invMaterials'] });
     qc.invalidateQueries({ queryKey: ['invSuppliers'] });
     qc.invalidateQueries({ queryKey: ['invQuotations'] });
@@ -593,6 +639,7 @@ export default function AdminInventory() {
               <input className="auth-input w-full pl-9 text-sm" placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
           )}
+          {tab === 'materials' && <button onClick={() => setModal({ type: 'categories' })} className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[var(--card-border)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)] whitespace-nowrap"><Tag size={15} /> Categories</button>}
           {tab === 'materials' && <button onClick={() => setModal({ type: 'material' })} className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 whitespace-nowrap"><Plus size={15} /> Material</button>}
           {tab === 'suppliers' && <button onClick={() => setModal({ type: 'supplier' })} className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 whitespace-nowrap"><Plus size={15} /> Supplier</button>}
           {tab === 'quotations' && <button onClick={() => setModal({ type: 'quotation' })} className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 whitespace-nowrap"><FileArrowUp size={15} /> Upload</button>}
@@ -713,6 +760,7 @@ export default function AdminInventory() {
       <AnimatePresence>
         {modal?.type === 'supplier' && <SupplierModal supplier={modal.data} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'material' && <MaterialModal material={modal.data} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
+        {modal?.type === 'categories' && <CategoriesModal categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'logprices' && <LogPricesDrawer suppliers={suppliers} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'quotation' && <QuotationModal suppliers={suppliers} onClose={() => setModal(null)} onSaved={refresh} />}
       </AnimatePresence>
