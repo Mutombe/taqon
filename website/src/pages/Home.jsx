@@ -30,6 +30,8 @@ const brandLogos = [
   { name: 'Sigenergy', logo: '/sigenergy.png', href: 'https://www.sigenergy.com' },
   { name: 'Sunsynk', logo: '/sunsynk.png', href: 'https://www.sunsynk.com' },
   { name: 'Victron Energy', logo: '/brands/victron.png', href: 'https://www.victronenergy.com', keepColor: true },
+  { name: 'Suntask Solar Geysers', logo: '/brands/suntask.png', keepColor: true },
+  { name: 'Ecosolar', logo: '/brands/ecosolar.png', keepColor: true },
 ];
 
 // Local suppliers & trade partners we work with.
@@ -252,30 +254,37 @@ export default function Home() {
         </div>
         <div className="overflow-hidden">
           <div className="flex animate-marquee items-center">
-            {[...brandLogos, ...brandLogos, ...brandLogos].map((brand, i) => (
-              <a
-                key={i}
-                href={brand.href}
-                onClick={(e) => confirmExternalNavigation(brand.href, e)}
-                className="flex-shrink-0 px-10 py-3 flex items-center justify-center cursor-pointer"
-              >
-                {brand.logo ? (
-                  brand.keepColor ? (
-                    <span className="bg-white rounded-lg px-3 py-2 flex items-center justify-center shadow-sm">
-                      <img src={brand.logo} alt={`${brand.name} — supplied and installed by Taqon Electrico in Zimbabwe`} className="h-8 lg:h-9 w-auto object-contain" />
-                    </span>
-                  ) : (
-                    <img
-                      src={brand.logo}
-                      alt={`${brand.name} — solar brand supplied and installed by Taqon Electrico in Zimbabwe`}
-                      className="h-10 lg:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300 dark:brightness-0 dark:invert dark:opacity-40 dark:hover:opacity-80"
-                    />
-                  )
+            {[...brandLogos, ...brandLogos, ...brandLogos].map((brand, i) => {
+              const inner = brand.logo ? (
+                brand.keepColor ? (
+                  <span className="bg-white rounded-lg px-3 py-2 flex items-center justify-center shadow-sm">
+                    <img src={brand.logo} alt={`${brand.name} — supplied and installed by Taqon Electrico in Zimbabwe`} className="h-8 lg:h-9 w-auto object-contain" />
+                  </span>
                 ) : (
-                  <span className="text-xl font-bold text-taqon-charcoal/20 dark:text-white/15 font-syne whitespace-nowrap hover:text-taqon-orange/50 transition-colors">{brand.name}</span>
-                )}
-              </a>
-            ))}
+                  <img
+                    src={brand.logo}
+                    alt={`${brand.name} — solar brand supplied and installed by Taqon Electrico in Zimbabwe`}
+                    className="h-10 lg:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300 dark:brightness-0 dark:invert dark:opacity-40 dark:hover:opacity-80"
+                  />
+                )
+              ) : (
+                <span className="text-xl font-bold text-taqon-charcoal/20 dark:text-white/15 font-syne whitespace-nowrap hover:text-taqon-orange/50 transition-colors">{brand.name}</span>
+              );
+              return brand.href ? (
+                <a
+                  key={i}
+                  href={brand.href}
+                  onClick={(e) => confirmExternalNavigation(brand.href, e)}
+                  className="flex-shrink-0 px-10 py-3 flex items-center justify-center cursor-pointer"
+                >
+                  {inner}
+                </a>
+              ) : (
+                <div key={i} className="flex-shrink-0 px-10 py-3 flex items-center justify-center">
+                  {inner}
+                </div>
+              );
+            })}
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -11,6 +11,7 @@ import {
   Calculator,
   CheckCircle,
   ArrowRight,
+  X,
   Phone,
   WhatsappLogo,
   MapPin,
@@ -64,6 +65,7 @@ const shopCategories = [
 
 export default function SolutionPageTemplate({ solution, allSolutions }) {
   const Icon = iconMap[solution.icon] || Sun;
+  const [lightbox, setLightbox] = useState(null);
   const relatedSolutions = allSolutions.filter(
     (s) => solution.relatedSolutions.includes(s.slug) && s.slug !== solution.slug && !s.redirectTo
   );
@@ -280,6 +282,44 @@ export default function SolutionPageTemplate({ solution, allSolutions }) {
         </section>
       )}
 
+      {/* ─── Gallery ─── */}
+      {solution.gallery?.length > 0 && (
+        <section className="py-20 lg:py-28 bg-taqon-cream dark:bg-taqon-dark">
+          <div className="max-w-7xl mx-auto px-4">
+            <AnimatedSection variant="fadeUp">
+              <div className="text-center mb-12">
+                <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">
+                  Gallery
+                </span>
+                <h2 className="mt-3 text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
+                  Recent Installations
+                </h2>
+                <p className="mt-4 text-taqon-charcoal/60 dark:text-white/50 max-w-xl mx-auto">
+                  A look at solar geysers we’ve supplied and installed across Zimbabwe.
+                </p>
+              </div>
+            </AnimatedSection>
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-4 [&>*]:mb-4">
+              {solution.gallery.map((src, i) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setLightbox(src)}
+                  className="block w-full break-inside-avoid rounded-2xl overflow-hidden group bg-taqon-charcoal/5 dark:bg-white/5 cursor-zoom-in"
+                >
+                  <img
+                    src={src}
+                    alt={`${solution.title} — installation ${i + 1}`}
+                    loading="lazy"
+                    className="w-full h-auto object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ─── Brands we supply & install ─── */}
       {solution.brands?.length > 0 && (
         <section className="py-16 lg:py-20 bg-white dark:bg-taqon-charcoal border-t border-gray-100 dark:border-white/10">
@@ -481,6 +521,23 @@ export default function SolutionPageTemplate({ solution, allSolutions }) {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* ─── Lightbox ─── */}
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+        >
+          <button
+            onClick={() => setLightbox(null)}
+            className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+          <img src={lightbox} alt="" className="max-w-full max-h-[90vh] object-contain rounded-xl" />
+        </div>
+      )}
     </>
   );
 }
