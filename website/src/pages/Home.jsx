@@ -26,6 +26,7 @@ const brandLogos = [
   { name: 'Dyness', logo: '/Dyness.png', href: 'https://www.dyness.com' },
   { name: 'Sigenergy', logo: '/sigenergy.png', href: 'https://www.sigenergy.com' },
   { name: 'Sunsynk', logo: '/sunsynk.png', href: 'https://www.sunsynk.com' },
+  { name: 'Victron Energy', logo: null, href: 'https://www.victronenergy.com' },
 ];
 
 const heroImages = [
@@ -228,7 +229,13 @@ export default function Home() {
       {/* Vision: Continuous scrolling marquee of partner brand logos on a clean background */}
       <section className="py-10 bg-taqon-cream dark:bg-taqon-dark border-b border-gray-100 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-4 mb-6">
-          <p className="text-center text-xs uppercase tracking-[0.2em] text-taqon-muted font-medium">Trusted brands we work with</p>
+          <h2 className="text-center text-xs uppercase tracking-[0.2em] text-taqon-muted font-medium">Trusted brands we work with</h2>
+          {/* Crawlable, accessible list of the brands we stock — so searches for
+              these brand names in Zimbabwe surface Taqon Electrico. */}
+          <p className="sr-only">
+            Taqon Electrico is an authorised supplier and installer of leading solar and energy
+            brands in Zimbabwe, including {brandLogos.map((b) => b.name).join(', ')}.
+          </p>
         </div>
         <div className="overflow-hidden">
           <div className="flex animate-marquee items-center">
@@ -242,7 +249,7 @@ export default function Home() {
                 {brand.logo ? (
                   <img
                     src={brand.logo}
-                    alt={brand.name}
+                    alt={`${brand.name} — solar brand supplied and installed by Taqon Electrico in Zimbabwe`}
                     className="h-10 lg:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300 dark:brightness-0 dark:invert dark:opacity-40 dark:hover:opacity-80"
                   />
                 ) : (
