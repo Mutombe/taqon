@@ -4,7 +4,7 @@ import {
   Plus, Pencil, Trash, X, SolarPanel, CircleNotch,
   CheckCircle, Star, Lightning, MagnifyingGlass,
   ArrowsClockwise, CaretDown, Package as PackageIcon,
-  Swap, Warning,
+  Swap, Warning, BatteryFull, Cube, Tag,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -113,224 +113,280 @@ function FeatureList({ items, onChange }) {
   );
 }
 
-/* ─── Component Picker (searchable dropdown) ─── */
-function ComponentPicker({ value, onChange, components, excludeIds = [] }) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
+function firstApiError(data, fallback) {
+  if (!data) return fallback;
+  if (typeof data === 'string') return data;
+  if (data.detail) return data.detail;
+  const d = data.details || data;
+  for (const k of Object.keys(d || {})) {
+    const v = d[k];
+    if (Array.isArray(v) && v.length) return `${k}: ${v[0]}`;
+    if (typeof v === 'string') return `${k}: ${v}`;
+  }
+  return data.error || fallback;
+}
 
-  const filtered = useMemo(() => {
-    const available = components.filter(c => !excludeIds.includes(c.id));
-    if (!search.trim()) return available;
-    const q = search.toLowerCase();
-    return available.filter(c => c.name.toLowerCase().includes(q) || c.category?.toLowerCase().includes(q));
-  }, [components, excludeIds, search]);
+// The package is assembled from these component categories, each in its own
+// section so panels / inverters / batteries / accessories never get cluttered.
+const ITEM_CATEGORIES = [
+  { key: 'panel', label: 'Solar Panels', icon: SolarPanel },
+  { key: 'inverter', label: 'Inverters', icon: Lightning },
+  { key: 'battery', label: 'Batteries', icon: BatteryFull },
+  { key: 'charger', label: 'Charge Controllers', icon: Lightning },
+  { key: 'mounting', label: 'Mounting', icon: Cube },
+  { key: 'cable', label: 'Cables & Wiring', icon: Cube },
+  { key: 'accessory', label: 'Accessories', icon: PackageIcon },
+];
+const money = (v) => `$${parseFloat(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const selected = components.find(c => c.id === value);
+/* ─── Component picker modal: search existing, pull from a product, or create new ─── */
+function ComponentPickerModal({ category, categoryLabel, excludeIds = [], onSelect, onClose }) {
+  const [mode, setMode] = useState('existing'); // existing | product | new
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ name: '', brand: '', price: '', wattage: '', capacity_kwh: '' });
+
+  useEffect(() => {
+    if (mode === 'new') return undefined;
+    let cancelled = false;
+    setLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        if (mode === 'existing') {
+          const { data } = await adminApi.getAdminComponents({ category, search: q || undefined, page_size: 20 });
+          if (!cancelled) setResults((data.results || data || []).filter((c) => !excludeIds.includes(c.id)));
+        } else {
+          const { data } = await adminApi.getAdminProducts({ search: q || undefined, page_size: 20 });
+          if (!cancelled) setResults(data.results || data || []);
+        }
+      } catch { if (!cancelled) setResults([]); }
+      finally { if (!cancelled) setLoading(false); }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [mode, q, category]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pickProduct = async (p) => {
+    setBusy(true);
+    try {
+      const { data } = await adminApi.createComponent({
+        name: p.name, category, brand: p.brand?.name || p.brand || '', price: p.price,
+        product: p.id, image_url: p.primary_image?.image || p.primary_image?.image_url || '', shop_visible: false,
+      });
+      onSelect(data.id);
+    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add from product')); }
+    finally { setBusy(false); }
+  };
+
+  const createNew = async () => {
+    if (!form.name.trim() || form.price === '') { toast.error('Name and price are required'); return; }
+    setBusy(true);
+    try {
+      const payload = { name: form.name.trim(), category, brand: form.brand, price: form.price };
+      if (form.wattage) payload.wattage = form.wattage;
+      if (form.capacity_kwh) payload.capacity_kwh = form.capacity_kwh;
+      const { data } = await adminApi.createComponent(payload);
+      onSelect(data.id);
+    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to create component')); }
+    finally { setBusy(false); }
+  };
+
+  const TABS = [
+    { key: 'existing', label: 'Components' },
+    { key: 'product', label: 'From a product' },
+    { key: 'new', label: 'Create new' },
+  ];
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="auth-input w-full text-sm text-left flex items-center justify-between gap-2 py-2"
-      >
-        <span className={selected ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}>
-          {selected ? `${selected.name} ($${parseFloat(selected.price).toLocaleString()})` : 'Select component...'}
-        </span>
-        <CaretDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-xl max-h-60 overflow-hidden">
-          <div className="p-2 border-b border-[var(--border-subtle)]">
-            <div className="relative">
-              <MagnifyingGlass size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-              <input
-                className="auth-input w-full text-xs pl-8 py-1.5"
-                placeholder="Search components..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                autoFocus
-              />
-            </div>
-          </div>
-          <div className="overflow-y-auto max-h-48">
-            {filtered.length === 0 ? (
-              <p className="text-xs text-[var(--text-muted)] p-3 text-center">No components found</p>
-            ) : (
-              filtered.map(c => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => { onChange(c.id); setOpen(false); setSearch(''); }}
-                  className={`w-full text-left px-3 py-2 text-xs hover:bg-[var(--bg-tertiary)] transition-colors flex items-center justify-between ${c.id === value ? 'bg-taqon-orange/10 text-taqon-orange' : 'text-[var(--text-secondary)]'}`}
-                >
-                  <span className="truncate">{c.name}</span>
-                  <span className="text-[var(--text-muted)] shrink-0 ml-2">${parseFloat(c.price).toLocaleString()} &middot; {c.category}</span>
-                </button>
-              ))
-            )}
-          </div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
+        className="w-full max-w-lg max-h-[85vh] flex flex-col bg-[var(--bg-secondary)] border border-[var(--card-border)] rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--card-border)]">
+          <h3 className="font-syne font-bold text-[var(--text-primary)]">Add {categoryLabel}</h3>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)]"><X size={18} /></button>
         </div>
-      )}
-    </div>
+        <div className="flex gap-1 px-5 pt-3 border-b border-[var(--card-border)]">
+          {TABS.map((t) => (
+            <button key={t.key} onClick={() => { setMode(t.key); setQ(''); }}
+              className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${mode === t.key ? 'border-taqon-orange text-taqon-orange' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5">
+          {mode !== 'new' ? (
+            <>
+              <div className="relative mb-3">
+                <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                <input autoFocus className="auth-input w-full pl-9 text-sm" placeholder={mode === 'existing' ? `Search ${categoryLabel.toLowerCase()}…` : 'Search products…'} value={q} onChange={(e) => setQ(e.target.value)} />
+              </div>
+              {loading ? (
+                <div className="flex justify-center py-8 text-[var(--text-muted)]"><CircleNotch size={22} className="animate-spin" /></div>
+              ) : results.length === 0 ? (
+                <p className="text-center text-sm text-[var(--text-muted)] py-8">Nothing found{q ? ' for this search' : ''}.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {results.map((r) => (
+                    <button key={r.id} type="button" disabled={busy}
+                      onClick={() => (mode === 'existing' ? onSelect(r.id) : pickProduct(r))}
+                      className="w-full text-left px-3 py-2.5 rounded-xl border border-[var(--card-border)] hover:border-taqon-orange/50 hover:bg-[var(--bg-tertiary)] transition-colors flex items-center justify-between gap-3 disabled:opacity-50">
+                      <span className="min-w-0">
+                        <span className="block text-sm text-[var(--text-primary)] truncate">{r.name}</span>
+                        <span className="block text-[11px] text-[var(--text-muted)] truncate">{(r.brand?.name || r.brand || '') + (mode === 'product' ? ' · product' : '')}</span>
+                      </span>
+                      <span className="text-sm font-semibold text-taqon-orange flex-shrink-0">{money(r.price)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {mode === 'product' && <p className="text-[11px] text-[var(--text-muted)] mt-3">Picking a product creates a linked component, so its price/name stay in sync with the shop product.</p>}
+            </>
+          ) : (
+            <div className="space-y-3">
+              <input className="auth-input w-full text-sm" placeholder="Name *" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              <div className="grid grid-cols-2 gap-3">
+                <input className="auth-input w-full text-sm" placeholder="Brand" value={form.brand} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} />
+                <input type="number" step="0.01" className="auth-input w-full text-sm" placeholder="Price *" value={form.price} onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {category === 'panel' || category === 'inverter'
+                  ? <input type="number" className="auth-input w-full text-sm" placeholder={category === 'inverter' ? 'VA rating' : 'Watts'} value={form.wattage} onChange={(e) => setForm((f) => ({ ...f, wattage: e.target.value }))} />
+                  : null}
+                {category === 'battery'
+                  ? <input type="number" step="0.01" className="auth-input w-full text-sm" placeholder="Capacity (kWh)" value={form.capacity_kwh} onChange={(e) => setForm((f) => ({ ...f, capacity_kwh: e.target.value }))} />
+                  : null}
+              </div>
+              <button type="button" onClick={createNew} disabled={busy} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+                {busy ? <CircleNotch size={15} className="animate-spin" /> : null}Create &amp; add
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
-/* ─── Package Items Table ─── */
+/* ─── Package components, grouped by category, with swap / add / remove / qty ─── */
 function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }) {
   const [items, setItems] = useState(initialItems || []);
-  const [components, setComponents] = useState([]);
-  const [loadingComponents, setLoadingComponents] = useState(false);
-  const [addingComponent, setAddingComponent] = useState(null); // component_id being added
-  const [saving, setSaving] = useState(null); // item id being saved
+  const [saving, setSaving] = useState(null);
+  const [picker, setPicker] = useState(null); // { category, label, swapItemId }
 
-  useEffect(() => {
-    setItems(initialItems || []);
-  }, [initialItems]);
+  useEffect(() => { setItems(initialItems || []); }, [initialItems]);
 
-  useEffect(() => {
-    if (!slug) return;
-    setLoadingComponents(true);
-    adminApi.getAdminComponents({ page_size: 200 })
-      .then(({ data }) => setComponents(data.results || data || []))
-      .catch(() => {})
-      .finally(() => setLoadingComponents(false));
-  }, [slug]);
-
-  const existingComponentIds = items.map(i => i.component?.id).filter(Boolean);
-
-  const handleAdd = async (componentId) => {
-    if (!componentId) return;
-    setAddingComponent(componentId);
-    try {
-      await adminApi.addPackageItem(slug, { component_id: componentId, quantity: 1 });
-      const { data } = await adminApi.getPackageItems(slug);
-      setItems(data);
-      onItemsChanged?.();
-      toast.success('Component added');
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Failed to add component');
-    } finally {
-      setAddingComponent(null);
-    }
+  const reloadItems = async () => {
+    const { data } = await adminApi.getPackageItems(slug);
+    setItems(data);
+    onItemsChanged?.();
   };
 
-  const handleUpdateQty = async (itemId, qty) => {
+  const handlePicked = async (componentId) => {
+    const p = picker; setPicker(null);
+    if (!componentId || !p) return;
+    setSaving(p.swapItemId || 'add');
+    try {
+      if (p.swapItemId) {
+        await adminApi.updatePackageItem(slug, p.swapItemId, { component_id: componentId });
+        toast.success('Component swapped');
+      } else {
+        await adminApi.addPackageItem(slug, { component_id: componentId, quantity: 1 });
+        toast.success('Component added');
+      }
+      await reloadItems();
+    } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to update components')); }
+    finally { setSaving(null); }
+  };
+
+  const handleQty = async (itemId, qty) => {
     if (qty < 1) return;
     setSaving(itemId);
-    try {
-      await adminApi.updatePackageItem(slug, itemId, { quantity: qty });
-      const { data } = await adminApi.getPackageItems(slug);
-      setItems(data);
-      onItemsChanged?.();
-    } catch (err) {
-      toast.error('Failed to update quantity');
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const handleSwap = async (itemId, newComponentId) => {
-    setSaving(itemId);
-    try {
-      await adminApi.updatePackageItem(slug, itemId, { component_id: newComponentId });
-      const { data } = await adminApi.getPackageItems(slug);
-      setItems(data);
-      onItemsChanged?.();
-      toast.success('Component swapped');
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Failed to swap component');
-    } finally {
-      setSaving(null);
-    }
+    try { await adminApi.updatePackageItem(slug, itemId, { quantity: qty }); await reloadItems(); }
+    catch { toast.error('Failed to update quantity'); }
+    finally { setSaving(null); }
   };
 
   const handleRemove = async (itemId) => {
     setSaving(itemId);
-    try {
-      await adminApi.removePackageItem(slug, itemId);
-      setItems(prev => prev.filter(i => i.id !== itemId));
-      onItemsChanged?.();
-      toast.success('Component removed');
-    } catch {
-      toast.error('Failed to remove component');
-    } finally {
-      setSaving(null);
-    }
+    try { await adminApi.removePackageItem(slug, itemId); await reloadItems(); toast.success('Component removed'); }
+    catch { toast.error('Failed to remove component'); }
+    finally { setSaving(null); }
   };
 
   if (!slug) {
     return (
       <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
         <Warning size={16} className="text-amber-400 mt-0.5 shrink-0" />
-        <p className="text-xs text-amber-300">Save the package first, then manage components here.</p>
+        <p className="text-xs text-amber-300">Save the package first, then manage its components here.</p>
       </div>
     );
   }
 
+  const total = items.reduce((s, i) => s + parseFloat(i.line_total || 0), 0);
+  const usedIds = items.map((i) => i.component?.id).filter(Boolean);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-          Components ({items.length})
-        </h3>
-        <span className="text-xs text-[var(--text-muted)]">
-          Material: ${items.reduce((s, i) => s + parseFloat(i.line_total || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-        </span>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Components &amp; Accessories</h3>
+        <span className="text-xs text-[var(--text-muted)]">Material: {money(total)}</span>
       </div>
 
-      {/* Existing items */}
-      <div className="space-y-2">
-        {items.map((item) => {
-          const comp = item.component || {};
-          return (
-            <div key={item.id} className="flex items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)]">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-[var(--text-primary)] truncate">{comp.name}</p>
-                <p className="text-[10px] text-[var(--text-muted)]">{comp.category} &middot; ${parseFloat(comp.price || 0).toLocaleString()}/ea</p>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleUpdateQty(item.id, item.quantity - 1)}
-                  disabled={item.quantity <= 1 || saving === item.id}
-                  className="w-6 h-6 rounded-md bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-xs hover:bg-[var(--card-border)] disabled:opacity-30 transition-colors"
-                >-</button>
-                <span className="w-7 text-center text-xs font-semibold text-[var(--text-primary)] tabular-nums">{item.quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateQty(item.id, item.quantity + 1)}
-                  disabled={saving === item.id}
-                  className="w-6 h-6 rounded-md bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-xs hover:bg-[var(--card-border)] disabled:opacity-30 transition-colors"
-                >+</button>
-              </div>
-              <span className="text-xs font-semibold text-taqon-orange tabular-nums w-16 text-right shrink-0">
-                ${parseFloat(item.line_total || 0).toLocaleString()}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleRemove(item.id)}
-                disabled={saving === item.id}
-                className="p-1 rounded-md text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 disabled:opacity-30 transition-colors shrink-0"
-              >
-                {saving === item.id ? <CircleNotch size={12} className="animate-spin" /> : <Trash size={12} />}
-              </button>
+      {ITEM_CATEGORIES.map((cat) => {
+        const catItems = items.filter((i) => (i.component?.category) === cat.key);
+        return (
+          <div key={cat.key} className="rounded-2xl border border-[var(--card-border)] overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-tertiary)]/50">
+              <span className="text-xs font-semibold text-[var(--text-secondary)] flex items-center gap-1.5"><cat.icon size={14} className="text-taqon-orange" /> {cat.label}{catItems.length ? ` (${catItems.length})` : ''}</span>
+              <button type="button" onClick={() => setPicker({ category: cat.key, label: cat.label, swapItemId: null })}
+                className="text-[11px] text-taqon-orange hover:underline flex items-center gap-1"><Plus size={12} /> Add</button>
             </div>
-          );
-        })}
-      </div>
+            {catItems.length === 0 ? (
+              <p className="text-[11px] text-[var(--text-muted)] px-3 py-2">None.</p>
+            ) : (
+              <div className="divide-y divide-[var(--card-border)]">
+                {catItems.map((item) => {
+                  const comp = item.component || {};
+                  return (
+                    <div key={item.id} className="flex items-center gap-2 px-3 py-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-[var(--text-primary)] truncate">{comp.name}{comp.brand ? ` · ${comp.brand}` : ''}</p>
+                        <p className="text-[10px] text-[var(--text-muted)]">{money(comp.price)}/ea</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button type="button" onClick={() => handleQty(item.id, item.quantity - 1)} disabled={item.quantity <= 1 || saving === item.id} className="w-6 h-6 rounded-md bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-xs hover:bg-[var(--card-border)] disabled:opacity-30">−</button>
+                        <span className="w-6 text-center text-xs font-semibold text-[var(--text-primary)] tabular-nums">{item.quantity}</span>
+                        <button type="button" onClick={() => handleQty(item.id, item.quantity + 1)} disabled={saving === item.id} className="w-6 h-6 rounded-md bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-xs hover:bg-[var(--card-border)] disabled:opacity-30">+</button>
+                      </div>
+                      <span className="text-xs font-semibold text-taqon-orange tabular-nums w-16 text-right shrink-0">{money(item.line_total)}</span>
+                      <button type="button" onClick={() => setPicker({ category: cat.key, label: cat.label, swapItemId: item.id })} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10 shrink-0" title="Swap / change"><Swap size={13} /></button>
+                      <button type="button" onClick={() => handleRemove(item.id)} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 shrink-0" title="Remove">
+                        {saving === item.id ? <CircleNotch size={12} className="animate-spin" /> : <Trash size={12} />}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
 
-      {/* Add component */}
-      {!loadingComponents && (
-        <div className="pt-2">
-          <ComponentPicker
-            value={null}
-            onChange={handleAdd}
-            components={components}
-            excludeIds={existingComponentIds}
+      <AnimatePresence>
+        {picker && (
+          <ComponentPickerModal
+            category={picker.category}
+            categoryLabel={picker.label}
+            excludeIds={picker.swapItemId ? [] : usedIds}
+            onSelect={handlePicked}
+            onClose={() => setPicker(null)}
           />
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -412,6 +468,31 @@ function PackageModal({ pkg, onClose, onSaved, onCascadeChange }) {
     } catch {
       toast.error('Failed to recalculate');
     }
+  };
+
+  // After a component is added/swapped/removed the package was recalculated on
+  // the server. Pull it back so the modal's price AND component-derived specs
+  // (kVA, battery kWh, panel count, system kW) reflect reality — and so saving
+  // the package can't clobber them with stale values. Also invalidates the
+  // public caches so the detail page / What's Included / specs cascade.
+  const syncFromServer = async () => {
+    if (!pkg?.slug) return;
+    try {
+      const { data } = await adminApi.getAdminPackage(pkg.slug);
+      setPriceInfo({
+        price: data.price, material_cost: data.material_cost, sundries_cost: data.sundries_cost,
+        labour_cost: data.labour_cost, transport_cost: data.transport_cost,
+      });
+      setForm((f) => ({
+        ...f,
+        inverter_kva: data.inverter_kva ?? f.inverter_kva,
+        inverter_rating_va: data.inverter_rating_va ?? f.inverter_rating_va,
+        battery_capacity_kwh: data.battery_capacity_kwh ?? f.battery_capacity_kwh,
+        panel_count: data.panel_count ?? f.panel_count,
+        system_size_kw: data.system_size_kw ?? f.system_size_kw,
+      }));
+      onCascadeChange?.();
+    } catch { /* non-fatal */ }
   };
 
   const handleSubmit = async (e) => {
@@ -600,7 +681,7 @@ function PackageModal({ pkg, onClose, onSaved, onCascadeChange }) {
             <PackageItemsEditor
               slug={pkg?.slug}
               items={pkg?.items || []}
-              onItemsChanged={refreshPrice}
+              onItemsChanged={syncFromServer}
             />
 
             {/* ── Price (computed, read-only) ── */}

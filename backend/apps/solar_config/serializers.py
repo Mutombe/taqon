@@ -371,7 +371,7 @@ class AdminSolarComponentCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SolarComponent
         fields = [
-            'name', 'slug', 'category', 'brand', 'model_number',
+            'id', 'name', 'slug', 'category', 'brand', 'model_number',
             'description', 'image_url', 'price', 'currency',
             'product',
             'wattage', 'voltage', 'capacity_ah', 'capacity_kwh',
@@ -380,6 +380,7 @@ class AdminSolarComponentCreateUpdateSerializer(serializers.ModelSerializer):
             'shop_visible', 'xlsx_row_key',
             'is_active', 'is_featured', 'sort_order',
         ]
+        read_only_fields = ['id']
         # Slug auto-generates from the name in the model's save() — admins
         # shouldn't have to supply it when creating.
         extra_kwargs = {'slug': {'required': False, 'allow_blank': True}}

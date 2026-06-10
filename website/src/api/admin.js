@@ -43,6 +43,7 @@ export const adminApi = {
 
   // Packages (backend uses slug for lookups)
   getAdminPackages: (params) => api.get('/solar-config/admin/packages/', { params }),
+  getAdminPackage: (slug) => api.get(`/solar-config/admin/packages/${slug}/`),
   createPackage: (data) => api.post('/solar-config/admin/packages/create/', data),
   updatePackage: (slug, data) => api.patch(`/solar-config/admin/packages/${slug}/`, data),
   deletePackage: (slug) => api.delete(`/solar-config/admin/packages/${slug}/delete/`),

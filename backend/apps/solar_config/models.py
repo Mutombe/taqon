@@ -316,6 +316,19 @@ class SolarPackageTemplate(SoftDeleteModel):
         if panel_watts > 0:
             update_fields.append('system_size_kw')
 
+        # Inverter VA/kVA from the largest inverter component, so swapping the
+        # inverter cascades to the package's rating. Only when the component
+        # actually carries a VA rating (its `wattage`), so we never zero out a
+        # manually-set value. `inverter_brand` (an engine code) is left alone.
+        inverter_va = max(
+            (item.component.wattage or 0 for item in items if item.component.category == 'inverter'),
+            default=0,
+        )
+        if inverter_va > 0:
+            self.inverter_rating_va = inverter_va
+            self.inverter_kva = (Decimal(str(inverter_va)) / Decimal('1000')).quantize(Decimal('0.1'))
+            update_fields += ['inverter_rating_va', 'inverter_kva']
+
         self.save(update_fields=update_fields)
 
 
