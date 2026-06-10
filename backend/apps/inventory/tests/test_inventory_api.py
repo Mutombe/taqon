@@ -98,6 +98,22 @@ class PriceAndHistoryTests(_Base):
         self.assertEqual(data['cheapest_supplier']['supplier'], 'Electrosales')
         self.assertEqual(len(data['prices']), 2)
 
+    def test_average_uses_latest_two_suppliers(self):
+        # Three suppliers price the same material, in order A=10, B=20, C=30.
+        self.set_price(self.supA, 10)
+        self.set_price(self.supB, 20)
+        supC = Supplier.objects.create(name='Cafca')
+        self.admin_client().post(f'{BASE}prices/', {
+            'supplier': str(supC.id), 'material': str(self.material.id), 'price': '30',
+        }, format='json')
+        data = self.admin_client().get(f'{BASE}materials/{self.material.slug}/').json()
+        # Average is the mean of the latest two (C=30, B=20) — A is excluded.
+        self.assertEqual(float(data['avg_price']), 25.0)
+        self.assertEqual(len(data['avg_basis']), 2)
+        # Full range still spans all three.
+        self.assertEqual(float(data['min_price']), 10.0)
+        self.assertEqual(float(data['max_price']), 30.0)
+
     def test_price_history_endpoint_filters_by_material(self):
         self.set_price(self.supA, 10)
         self.set_price(self.supB, 9)

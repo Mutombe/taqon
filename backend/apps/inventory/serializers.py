@@ -62,6 +62,7 @@ class MaterialSerializer(serializers.ModelSerializer):
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     prices = serializers.SerializerMethodField()
     avg_price = serializers.SerializerMethodField()
+    avg_basis = serializers.SerializerMethodField()
     min_price = serializers.SerializerMethodField()
     max_price = serializers.SerializerMethodField()
     supplier_count = serializers.SerializerMethodField()
@@ -72,7 +73,7 @@ class MaterialSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'category', 'category_name', 'category_slug',
             'specification', 'brand', 'unit', 'notes', 'is_active',
-            'prices', 'avg_price', 'min_price', 'max_price', 'supplier_count',
+            'prices', 'avg_price', 'avg_basis', 'min_price', 'max_price', 'supplier_count',
             'cheapest_supplier', 'created_at',
         ]
         read_only_fields = fields
@@ -89,8 +90,16 @@ class MaterialSerializer(serializers.ModelSerializer):
         return [p.price for p in self._live_prices(obj)]
 
     def get_avg_price(self, obj):
-        vals = self._values(obj)
+        # The benchmark price = the mean of the TWO most recently updated supplier
+        # prices for this material. Each supplier has one current price, so the
+        # latest two are inherently from two different suppliers.
+        latest_two = sorted(self._live_prices(obj), key=lambda p: p.updated_at, reverse=True)[:2]
+        vals = [p.price for p in latest_two]
         return (sum(vals) / len(vals)).quantize(Decimal('0.01')) if vals else None
+
+    def get_avg_basis(self, obj):
+        latest_two = sorted(self._live_prices(obj), key=lambda p: p.updated_at, reverse=True)[:2]
+        return [{'supplier': p.supplier.name, 'price': p.price} for p in latest_two]
 
     def get_min_price(self, obj):
         vals = self._values(obj)

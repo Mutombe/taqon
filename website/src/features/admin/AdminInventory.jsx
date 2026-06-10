@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Buildings, Cube, Plus, MagnifyingGlass, X, CircleNotch, Pencil, Trash,
   CaretDown, ClockCounterClockwise, FileArrowUp, ClipboardText,
-  CurrencyDollar, FilePdf, ArrowDown, ArrowUp, Tag,
+  CurrencyDollar, FilePdf, ArrowDown, ArrowUp, Tag, Check, Copy, Plus as PlusIcon,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -52,6 +52,69 @@ function Field({ label, children }) {
       {children}
     </div>
   );
+}
+
+/* Select with a just-in-time "+ add" — create a supplier/category without
+   leaving the modal you're in. onCreate(name) must return {id, name} or null. */
+function SelectWithAdd({ value, onChange, options, onCreate, addLabel = 'Add new', placeholder = 'New name' }) {
+  const [extra, setExtra] = useState([]);
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const all = [...options, ...extra.filter((e) => !options.some((o) => o.id === e.id))];
+
+  const create = async () => {
+    if (!name.trim()) return;
+    setBusy(true);
+    try {
+      const created = await onCreate(name.trim());
+      if (created?.id) { setExtra((x) => [...x, created]); onChange(created.id); }
+      setName(''); setAdding(false);
+    } finally { setBusy(false); }
+  };
+
+  if (adding) {
+    return (
+      <div className="flex gap-1.5">
+        <input autoFocus className="auth-input flex-1 text-sm py-1.5" placeholder={placeholder} value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); create(); } if (e.key === 'Escape') { setAdding(false); setName(''); } }} />
+        <button type="button" onClick={create} disabled={busy} className="px-2.5 rounded-lg bg-taqon-orange text-white flex items-center disabled:opacity-50"><Check size={14} /></button>
+        <button type="button" onClick={() => { setAdding(false); setName(''); }} className="px-2.5 rounded-lg border border-[var(--card-border)] text-[var(--text-muted)] flex items-center"><X size={14} /></button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex gap-1.5">
+      <select className="auth-input flex-1 text-sm" value={value} onChange={(e) => onChange(e.target.value)}>
+        {all.length === 0 && <option value="">—</option>}
+        {all.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+      </select>
+      <button type="button" onClick={() => setAdding(true)} className="px-2.5 rounded-lg border border-[var(--card-border)] text-taqon-orange hover:bg-taqon-orange/10 flex items-center" title={addLabel}><PlusIcon size={14} /></button>
+    </div>
+  );
+}
+
+// Inline creators used by SelectWithAdd (toast + cache invalidation handled here).
+function makeSupplierCreator(qc) {
+  return async (name) => {
+    try {
+      const { data } = await adminApi.createSupplier({ name });
+      toast.success('Supplier added');
+      qc.invalidateQueries({ queryKey: ['invSuppliers'] });
+      return { id: data.id, name: data.name };
+    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add supplier')); return null; }
+  };
+}
+function makeCategoryCreator(qc) {
+  return async (name) => {
+    try {
+      const { data } = await adminApi.createMaterialCategory({ name });
+      toast.success('Category added');
+      qc.invalidateQueries({ queryKey: ['invCats'] });
+      return { id: data.id, name: data.name };
+    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add category')); return null; }
+  };
 }
 
 /* ─────────────────────────── Supplier modal ─────────────────────────── */
@@ -109,6 +172,7 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
     notes: material?.notes || '', is_active: material?.is_active ?? true,
   }));
   const [saving, setSaving] = useState(false);
+  const qc = useQueryClient();
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const submit = async (e) => {
     e.preventDefault();
@@ -118,20 +182,18 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
     try {
       if (material?.slug) await adminApi.updateMaterial(material.slug, form);
       else await adminApi.createMaterial(form);
-      toast.success(material ? 'Material updated' : 'Material added');
+      toast.success(material?.slug ? 'Material updated' : 'Material added');
       onSaved(); onClose();
     } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to save material')); }
     finally { setSaving(false); }
   };
   return (
-    <Drawer title={material ? 'Edit Material' : 'Add Material'} onClose={onClose}>
+    <Drawer title={material?.slug ? 'Edit Material' : (material ? 'Duplicate Material' : 'Add Material')} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Name *"><input className="auth-input w-full text-sm" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. 20mm PVC Pipe" /></Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Category *">
-            <select className="auth-input w-full text-sm" value={form.category} onChange={(e) => set('category', e.target.value)}>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <SelectWithAdd value={form.category} onChange={(v) => set('category', v)} options={categories} onCreate={makeCategoryCreator(qc)} addLabel="Add category" placeholder="New category" />
           </Field>
           <Field label="Unit"><input className="auth-input w-full text-sm" value={form.unit} onChange={(e) => set('unit', e.target.value)} placeholder="each, m, roll…" /></Field>
         </div>
@@ -192,11 +254,68 @@ function CategoriesModal({ categories, onClose, onSaved }) {
   );
 }
 
+/* ─────────────────── Add-supplier-price (same material) ─────────────────── */
+function QuickPriceModal({ material, suppliers, onClose, onSaved }) {
+  const qc = useQueryClient();
+  const priced = material.prices || [];
+  const pricedIds = new Set(priced.map((p) => p.supplier));
+  const firstUnpriced = suppliers.find((s) => !pricedIds.has(s.id));
+  const [supplier, setSupplier] = useState(firstUnpriced?.id || suppliers[0]?.id || '');
+  const [price, setPrice] = useState('');
+  const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!supplier) { toast.error('Choose a supplier'); return; }
+    if (price === '') { toast.error('Enter a price'); return; }
+    setSaving(true);
+    try {
+      await adminApi.setSupplierPrice({ supplier, material: material.id, price, note });
+      toast.success('Price logged');
+      onSaved(); onClose();
+    } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to log price')); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <Drawer title="Add supplier price" onClose={onClose}>
+      <div className="rounded-xl bg-[var(--bg-tertiary)]/50 p-3 mb-4">
+        <p className="text-sm font-medium text-[var(--text-primary)]">{material.name}{material.specification ? ` · ${material.specification}` : ''}</p>
+        <p className="text-xs text-[var(--text-muted)]">{material.category_name}{material.unit ? ` · per ${material.unit}` : ''}</p>
+        {priced.length > 0 && (
+          <div className="mt-2 space-y-0.5 border-t border-[var(--card-border)] pt-2">
+            {priced.map((p) => (
+              <div key={p.id} className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+                <span>{p.supplier_name}</span><span className="font-medium">{money(p.price, p.currency)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Supplier *">
+          <SelectWithAdd value={supplier} onChange={setSupplier} options={suppliers} onCreate={makeSupplierCreator(qc)} addLabel="Add supplier" placeholder="New supplier name" />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Price (USD) *"><input type="number" step="0.01" className="auth-input w-full text-sm" value={price} onChange={(e) => setPrice(e.target.value)} /></Field>
+          <Field label="Note"><input className="auth-input w-full text-sm" value={note} onChange={(e) => setNote(e.target.value)} /></Field>
+        </div>
+        <p className="text-[11px] text-[var(--text-muted)]">Same material, another supplier — its price joins the comparison and the average updates from the two most recent suppliers.</p>
+        <button type="submit" disabled={saving} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+          {saving ? <CircleNotch size={15} className="animate-spin" /> : null}Log price
+        </button>
+      </form>
+    </Drawer>
+  );
+}
+
 /* ─────────────────────── Log Prices drawer (the entry point) ─────────────────────── */
 // Supplier-centric batch entry. A quotation document is OPTIONAL — leave it off
 // for prices a supplier simply told you. Materials can be typed in and created
 // inline. Every line becomes that supplier's price for the material.
 function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
+  const qc = useQueryClient();
   const [supplier, setSupplier] = useState(suppliers[0]?.id || '');
   const [attachQuote, setAttachQuote] = useState(false);
   const [meta, setMeta] = useState({ title: '', reference: '', quote_date: '' });
@@ -241,13 +360,7 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
     <Drawer title="Log Prices" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Supplier *">
-          {suppliers.length === 0 ? (
-            <p className="text-xs text-amber-600 dark:text-amber-400">Add a supplier first (Suppliers tab), then come back.</p>
-          ) : (
-            <select className="auth-input w-full text-sm" value={supplier} onChange={(e) => setSupplier(e.target.value)}>
-              {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          )}
+          <SelectWithAdd value={supplier} onChange={setSupplier} options={suppliers} onCreate={makeSupplierCreator(qc)} addLabel="Add supplier" placeholder="New supplier name" />
         </Field>
 
         {/* Optional quotation document */}
@@ -287,9 +400,7 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
                     <input type="number" step="0.01" className="auth-input w-24 text-sm py-1.5" placeholder="Price" value={r.price} onChange={(e) => setRow(i, 'price', e.target.value)} />
                     <input className="auth-input w-20 text-sm py-1.5" placeholder="unit" value={r.unit} onChange={(e) => setRow(i, 'unit', e.target.value)} />
                     {isNew ? (
-                      <select className="auth-input flex-1 text-sm py-1.5" value={r.category} onChange={(e) => setRow(i, 'category', e.target.value)} title="Category for the new material">
-                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
+                      <div className="flex-1"><SelectWithAdd value={r.category} onChange={(v) => setRow(i, 'category', v)} options={categories} onCreate={makeCategoryCreator(qc)} addLabel="Add category" placeholder="New category" /></div>
                     ) : m ? (
                       <span className="text-[10px] text-[var(--text-muted)] px-1 truncate">{m.category_name}</span>
                     ) : null}
@@ -302,7 +413,7 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
           <button type="button" onClick={addRow} className="mt-2 text-xs text-taqon-orange hover:underline flex items-center gap-1"><Plus size={12} /> Add item</button>
         </div>
 
-        <button type="submit" disabled={saving || !suppliers.length} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+        <button type="submit" disabled={saving} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
           {saving ? <CircleNotch size={15} className="animate-spin" /> : null}Log prices
         </button>
       </form>
@@ -358,7 +469,7 @@ function QuotationModal({ suppliers, onClose, onSaved }) {
 }
 
 /* ─────────────────────────── Material row ─────────────────────────── */
-function MaterialRow({ material, onEdit, onDelete }) {
+function MaterialRow({ material, onAddPrice, onDuplicate, onEdit, onDelete }) {
   const [open, setOpen] = useState(false);
   const prices = material.prices || [];
   return (
@@ -371,7 +482,9 @@ function MaterialRow({ material, onEdit, onDelete }) {
           </button>
           <p className="text-xs text-[var(--text-muted)] ml-5">{material.category_name}{material.unit ? ` · per ${material.unit}` : ''}</p>
         </div>
-        <div className="text-sm"><span className="text-[var(--text-muted)] text-xs">Avg </span><span className="font-semibold text-[var(--text-primary)]">{money(material.avg_price)}</span></div>
+        <div className="text-sm" title={(material.avg_basis || []).length ? `Average of the latest two suppliers:\n${material.avg_basis.map((b) => `${b.supplier}: ${money(b.price)}`).join('\n')}` : 'Average of the latest two suppliers'}>
+          <span className="text-[var(--text-muted)] text-xs">Avg </span><span className="font-semibold text-[var(--text-primary)]">{money(material.avg_price)}</span>
+        </div>
         <div className="text-xs text-[var(--text-secondary)]">{material.supplier_count ? `${money(material.min_price)} – ${money(material.max_price)}` : '—'}</div>
         <div className="text-xs">
           {material.cheapest_supplier ? (
@@ -379,6 +492,8 @@ function MaterialRow({ material, onEdit, onDelete }) {
           ) : <span className="text-[var(--text-muted)]">No prices</span>}
         </div>
         <div className="flex items-center gap-1 justify-start md:justify-end">
+          <button onClick={() => onAddPrice(material)} className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-taqon-orange hover:bg-taqon-orange/10 flex items-center gap-1" title="Add another supplier's price"><CurrencyDollar size={14} /> Price</button>
+          <button onClick={() => onDuplicate(material)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10" title="Duplicate material"><Copy size={14} /></button>
           <button onClick={() => onEdit(material)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10" title="Edit"><Pencil size={14} /></button>
           <button onClick={() => onDelete(material)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10" title="Delete"><Trash size={14} /></button>
         </div>
@@ -654,7 +769,16 @@ export default function AdminInventory() {
           </div>
           {materialsQ.isLoading ? <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <SkeletonBox key={i} className="h-10 w-full rounded-xl" />)}</div>
             : materials.length === 0 ? <div className="text-center py-14 text-[var(--text-muted)]"><Cube size={36} className="mx-auto opacity-40 mb-2" />No materials {search || category ? 'match your filters' : 'yet'}</div>
-            : materials.map((m) => <MaterialRow key={m.id} material={m} onEdit={(mat) => setModal({ type: 'material', data: mat })} onDelete={(mat) => del(() => adminApi.deleteMaterial(mat.slug), 'Material')} />)}
+            : materials.map((m) => (
+              <MaterialRow
+                key={m.id}
+                material={m}
+                onAddPrice={(mat) => setModal({ type: 'quickprice', data: mat })}
+                onDuplicate={(mat) => setModal({ type: 'material', data: { ...mat, slug: undefined, name: `${mat.name} (copy)` } })}
+                onEdit={(mat) => setModal({ type: 'material', data: mat })}
+                onDelete={(mat) => del(() => adminApi.deleteMaterial(mat.slug), 'Material')}
+              />
+            ))}
         </div>
       )}
 
@@ -761,6 +885,7 @@ export default function AdminInventory() {
         {modal?.type === 'supplier' && <SupplierModal supplier={modal.data} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'material' && <MaterialModal material={modal.data} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'categories' && <CategoriesModal categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
+        {modal?.type === 'quickprice' && <QuickPriceModal material={modal.data} suppliers={suppliers} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'logprices' && <LogPricesDrawer suppliers={suppliers} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'quotation' && <QuotationModal suppliers={suppliers} onClose={() => setModal(null)} onSaved={refresh} />}
       </AnimatePresence>
