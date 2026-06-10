@@ -21,7 +21,7 @@ const TIER_CONFIG = {
 
 const EMPTY_FORM = {
   name: '', tier: 'starter', description: '', short_description: '',
-  features: [''], suitable_for: [''],
+  features: [{ title: '', description: '' }], suitable_for: [''],
   system_size_kw: '', inverter_rating_va: '', inverter_kva: '', battery_capacity_kwh: '',
   estimated_daily_output_kwh: '', backup_hours: '',
   panel_count: '', phase: '1P', distance_km: '10',
@@ -58,6 +58,56 @@ function TagList({ items, onChange, placeholder, label }) {
       ))}
       <button type="button" onClick={add} className="text-xs text-taqon-orange hover:text-taqon-orange/80 transition-colors flex items-center gap-1">
         <Plus size={12} /> Add
+      </button>
+    </div>
+  );
+}
+
+/* ─── Feature List (title + description objects) ─── */
+// Package `features` are stored as { title, description } objects and rendered
+// that way on the public package page. Coerce any legacy plain-string entries
+// so the editor always works with the object shape (this is what fixed the
+// "[object Object]" bug — the old TagList treated them as strings).
+function normaliseFeature(f) {
+  if (f && typeof f === 'object') return { title: f.title || '', description: f.description || '' };
+  return { title: typeof f === 'string' ? f : '', description: '' };
+}
+
+function FeatureList({ items, onChange }) {
+  const list = items.length ? items : [{ title: '', description: '' }];
+  const add = () => onChange([...list, { title: '', description: '' }]);
+  const remove = (i) => onChange(list.filter((_, idx) => idx !== i));
+  const update = (i, key, val) => onChange(list.map((f, idx) => (idx === i ? { ...f, [key]: val } : f)));
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Features</label>
+      {list.map((f, i) => (
+        <div key={i} className="flex gap-2 items-start bg-[var(--bg-tertiary)]/40 rounded-xl p-2">
+          <div className="flex-1 space-y-1.5">
+            <input
+              className="auth-input w-full text-sm py-1.5 font-medium"
+              placeholder="Feature title (e.g. Reliable Backup Power)"
+              value={f.title || ''}
+              onChange={(e) => update(i, 'title', e.target.value)}
+            />
+            <textarea
+              className="auth-input w-full text-sm py-1.5 resize-y min-h-[2.25rem]"
+              placeholder="Short description shown under the title"
+              rows={2}
+              value={f.description || ''}
+              onChange={(e) => update(i, 'description', e.target.value)}
+            />
+          </div>
+          {list.length > 1 && (
+            <button type="button" onClick={() => remove(i)} className="p-1.5 mt-0.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      ))}
+      <button type="button" onClick={add} className="text-xs text-taqon-orange hover:text-taqon-orange/80 transition-colors flex items-center gap-1">
+        <Plus size={12} /> Add feature
       </button>
     </div>
   );
@@ -305,7 +355,9 @@ function PackageModal({ pkg, onClose, onSaved, onCascadeChange }) {
       tier: pkg.tier || 'starter',
       description: pkg.description || '',
       short_description: pkg.short_description || '',
-      features: Array.isArray(pkg.features) && pkg.features.length ? pkg.features : [''],
+      features: Array.isArray(pkg.features) && pkg.features.length
+        ? pkg.features.map(normaliseFeature)
+        : [{ title: '', description: '' }],
       suitable_for: Array.isArray(pkg.suitable_for) && pkg.suitable_for.length ? pkg.suitable_for : [''],
       system_size_kw: pkg.system_size_kw || '',
       inverter_rating_va: pkg.inverter_rating_va || '',
@@ -369,7 +421,10 @@ function PackageModal({ pkg, onClose, onSaved, onCascadeChange }) {
     try {
       const payload = {
         ...form,
-        features: form.features.filter((f) => f.trim()),
+        features: form.features
+          .map(normaliseFeature)
+          .map((f) => ({ title: f.title.trim(), description: f.description.trim() }))
+          .filter((f) => f.title || f.description),
         suitable_for: form.suitable_for.filter((f) => f.trim()),
         family: form.family || null,
       };
@@ -584,7 +639,7 @@ function PackageModal({ pkg, onClose, onSaved, onCascadeChange }) {
             )}
 
             {/* ── Features & Suitable For ── */}
-            <TagList items={form.features} onChange={(f) => set('features', f)} placeholder="Feature..." label="Features" />
+            <FeatureList items={form.features} onChange={(f) => set('features', f)} />
             <TagList items={form.suitable_for} onChange={(f) => set('suitable_for', f)} placeholder="e.g. residential, small_business" label="Suitable For" />
 
             {/* ── Settings ── */}
