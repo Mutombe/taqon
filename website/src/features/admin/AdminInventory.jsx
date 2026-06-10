@@ -95,6 +95,48 @@ function SelectWithAdd({ value, onChange, options, onCreate, addLabel = 'Add new
   );
 }
 
+/* Type-ahead combobox: filters an existing list as you type, click a match to
+   autofill, or (optionally) create a new one inline. Fully controlled text. */
+function Combobox({ value, onChange, options, onPick, onCreate, placeholder, getSub, autoFocus }) {
+  const [open, setOpen] = useState(false);
+  const q = (value || '').trim().toLowerCase();
+  const filtered = (q ? options.filter((o) => o.name.toLowerCase().includes(q)) : options).slice(0, 8);
+  const exact = options.some((o) => o.name.toLowerCase() === q);
+
+  return (
+    <div className="relative">
+      <input
+        autoFocus={autoFocus}
+        className="auth-input w-full text-sm"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {open && (filtered.length > 0 || (onCreate && q && !exact)) && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-xl max-h-56 overflow-y-auto">
+          {filtered.map((o) => (
+            <button key={o.id} type="button"
+              onMouseDown={(e) => { e.preventDefault(); onPick(o); setOpen(false); }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--bg-tertiary)] flex items-center justify-between gap-2">
+              <span className="truncate text-[var(--text-primary)]">{o.name}</span>
+              {getSub && <span className="text-[10px] text-[var(--text-muted)] flex-shrink-0">{getSub(o)}</span>}
+            </button>
+          ))}
+          {onCreate && q && !exact && (
+            <button type="button"
+              onMouseDown={(e) => { e.preventDefault(); onCreate(value.trim()); setOpen(false); }}
+              className="w-full text-left px-3 py-2 text-sm text-taqon-orange hover:bg-taqon-orange/10 flex items-center gap-1 border-t border-[var(--card-border)]">
+              <PlusIcon size={13} /> Create “{value.trim()}”
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Inline creators used by SelectWithAdd (toast + cache invalidation handled here).
 function makeSupplierCreator(qc) {
   return async (name) => {
@@ -126,6 +168,9 @@ function SupplierModal({ supplier, onClose, onSaved }) {
   }));
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const { data: supData } = useQuery({ queryKey: ['invSuppliersAll'], queryFn: () => adminApi.getSuppliers({ page_size: 500 }).then((r) => r.data) });
+  const allSuppliers = supData?.results || supData || [];
+  const dup = allSuppliers.find((s) => s.name.toLowerCase() === form.name.trim().toLowerCase() && s.slug !== supplier?.slug);
   const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) { toast.error('Name is required'); return; }
@@ -141,7 +186,10 @@ function SupplierModal({ supplier, onClose, onSaved }) {
   return (
     <Drawer title={supplier ? 'Edit Supplier' : 'Add Supplier'} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        <Field label="Name *"><input className="auth-input w-full text-sm" value={form.name} onChange={(e) => set('name', e.target.value)} /></Field>
+        <Field label="Name *">
+          <Combobox value={form.name} onChange={(t) => set('name', t)} options={allSuppliers} onPick={(o) => set('name', o.name)} placeholder="Supplier name" />
+          {dup && <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">⚠ A supplier named “{dup.name}” already exists.</p>}
+        </Field>
         <Field label="Contact person"><input className="auth-input w-full text-sm" value={form.contact_person} onChange={(e) => set('contact_person', e.target.value)} /></Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Phone"><input className="auth-input w-full text-sm" value={form.phone} onChange={(e) => set('phone', e.target.value)} /></Field>
@@ -174,6 +222,9 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const qc = useQueryClient();
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const { data: matData } = useQuery({ queryKey: ['invAllMaterials'], queryFn: () => adminApi.getMaterials({ page_size: 500 }).then((r) => r.data) });
+  const allMaterials = matData?.results || matData || [];
+  const dup = allMaterials.find((m) => m.name.toLowerCase() === form.name.trim().toLowerCase() && m.slug !== material?.slug);
   const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) { toast.error('Name is required'); return; }
@@ -190,7 +241,10 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
   return (
     <Drawer title={material?.slug ? 'Edit Material' : (material ? 'Duplicate Material' : 'Add Material')} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        <Field label="Name *"><input className="auth-input w-full text-sm" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. 20mm PVC Pipe" /></Field>
+        <Field label="Name *">
+          <Combobox value={form.name} onChange={(t) => set('name', t)} options={allMaterials} onPick={(o) => set('name', o.name)} getSub={(o) => o.category_name} placeholder="e.g. 20mm PVC Pipe" />
+          {dup && <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">⚠ A material named “{dup.name}” already exists ({dup.category_name}).</p>}
+        </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Category *">
             <SelectWithAdd value={form.category} onChange={(v) => set('category', v)} options={categories} onCreate={makeCategoryCreator(qc)} addLabel="Add category" placeholder="New category" />
@@ -259,19 +313,25 @@ function QuickPriceModal({ material, suppliers, onClose, onSaved }) {
   const qc = useQueryClient();
   const priced = material.prices || [];
   const pricedIds = new Set(priced.map((p) => p.supplier));
-  const firstUnpriced = suppliers.find((s) => !pricedIds.has(s.id));
-  const [supplier, setSupplier] = useState(firstUnpriced?.id || suppliers[0]?.id || '');
+  const initSup = suppliers.find((s) => !pricedIds.has(s.id)) || suppliers[0];
+  const [supplier, setSupplier] = useState(initSup?.id || '');
+  const [supplierText, setSupplierText] = useState(initSup?.name || '');
   const [price, setPrice] = useState('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!supplier) { toast.error('Choose a supplier'); return; }
+    let supplierId = supplier;
+    if (!supplierId) {
+      const m = suppliers.find((s) => s.name.toLowerCase() === supplierText.trim().toLowerCase());
+      if (m) supplierId = m.id;
+    }
+    if (!supplierId) { toast.error('Choose or add a supplier'); return; }
     if (price === '') { toast.error('Enter a price'); return; }
     setSaving(true);
     try {
-      await adminApi.setSupplierPrice({ supplier, material: material.id, price, note });
+      await adminApi.setSupplierPrice({ supplier: supplierId, material: material.id, price, note });
       toast.success('Price logged');
       onSaved(); onClose();
     } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to log price')); }
@@ -295,7 +355,14 @@ function QuickPriceModal({ material, suppliers, onClose, onSaved }) {
       </div>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Supplier *">
-          <SelectWithAdd value={supplier} onChange={setSupplier} options={suppliers} onCreate={makeSupplierCreator(qc)} addLabel="Add supplier" placeholder="New supplier name" />
+          <Combobox
+            value={supplierText}
+            onChange={(t) => { setSupplierText(t); setSupplier(''); }}
+            options={suppliers}
+            onPick={(o) => { setSupplier(o.id); setSupplierText(o.name); }}
+            onCreate={async (name) => { const c = await makeSupplierCreator(qc)(name); if (c) { setSupplier(c.id); setSupplierText(c.name); } }}
+            placeholder="Search or add a supplier…"
+          />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Price (USD) *"><input type="number" step="0.01" className="auth-input w-full text-sm" value={price} onChange={(e) => setPrice(e.target.value)} /></Field>
@@ -317,6 +384,7 @@ function QuickPriceModal({ material, suppliers, onClose, onSaved }) {
 function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
   const qc = useQueryClient();
   const [supplier, setSupplier] = useState(suppliers[0]?.id || '');
+  const [supplierText, setSupplierText] = useState(suppliers[0]?.name || '');
   const [attachQuote, setAttachQuote] = useState(false);
   const [meta, setMeta] = useState({ title: '', reference: '', quote_date: '' });
   const [file, setFile] = useState(null);
@@ -333,7 +401,12 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!supplier) { toast.error('Choose a supplier'); return; }
+    let supplierId = supplier;
+    if (!supplierId) {
+      const m = suppliers.find((s) => s.name.toLowerCase() === supplierText.trim().toLowerCase());
+      if (m) supplierId = m.id;
+    }
+    if (!supplierId) { toast.error('Choose or add a supplier'); return; }
     const items = rows
       .filter((r) => r.name.trim() && r.price !== '')
       .map((r) => ({ material_name: r.name.trim(), category: matchOf(r.name) ? undefined : r.category, price: r.price, unit: r.unit }));
@@ -341,7 +414,7 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
     setSaving(true);
     try {
       const fd = new FormData();
-      fd.append('supplier', supplier);
+      fd.append('supplier', supplierId);
       fd.append('items', JSON.stringify(items));
       if (attachQuote) {
         if (meta.title) fd.append('quotation_title', meta.title);
@@ -360,7 +433,14 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
     <Drawer title="Log Prices" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Supplier *">
-          <SelectWithAdd value={supplier} onChange={setSupplier} options={suppliers} onCreate={makeSupplierCreator(qc)} addLabel="Add supplier" placeholder="New supplier name" />
+          <Combobox
+            value={supplierText}
+            onChange={(t) => { setSupplierText(t); setSupplier(''); }}
+            options={suppliers}
+            onPick={(o) => { setSupplier(o.id); setSupplierText(o.name); }}
+            onCreate={async (name) => { const c = await makeSupplierCreator(qc)(name); if (c) { setSupplier(c.id); setSupplierText(c.name); } }}
+            placeholder="Search or add a supplier…"
+          />
         </Field>
 
         {/* Optional quotation document */}
@@ -385,7 +465,6 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
         {/* Line items */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Items</p>
-          <datalist id="material-options">{materials.map((m) => <option key={m.id} value={m.name} />)}</datalist>
           <div className="space-y-2">
             {rows.map((r, i) => {
               const m = matchOf(r.name);
@@ -393,7 +472,16 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
               return (
                 <div key={i} className="rounded-xl bg-[var(--bg-tertiary)]/40 p-2 space-y-1.5">
                   <div className="flex gap-1.5">
-                    <input list="material-options" className="auth-input flex-1 text-sm py-1.5" placeholder="Material (type to search or add new)" value={r.name} onChange={(e) => setRow(i, 'name', e.target.value)} />
+                    <div className="flex-1">
+                      <Combobox
+                        value={r.name}
+                        onChange={(t) => setRow(i, 'name', t)}
+                        options={materials}
+                        onPick={(o) => setRow(i, 'name', o.name)}
+                        getSub={(o) => o.category_name}
+                        placeholder="Material (type to search or add new)"
+                      />
+                    </div>
                     {rows.length > 1 && <button type="button" onClick={() => removeRow(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg"><X size={14} /></button>}
                   </div>
                   <div className="flex gap-1.5 items-center">
