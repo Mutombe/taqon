@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Buildings, Cube, Plus, MagnifyingGlass, X, CircleNotch, Pencil, Trash,
@@ -97,11 +97,32 @@ function SelectWithAdd({ value, onChange, options, onCreate, addLabel = 'Add new
 
 /* Type-ahead combobox: filters an existing list as you type, click a match to
    autofill, or (optionally) create a new one inline. Fully controlled text. */
-function Combobox({ value, onChange, options, onPick, onCreate, placeholder, getSub, autoFocus }) {
+function Combobox({ value, onChange, options = [], searchFn, onPick, onCreate, placeholder, getSub, autoFocus }) {
   const [open, setOpen] = useState(false);
+  const [remote, setRemote] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const searchRef = useRef(searchFn);
+  searchRef.current = searchFn;
   const q = (value || '').trim().toLowerCase();
-  const filtered = (q ? options.filter((o) => o.name.toLowerCase().includes(q)) : options).slice(0, 8);
-  const exact = options.some((o) => o.name.toLowerCase() === q);
+
+  // Server-side search (debounced) — used for high-cardinality lists (materials)
+  // so we never preload millions of rows. Falls back to filtering static options.
+  useEffect(() => {
+    if (!searchRef.current) return undefined;
+    if (!q) { setRemote([]); setLoading(false); return undefined; }
+    let cancelled = false;
+    setLoading(true);
+    const t = setTimeout(async () => {
+      try { const res = await searchRef.current(q); if (!cancelled) setRemote(res || []); }
+      catch { if (!cancelled) setRemote([]); }
+      finally { if (!cancelled) setLoading(false); }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [q]);
+
+  const source = searchFn ? remote : (q ? options.filter((o) => o.name.toLowerCase().includes(q)) : options);
+  const filtered = source.slice(0, 8);
+  const exact = source.some((o) => o.name.toLowerCase() === q);
 
   return (
     <div className="relative">
@@ -114,8 +135,9 @@ function Combobox({ value, onChange, options, onPick, onCreate, placeholder, get
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
       />
-      {open && (filtered.length > 0 || (onCreate && q && !exact)) && (
+      {open && (loading || filtered.length > 0 || (onCreate && q && !exact)) && (
         <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-xl max-h-56 overflow-y-auto">
+          {loading && <div className="px-3 py-2 text-xs text-[var(--text-muted)] flex items-center gap-2"><CircleNotch size={13} className="animate-spin" /> Searching…</div>}
           {filtered.map((o) => (
             <button key={o.id} type="button"
               onMouseDown={(e) => { e.preventDefault(); onPick(o); setOpen(false); }}
@@ -222,9 +244,7 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const qc = useQueryClient();
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const { data: matData } = useQuery({ queryKey: ['invAllMaterials'], queryFn: () => adminApi.getMaterials({ page_size: 500 }).then((r) => r.data) });
-  const allMaterials = matData?.results || matData || [];
-  const dup = allMaterials.find((m) => m.name.toLowerCase() === form.name.trim().toLowerCase() && m.slug !== material?.slug);
+  const searchMaterials = (s) => adminApi.getMaterials({ search: s, page_size: 8 }).then((r) => r.data.results || r.data || []);
   const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) { toast.error('Name is required'); return; }
@@ -242,8 +262,8 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
     <Drawer title={material?.slug ? 'Edit Material' : (material ? 'Duplicate Material' : 'Add Material')} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Name *">
-          <Combobox value={form.name} onChange={(t) => set('name', t)} options={allMaterials} onPick={(o) => set('name', o.name)} getSub={(o) => o.category_name} placeholder="e.g. 20mm PVC Pipe" />
-          {dup && <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">⚠ A material named “{dup.name}” already exists ({dup.category_name}).</p>}
+          <Combobox value={form.name} onChange={(t) => set('name', t)} searchFn={searchMaterials} onPick={(o) => set('name', o.name)} getSub={(o) => o.category_name} placeholder="e.g. 20mm PVC Pipe" />
+          <p className="text-[10px] text-[var(--text-muted)] mt-1">Matching materials appear as you type — pick one to avoid duplicates.</p>
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Category *">
@@ -391,9 +411,8 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
   const [rows, setRows] = useState([{ name: '', category: categories[0]?.id || '', price: '', unit: '' }]);
   const [saving, setSaving] = useState(false);
 
-  const { data: matData } = useQuery({ queryKey: ['invAllMaterials'], queryFn: () => adminApi.getMaterials({ page_size: 500 }).then((r) => r.data) });
-  const materials = matData?.results || matData || [];
-  const matchOf = (name) => materials.find((m) => m.name.toLowerCase() === (name || '').trim().toLowerCase());
+  // High-cardinality: search materials on the server as the user types.
+  const searchMaterials = (s) => adminApi.getMaterials({ search: s, page_size: 10 }).then((r) => r.data.results || r.data || []);
 
   const setRow = (i, k, v) => setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, [k]: v } : r)));
   const addRow = () => setRows((rs) => [...rs, { name: '', category: categories[0]?.id || '', price: '', unit: '' }]);
@@ -409,7 +428,7 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
     if (!supplierId) { toast.error('Choose or add a supplier'); return; }
     const items = rows
       .filter((r) => r.name.trim() && r.price !== '')
-      .map((r) => ({ material_name: r.name.trim(), category: matchOf(r.name) ? undefined : r.category, price: r.price, unit: r.unit }));
+      .map((r) => ({ material_name: r.name.trim(), category: r.category, price: r.price, unit: r.unit }));
     if (!items.length) { toast.error('Add at least one material with a price'); return; }
     setSaving(true);
     try {
@@ -466,37 +485,29 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Items</p>
           <div className="space-y-2">
-            {rows.map((r, i) => {
-              const m = matchOf(r.name);
-              const isNew = r.name.trim() && !m;
-              return (
-                <div key={i} className="rounded-xl bg-[var(--bg-tertiary)]/40 p-2 space-y-1.5">
-                  <div className="flex gap-1.5">
-                    <div className="flex-1">
-                      <Combobox
-                        value={r.name}
-                        onChange={(t) => setRow(i, 'name', t)}
-                        options={materials}
-                        onPick={(o) => setRow(i, 'name', o.name)}
-                        getSub={(o) => o.category_name}
-                        placeholder="Material (type to search or add new)"
-                      />
-                    </div>
-                    {rows.length > 1 && <button type="button" onClick={() => removeRow(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg"><X size={14} /></button>}
+            {rows.map((r, i) => (
+              <div key={i} className="rounded-xl bg-[var(--bg-tertiary)]/40 p-2 space-y-1.5">
+                <div className="flex gap-1.5">
+                  <div className="flex-1">
+                    <Combobox
+                      value={r.name}
+                      onChange={(t) => setRow(i, 'name', t)}
+                      searchFn={searchMaterials}
+                      onPick={(o) => setRow(i, 'name', o.name)}
+                      getSub={(o) => o.category_name}
+                      placeholder="Material (type to search or add new)"
+                    />
                   </div>
-                  <div className="flex gap-1.5 items-center">
-                    <input type="number" step="0.01" className="auth-input w-24 text-sm py-1.5" placeholder="Price" value={r.price} onChange={(e) => setRow(i, 'price', e.target.value)} />
-                    <input className="auth-input w-20 text-sm py-1.5" placeholder="unit" value={r.unit} onChange={(e) => setRow(i, 'unit', e.target.value)} />
-                    {isNew ? (
-                      <div className="flex-1"><SelectWithAdd value={r.category} onChange={(v) => setRow(i, 'category', v)} options={categories} onCreate={makeCategoryCreator(qc)} addLabel="Add category" placeholder="New category" /></div>
-                    ) : m ? (
-                      <span className="text-[10px] text-[var(--text-muted)] px-1 truncate">{m.category_name}</span>
-                    ) : null}
-                  </div>
-                  {isNew && <p className="text-[10px] text-taqon-orange">New — will be created under the chosen category.</p>}
+                  {rows.length > 1 && <button type="button" onClick={() => removeRow(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg"><X size={14} /></button>}
                 </div>
-              );
-            })}
+                <div className="flex gap-1.5 items-center">
+                  <input type="number" step="0.01" className="auth-input w-24 text-sm py-1.5" placeholder="Price" value={r.price} onChange={(e) => setRow(i, 'price', e.target.value)} />
+                  <input className="auth-input w-20 text-sm py-1.5" placeholder="unit" value={r.unit} onChange={(e) => setRow(i, 'unit', e.target.value)} />
+                  <div className="flex-1"><SelectWithAdd value={r.category} onChange={(v) => setRow(i, 'category', v)} options={categories} onCreate={makeCategoryCreator(qc)} addLabel="Add category" placeholder="New category" /></div>
+                </div>
+                <p className="text-[10px] text-[var(--text-muted)]">If the material is new it’s created under the chosen category; if it exists, the category is ignored.</p>
+              </div>
+            ))}
           </div>
           <button type="button" onClick={addRow} className="mt-2 text-xs text-taqon-orange hover:underline flex items-center gap-1"><Plus size={12} /> Add item</button>
         </div>
@@ -680,6 +691,25 @@ const ACTION_STYLE = {
   updated: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
   deleted: 'bg-red-500/15 text-red-600 dark:text-red-400',
 };
+const PAGE_SIZE = 25;
+
+function Pagination({ page, count, onPage }) {
+  if (count == null) return null;
+  const pages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+  if (pages <= 1) return null;
+  const from = (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, count);
+  return (
+    <div className="flex items-center justify-between gap-3 pt-1">
+      <span className="text-xs text-[var(--text-muted)]">{from.toLocaleString()}–{to.toLocaleString()} of {count.toLocaleString()}</span>
+      <div className="flex items-center gap-2">
+        <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="px-3 py-1.5 rounded-lg border border-[var(--card-border)] text-sm text-[var(--text-secondary)] disabled:opacity-40 hover:bg-[var(--bg-tertiary)]">Previous</button>
+        <span className="text-xs text-[var(--text-muted)]">Page {page} / {pages.toLocaleString()}</span>
+        <button disabled={page >= pages} onClick={() => onPage(page + 1)} className="px-3 py-1.5 rounded-lg border border-[var(--card-border)] text-sm text-[var(--text-secondary)] disabled:opacity-40 hover:bg-[var(--bg-tertiary)]">Next</button>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminInventory() {
   const qc = useQueryClient();
@@ -687,53 +717,59 @@ export default function AdminInventory() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [auditType, setAuditType] = useState('');
+  const [page, setPage] = useState(1);
   const [modal, setModal] = useState(null); // { type, data }
+
+  // Reset to page 1 whenever the active list or its filters change.
+  useEffect(() => { setPage(1); }, [tab, search, category, auditType]);
 
   const summaryQ = useQuery({ queryKey: ['invSummary'], queryFn: () => adminApi.getInventorySummary().then((r) => r.data) });
   const catsQ = useQuery({ queryKey: ['invCats'], queryFn: () => adminApi.getMaterialCategories().then((r) => r.data) });
-  const suppliersQ = useQuery({ queryKey: ['invSuppliers', search], queryFn: () => adminApi.getSuppliers({ page_size: 200, ...(tab === 'suppliers' && search ? { search } : {}) }).then((r) => r.data) });
+  // Full supplier list for the comboboxes/dropdowns (suppliers are bounded, not millions).
+  const allSuppliersQ = useQuery({ queryKey: ['invSuppliersAll'], queryFn: () => adminApi.getSuppliers({ page_size: 500 }).then((r) => r.data) });
+  const allSuppliers = allSuppliersQ.data?.results || allSuppliersQ.data || [];
 
   const categories = catsQ.data || [];
+
+  // Paginated supplier list for the Suppliers tab.
+  const suppliersQ = useQuery({
+    queryKey: ['invSuppliers', page, search],
+    queryFn: () => adminApi.getSuppliers({ page, page_size: PAGE_SIZE, ...(search ? { search } : {}) }).then((r) => r.data),
+    enabled: tab === 'suppliers',
+  });
   const suppliers = suppliersQ.data?.results || suppliersQ.data || [];
 
   const materialParams = useMemo(() => {
-    const p = { page_size: 200 };
+    const p = { page, page_size: PAGE_SIZE };
     if (search && tab === 'materials') p.search = search;
     if (category) p.category = category;
     return p;
-  }, [search, category, tab]);
-
-  const materialsQ = useQuery({
-    queryKey: ['invMaterials', materialParams],
-    queryFn: () => adminApi.getMaterials(materialParams).then((r) => r.data),
-    enabled: tab === 'materials',
-  });
+  }, [page, search, category, tab]);
+  const materialsQ = useQuery({ queryKey: ['invMaterials', materialParams], queryFn: () => adminApi.getMaterials(materialParams).then((r) => r.data), enabled: tab === 'materials' });
   const materials = materialsQ.data?.results || materialsQ.data || [];
 
-  const quotesQ = useQuery({
-    queryKey: ['invQuotations'],
-    queryFn: () => adminApi.getQuotations({ page_size: 200 }).then((r) => r.data),
-    enabled: tab === 'quotations',
-  });
+  const quotesQ = useQuery({ queryKey: ['invQuotations', page], queryFn: () => adminApi.getQuotations({ page, page_size: PAGE_SIZE }).then((r) => r.data), enabled: tab === 'quotations' });
   const quotations = quotesQ.data?.results || quotesQ.data || [];
 
   const logParams = useMemo(() => {
-    const p = { page_size: 100 };
+    const p = { page, page_size: PAGE_SIZE };
     if (search && tab === 'logs') p.search = search;
     if (category) p.category = category;
     return p;
-  }, [search, category, tab]);
+  }, [page, search, category, tab]);
   const logsQ = useQuery({ queryKey: ['invLogs', logParams], queryFn: () => adminApi.getPriceHistory(logParams).then((r) => r.data), enabled: tab === 'logs' });
   const logs = logsQ.data?.results || logsQ.data || [];
 
   const auditParams = useMemo(() => {
-    const p = { page_size: 100 };
+    const p = { page, page_size: PAGE_SIZE };
     if (search && tab === 'audit') p.search = search;
     if (auditType) p.target_type = auditType;
     return p;
-  }, [search, auditType, tab]);
+  }, [page, search, auditType, tab]);
   const auditQ = useQuery({ queryKey: ['invAudit', auditParams], queryFn: () => adminApi.getInventoryAudit(auditParams).then((r) => r.data), enabled: tab === 'audit' });
   const auditEntries = auditQ.data?.results || auditQ.data || [];
+
+  const activeCount = { materials: materialsQ, suppliers: suppliersQ, quotations: quotesQ, logs: logsQ, audit: auditQ }[tab]?.data?.count;
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['invSummary'] });
@@ -968,14 +1004,17 @@ export default function AdminInventory() {
         </div>
       )}
 
+      {/* Pagination (every list tab is server-paginated for scale) */}
+      <Pagination page={page} count={activeCount} onPage={setPage} />
+
       {/* Modals */}
       <AnimatePresence>
         {modal?.type === 'supplier' && <SupplierModal supplier={modal.data} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'material' && <MaterialModal material={modal.data} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'categories' && <CategoriesModal categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
-        {modal?.type === 'quickprice' && <QuickPriceModal material={modal.data} suppliers={suppliers} onClose={() => setModal(null)} onSaved={refresh} />}
-        {modal?.type === 'logprices' && <LogPricesDrawer suppliers={suppliers} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
-        {modal?.type === 'quotation' && <QuotationModal suppliers={suppliers} onClose={() => setModal(null)} onSaved={refresh} />}
+        {modal?.type === 'quickprice' && <QuickPriceModal material={modal.data} suppliers={allSuppliers} onClose={() => setModal(null)} onSaved={refresh} />}
+        {modal?.type === 'logprices' && <LogPricesDrawer suppliers={allSuppliers} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
+        {modal?.type === 'quotation' && <QuotationModal suppliers={allSuppliers} onClose={() => setModal(null)} onSaved={refresh} />}
       </AnimatePresence>
     </div>
   );

@@ -7,7 +7,9 @@ import {
   Bell, MoonStars, Sun, FileText, Wallet, Lightning, ToggleRight, ChatCircle, DownloadSimple,
   Cube, Buildings,
 } from '@phosphor-icons/react';
+import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '../../stores/authStore';
+import { adminApi } from '../../api/admin';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const NAV_SECTIONS = [
@@ -21,41 +23,49 @@ const NAV_SECTIONS = [
   {
     label: 'Commerce',
     items: [
-      { to: '/admin/products', label: 'Products', icon: Package },
-      { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-      { to: '/admin/packages', label: 'Packages', icon: SolarPanel },
-      { to: '/admin/components', label: 'Components', icon: Cube },
-      { to: '/admin/inventory', label: 'Inventory', icon: Buildings },
-      { to: '/admin/appliances', label: 'Appliances', icon: Lightning },
-      { to: '/admin/quotations', label: 'Quotations', icon: FileText },
-      { to: '/admin/deposits', label: 'Deposits', icon: Wallet },
+      { to: '/admin/products', label: 'Products', icon: Package, count: 'products' },
+      { to: '/admin/orders', label: 'Orders', icon: ShoppingCart, count: 'orders' },
+      { to: '/admin/packages', label: 'Packages', icon: SolarPanel, count: 'packages' },
+      { to: '/admin/components', label: 'Components', icon: Cube, count: 'components' },
+      { to: '/admin/inventory', label: 'Inventory', icon: Buildings, count: 'inventory' },
+      { to: '/admin/appliances', label: 'Appliances', icon: Lightning, count: 'appliances' },
+      { to: '/admin/quotations', label: 'Quotations', icon: FileText, count: 'quotations' },
+      { to: '/admin/deposits', label: 'Deposits', icon: Wallet, count: 'deposits' },
     ],
   },
   {
     label: 'Content',
     items: [
-      { to: '/admin/blog', label: 'Blog Posts', icon: Article },
-      { to: '/admin/media', label: 'Media', icon: Image },
+      { to: '/admin/blog', label: 'Blog Posts', icon: Article, count: 'blog' },
+      { to: '/admin/media', label: 'Media', icon: Image, count: 'media' },
     ],
   },
   {
     label: 'People',
     items: [
-      { to: '/admin/users', label: 'Users', icon: Users },
-      { to: '/admin/inquiries', label: 'Inquiries', icon: ChatCircle },
+      { to: '/admin/users', label: 'Users', icon: Users, count: 'users' },
+      { to: '/admin/inquiries', label: 'Inquiries', icon: ChatCircle, count: 'inquiries' },
     ],
   },
   {
     label: 'Platform',
     items: [
-      { to: '/admin/downloads', label: 'Downloads', icon: DownloadSimple },
-      { to: '/admin/feature-flags', label: 'Feature Flags', icon: ToggleRight },
+      { to: '/admin/downloads', label: 'Downloads', icon: DownloadSimple, count: 'downloads' },
+      { to: '/admin/feature-flags', label: 'Feature Flags', icon: ToggleRight, count: 'feature_flags' },
     ],
   },
 ];
 
-function NavItem({ item, isActive, onClick }) {
+function fmtCount(n) {
+  if (n == null) return null;
+  if (n >= 1000000) return `${(n / 1000000).toFixed(n % 1000000 ? 1 : 0)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 ? 1 : 0)}k`;
+  return String(n);
+}
+
+function NavItem({ item, isActive, onClick, count }) {
   const Icon = item.icon;
+  const badge = fmtCount(count);
   return (
     <Link
       to={item.to}
@@ -72,9 +82,17 @@ function NavItem({ item, isActive, onClick }) {
         className={isActive ? 'text-white' : 'group-hover:text-taqon-orange transition-colors'}
       />
       <span>{item.label}</span>
-      {isActive && (
-        <CaretRight size={12} weight="bold" className="ml-auto text-white/60" />
-      )}
+      <span className="ml-auto flex items-center gap-1.5">
+        {badge != null && (
+          <span
+            title={count != null ? count.toLocaleString() : undefined}
+            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full tabular-nums ${isActive ? 'bg-white/20 text-white' : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] group-hover:bg-[var(--card-border)]'}`}
+          >
+            {badge}
+          </span>
+        )}
+        {isActive && <CaretRight size={12} weight="bold" className="text-white/60" />}
+      </span>
     </Link>
   );
 }
@@ -83,6 +101,12 @@ function Sidebar({ open, onClose }) {
   const { pathname } = useLocation();
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const { data: counts } = useQuery({
+    queryKey: ['sidebarCounts'],
+    queryFn: () => adminApi.getSidebarCounts().then((r) => r.data),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 
   const handleLogout = () => {
     logout();
@@ -122,6 +146,7 @@ function Sidebar({ open, onClose }) {
                 <NavItem
                   key={item.to}
                   item={item}
+                  count={item.count ? counts?.[item.count] : undefined}
                   isActive={pathname === item.to || (item.to !== '/admin/dashboard' && pathname.startsWith(item.to))}
                   onClick={onClose}
                 />

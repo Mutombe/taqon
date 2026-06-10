@@ -618,3 +618,47 @@ class DailySnapshotListView(APIView):
         snapshots = DailySnapshot.objects.filter(date__gte=since).order_by('date')
         serializer = DailySnapshotSerializer(snapshots, many=True)
         return Response(serializer.data)
+
+
+# ── Sidebar item counts ─────────────────────────────────────────
+
+class SidebarCountsView(APIView):
+    """Per-tab item counts for the admin sidebar badges. Best-effort: any count
+    that errors is returned as null and simply hides that badge."""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        def safe(fn):
+            try:
+                return fn()
+            except Exception:
+                return None
+
+        from apps.shop.models import Product, Order, ProductImage, MediaAsset
+        from apps.solar_config.models import (
+            SolarPackageTemplate, SolarComponent, Appliance, InstantQuoteDownload,
+        )
+        from apps.inventory.models import Material
+        from apps.blog.models import BlogPost
+        from apps.inquiries.models import Inquiry
+        from apps.downloads.models import Download
+        from apps.feature_flags.models import FeatureFlag
+        from apps.payments.models import Payment
+
+        counts = {
+            'products': safe(lambda: Product.objects.filter(is_deleted=False).count()),
+            'orders': safe(lambda: Order.objects.count()),
+            'packages': safe(lambda: SolarPackageTemplate.objects.filter(is_deleted=False).count()),
+            'components': safe(lambda: SolarComponent.objects.filter(is_deleted=False).count()),
+            'inventory': safe(lambda: Material.objects.filter(is_deleted=False).count()),
+            'appliances': safe(lambda: Appliance.objects.filter(is_deleted=False).count()),
+            'quotations': safe(lambda: InstantQuoteDownload.objects.count()),
+            'deposits': safe(lambda: Payment.objects.count()),
+            'blog': safe(lambda: BlogPost.objects.filter(is_deleted=False).count()),
+            'media': safe(lambda: ProductImage.objects.count() + MediaAsset.objects.count()),
+            'users': safe(lambda: User.objects.count()),
+            'inquiries': safe(lambda: Inquiry.objects.count()),
+            'downloads': safe(lambda: Download.objects.count()),
+            'feature_flags': safe(lambda: FeatureFlag.objects.count()),
+        }
+        return Response(counts)

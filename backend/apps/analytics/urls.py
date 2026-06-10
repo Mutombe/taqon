@@ -10,6 +10,7 @@ urlpatterns = [
     path('support/', views.SupportAnalyticsView.as_view(), name='analytics-support'),
     path('activity/', views.RecentActivityView.as_view(), name='analytics-activity'),
     path('snapshots/', views.DailySnapshotListView.as_view(), name='analytics-snapshots'),
+    path('sidebar-counts/', views.SidebarCountsView.as_view(), name='analytics-sidebar-counts'),
 
     # Page view tracking (public)
     path('track/', views.TrackPageViewView.as_view(), name='analytics-track'),

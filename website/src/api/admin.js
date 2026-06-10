@@ -10,6 +10,7 @@ export const adminApi = {
   getOrderAnalytics: (params = {}) => api.get(`${BASE}/orders/`, { params }),
   getSupportAnalytics: (params = {}) => api.get(`${BASE}/support/`, { params }),
   getRecentActivity: (params = {}) => api.get(`${BASE}/activity/`, { params }),
+  getSidebarCounts: () => api.get(`${BASE}/sidebar-counts/`),
   getSnapshots: (params = {}) => api.get(`${BASE}/snapshots/`, { params }),
 
   // Page view tracking
