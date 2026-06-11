@@ -85,6 +85,22 @@ class LinkAndPublishTests(_Base):
         self.assertEqual(prod.brand.name, 'Sunsynk')
         self.assertEqual(prod.category.name, 'Electrical')
 
+    def test_sync_price_updates_linked_product(self):
+        mat = self._material()
+        mat.product = self.product
+        mat.save(update_fields=['product'])
+        self.assertEqual(self.product.price, Decimal('900'))
+        supplier = Supplier.objects.create(name='Electrosales')
+        SupplierPrice.objects.create(supplier=supplier, material=mat, price=Decimal('780'))
+        resp = self.admin_client().post(link_url(mat.slug), {'sync_price': True}, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.price, Decimal('780'))
+
+    def test_sync_price_requires_a_link(self):
+        mat = self._material()  # not linked
+        self.assertEqual(self.admin_client().post(link_url(mat.slug), {'sync_price': True}, format='json').status_code, 400)
+
     def test_link_without_args_is_rejected(self):
         mat = self._material()
         self.assertEqual(self.admin_client().post(link_url(mat.slug), {}, format='json').status_code, 400)

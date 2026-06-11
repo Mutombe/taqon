@@ -112,6 +112,7 @@ export const adminApi = {
   deleteMaterial: (slug) => api.delete(`/inventory/materials/${slug}/`),
   importMaterialFromProduct: (productId) => api.post('/inventory/materials/import-from-product/', { product_id: productId }),
   linkMaterialProduct: (slug, data) => api.post(`/inventory/materials/${slug}/link-product/`, data),
+  syncMaterialPrice: (slug) => api.post(`/inventory/materials/${slug}/link-product/`, { sync_price: true }),
   unlinkMaterialProduct: (slug) => api.delete(`/inventory/materials/${slug}/link-product/`),
 
   setSupplierPrice: (data) => api.post('/inventory/prices/', data),

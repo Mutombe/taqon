@@ -803,6 +803,13 @@ function ShopLinkModal({ material, onClose, onChanged }) {
           <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-1.5"><Storefront size={15} className="text-green-600 dark:text-green-400" /> {material.product_name}</p>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">{material.in_shop ? 'Live in the shop' : 'Linked — product is inactive'}{material.product_price != null ? ` · ${money(material.product_price)}` : ''}</p>
         </div>
+        <button onClick={() => run(() => adminApi.syncMaterialPrice(material.slug), 'Shop price synced')} disabled={busy} className="w-full mb-2 px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+          {busy ? <CircleNotch size={15} className="animate-spin" /> : <CurrencyDollar size={15} />} Sync price to shop
+        </button>
+        <p className="text-[11px] text-[var(--text-muted)] mb-3 text-center">
+          Updates the shop price to the latest supplier price{material.avg_price != null ? ` (≈ ${money(material.avg_price)})` : ''}.
+          {material.product_price != null ? ` Currently ${money(material.product_price)} in shop.` : ''}
+        </p>
         {material.product_slug && (
           <a href={`/shop/${material.product_slug}`} target="_blank" rel="noreferrer" className="w-full mb-2 px-4 py-2.5 rounded-xl border border-[var(--card-border)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)] flex items-center justify-center gap-2">
             <ArrowSquareOut size={15} /> View in shop

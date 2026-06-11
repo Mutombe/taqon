@@ -343,6 +343,7 @@ class MaterialLinkProductView(APIView):
 
         product_id = request.data.get('product_id')
         create = request.data.get('create')
+        sync_price = request.data.get('sync_price')
 
         if product_id:
             from apps.shop.models import Product
@@ -358,8 +359,18 @@ class MaterialLinkProductView(APIView):
             product = _create_product_from_material(material)
             audit.log(request, action='created', target_type='material', target_name=material.name,
                       target_id=material.id, summary=f'Published to shop as “{product.name}”')
+        elif sync_price:
+            if not material.product_id:
+                return Response({'detail': 'This material is not linked to a product.'}, status=status.HTTP_400_BAD_REQUEST)
+            product = material.product
+            new_price = _material_latest_price(material)
+            old_price = product.price
+            product.price = new_price
+            product.save(update_fields=['price', 'updated_at'])
+            audit.log(request, action='updated', target_type='material', target_name=material.name,
+                      target_id=material.id, summary=f'Synced shop price {old_price} → {new_price} for “{product.name}”')
         else:
-            return Response({'detail': 'Provide product_id to link, or create=true to publish to the shop.'},
+            return Response({'detail': 'Provide product_id to link, create=true to publish, or sync_price=true.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
         return Response(MaterialSerializer(_fetch_material(slug)).data)
