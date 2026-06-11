@@ -1,18 +1,21 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Sun, Sparkle, Check, ArrowLeft, ArrowRight, SpinnerGap, ChatCircleText, Drop, FilePdf,
+  Sun, Sparkle, Check, ArrowLeft, ArrowRight, SpinnerGap, Drop, FilePdf,
 } from '@phosphor-icons/react';
 import SEO from '../components/SEO';
 import { geysersApi } from '../api/geysers';
 import { openGeyserQuote } from '../lib/geyserQuote';
+import GeyserQuoteModal from '../components/GeyserQuoteModal';
 
 const fmt = (v) => `$${parseFloat(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const heroImg = (p) => p?.image_url || `/geysers/solar-geyser-0${((p?.capacity_litres || 100) / 100) % 9 + 1}.jpg`;
 
 export default function GeyserPackageDetail() {
   const { slug } = useParams();
+  const [quoteOpen, setQuoteOpen] = useState(false);
   const { data: p, isLoading, isError } = useQuery({
     queryKey: ['geyserPackage', slug],
     queryFn: () => geysersApi.getPackage(slug).then((r) => r.data),
@@ -30,8 +33,6 @@ export default function GeyserPackageDetail() {
       </div>
     );
   }
-
-  const quoteLink = `/inquiry?source=solar-geyser-${p.slug}`;
 
   return (
     <div className="min-h-screen bg-taqon-cream dark:bg-taqon-dark">
@@ -74,9 +75,9 @@ export default function GeyserPackageDetail() {
                 Includes equipment, plumbing, mounting & professional installation within {parseFloat(p.distance_km)} km of Harare ($0.65/km beyond).
               </p>
               <div className="flex flex-wrap gap-3 mt-5">
-                <Link to={quoteLink} className="flex-1 min-w-[150px] px-5 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-center hover:bg-taqon-orange/90 transition-colors flex items-center justify-center gap-2">
+                <button onClick={() => setQuoteOpen(true)} className="flex-1 min-w-[150px] px-5 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-center hover:bg-taqon-orange/90 transition-colors flex items-center justify-center gap-2">
                   Request a quote <ArrowRight size={16} />
-                </Link>
+                </button>
                 <button onClick={() => openGeyserQuote(p)} className="px-5 py-3 rounded-xl border border-black/10 dark:border-white/15 text-taqon-dark dark:text-white font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
                   <FilePdf size={16} /> Download quotation
                 </button>
@@ -133,11 +134,13 @@ export default function GeyserPackageDetail() {
         <div className="mt-12 rounded-3xl bg-taqon-dark dark:bg-taqon-charcoal p-8 sm:p-10 text-center">
           <h3 className="font-syne font-extrabold text-2xl text-white">Ready for free hot water?</h3>
           <p className="text-white/60 mt-2 max-w-xl mx-auto">Request a quote for the {p.name} and our team will confirm pricing for your site and arrange installation.</p>
-          <Link to={quoteLink} className="inline-flex items-center gap-2 mt-6 px-7 py-3 rounded-full bg-taqon-orange text-white font-semibold hover:bg-taqon-orange/90 transition-colors">
+          <button onClick={() => setQuoteOpen(true)} className="inline-flex items-center gap-2 mt-6 px-7 py-3 rounded-full bg-taqon-orange text-white font-semibold hover:bg-taqon-orange/90 transition-colors">
             Request a quote <ArrowRight size={16} />
-          </Link>
+          </button>
         </div>
       </div>
+
+      <GeyserQuoteModal open={quoteOpen} onClose={() => setQuoteOpen(false)} pkg={p} />
     </div>
   );
 }

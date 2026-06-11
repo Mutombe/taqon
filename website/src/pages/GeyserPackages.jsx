@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react';
 import SEO from '../components/SEO';
 import AnimatedSection from '../components/AnimatedSection';
+import GeyserQuoteModal from '../components/GeyserQuoteModal';
 import { geysersApi } from '../api/geysers';
 
 const fmt = (v) => `$${parseFloat(v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -100,6 +101,7 @@ function GeyserCard({ p, index = 0 }) {
 export default function GeyserPackages() {
   const [system, setSystem] = useState('all');
   const [variant, setVariant] = useState('all');
+  const [quoteOpen, setQuoteOpen] = useState(false);
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['geyserPackages'],
@@ -139,7 +141,7 @@ export default function GeyserPackages() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
               <a href="#packages" className="px-6 py-3 rounded-full bg-taqon-orange text-white font-semibold hover:bg-taqon-orange/90 transition-colors">Browse packages</a>
-              <Link to="/inquiry?source=solar-geysers" className="px-6 py-3 rounded-full border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors">Get a quote</Link>
+              <button onClick={() => setQuoteOpen(true)} className="px-6 py-3 rounded-full border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors">Get a quote</button>
             </div>
           </motion.div>
         </div>
@@ -160,9 +162,9 @@ export default function GeyserPackages() {
               Answer a few quick questions and we'll recommend the perfect geyser for your household. In the meantime, browse the packages below or ask our team.
             </p>
           </div>
-          <Link to="/inquiry?source=solar-geysers" className="px-5 py-2.5 rounded-full bg-taqon-dark dark:bg-white text-white dark:text-taqon-dark font-semibold text-sm hover:opacity-90 transition-opacity whitespace-nowrap">
+          <button onClick={() => setQuoteOpen(true)} className="px-5 py-2.5 rounded-full bg-taqon-dark dark:bg-white text-white dark:text-taqon-dark font-semibold text-sm hover:opacity-90 transition-opacity whitespace-nowrap">
             Ask our team
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -247,6 +249,8 @@ export default function GeyserPackages() {
           </div>
         </AnimatedSection>
       </section>
+
+      <GeyserQuoteModal open={quoteOpen} onClose={() => setQuoteOpen(false)} />
     </div>
   );
 }
