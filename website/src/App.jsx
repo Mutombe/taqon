@@ -32,6 +32,8 @@ const Shop = lazy(() => import('./pages/Shop'));
 const Projects = lazy(() => import('./pages/Projects'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Packages = lazy(() => import('./pages/Packages'));
+const GeyserPackages = lazy(() => import('./pages/GeyserPackages'));
+const GeyserPackageDetail = lazy(() => import('./pages/GeyserPackageDetail'));
 const Careers = lazy(() => import('./pages/Careers'));
 const SolarSecrets = lazy(() => import('./pages/SolarSecrets'));
 const Inquiry = lazy(() => import('./pages/Inquiry'));
@@ -252,6 +254,8 @@ function AppContent() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/packages" element={<Packages />} />
             <Route path="/packages/:slug" element={<PackageDetail />} />
+            <Route path="/solar-geysers" element={<GeyserPackages />} />
+            <Route path="/solar-geysers/:slug" element={<GeyserPackageDetail />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/solar-secrets" element={<SolarSecrets />} />
             {/* Public inquiry form — sharable as a direct link */}

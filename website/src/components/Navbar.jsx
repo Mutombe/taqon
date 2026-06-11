@@ -56,6 +56,9 @@ const navLinks = [
         { path: '/packages/pro-power-1-0', label: 'ProPower 16kVA' },
         { path: '/packages/master-power-v1-0', label: 'MasterPower 20kVA' },
       ]},
+      { tier: 'SOLAR GEYSERS', items: [
+        { path: '/solar-geysers', label: 'Solar Geyser Packages', popular: true },
+      ]},
     ],
   },
   {

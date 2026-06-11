@@ -43,6 +43,15 @@ export default function Inquiry() {
   const refSource = searchParams.get('source') || 'public_form';
 
   const savedLocation = getSavedLocation();
+  // Prefill the message when the visitor arrives from a solar-geyser package.
+  const geyserPrefill = (() => {
+    if (!refSource.startsWith('solar-geyser')) return '';
+    const slug = refSource.replace(/^solar-geyser-?/, '');
+    const name = slug ? slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '';
+    return name
+      ? `I'd like a quote for the ${name} solar geyser package.`
+      : "I'd like a quote for a solar geyser package.";
+  })();
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -51,7 +60,7 @@ export default function Inquiry() {
     distanceKm: savedLocation?.distanceKm ?? null,
     monthly_grid_bill: '',
     appliances: [],
-    message: '',
+    message: geyserPrefill,
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);

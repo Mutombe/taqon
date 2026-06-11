@@ -134,6 +134,7 @@ const STATIC_PAGES = [
   { loc: `${SITE}/`, priority: '1.0' },
   { loc: `${SITE}/shop`, priority: '0.9' },
   { loc: `${SITE}/packages`, priority: '0.9' },
+  { loc: `${SITE}/solar-geysers`, priority: '0.8' },
   { loc: `${SITE}/solutions`, priority: '0.8' },
   { loc: `${SITE}/solar-advisor`, priority: '0.8' },
   { loc: `${SITE}/about`, priority: '0.6' },
@@ -236,6 +237,21 @@ async function main() {
     console.log(`[prerender-og] wrote ${products.length} product pages.`);
   } catch (err) {
     console.warn(`[prerender-og] product fetch failed (${err.message}) — products skipped.`);
+  }
+
+  // Geyser packages → sitemap (best-effort; non-fatal if the API is down).
+  try {
+    const res = await fetch(`${API}/api/v1/geysers/packages/`, { headers: { Accept: 'application/json' } });
+    if (res.ok) {
+      const data = await res.json();
+      const geysers = data.results || data || [];
+      for (const g of geysers) {
+        if (g.slug) sitemapUrls.push({ loc: `${SITE}/solar-geysers/${g.slug}`, priority: '0.7' });
+      }
+      console.log(`[prerender-og] added ${geysers.length} geyser package URLs to sitemap.`);
+    }
+  } catch (err) {
+    console.warn(`[prerender-og] geyser fetch failed (${err.message}) — skipped in sitemap.`);
   }
 
   // sitemap.xml + robots.txt
