@@ -639,6 +639,7 @@ class SidebarCountsView(APIView):
             SolarPackageTemplate, SolarComponent, Appliance, InstantQuoteDownload,
         )
         from apps.inventory.models import Material
+        from apps.geysers.models import GeyserPackage
         from apps.blog.models import BlogPost
         from apps.inquiries.models import Inquiry
         from apps.downloads.models import Download
@@ -649,6 +650,7 @@ class SidebarCountsView(APIView):
             'products': safe(lambda: Product.objects.filter(is_deleted=False).count()),
             'orders': safe(lambda: Order.objects.count()),
             'packages': safe(lambda: SolarPackageTemplate.objects.filter(is_deleted=False).count()),
+            'geysers': safe(lambda: GeyserPackage.objects.filter(is_deleted=False).count()),
             'components': safe(lambda: SolarComponent.objects.filter(is_deleted=False).count()),
             'inventory': safe(lambda: Material.objects.filter(is_deleted=False).count()),
             'appliances': safe(lambda: Appliance.objects.filter(is_deleted=False).count()),

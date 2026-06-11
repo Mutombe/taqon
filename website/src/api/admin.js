@@ -57,6 +57,12 @@ export const adminApi = {
   getPackageChangelog: (slug, params) => api.get(`/solar-config/admin/packages/${slug}/changelog/`, { params }),
   revertPackageChange: (slug, logId) => api.post(`/solar-config/admin/packages/${slug}/changelog/${logId}/revert/`),
 
+  // Geyser packages
+  getGeyserPackages: (params) => api.get('/geysers/admin/packages/', { params }),
+  createGeyserPackage: (data) => api.post('/geysers/admin/packages/', data),
+  updateGeyserPackage: (slug, data) => api.patch(`/geysers/admin/packages/${slug}/`, data),
+  deleteGeyserPackage: (slug) => api.delete(`/geysers/admin/packages/${slug}/`),
+
   // Solar components & families (for dropdowns)
   getAdminComponents: (params) => api.get('/solar-config/admin/components/', { params }),
   getAdminComponent: (slug) => api.get(`/solar-config/admin/components/${slug}/`),

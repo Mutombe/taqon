@@ -117,6 +117,7 @@ const AdminAnalytics = lazy(() => import('./features/admin/AdminAnalytics'));
 const AdminProducts = lazy(() => import('./features/admin/AdminProducts'));
 const AdminPackages = lazy(() => import('./features/admin/AdminPackages'));
 const AdminPackageDetail = lazy(() => import('./features/admin/AdminPackageDetail'));
+const AdminGeyserPackages = lazy(() => import('./features/admin/AdminGeyserPackages'));
 const AdminComponents = lazy(() => import('./features/admin/AdminComponents'));
 const AdminInventory = lazy(() => import('./features/admin/AdminInventory'));
 const AdminQuotations = lazy(() => import('./features/admin/AdminQuotations'));
@@ -343,6 +344,7 @@ function AppContent() {
               <Route path="orders" element={<AdminOrders />} />
               <Route path="packages" element={<AdminPackages />} />
               <Route path="packages/:slug" element={<AdminPackageDetail />} />
+              <Route path="geysers" element={<AdminGeyserPackages />} />
               <Route path="components" element={<AdminComponents />} />
               <Route path="inventory" element={<AdminInventory />} />
               <Route path="quotations" element={<AdminQuotations />} />

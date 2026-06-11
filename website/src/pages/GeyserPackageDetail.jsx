@@ -2,10 +2,11 @@ import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Sun, Sparkle, Check, ArrowLeft, ArrowRight, SpinnerGap, ChatCircleText, Drop,
+  Sun, Sparkle, Check, ArrowLeft, ArrowRight, SpinnerGap, ChatCircleText, Drop, FilePdf,
 } from '@phosphor-icons/react';
 import SEO from '../components/SEO';
 import { geysersApi } from '../api/geysers';
+import { openGeyserQuote } from '../lib/geyserQuote';
 
 const fmt = (v) => `$${parseFloat(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const heroImg = (p) => p?.image_url || `/geysers/solar-geyser-0${((p?.capacity_litres || 100) / 100) % 9 + 1}.jpg`;
@@ -76,9 +77,9 @@ export default function GeyserPackageDetail() {
                 <Link to={quoteLink} className="flex-1 min-w-[150px] px-5 py-3 rounded-xl bg-taqon-orange text-white font-semibold text-center hover:bg-taqon-orange/90 transition-colors flex items-center justify-center gap-2">
                   Request a quote <ArrowRight size={16} />
                 </Link>
-                <Link to={quoteLink} className="px-5 py-3 rounded-xl border border-black/10 dark:border-white/15 text-taqon-dark dark:text-white font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
-                  <ChatCircleText size={16} /> Enquire
-                </Link>
+                <button onClick={() => openGeyserQuote(p)} className="px-5 py-3 rounded-xl border border-black/10 dark:border-white/15 text-taqon-dark dark:text-white font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
+                  <FilePdf size={16} /> Download quotation
+                </button>
               </div>
             </div>
           </div>
