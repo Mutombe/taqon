@@ -217,7 +217,7 @@ class MaterialListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         qs = (
             Material.objects.filter(is_deleted=False)
-            .select_related('category')
+            .select_related('category', 'product')
             .prefetch_related(
                 Prefetch(
                     'supplier_prices',
@@ -273,6 +273,139 @@ class MaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
         audit.log(self.request, action='deleted', target_type='material',
                   target_name=instance.name, target_id=instance.id, summary='Material deleted')
         instance.soft_delete(user=self.request.user)
+
+
+# ── Material ⇄ Shop product linking ─────────────────────────────────────────
+
+def _material_latest_price(material):
+    """A representative price for a material = its most recently updated supplier
+    price (each supplier has one current price). Used when publishing to the shop."""
+    prices = [p for p in material.supplier_prices.all() if not p.is_deleted]
+    if not prices:
+        return Decimal('0')
+    return sorted(prices, key=lambda p: p.updated_at, reverse=True)[0].price
+
+
+def _fetch_material(slug):
+    return (
+        Material.objects.filter(slug=slug, is_deleted=False)
+        .select_related('category', 'product')
+        .prefetch_related(
+            Prefetch('supplier_prices',
+                     queryset=SupplierPrice.objects.filter(is_deleted=False).select_related('supplier', 'source_quotation')),
+        )
+        .first()
+    )
+
+
+def _create_product_from_material(material):
+    """Promote a material into a shop Product so it appears in the shop, priced
+    from its latest supplier price. Category/brand are matched (or created)."""
+    from django.utils.text import slugify
+    from apps.shop.models import Product, Category, Brand
+
+    shop_cat, _ = Category.objects.get_or_create(name=material.category.name)
+    shop_brand = None
+    if material.brand:
+        shop_brand, _ = Brand.objects.get_or_create(name=material.brand)
+
+    root = (slugify(material.name) or 'material').replace('-', '').upper()[:42] or 'MATERIAL'
+    sku, i = root, 1
+    while Product.objects.filter(sku=sku).exists():
+        suffix = f'-{i}'
+        sku = root[:50 - len(suffix)] + suffix
+        i += 1
+
+    product = Product(
+        name=material.name,
+        sku=sku,
+        category=shop_cat,
+        brand=shop_brand,
+        description=material.notes or '',
+        short_description=(f'{material.brand} ' if material.brand else '') + material.name,
+        price=_material_latest_price(material),
+        is_active=True,
+    )
+    product.save()
+    material.product = product
+    material.save(update_fields=['product', 'updated_at'])
+    return product
+
+
+class MaterialLinkProductView(APIView):
+    """Link a material to a shop product (existing or newly created), or unlink it."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request, slug):
+        material = _fetch_material(slug)
+        if not material:
+            return Response({'detail': 'Material not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        product_id = request.data.get('product_id')
+        create = request.data.get('create')
+
+        if product_id:
+            from apps.shop.models import Product
+            try:
+                product = Product.objects.get(pk=product_id, is_deleted=False)
+            except Product.DoesNotExist:
+                return Response({'detail': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
+            material.product = product
+            material.save(update_fields=['product', 'updated_at'])
+            audit.log(request, action='updated', target_type='material', target_name=material.name,
+                      target_id=material.id, summary=f'Linked to shop product “{product.name}”')
+        elif create:
+            product = _create_product_from_material(material)
+            audit.log(request, action='created', target_type='material', target_name=material.name,
+                      target_id=material.id, summary=f'Published to shop as “{product.name}”')
+        else:
+            return Response({'detail': 'Provide product_id to link, or create=true to publish to the shop.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(MaterialSerializer(_fetch_material(slug)).data)
+
+    def delete(self, request, slug):
+        material = _fetch_material(slug)
+        if not material:
+            return Response({'detail': 'Material not found.'}, status=status.HTTP_404_NOT_FOUND)
+        material.product = None
+        material.save(update_fields=['product', 'updated_at'])
+        audit.log(request, action='updated', target_type='material', target_name=material.name,
+                  target_id=material.id, summary='Unlinked from shop product')
+        return Response(MaterialSerializer(_fetch_material(slug)).data)
+
+
+class ImportFromProductView(APIView):
+    """Create an inventory material from a shop product (linked), so its supplier
+    pricing can be tracked here. Idempotent: re-importing returns the existing one."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        from apps.shop.models import Product
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return Response({'detail': 'product_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            product = Product.objects.select_related('category', 'brand').get(pk=product_id, is_deleted=False)
+        except Product.DoesNotExist:
+            return Response({'detail': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        existing = Material.objects.filter(product=product, is_deleted=False).first()
+        if existing:
+            return Response(MaterialSerializer(_fetch_material(existing.slug)).data, status=status.HTTP_200_OK)
+
+        cat, _ = MaterialCategory.objects.get_or_create(name=product.category.name if product.category else 'General')
+        material = Material(
+            name=product.name,
+            category=cat,
+            brand=(product.brand.name if product.brand else ''),
+            product=product,
+            created_by=request.user,
+        )
+        material.save()
+        audit.log(request, action='created', target_type='material', target_name=material.name,
+                  target_id=material.id, summary=f'Imported from shop product “{product.name}”')
+        return Response(MaterialSerializer(_fetch_material(material.slug)).data, status=status.HTTP_201_CREATED)
 
 
 # ── Supplier prices (with history logging) ──────────────────────────────────

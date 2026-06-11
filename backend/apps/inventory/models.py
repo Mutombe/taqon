@@ -82,6 +82,13 @@ class Material(SoftDeleteModel):
     unit = models.CharField(max_length=40, blank=True, help_text='each, m, roll, bag, …')
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True, db_index=True)
+    # Optional link to a shop product: the same item may be sold in the shop, and
+    # we still want to track its supplier pricing here. A material can be imported
+    # from a product, or promoted into one so it appears in the shop.
+    product = models.ForeignKey(
+        'shop.Product', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='inventory_materials',
+    )
 
     class Meta:
         ordering = ['category__sort_order', 'name']

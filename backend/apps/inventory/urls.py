@@ -18,6 +18,8 @@ urlpatterns = [
 
     # Materials
     path('materials/', views.MaterialListCreateView.as_view(), name='material-list'),
+    path('materials/import-from-product/', views.ImportFromProductView.as_view(), name='material-import-from-product'),
+    path('materials/<slug:slug>/link-product/', views.MaterialLinkProductView.as_view(), name='material-link-product'),
     path('materials/<slug:slug>/', views.MaterialDetailView.as_view(), name='material-detail'),
 
     # Supplier prices (with history logging)

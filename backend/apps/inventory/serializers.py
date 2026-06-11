@@ -67,6 +67,10 @@ class MaterialSerializer(serializers.ModelSerializer):
     max_price = serializers.SerializerMethodField()
     supplier_count = serializers.SerializerMethodField()
     cheapest_supplier = serializers.SerializerMethodField()
+    product_name = serializers.CharField(source='product.name', read_only=True, default=None)
+    product_slug = serializers.CharField(source='product.slug', read_only=True, default=None)
+    product_price = serializers.DecimalField(source='product.price', max_digits=10, decimal_places=2, read_only=True, default=None)
+    in_shop = serializers.SerializerMethodField()
 
     class Meta:
         model = Material
@@ -75,8 +79,12 @@ class MaterialSerializer(serializers.ModelSerializer):
             'specification', 'brand', 'unit', 'notes', 'is_active',
             'prices', 'avg_price', 'avg_basis', 'min_price', 'max_price', 'supplier_count',
             'cheapest_supplier', 'created_at',
+            'product', 'product_name', 'product_slug', 'product_price', 'in_shop',
         ]
         read_only_fields = fields
+
+    def get_in_shop(self, obj):
+        return bool(obj.product_id and getattr(obj.product, 'is_active', False))
 
     def _live_prices(self, obj):
         return [p for p in obj.supplier_prices.all() if not p.is_deleted]
@@ -123,9 +131,12 @@ class MaterialSerializer(serializers.ModelSerializer):
 class MaterialWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
-        fields = ['id', 'name', 'slug', 'category', 'specification', 'brand', 'unit', 'notes', 'is_active']
+        fields = ['id', 'name', 'slug', 'category', 'specification', 'brand', 'unit', 'notes', 'is_active', 'product']
         read_only_fields = ['id']
-        extra_kwargs = {'slug': {'required': False, 'allow_blank': True}}
+        extra_kwargs = {
+            'slug': {'required': False, 'allow_blank': True},
+            'product': {'required': False, 'allow_null': True},
+        }
 
 
 class PriceHistorySerializer(serializers.ModelSerializer):

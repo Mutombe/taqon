@@ -110,6 +110,9 @@ export const adminApi = {
   createMaterial: (data) => api.post('/inventory/materials/', data),
   updateMaterial: (slug, data) => api.patch(`/inventory/materials/${slug}/`, data),
   deleteMaterial: (slug) => api.delete(`/inventory/materials/${slug}/`),
+  importMaterialFromProduct: (productId) => api.post('/inventory/materials/import-from-product/', { product_id: productId }),
+  linkMaterialProduct: (slug, data) => api.post(`/inventory/materials/${slug}/link-product/`, data),
+  unlinkMaterialProduct: (slug) => api.delete(`/inventory/materials/${slug}/link-product/`),
 
   setSupplierPrice: (data) => api.post('/inventory/prices/', data),
   batchPrices: (formData) => api.post('/inventory/prices/batch/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),

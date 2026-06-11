@@ -4,6 +4,7 @@ import {
   Buildings, Cube, Plus, MagnifyingGlass, X, CircleNotch, Pencil, Trash,
   CaretDown, ClockCounterClockwise, FileArrowUp, ClipboardText,
   CurrencyDollar, FilePdf, ArrowDown, ArrowUp, Tag, Check, Copy, Plus as PlusIcon,
+  Storefront, LinkSimple, ArrowSquareOut, LinkBreak,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -593,7 +594,7 @@ function QuotationModal({ suppliers, onClose, onSaved }) {
 }
 
 /* ─────────────────────────── Material row ─────────────────────────── */
-function MaterialRow({ material, onAddPrice, onDuplicate, onEdit, onDelete }) {
+function MaterialRow({ material, onAddPrice, onDuplicate, onEdit, onDelete, onShopLink }) {
   const [open, setOpen] = useState(false);
   const prices = material.prices || [];
   return (
@@ -603,6 +604,11 @@ function MaterialRow({ material, onAddPrice, onDuplicate, onEdit, onDelete }) {
           <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-1.5 text-left">
             <CaretDown size={13} className={`text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
             <span className="text-sm font-medium text-[var(--text-primary)] truncate">{material.name}{material.specification ? ` · ${material.specification}` : ''}</span>
+            {material.product && (
+              <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${material.in_shop ? 'bg-green-500/15 text-green-600 dark:text-green-400' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'}`} title={material.in_shop ? 'Live in the shop' : 'Linked to a product (inactive)'}>
+                <Storefront size={10} /> {material.in_shop ? 'In shop' : 'Linked'}
+              </span>
+            )}
           </button>
           <p className="text-xs text-[var(--text-muted)] ml-5">{material.category_name}{material.unit ? ` · per ${material.unit}` : ''}</p>
         </div>
@@ -617,6 +623,7 @@ function MaterialRow({ material, onAddPrice, onDuplicate, onEdit, onDelete }) {
         </div>
         <div className="flex items-center gap-1 justify-start md:justify-end">
           <button onClick={() => onAddPrice(material)} className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-taqon-orange hover:bg-taqon-orange/10 flex items-center gap-1" title="Add another supplier's price"><CurrencyDollar size={14} /> Price</button>
+          <button onClick={() => onShopLink(material)} className={`p-1.5 rounded-lg hover:bg-taqon-orange/10 ${material.product ? 'text-green-600 dark:text-green-400' : 'text-[var(--text-muted)] hover:text-taqon-orange'}`} title={material.product ? 'Manage shop link' : 'Link to a product / add to shop'}><Storefront size={14} /></button>
           <button onClick={() => onDuplicate(material)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10" title="Duplicate material"><Copy size={14} /></button>
           <button onClick={() => onEdit(material)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10" title="Edit"><Pencil size={14} /></button>
           <button onClick={() => onDelete(material)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10" title="Delete"><Trash size={14} /></button>
@@ -692,6 +699,168 @@ function QuotationRow({ quotation, onDelete }) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/* ─────────────── Import shop products into inventory ─────────────── */
+function ProductImportModal({ onClose, onImported }) {
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(null);
+  const [done, setDone] = useState(() => new Set());
+
+  useEffect(() => {
+    let cancelled = false; setLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const { data } = await adminApi.getAdminProducts({ search: q || undefined, page_size: 20 });
+        if (!cancelled) setResults(data.results || data || []);
+      } catch { if (!cancelled) setResults([]); }
+      finally { if (!cancelled) setLoading(false); }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [q]);
+
+  const importOne = async (p) => {
+    setBusy(p.id);
+    try {
+      await adminApi.importMaterialFromProduct(p.id);
+      setDone((s) => new Set(s).add(p.id));
+      toast.success(`Imported “${p.name}”`);
+      onImported?.();
+    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to import')); }
+    finally { setBusy(null); }
+  };
+
+  return (
+    <Drawer title="Import from Shop" onClose={onClose}>
+      <p className="text-xs text-[var(--text-muted)] -mt-1 mb-3">Pull a shop product into inventory so you can track its supplier pricing. The material stays linked to the product.</p>
+      <div className="relative mb-3">
+        <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+        <input autoFocus className="auth-input w-full pl-9 text-sm" placeholder="Search shop products…" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-8 text-[var(--text-muted)]"><CircleNotch size={22} className="animate-spin" /></div>
+      ) : results.length === 0 ? (
+        <p className="text-center text-sm text-[var(--text-muted)] py-8">No products found{q ? ' for this search' : ''}.</p>
+      ) : (
+        <div className="space-y-1.5">
+          {results.map((p) => (
+            <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-[var(--card-border)]">
+              <span className="min-w-0">
+                <span className="block text-sm text-[var(--text-primary)] truncate">{p.name}</span>
+                <span className="block text-[11px] text-[var(--text-muted)] truncate">{[p.brand?.name || p.brand, p.category?.name].filter(Boolean).join(' · ')}</span>
+              </span>
+              {done.has(p.id) ? (
+                <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 flex-shrink-0"><Check size={14} /> Imported</span>
+              ) : (
+                <button onClick={() => importOne(p)} disabled={busy === p.id} className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-taqon-orange hover:bg-taqon-orange/10 flex items-center gap-1 flex-shrink-0 disabled:opacity-50">
+                  {busy === p.id ? <CircleNotch size={13} className="animate-spin" /> : <ArrowDown size={13} />} Import
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </Drawer>
+  );
+}
+
+/* ──────────── Link a material to the shop (existing or new) ──────────── */
+function ShopLinkModal({ material, onClose, onChanged }) {
+  const [tab, setTab] = useState('existing'); // existing | publish
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const linked = !!material.product;
+
+  useEffect(() => {
+    if (linked || tab !== 'existing') return undefined;
+    let cancelled = false; setLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const { data } = await adminApi.getAdminProducts({ search: q || undefined, page_size: 20 });
+        if (!cancelled) setResults(data.results || data || []);
+      } catch { if (!cancelled) setResults([]); }
+      finally { if (!cancelled) setLoading(false); }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [q, tab, linked]);
+
+  const run = async (fn, msg) => {
+    setBusy(true);
+    try { await fn(); toast.success(msg); onChanged?.(); onClose(); }
+    catch (e) { toast.error(firstApiError(e?.response?.data, 'Something went wrong')); }
+    finally { setBusy(false); }
+  };
+
+  if (linked) {
+    return (
+      <Drawer title="Shop link" onClose={onClose}>
+        <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 mb-4">
+          <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-1.5"><Storefront size={15} className="text-green-600 dark:text-green-400" /> {material.product_name}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">{material.in_shop ? 'Live in the shop' : 'Linked — product is inactive'}{material.product_price != null ? ` · ${money(material.product_price)}` : ''}</p>
+        </div>
+        {material.product_slug && (
+          <a href={`/shop/${material.product_slug}`} target="_blank" rel="noreferrer" className="w-full mb-2 px-4 py-2.5 rounded-xl border border-[var(--card-border)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)] flex items-center justify-center gap-2">
+            <ArrowSquareOut size={15} /> View in shop
+          </a>
+        )}
+        <button onClick={() => run(() => adminApi.unlinkMaterialProduct(material.slug), 'Unlinked from product')} disabled={busy} className="w-full px-4 py-2.5 rounded-xl border border-red-500/30 text-red-500 text-sm font-medium hover:bg-red-500/10 disabled:opacity-60 flex items-center justify-center gap-2">
+          {busy ? <CircleNotch size={15} className="animate-spin" /> : <LinkBreak size={15} />} Unlink from product
+        </button>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Drawer title="Add to shop" onClose={onClose}>
+      <div className="flex gap-1 mb-4 border-b border-[var(--card-border)]">
+        {[{ k: 'existing', l: 'Link existing' }, { k: 'publish', l: 'Publish new' }].map((t) => (
+          <button key={t.k} onClick={() => setTab(t.k)} className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px ${tab === t.k ? 'border-taqon-orange text-taqon-orange' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>{t.l}</button>
+        ))}
+      </div>
+      {tab === 'existing' ? (
+        <>
+          <p className="text-xs text-[var(--text-muted)] mb-3">Link “{material.name}” to a product that's already in the shop.</p>
+          <div className="relative mb-3">
+            <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input autoFocus className="auth-input w-full pl-9 text-sm" placeholder="Search shop products…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          {loading ? (
+            <div className="flex justify-center py-8 text-[var(--text-muted)]"><CircleNotch size={22} className="animate-spin" /></div>
+          ) : results.length === 0 ? (
+            <p className="text-center text-sm text-[var(--text-muted)] py-8">No products found{q ? ' for this search' : ''}.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {results.map((p) => (
+                <button key={p.id} disabled={busy} onClick={() => run(() => adminApi.linkMaterialProduct(material.slug, { product_id: p.id }), `Linked to “${p.name}”`)}
+                  className="w-full text-left px-3 py-2.5 rounded-xl border border-[var(--card-border)] hover:border-taqon-orange/50 hover:bg-[var(--bg-tertiary)] flex items-center justify-between gap-3 disabled:opacity-50">
+                  <span className="min-w-0">
+                    <span className="block text-sm text-[var(--text-primary)] truncate">{p.name}</span>
+                    <span className="block text-[11px] text-[var(--text-muted)] truncate">{[p.brand?.name || p.brand, p.category?.name].filter(Boolean).join(' · ')}</span>
+                  </span>
+                  <LinkSimple size={15} className="text-taqon-orange flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--text-secondary)]">Create a new shop product from this material so it appears in the shop. It'll be priced from the most recent supplier price{material.avg_price != null ? ` (currently around ${money(material.avg_price)})` : ''} — you can adjust it in the shop afterwards.</p>
+          <ul className="text-xs text-[var(--text-muted)] space-y-1">
+            <li>· Name: {material.name}</li>
+            <li>· Category: {material.category_name}{material.brand ? ` · Brand: ${material.brand}` : ''}</li>
+          </ul>
+          <button onClick={() => run(() => adminApi.linkMaterialProduct(material.slug, { create: true }), 'Published to the shop')} disabled={busy} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+            {busy ? <CircleNotch size={15} className="animate-spin" /> : <Storefront size={15} />} Publish to shop
+          </button>
+        </div>
+      )}
+    </Drawer>
   );
 }
 
@@ -904,6 +1073,7 @@ export default function AdminInventory() {
               <input className="auth-input w-full pl-9 text-sm" placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
           )}
+          {tab === 'materials' && <button onClick={() => setModal({ type: 'importProduct' })} className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[var(--card-border)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)] whitespace-nowrap"><Storefront size={15} /> Import from Shop</button>}
           {tab === 'materials' && <button onClick={() => setModal({ type: 'categories' })} className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[var(--card-border)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)] whitespace-nowrap"><Tag size={15} /> Categories</button>}
           {tab === 'materials' && <button onClick={() => setModal({ type: 'material' })} className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 whitespace-nowrap"><Plus size={15} /> Material</button>}
           {tab === 'suppliers' && <button onClick={() => setModal({ type: 'supplier' })} className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 whitespace-nowrap"><Plus size={15} /> Supplier</button>}
@@ -924,6 +1094,7 @@ export default function AdminInventory() {
                 key={m.id}
                 material={m}
                 onAddPrice={(mat) => setModal({ type: 'quickprice', data: mat })}
+                onShopLink={(mat) => setModal({ type: 'shopLink', data: mat })}
                 onDuplicate={(mat) => setModal({ type: 'material', data: { ...mat, slug: undefined, name: `${mat.name} (copy)` } })}
                 onEdit={(mat) => setModal({ type: 'material', data: mat })}
                 onDelete={(mat) => del(() => adminApi.deleteMaterial(mat.slug), 'Material')}
@@ -1041,6 +1212,8 @@ export default function AdminInventory() {
         {modal?.type === 'quickprice' && <QuickPriceModal material={modal.data} suppliers={allSuppliers} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'logprices' && <LogPricesDrawer suppliers={allSuppliers} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'quotation' && <QuotationModal suppliers={allSuppliers} onClose={() => setModal(null)} onSaved={refresh} />}
+        {modal?.type === 'importProduct' && <ProductImportModal onClose={() => setModal(null)} onImported={refresh} />}
+        {modal?.type === 'shopLink' && <ShopLinkModal material={modal.data} onClose={() => setModal(null)} onChanged={refresh} />}
       </AnimatePresence>
     </div>
   );
