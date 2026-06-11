@@ -10,6 +10,7 @@ import AnimatedSection from '../components/AnimatedSection';
 import { geysersApi } from '../api/geysers';
 
 const fmt = (v) => `$${parseFloat(v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+const cardImg = (p, idx) => p?.image_url || `/geysers/solar-geyser-${String((idx % 26) + 1).padStart(2, '0')}.jpg`;
 const SYSTEMS = [
   { key: 'all', label: 'All' },
   { key: 'gravity', label: 'Gravity (Non-Pressure)' },
@@ -21,37 +22,77 @@ const VARIANTS = [
   { key: 'smart', label: 'Smart' },
 ];
 
-function GeyserCard({ p }) {
+function GeyserCard({ p, index = 0 }) {
+  const pressure = p.system_type === 'pressure';
+  const accentBg = pressure ? 'from-blue-600/90 to-blue-500/70' : 'from-emerald-600/90 to-emerald-500/70';
+  const chips = [
+    { label: 'System', value: pressure ? 'Pressure' : 'Gravity' },
+    { label: 'Version', value: p.is_smart ? 'Smart' : 'Standard' },
+    { label: 'Brand', value: p.brand || '—' },
+  ];
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-      className="group relative bg-white dark:bg-taqon-charcoal border border-black/5 dark:border-white/10 rounded-3xl p-6 flex flex-col hover:shadow-xl hover:shadow-taqon-orange/5 hover:-translate-y-1 transition-all"
+      initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+      transition={{ delay: (index % 4) * 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className={`text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full ${p.system_type === 'pressure' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'}`}>
-          {p.system_type === 'pressure' ? 'Pressure' : 'Gravity'}
-        </span>
-        {p.is_smart && (
-          <span className="text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full bg-taqon-orange/15 text-taqon-orange flex items-center gap-1">
-            <Sparkle size={11} weight="fill" /> Smart
-          </span>
-        )}
-      </div>
-      <div className="flex items-baseline gap-2 mb-1">
-        <span className="font-syne font-extrabold text-3xl text-taqon-dark dark:text-white">{p.capacity_litres}L</span>
-        <span className="text-sm text-taqon-dark/50 dark:text-white/50">{p.brand}</span>
-      </div>
-      <h3 className="font-syne font-bold text-base text-taqon-dark dark:text-white">{p.name}</h3>
-      <p className="text-sm text-taqon-dark/60 dark:text-white/60 mt-1 flex-1">{p.short_description}</p>
-      <div className="mt-4 pt-4 border-t border-black/5 dark:border-white/10 flex items-end justify-between">
-        <div>
-          <p className="text-[11px] text-taqon-dark/40 dark:text-white/40 uppercase tracking-wide">Installed price</p>
-          <p className="font-syne font-extrabold text-2xl text-taqon-orange">{fmt(p.price)}</p>
+      <Link to={`/solar-geysers/${p.slug}`} className="group block h-full">
+        <div className="relative h-full flex flex-col rounded-3xl overflow-hidden bg-white dark:bg-taqon-charcoal border border-black/5 dark:border-white/10 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-black/10 transition-all duration-300">
+          {/* Image header */}
+          <div className="relative h-44 overflow-hidden">
+            <img src={cardImg(p, index)} alt={p.name} loading="lazy"
+              className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-500" />
+            <div className={`absolute inset-0 bg-gradient-to-t ${accentBg} mix-blend-multiply opacity-60`} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+            {/* Badges */}
+            <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-white/90 text-taqon-dark backdrop-blur-sm">
+                {pressure ? 'Pressure' : 'Gravity'}
+              </span>
+              {p.is_smart && (
+                <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-taqon-orange text-white flex items-center gap-1 shadow-lg">
+                  <Sparkle size={11} weight="fill" /> Smart
+                </span>
+              )}
+            </div>
+            {/* Capacity over image */}
+            <div className="absolute bottom-3 left-4">
+              <span className="font-syne font-extrabold text-4xl text-white drop-shadow-lg">{p.capacity_litres}L</span>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="flex flex-col flex-1 p-5">
+            <h3 className="font-syne font-bold text-base text-taqon-dark dark:text-white group-hover:text-taqon-orange transition-colors leading-tight">{p.name}</h3>
+            <p className="text-xs text-taqon-dark/55 dark:text-white/55 mt-1 line-clamp-2">{p.short_description}</p>
+
+            {/* Spec chips */}
+            <div className="grid grid-cols-3 gap-1.5 mt-4">
+              {chips.map((c) => (
+                <div key={c.label} className="rounded-xl bg-black/[0.03] dark:bg-white/[0.06] px-2 py-2 text-center">
+                  <p className="text-[11px] font-bold text-taqon-dark dark:text-white truncate" title={c.value}>{c.value}</p>
+                  <p className="text-[9px] uppercase tracking-wide text-taqon-dark/40 dark:text-white/40">{c.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex-1" />
+
+            {/* Price + CTA */}
+            <div className="mt-5 pt-4 border-t border-black/5 dark:border-white/10 flex items-end justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-taqon-dark/40 dark:text-white/40">Installed</p>
+                <p className="font-syne font-extrabold text-2xl text-taqon-orange tabular-nums">{fmt(p.price)}</p>
+              </div>
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-taqon-dark/60 dark:text-white/50 group-hover:text-taqon-orange group-hover:gap-2.5 transition-all">
+                View <ArrowRight size={15} />
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom accent line on hover */}
+          <div className={`absolute bottom-0 left-5 right-5 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${pressure ? 'bg-blue-500' : 'bg-emerald-500'}`} />
         </div>
-        <Link to={`/solar-geysers/${p.slug}`} className="flex items-center gap-1 text-sm font-semibold text-taqon-dark dark:text-white group-hover:text-taqon-orange transition-colors">
-          View <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
-        </Link>
-      </div>
+      </Link>
     </motion.div>
   );
 }
@@ -175,7 +216,7 @@ export default function GeyserPackages() {
             <p className="text-center text-taqon-dark/50 dark:text-white/50 py-20">No packages match that filter.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {filtered.map((p) => <GeyserCard key={p.id} p={p} />)}
+              {filtered.map((p, i) => <GeyserCard key={p.id} p={p} index={i} />)}
             </div>
           )}
         </AnimatedSection>

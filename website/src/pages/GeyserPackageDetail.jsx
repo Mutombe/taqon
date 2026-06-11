@@ -42,7 +42,7 @@ export default function GeyserPackageDetail() {
         image={heroImg(p)}
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-12">
         <Link to="/solar-geysers" className="inline-flex items-center gap-1.5 text-sm text-taqon-dark/60 dark:text-white/60 hover:text-taqon-orange mb-6">
           <ArrowLeft size={15} /> All geyser packages
         </Link>
