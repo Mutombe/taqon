@@ -774,7 +774,13 @@ function ShopLinkModal({ material, onClose, onChanged }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [markup, setMarkup] = useState(String(material.markup_pct ?? 0));
   const linked = !!material.product;
+  // Latest supplier price = the most recently updated of the two in avg_basis.
+  const latestSupplier = material.avg_basis?.[0]?.price ?? material.avg_price ?? null;
+  const m = parseFloat(markup);
+  const shopPreview = latestSupplier != null && !Number.isNaN(m)
+    ? parseFloat(latestSupplier) * (1 + m / 100) : null;
 
   useEffect(() => {
     if (linked || tab !== 'existing') return undefined;
@@ -803,13 +809,21 @@ function ShopLinkModal({ material, onClose, onChanged }) {
           <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-1.5"><Storefront size={15} className="text-green-600 dark:text-green-400" /> {material.product_name}</p>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">{material.in_shop ? 'Live in the shop' : 'Linked — product is inactive'}{material.product_price != null ? ` · ${money(material.product_price)}` : ''}</p>
         </div>
-        <button onClick={() => run(() => adminApi.syncMaterialPrice(material.slug), 'Shop price synced')} disabled={busy} className="w-full mb-2 px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+        <div className="mb-2">
+          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Markup %</label>
+          <div className="relative">
+            <input type="number" step="0.5" min="0" className="auth-input w-full text-sm pr-8" value={markup} onChange={(e) => setMarkup(e.target.value)} />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm">%</span>
+          </div>
+          <p className="text-[11px] text-[var(--text-muted)] mt-1">
+            Latest supplier {latestSupplier != null ? money(latestSupplier) : '—'}
+            {shopPreview != null && <> → shop <span className="font-semibold text-[var(--text-primary)]">{money(shopPreview)}</span></>}
+            {material.product_price != null ? ` · now ${money(material.product_price)}` : ''}
+          </p>
+        </div>
+        <button onClick={() => run(() => adminApi.linkMaterialProduct(material.slug, { sync_price: true, markup_pct: markup || 0 }), 'Shop price synced')} disabled={busy} className="w-full mb-3 px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
           {busy ? <CircleNotch size={15} className="animate-spin" /> : <CurrencyDollar size={15} />} Sync price to shop
         </button>
-        <p className="text-[11px] text-[var(--text-muted)] mb-3 text-center">
-          Updates the shop price to the latest supplier price{material.avg_price != null ? ` (≈ ${money(material.avg_price)})` : ''}.
-          {material.product_price != null ? ` Currently ${money(material.product_price)} in shop.` : ''}
-        </p>
         {material.product_slug && (
           <a href={`/shop/${material.product_slug}`} target="_blank" rel="noreferrer" className="w-full mb-2 px-4 py-2.5 rounded-xl border border-[var(--card-border)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)] flex items-center justify-center gap-2">
             <ArrowSquareOut size={15} /> View in shop
@@ -857,12 +871,23 @@ function ShopLinkModal({ material, onClose, onChanged }) {
         </>
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-[var(--text-secondary)]">Create a new shop product from this material so it appears in the shop. It'll be priced from the most recent supplier price{material.avg_price != null ? ` (currently around ${money(material.avg_price)})` : ''} — you can adjust it in the shop afterwards.</p>
+          <p className="text-sm text-[var(--text-secondary)]">Create a new shop product from this material so it appears in the shop. The shop price is the latest supplier price plus your markup.</p>
           <ul className="text-xs text-[var(--text-muted)] space-y-1">
             <li>· Name: {material.name}</li>
             <li>· Category: {material.category_name}{material.brand ? ` · Brand: ${material.brand}` : ''}</li>
           </ul>
-          <button onClick={() => run(() => adminApi.linkMaterialProduct(material.slug, { create: true }), 'Published to the shop')} disabled={busy} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Markup %</label>
+            <div className="relative">
+              <input type="number" step="0.5" min="0" className="auth-input w-full text-sm pr-8" value={markup} onChange={(e) => setMarkup(e.target.value)} placeholder="0" />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm">%</span>
+            </div>
+          </div>
+          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)]/60 text-sm flex items-center justify-between">
+            <span className="text-[var(--text-muted)]">Latest supplier {latestSupplier != null ? money(latestSupplier) : '—'}{!Number.isNaN(m) && m > 0 ? ` + ${m}%` : ''}</span>
+            <span className="font-bold text-taqon-orange">{shopPreview != null ? money(shopPreview) : '—'}</span>
+          </div>
+          <button onClick={() => run(() => adminApi.linkMaterialProduct(material.slug, { create: true, markup_pct: markup || 0 }), 'Published to the shop')} disabled={busy} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
             {busy ? <CircleNotch size={15} className="animate-spin" /> : <Storefront size={15} />} Publish to shop
           </button>
         </div>

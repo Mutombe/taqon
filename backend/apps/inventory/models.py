@@ -89,6 +89,9 @@ class Material(SoftDeleteModel):
         'shop.Product', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='inventory_materials',
     )
+    # Markup applied to the latest supplier price to get the shop price when this
+    # material is published/synced to the shop: shop price = supplier × (1 + %/100).
+    markup_pct = models.DecimalField(max_digits=6, decimal_places=2, default=0)
 
     class Meta:
         ordering = ['category__sort_order', 'name']

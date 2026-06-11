@@ -4,7 +4,7 @@ Every endpoint is gated by IsAdmin — this data is internal procurement
 intelligence and never exposed to the public.
 """
 import uuid
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.db.models import Count, Q, Prefetch, Avg, Min, Max
 
@@ -286,6 +286,25 @@ def _material_latest_price(material):
     return sorted(prices, key=lambda p: p.updated_at, reverse=True)[0].price
 
 
+def _material_shop_price(material):
+    """Shop price = latest supplier price + that price × markup% (stored on the
+    material): supplier × (1 + markup/100)."""
+    base = _material_latest_price(material)
+    pct = material.markup_pct or Decimal('0')
+    return (base * (Decimal('1') + pct / Decimal('100'))).quantize(Decimal('0.01'))
+
+
+def _parse_markup(value):
+    """Returns a non-negative Decimal markup %, or None on invalid input."""
+    if value is None or value == '':
+        return Decimal('0')
+    try:
+        pct = Decimal(str(value))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+    return pct if pct >= 0 else None
+
+
 def _fetch_material(slug):
     return (
         Material.objects.filter(slug=slug, is_deleted=False)
@@ -323,7 +342,7 @@ def _create_product_from_material(material):
         brand=shop_brand,
         description=material.notes or '',
         short_description=(f'{material.brand} ' if material.brand else '') + material.name,
-        price=_material_latest_price(material),
+        price=_material_shop_price(material),
         is_active=True,
     )
     product.save()
@@ -356,19 +375,33 @@ class MaterialLinkProductView(APIView):
             audit.log(request, action='updated', target_type='material', target_name=material.name,
                       target_id=material.id, summary=f'Linked to shop product “{product.name}”')
         elif create:
+            if 'markup_pct' in request.data:
+                markup = _parse_markup(request.data.get('markup_pct'))
+                if markup is None:
+                    return Response({'detail': 'Markup must be a number ≥ 0.'}, status=status.HTTP_400_BAD_REQUEST)
+                material.markup_pct = markup
+                material.save(update_fields=['markup_pct', 'updated_at'])
             product = _create_product_from_material(material)
             audit.log(request, action='created', target_type='material', target_name=material.name,
-                      target_id=material.id, summary=f'Published to shop as “{product.name}”')
+                      target_id=material.id,
+                      summary=f'Published to shop as “{product.name}” at {product.price} ({material.markup_pct}% markup)')
         elif sync_price:
             if not material.product_id:
                 return Response({'detail': 'This material is not linked to a product.'}, status=status.HTTP_400_BAD_REQUEST)
+            if 'markup_pct' in request.data:
+                markup = _parse_markup(request.data.get('markup_pct'))
+                if markup is None:
+                    return Response({'detail': 'Markup must be a number ≥ 0.'}, status=status.HTTP_400_BAD_REQUEST)
+                material.markup_pct = markup
+                material.save(update_fields=['markup_pct', 'updated_at'])
             product = material.product
-            new_price = _material_latest_price(material)
+            new_price = _material_shop_price(material)
             old_price = product.price
             product.price = new_price
             product.save(update_fields=['price', 'updated_at'])
             audit.log(request, action='updated', target_type='material', target_name=material.name,
-                      target_id=material.id, summary=f'Synced shop price {old_price} → {new_price} for “{product.name}”')
+                      target_id=material.id,
+                      summary=f'Synced shop price {old_price} → {new_price} ({material.markup_pct}% markup) for “{product.name}”')
         else:
             return Response({'detail': 'Provide product_id to link, create=true to publish, or sync_price=true.'},
                             status=status.HTTP_400_BAD_REQUEST)

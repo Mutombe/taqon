@@ -101,6 +101,32 @@ class LinkAndPublishTests(_Base):
         mat = self._material()  # not linked
         self.assertEqual(self.admin_client().post(link_url(mat.slug), {'sync_price': True}, format='json').status_code, 400)
 
+    def test_publish_applies_markup(self):
+        mat = self._material()
+        supplier = Supplier.objects.create(name='Flint')
+        SupplierPrice.objects.create(supplier=supplier, material=mat, price=Decimal('100'))
+        resp = self.admin_client().post(link_url(mat.slug), {'create': True, 'markup_pct': '25'}, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        mat.refresh_from_db()
+        self.assertEqual(mat.markup_pct, Decimal('25.00'))
+        self.assertEqual(mat.product.price, Decimal('125.00'))  # 100 + 25%
+
+    def test_sync_applies_markup(self):
+        mat = self._material()
+        mat.product = self.product
+        mat.save(update_fields=['product'])
+        supplier = Supplier.objects.create(name='Cafca')
+        SupplierPrice.objects.create(supplier=supplier, material=mat, price=Decimal('200'))
+        resp = self.admin_client().post(link_url(mat.slug), {'sync_price': True, 'markup_pct': '10'}, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.price, Decimal('220.00'))  # 200 + 10%
+
+    def test_negative_markup_rejected(self):
+        mat = self._material()
+        SupplierPrice.objects.create(supplier=Supplier.objects.create(name='X'), material=mat, price=Decimal('100'))
+        self.assertEqual(self.admin_client().post(link_url(mat.slug), {'create': True, 'markup_pct': '-5'}, format='json').status_code, 400)
+
     def test_link_without_args_is_rejected(self):
         mat = self._material()
         self.assertEqual(self.admin_client().post(link_url(mat.slug), {}, format='json').status_code, 400)

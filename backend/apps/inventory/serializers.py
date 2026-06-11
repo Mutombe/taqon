@@ -79,7 +79,7 @@ class MaterialSerializer(serializers.ModelSerializer):
             'specification', 'brand', 'unit', 'notes', 'is_active',
             'prices', 'avg_price', 'avg_basis', 'min_price', 'max_price', 'supplier_count',
             'cheapest_supplier', 'created_at',
-            'product', 'product_name', 'product_slug', 'product_price', 'in_shop',
+            'product', 'product_name', 'product_slug', 'product_price', 'in_shop', 'markup_pct',
         ]
         read_only_fields = fields
 
@@ -131,11 +131,12 @@ class MaterialSerializer(serializers.ModelSerializer):
 class MaterialWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
-        fields = ['id', 'name', 'slug', 'category', 'specification', 'brand', 'unit', 'notes', 'is_active', 'product']
+        fields = ['id', 'name', 'slug', 'category', 'specification', 'brand', 'unit', 'notes', 'is_active', 'product', 'markup_pct']
         read_only_fields = ['id']
         extra_kwargs = {
             'slug': {'required': False, 'allow_blank': True},
             'product': {'required': False, 'allow_null': True},
+            'markup_pct': {'required': False},
         }
 
 
