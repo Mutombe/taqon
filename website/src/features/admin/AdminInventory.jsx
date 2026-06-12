@@ -775,7 +775,30 @@ function ShopLinkModal({ material, onClose, onChanged }) {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [markup, setMarkup] = useState(String(material.markup_pct ?? 0));
+  const [files, setFiles] = useState([]); // images to attach to the new shop product
   const linked = !!material.product;
+
+  const addFiles = (list) => {
+    const picked = Array.from(list || []).filter((f) => f.type.startsWith('image/'));
+    setFiles((prev) => [...prev, ...picked.map((f) => ({ file: f, url: URL.createObjectURL(f) }))]);
+  };
+  const removeFile = (i) => setFiles((prev) => { URL.revokeObjectURL(prev[i]?.url); return prev.filter((_, idx) => idx !== i); });
+
+  const publish = async () => {
+    setBusy(true);
+    try {
+      const { data } = await adminApi.linkMaterialProduct(material.slug, { create: true, markup_pct: markup || 0 });
+      if (files.length && data?.product_slug) {
+        const fd = new FormData();
+        files.forEach((f) => fd.append('images', f.file));
+        try { await adminApi.uploadProductImage(data.product_slug, fd); }
+        catch { toast.error('Product created, but image upload failed — add images from the shop.'); }
+      }
+      toast.success(files.length ? 'Published to the shop with photos' : 'Published to the shop');
+      onChanged?.(); onClose();
+    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to publish')); }
+    finally { setBusy(false); }
+  };
   // Latest supplier price = the most recently updated of the two in avg_basis.
   const latestSupplier = material.avg_basis?.[0]?.price ?? material.avg_price ?? null;
   const m = parseFloat(markup);
@@ -887,8 +910,31 @@ function ShopLinkModal({ material, onClose, onChanged }) {
             <span className="text-[var(--text-muted)]">Latest supplier {latestSupplier != null ? money(latestSupplier) : '—'}{!Number.isNaN(m) && m > 0 ? ` + ${m}%` : ''}</span>
             <span className="font-bold text-taqon-orange">{shopPreview != null ? money(shopPreview) : '—'}</span>
           </div>
-          <button onClick={() => run(() => adminApi.linkMaterialProduct(material.slug, { create: true, markup_pct: markup || 0 }), 'Published to the shop')} disabled={busy} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
-            {busy ? <CircleNotch size={15} className="animate-spin" /> : <Storefront size={15} />} Publish to shop
+
+          {/* Product photos — needed in the shop */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Product photos <span className="text-[var(--text-muted)]">(shown in the shop)</span></label>
+            <label className="flex flex-col items-center justify-center gap-1.5 py-5 rounded-xl border-2 border-dashed border-[var(--card-border)] cursor-pointer hover:border-taqon-orange/50 hover:bg-taqon-orange/5 transition-colors text-center">
+              <FileArrowUp size={22} className="text-[var(--text-muted)]" />
+              <span className="text-xs text-[var(--text-secondary)]">Click to add photos</span>
+              <span className="text-[10px] text-[var(--text-muted)]">JPG / PNG · multiple allowed</span>
+              <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+            </label>
+            {files.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 mt-2">
+                {files.map((f, i) => (
+                  <div key={f.url} className="relative group aspect-square rounded-lg overflow-hidden border border-[var(--card-border)]">
+                    <img src={f.url} alt="" className="w-full h-full object-cover" />
+                    {i === 0 && <span className="absolute bottom-0 inset-x-0 bg-taqon-orange/90 text-white text-[9px] text-center py-0.5">Primary</span>}
+                    <button type="button" onClick={() => removeFile(i)} className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={11} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button onClick={publish} disabled={busy} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+            {busy ? <CircleNotch size={15} className="animate-spin" /> : <Storefront size={15} />} Publish to shop{files.length ? ` (${files.length} photo${files.length > 1 ? 's' : ''})` : ''}
           </button>
         </div>
       )}
