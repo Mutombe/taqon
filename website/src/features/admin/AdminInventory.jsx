@@ -4,7 +4,7 @@ import {
   Buildings, Cube, Plus, MagnifyingGlass, X, CircleNotch, Pencil, Trash,
   CaretDown, ClockCounterClockwise, FileArrowUp, ClipboardText,
   CurrencyDollar, FilePdf, ArrowDown, ArrowUp, Tag, Check, Copy, Plus as PlusIcon,
-  Storefront, LinkSimple, ArrowSquareOut, LinkBreak,
+  Storefront, LinkSimple, ArrowSquareOut, LinkBreak, Star,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -803,6 +803,22 @@ function ShopLinkModal({ material, onClose, onChanged }) {
   const [files, setFiles] = useState([]); // images to attach to the new shop product
   const linked = !!material.product;
 
+  // Existing photos on the linked shop product (mini gallery manager).
+  const { data: linkedProduct, refetch: refetchImages } = useQuery({
+    queryKey: ['shopLinkImages', material.product_slug],
+    queryFn: () => adminApi.getAdminProduct(material.product_slug).then((r) => r.data),
+    enabled: linked && !!material.product_slug,
+    staleTime: 0,
+  });
+  const existingImages = linkedProduct?.images || [];
+  const [imgBusy, setImgBusy] = useState(null);
+  const imgOp = async (id, fn) => {
+    setImgBusy(id);
+    try { await fn(); await refetchImages(); onChanged?.(); }
+    catch (e) { toast.error(firstApiError(e?.response?.data, 'Image update failed')); }
+    finally { setImgBusy(null); }
+  };
+
   const addFiles = (list) => {
     const picked = Array.from(list || []).filter((f) => f.type.startsWith('image/'));
     setFiles((prev) => [...prev, ...picked.map((f) => ({ file: f, url: URL.createObjectURL(f) }))]);
@@ -833,7 +849,7 @@ function ShopLinkModal({ material, onClose, onChanged }) {
       files.forEach((f) => fd.append('images', f.file));
       await adminApi.uploadProductImage(material.product_slug, fd);
       toast.success(`Added ${files.length} photo${files.length > 1 ? 's' : ''} to the product`);
-      setFiles([]); onChanged?.(); onClose();
+      setFiles([]); await refetchImages(); onChanged?.();
     } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to upload photos')); }
     finally { setBusy(false); }
   };
@@ -886,11 +902,37 @@ function ShopLinkModal({ material, onClose, onChanged }) {
           {busy ? <CircleNotch size={15} className="animate-spin" /> : <CurrencyDollar size={15} />} Sync price to shop
         </button>
 
-        {/* Add product photos to the linked product */}
-        <div className="mb-4 pt-4 border-t border-[var(--card-border)]">
+        {/* Product photos — current gallery + add new */}
+        <div className="mb-4 pt-4 border-t border-[var(--card-border)] space-y-3">
+          {existingImages.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-[var(--text-secondary)] mb-1.5">Current photos ({existingImages.length})</p>
+              <div className="grid grid-cols-4 gap-2">
+                {existingImages.map((img) => (
+                  <div key={img.id} className="relative group aspect-square rounded-lg overflow-hidden border border-[var(--card-border)]">
+                    <img src={img.image || img.image_url} alt={img.alt_text || ''} className="w-full h-full object-cover" />
+                    {img.is_primary ? (
+                      <span className="absolute bottom-0 inset-x-0 bg-taqon-orange/90 text-white text-[9px] text-center py-0.5">Primary</span>
+                    ) : (
+                      <button type="button" disabled={imgBusy === img.id} title="Set as primary"
+                        onClick={() => imgOp(img.id, () => adminApi.setProductImagePrimary(material.product_slug, img.id))}
+                        className="absolute bottom-0.5 left-0.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-taqon-orange">
+                        <Star size={11} />
+                      </button>
+                    )}
+                    <button type="button" disabled={imgBusy === img.id} title="Delete photo"
+                      onClick={() => imgOp(img.id, () => adminApi.deleteProductImage(material.product_slug, img.id))}
+                      className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
+                      {imgBusy === img.id ? <CircleNotch size={10} className="animate-spin" /> : <X size={11} />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <PhotoPicker files={files} onAdd={addFiles} onRemove={removeFile} />
           {files.length > 0 && (
-            <button onClick={uploadPhotos} disabled={busy} className="w-full mt-2 px-4 py-2.5 rounded-xl bg-taqon-dark dark:bg-white text-white dark:text-taqon-dark text-sm font-semibold hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2">
+            <button onClick={uploadPhotos} disabled={busy} className="w-full px-4 py-2.5 rounded-xl bg-taqon-dark dark:bg-white text-white dark:text-taqon-dark text-sm font-semibold hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2">
               {busy ? <CircleNotch size={15} className="animate-spin" /> : <FileArrowUp size={15} />} Add {files.length} photo{files.length > 1 ? 's' : ''} to product
             </button>
           )}
