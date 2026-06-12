@@ -260,20 +260,32 @@ function SupplierModal({ supplier, initialName = '', onClose, onSaved, zClass })
 }
 
 /* ─────────────────────────── Material modal ─────────────────────────── */
-function MaterialModal({ material, categories, onClose, onSaved }) {
+function MaterialModal({ material, categories, suppliers = [], onClose, onSaved }) {
+  const isDuplicate = !!material && !material.slug; // copied from an existing material
   const [form, setForm] = useState(() => ({
     name: material?.name || '', category: material?.category || (categories[0]?.id || ''),
     specification: material?.specification || '', brand: material?.brand || '', unit: material?.unit || '',
     notes: material?.notes || '', is_active: material?.is_active ?? true,
   }));
+  // Starting price for a duplicate — supplier pre-filled from the original, but
+  // the admin sets a fresh price (the original's prices are NOT carried over,
+  // so the average reflects this new, similar item).
+  const [supplier, setSupplier] = useState(isDuplicate ? (material.prices?.[0]?.supplier || '') : '');
+  const [supplierText, setSupplierText] = useState(isDuplicate ? (material.prices?.[0]?.supplier_name || '') : '');
+  const [price, setPrice] = useState('');
   const [saving, setSaving] = useState(false);
-  const qc = useQueryClient();
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const searchMaterials = (s) => adminApi.getMaterials({ search: s, page_size: 8 }).then((r) => r.data.results || r.data || []);
   const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) { toast.error('Name is required'); return; }
     if (!form.category) { toast.error('Choose a category'); return; }
+    const wantsPrice = isDuplicate && price !== '' && !Number.isNaN(parseFloat(price));
+    let startSupplierId = null;
+    if (wantsPrice) {
+      startSupplierId = supplier || suppliers.find((s) => s.name.toLowerCase() === supplierText.trim().toLowerCase())?.id;
+      if (!startSupplierId) { toast.error('Pick a supplier for the starting price'); return; }
+    }
     setSaving(true);
     try {
       if (material?.slug) {
@@ -281,18 +293,11 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
         toast.success('Material updated');
       } else {
         const { data } = await adminApi.createMaterial(form);
-        // When duplicating, carry over the source material's supplier prices so
-        // the copy keeps the original's supplier(s) — not an arbitrary default.
-        const sourcePrices = material?.prices || [];
-        let copied = 0;
-        for (const p of sourcePrices) {
-          if (!p.supplier || p.price == null) continue;
-          try {
-            await adminApi.setSupplierPrice({ supplier: p.supplier, material: data.id, price: p.price, currency: p.currency, note: p.note || '' });
-            copied += 1;
-          } catch { /* skip a price that fails, keep the rest */ }
+        if (wantsPrice) {
+          try { await adminApi.setSupplierPrice({ supplier: startSupplierId, material: data.id, price }); }
+          catch { toast.error('Material added, but the starting price failed to save'); }
         }
-        toast.success(copied ? `Material added with ${copied} supplier price${copied > 1 ? 's' : ''}` : 'Material added');
+        toast.success(isDuplicate ? (wantsPrice ? 'Duplicate added with its new price' : 'Duplicate added') : 'Material added');
       }
       onSaved(); onClose();
     } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to save material')); }
@@ -316,6 +321,20 @@ function MaterialModal({ material, categories, onClose, onSaved }) {
           <Field label="Brand"><input className="auth-input w-full text-sm" value={form.brand} onChange={(e) => set('brand', e.target.value)} /></Field>
         </div>
         <Field label="Notes"><textarea rows={2} className="auth-input w-full text-sm resize-y" value={form.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
+
+        {isDuplicate && (
+          <div className="rounded-xl border border-[var(--card-border)] p-3 space-y-3 bg-[var(--bg-tertiary)]/30">
+            <div>
+              <p className="text-xs font-semibold text-[var(--text-secondary)]">Starting price for this copy</p>
+              <p className="text-[11px] text-[var(--text-muted)] mt-0.5">The original's prices aren't carried over — set this copy's own price so its average is based on the new item.</p>
+            </div>
+            <Field label="Supplier">
+              <SupplierField suppliers={suppliers} value={supplier} text={supplierText} onChange={(id, name) => { setSupplier(id); setSupplierText(name); }} />
+            </Field>
+            <Field label="Price (USD)"><input type="number" step="0.01" className="auth-input w-full text-sm" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="New price for this copy" /></Field>
+          </div>
+        )}
+
         <button type="submit" disabled={saving} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
           {saving ? <CircleNotch size={15} className="animate-spin" /> : null}{material ? 'Save' : 'Add Material'}
         </button>
@@ -1357,7 +1376,7 @@ export default function AdminInventory() {
       {/* Modals */}
       <AnimatePresence>
         {modal?.type === 'supplier' && <SupplierModal supplier={modal.data} onClose={() => setModal(null)} onSaved={refresh} />}
-        {modal?.type === 'material' && <MaterialModal material={modal.data} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
+        {modal?.type === 'material' && <MaterialModal material={modal.data} categories={categories} suppliers={allSuppliers} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'categories' && <CategoriesModal categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'quickprice' && <QuickPriceModal material={modal.data} suppliers={allSuppliers} onClose={() => setModal(null)} onSaved={refresh} />}
         {modal?.type === 'logprices' && <LogPricesDrawer suppliers={allSuppliers} categories={categories} onClose={() => setModal(null)} onSaved={refresh} />}
