@@ -853,11 +853,11 @@ function ShopLinkModal({ material, onClose, onChanged }) {
     } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to upload photos')); }
     finally { setBusy(false); }
   };
-  // Latest supplier price = the most recently updated of the two in avg_basis.
-  const latestSupplier = material.avg_basis?.[0]?.price ?? material.avg_price ?? null;
+  // Benchmark = the average (mean of the latest two supplier prices).
+  const benchmark = material.avg_price ?? null;
   const m = parseFloat(markup);
-  const shopPreview = latestSupplier != null && !Number.isNaN(m)
-    ? parseFloat(latestSupplier) * (1 + m / 100) : null;
+  const shopPreview = benchmark != null && !Number.isNaN(m)
+    ? parseFloat(benchmark) * (1 + m / 100) : null;
 
   useEffect(() => {
     if (linked || tab !== 'existing') return undefined;
@@ -893,7 +893,7 @@ function ShopLinkModal({ material, onClose, onChanged }) {
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm">%</span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-1">
-            Latest supplier {latestSupplier != null ? money(latestSupplier) : '—'}
+            Average {benchmark != null ? money(benchmark) : '—'}
             {shopPreview != null && <> → shop <span className="font-semibold text-[var(--text-primary)]">{money(shopPreview)}</span></>}
             {material.product_price != null ? ` · now ${money(material.product_price)}` : ''}
           </p>
@@ -985,7 +985,7 @@ function ShopLinkModal({ material, onClose, onChanged }) {
         </>
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-[var(--text-secondary)]">Create a new shop product from this material so it appears in the shop. The shop price is the latest supplier price plus your markup.</p>
+          <p className="text-sm text-[var(--text-secondary)]">Create a new shop product from this material so it appears in the shop. The shop price is the average supplier price plus your markup.</p>
           <ul className="text-xs text-[var(--text-muted)] space-y-1">
             <li>· Name: {material.name}</li>
             <li>· Category: {material.category_name}{material.brand ? ` · Brand: ${material.brand}` : ''}</li>
@@ -998,7 +998,7 @@ function ShopLinkModal({ material, onClose, onChanged }) {
             </div>
           </div>
           <div className="p-3 rounded-xl bg-[var(--bg-tertiary)]/60 text-sm flex items-center justify-between">
-            <span className="text-[var(--text-muted)]">Latest supplier {latestSupplier != null ? money(latestSupplier) : '—'}{!Number.isNaN(m) && m > 0 ? ` + ${m}%` : ''}</span>
+            <span className="text-[var(--text-muted)]">Average {benchmark != null ? money(benchmark) : '—'}{!Number.isNaN(m) && m > 0 ? ` + ${m}%` : ''}</span>
             <span className="font-bold text-taqon-orange">{shopPreview != null ? money(shopPreview) : '—'}</span>
           </div>
 

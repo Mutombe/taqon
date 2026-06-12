@@ -277,19 +277,22 @@ class MaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # ── Material ⇄ Shop product linking ─────────────────────────────────────────
 
-def _material_latest_price(material):
-    """A representative price for a material = its most recently updated supplier
-    price (each supplier has one current price). Used when publishing to the shop."""
+def _material_avg_price(material):
+    """Benchmark price for a material = the mean of its two most recently updated
+    supplier prices (each supplier has one current price, so the latest two are
+    from two different suppliers). Matches the average shown in the table."""
     prices = [p for p in material.supplier_prices.all() if not p.is_deleted]
     if not prices:
         return Decimal('0')
-    return sorted(prices, key=lambda p: p.updated_at, reverse=True)[0].price
+    latest_two = sorted(prices, key=lambda p: p.updated_at, reverse=True)[:2]
+    vals = [p.price for p in latest_two]
+    return (sum(vals) / len(vals)).quantize(Decimal('0.01'))
 
 
 def _material_shop_price(material):
-    """Shop price = latest supplier price + that price × markup% (stored on the
-    material): supplier × (1 + markup/100)."""
-    base = _material_latest_price(material)
+    """Shop price = average supplier price + that average × markup% (stored on the
+    material): average × (1 + markup/100)."""
+    base = _material_avg_price(material)
     pct = material.markup_pct or Decimal('0')
     return (base * (Decimal('1') + pct / Decimal('100'))).quantize(Decimal('0.01'))
 

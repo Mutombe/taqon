@@ -101,6 +101,16 @@ class LinkAndPublishTests(_Base):
         mat = self._material()  # not linked
         self.assertEqual(self.admin_client().post(link_url(mat.slug), {'sync_price': True}, format='json').status_code, 400)
 
+    def test_publish_prices_from_average_of_two_suppliers(self):
+        mat = self._material()
+        SupplierPrice.objects.create(supplier=Supplier.objects.create(name='A'), material=mat, price=Decimal('100'))
+        SupplierPrice.objects.create(supplier=Supplier.objects.create(name='B'), material=mat, price=Decimal('200'))
+        resp = self.admin_client().post(link_url(mat.slug), {'create': True, 'markup_pct': '10'}, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        mat.refresh_from_db()
+        # avg(100, 200) = 150 → +10% = 165 (NOT 200+10% = 220 from the latest only)
+        self.assertEqual(mat.product.price, Decimal('165.00'))
+
     def test_publish_applies_markup(self):
         mat = self._material()
         supplier = Supplier.objects.create(name='Flint')
