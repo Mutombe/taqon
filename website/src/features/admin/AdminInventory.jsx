@@ -768,6 +768,31 @@ function ProductImportModal({ onClose, onImported }) {
 }
 
 /* ──────────── Link a material to the shop (existing or new) ──────────── */
+function PhotoPicker({ files, onAdd, onRemove, markPrimary = false }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Product photos <span className="text-[var(--text-muted)]">(shown in the shop)</span></label>
+      <label className="flex flex-col items-center justify-center gap-1.5 py-5 rounded-xl border-2 border-dashed border-[var(--card-border)] cursor-pointer hover:border-taqon-orange/50 hover:bg-taqon-orange/5 transition-colors text-center">
+        <FileArrowUp size={22} className="text-[var(--text-muted)]" />
+        <span className="text-xs text-[var(--text-secondary)]">Click to add photos</span>
+        <span className="text-[10px] text-[var(--text-muted)]">JPG / PNG · multiple allowed</span>
+        <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { onAdd(e.target.files); e.target.value = ''; }} />
+      </label>
+      {files.length > 0 && (
+        <div className="grid grid-cols-4 gap-2 mt-2">
+          {files.map((f, i) => (
+            <div key={f.url} className="relative group aspect-square rounded-lg overflow-hidden border border-[var(--card-border)]">
+              <img src={f.url} alt="" className="w-full h-full object-cover" />
+              {markPrimary && i === 0 && <span className="absolute bottom-0 inset-x-0 bg-taqon-orange/90 text-white text-[9px] text-center py-0.5">Primary</span>}
+              <button type="button" onClick={() => onRemove(i)} className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={11} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ShopLinkModal({ material, onClose, onChanged }) {
   const [tab, setTab] = useState('existing'); // existing | publish
   const [q, setQ] = useState('');
@@ -797,6 +822,19 @@ function ShopLinkModal({ material, onClose, onChanged }) {
       toast.success(files.length ? 'Published to the shop with photos' : 'Published to the shop');
       onChanged?.(); onClose();
     } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to publish')); }
+    finally { setBusy(false); }
+  };
+
+  const uploadPhotos = async () => {
+    if (!files.length || !material.product_slug) return;
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      files.forEach((f) => fd.append('images', f.file));
+      await adminApi.uploadProductImage(material.product_slug, fd);
+      toast.success(`Added ${files.length} photo${files.length > 1 ? 's' : ''} to the product`);
+      setFiles([]); onChanged?.(); onClose();
+    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to upload photos')); }
     finally { setBusy(false); }
   };
   // Latest supplier price = the most recently updated of the two in avg_basis.
@@ -844,9 +882,20 @@ function ShopLinkModal({ material, onClose, onChanged }) {
             {material.product_price != null ? ` · now ${money(material.product_price)}` : ''}
           </p>
         </div>
-        <button onClick={() => run(() => adminApi.linkMaterialProduct(material.slug, { sync_price: true, markup_pct: markup || 0 }), 'Shop price synced')} disabled={busy} className="w-full mb-3 px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
+        <button onClick={() => run(() => adminApi.linkMaterialProduct(material.slug, { sync_price: true, markup_pct: markup || 0 }), 'Shop price synced')} disabled={busy} className="w-full mb-4 px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
           {busy ? <CircleNotch size={15} className="animate-spin" /> : <CurrencyDollar size={15} />} Sync price to shop
         </button>
+
+        {/* Add product photos to the linked product */}
+        <div className="mb-4 pt-4 border-t border-[var(--card-border)]">
+          <PhotoPicker files={files} onAdd={addFiles} onRemove={removeFile} />
+          {files.length > 0 && (
+            <button onClick={uploadPhotos} disabled={busy} className="w-full mt-2 px-4 py-2.5 rounded-xl bg-taqon-dark dark:bg-white text-white dark:text-taqon-dark text-sm font-semibold hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2">
+              {busy ? <CircleNotch size={15} className="animate-spin" /> : <FileArrowUp size={15} />} Add {files.length} photo{files.length > 1 ? 's' : ''} to product
+            </button>
+          )}
+        </div>
+
         {material.product_slug && (
           <a href={`/shop/${material.product_slug}`} target="_blank" rel="noreferrer" className="w-full mb-2 px-4 py-2.5 rounded-xl border border-[var(--card-border)] text-[var(--text-secondary)] text-sm font-medium hover:bg-[var(--bg-tertiary)] flex items-center justify-center gap-2">
             <ArrowSquareOut size={15} /> View in shop
@@ -912,26 +961,7 @@ function ShopLinkModal({ material, onClose, onChanged }) {
           </div>
 
           {/* Product photos — needed in the shop */}
-          <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Product photos <span className="text-[var(--text-muted)]">(shown in the shop)</span></label>
-            <label className="flex flex-col items-center justify-center gap-1.5 py-5 rounded-xl border-2 border-dashed border-[var(--card-border)] cursor-pointer hover:border-taqon-orange/50 hover:bg-taqon-orange/5 transition-colors text-center">
-              <FileArrowUp size={22} className="text-[var(--text-muted)]" />
-              <span className="text-xs text-[var(--text-secondary)]">Click to add photos</span>
-              <span className="text-[10px] text-[var(--text-muted)]">JPG / PNG · multiple allowed</span>
-              <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
-            </label>
-            {files.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 mt-2">
-                {files.map((f, i) => (
-                  <div key={f.url} className="relative group aspect-square rounded-lg overflow-hidden border border-[var(--card-border)]">
-                    <img src={f.url} alt="" className="w-full h-full object-cover" />
-                    {i === 0 && <span className="absolute bottom-0 inset-x-0 bg-taqon-orange/90 text-white text-[9px] text-center py-0.5">Primary</span>}
-                    <button type="button" onClick={() => removeFile(i)} className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={11} /></button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <PhotoPicker files={files} onAdd={addFiles} onRemove={removeFile} markPrimary />
 
           <button onClick={publish} disabled={busy} className="w-full px-4 py-2.5 rounded-xl bg-taqon-orange text-white text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-60 flex items-center justify-center gap-2">
             {busy ? <CircleNotch size={15} className="animate-spin" /> : <Storefront size={15} />} Publish to shop{files.length ? ` (${files.length} photo${files.length > 1 ? 's' : ''})` : ''}
