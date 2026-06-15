@@ -24,8 +24,22 @@ class SolarComponentSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+def _material_avg(material):
+    """Mean of the two most recently updated supplier prices of a material."""
+    from decimal import Decimal
+    prices = [p for p in material.supplier_prices.all() if not p.is_deleted]
+    if not prices:
+        return None
+    latest_two = sorted(prices, key=lambda p: p.updated_at, reverse=True)[:2]
+    vals = [p.price for p in latest_two]
+    return str((sum(vals) / len(vals)).quantize(Decimal('0.01')))
+
+
 class SolarComponentListSerializer(serializers.ModelSerializer):
     """Compact list view."""
+
+    material_name = serializers.CharField(source='material.name', read_only=True, default=None)
+    material_avg_price = serializers.SerializerMethodField()
 
     class Meta:
         model = SolarComponent
@@ -34,8 +48,12 @@ class SolarComponentListSerializer(serializers.ModelSerializer):
             'price', 'currency', 'wattage', 'voltage',
             'capacity_kwh', 'efficiency', 'warranty_years',
             'image_url', 'is_featured', 'shop_visible', 'product',
+            'material', 'material_name', 'material_avg_price',
         ]
         read_only_fields = fields
+
+    def get_material_avg_price(self, obj):
+        return _material_avg(obj.material) if obj.material_id else None
 
 
 class AdminSolarComponentSerializer(serializers.ModelSerializer):
@@ -43,6 +61,8 @@ class AdminSolarComponentSerializer(serializers.ModelSerializer):
     admin can see the blast radius before editing a price/spec."""
 
     product_name = serializers.CharField(source='product.name', read_only=True, default=None)
+    material_name = serializers.CharField(source='material.name', read_only=True, default=None)
+    material_avg_price = serializers.SerializerMethodField()
     used_in_packages = serializers.SerializerMethodField()
     package_count = serializers.SerializerMethodField()
 
@@ -51,7 +71,7 @@ class AdminSolarComponentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'category', 'brand', 'model_number',
             'description', 'image_url', 'price', 'currency',
-            'product', 'product_name',
+            'product', 'product_name', 'material', 'material_name', 'material_avg_price',
             'wattage', 'voltage', 'capacity_ah', 'capacity_kwh',
             'efficiency', 'warranty_years', 'weight_kg',
             'compatible_voltages', 'specifications',
@@ -59,6 +79,9 @@ class AdminSolarComponentSerializer(serializers.ModelSerializer):
             'used_in_packages', 'package_count',
         ]
         read_only_fields = fields
+
+    def get_material_avg_price(self, obj):
+        return _material_avg(obj.material) if obj.material_id else None
 
     def _live_uses(self, obj):
         return [pu for pu in obj.package_uses.all() if pu.package and not pu.package.is_deleted]
@@ -398,7 +421,7 @@ class AdminSolarComponentCreateUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'category', 'brand', 'model_number',
             'description', 'image_url', 'price', 'currency',
-            'product',
+            'product', 'material',
             'wattage', 'voltage', 'capacity_ah', 'capacity_kwh',
             'efficiency', 'warranty_years', 'weight_kg',
             'compatible_voltages', 'specifications',

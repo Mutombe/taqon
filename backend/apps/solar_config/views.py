@@ -871,7 +871,7 @@ class PackagesCatalogueView(APIView):
             SolarPackageTemplate.objects
             .filter(is_active=True, is_deleted=False)
             .order_by('price')
-            .prefetch_related(Prefetch('items', queryset=PackageComponent.objects.select_related('component')))
+            .prefetch_related(Prefetch('items', queryset=PackageComponent.objects.select_related('component', 'component__material').prefetch_related('component__material__supplier_prices')))
         )
         family_qs = (
             PackageFamily.objects
@@ -1764,17 +1764,23 @@ class AdminComponentListView(generics.ListAPIView):
     def get_queryset(self):
         qs = (
             SolarComponent.objects.filter(is_deleted=False)
-            .select_related('product')
+            .select_related('product', 'material')
             .prefetch_related(
                 Prefetch(
                     'package_uses',
                     queryset=PackageComponent.objects.select_related('package'),
                 ),
+                'material__supplier_prices',
             )
         )
         category = self.request.query_params.get('category')
         if category:
             qs = qs.filter(category=category)
+
+        # The package builder's "Components" tab wants pure components — not the
+        # ones that mirror a shop product (those live in the "From a product" tab).
+        if self.request.query_params.get('exclude_product') in ('1', 'true', 'True'):
+            qs = qs.filter(product__isnull=True)
 
         search = (self.request.query_params.get('search') or '').strip()
         if search:
@@ -2095,7 +2101,7 @@ class AdminPackageItemsView(APIView):
     def _get_package(self, slug):
         try:
             return SolarPackageTemplate.objects.prefetch_related(
-                Prefetch('items', queryset=PackageComponent.objects.select_related('component'))
+                Prefetch('items', queryset=PackageComponent.objects.select_related('component', 'component__material').prefetch_related('component__material__supplier_prices'))
             ).get(slug=slug, is_deleted=False)
         except SolarPackageTemplate.DoesNotExist:
             return None

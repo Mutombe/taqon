@@ -118,6 +118,12 @@ class SolarComponent(SoftDeleteModel):
         'shop.Product', on_delete=models.SET_NULL,
         null=True, blank=True, related_name='solar_components',
     )
+    # Linked inventory material (optional): a build component whose supplier
+    # pricing/average is tracked in the inventory module.
+    material = models.ForeignKey(
+        'inventory.Material', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='solar_components',
+    )
 
     # Technical specifications (flexible JSON)
     specifications = models.JSONField(default=dict, blank=True)

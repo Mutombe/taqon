@@ -42,6 +42,42 @@ class _Base(TestCase):
         c = APIClient(); c.force_authenticate(self.customer); return c
 
 
+class ComponentMaterialLinkTests(_Base):
+    def _material_with_prices(self):
+        from apps.inventory.models import MaterialCategory, Material, Supplier, SupplierPrice
+        cat, _ = MaterialCategory.objects.get_or_create(name='Electrical')
+        mat = Material.objects.create(name='Tracked Inverter', category=cat, brand='Sunsynk')
+        SupplierPrice.objects.create(supplier=Supplier.objects.create(name='A'), material=mat, price=Decimal('100'))
+        SupplierPrice.objects.create(supplier=Supplier.objects.create(name='B'), material=mat, price=Decimal('200'))
+        return mat
+
+    def test_create_component_linked_to_material_exposes_avg(self):
+        mat = self._material_with_prices()
+        c = self.admin_client()
+        resp = c.post(BASE + 'create/', {
+            'name': 'Inv from inventory', 'category': 'inverter', 'price': '150', 'material': str(mat.id),
+        }, format='json')
+        self.assertEqual(resp.status_code, 201, resp.content)
+        comp = SolarComponent.objects.get(name='Inv from inventory')
+        self.assertEqual(comp.material_id, mat.id)
+        # Listed with the material's average (mean of latest two: 100, 200 -> 150).
+        row = next(r for r in self.admin_client().get(BASE).json()['results'] if r['id'] == str(comp.id))
+        self.assertEqual(row['material_avg_price'], '150.00')
+        self.assertEqual(row['material_name'], 'Tracked Inverter')
+
+    def test_exclude_product_filters_out_product_components(self):
+        from apps.shop.models import Category, Product
+        cat, _ = Category.objects.get_or_create(name='Inverters')
+        prod = Product.objects.create(name='Shop Inv', sku='SI-1', category=cat, price=Decimal('900'))
+        SolarComponent.objects.update_or_create(
+            name='Product Comp', defaults={'category': 'inverter', 'price': Decimal('900'), 'product': prod})
+        all_rows = self.admin_client().get(BASE).json()['results']
+        self.assertTrue(any(r.get('product') for r in all_rows))  # ≥1 product-linked exists
+        filtered = self.admin_client().get(BASE, {'exclude_product': 1}).json()['results']
+        self.assertTrue(all(not r.get('product') for r in filtered))  # none are product-linked
+        self.assertIn('5kVA Inverter', [r['name'] for r in filtered])  # plain component stays
+
+
 class TenancyTests(_Base):
     """Only admins may touch the component endpoints."""
 
