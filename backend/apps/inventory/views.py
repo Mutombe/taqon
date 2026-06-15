@@ -380,6 +380,9 @@ class MaterialLinkProductView(APIView):
             audit.log(request, action='updated', target_type='material', target_name=material.name,
                       target_id=material.id, summary=f'Linked to shop product “{product.name}”')
         elif create:
+            if material.product_id:
+                # Already in the shop — don't create a duplicate product.
+                return Response({'detail': f'Already linked to “{material.product.name}”.'}, status=status.HTTP_400_BAD_REQUEST)
             if 'markup_pct' in request.data:
                 markup = _parse_markup(request.data.get('markup_pct'))
                 if markup is None:

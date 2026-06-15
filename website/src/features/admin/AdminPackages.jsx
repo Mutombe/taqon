@@ -5,7 +5,7 @@ import {
   Plus, Pencil, Trash, X, SolarPanel, CircleNotch,
   CheckCircle, Star, Lightning, MagnifyingGlass,
   ArrowsClockwise, CaretDown, Package as PackageIcon,
-  Swap, Warning, BatteryFull, Cube, Tag,
+  Swap, Warning, BatteryFull, Cube, Tag, Buildings,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -146,16 +146,15 @@ function ComponentPickerModal({ category, categoryLabel, kind, swapping = false,
   // 'component' shows only existing components + create; otherwise (adding) all.
   const ALL_TABS = {
     existing: { key: 'existing', label: 'Components' },
-    material: { key: 'material', label: 'From inventory' },
     product: { key: 'product', label: 'From a product' },
     new: { key: 'new', label: 'Create new' },
   };
   const TABS = kind === 'product'
     ? [ALL_TABS.product, ALL_TABS.new]
     : kind === 'component'
-      ? [ALL_TABS.existing, ALL_TABS.material, ALL_TABS.new]
-      : [ALL_TABS.existing, ALL_TABS.material, ALL_TABS.product, ALL_TABS.new];
-  const [mode, setMode] = useState(TABS[0].key); // existing | material | product | new
+      ? [ALL_TABS.existing, ALL_TABS.new]
+      : [ALL_TABS.existing, ALL_TABS.product, ALL_TABS.new];
+  const [mode, setMode] = useState(TABS[0].key); // existing | product | new
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -171,9 +170,6 @@ function ComponentPickerModal({ category, categoryLabel, kind, swapping = false,
         if (mode === 'existing') {
           const { data } = await adminApi.getAdminComponents({ category, search: q || undefined, page_size: 20, exclude_product: 1 });
           if (!cancelled) setResults((data.results || data || []).filter((c) => !excludeIds.includes(c.id)));
-        } else if (mode === 'material') {
-          const { data } = await adminApi.getMaterials({ search: q || undefined, page_size: 20 });
-          if (!cancelled) setResults(data.results || data || []);
         } else {
           const { data } = await adminApi.getAdminProducts({ search: q || undefined, page_size: 20 });
           if (!cancelled) setResults(data.results || data || []);
@@ -193,19 +189,6 @@ function ComponentPickerModal({ category, categoryLabel, kind, swapping = false,
       });
       onSelect(data.id);
     } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add from product')); }
-    finally { setBusy(false); }
-  };
-
-  const pickMaterial = async (m) => {
-    setBusy(true);
-    try {
-      const { data } = await adminApi.createComponent({
-        name: m.name, category, brand: m.brand || '',
-        price: m.avg_price ?? m.cheapest_supplier?.price ?? 0,
-        material: m.id, shop_visible: false,
-      });
-      onSelect(data.id);
-    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add from inventory')); }
     finally { setBusy(false); }
   };
 
@@ -255,27 +238,23 @@ function ComponentPickerModal({ category, categoryLabel, kind, swapping = false,
               ) : (
                 <div className="space-y-1.5">
                   {results.map((r) => {
-                    const isMat = mode === 'material';
-                    const price = isMat ? (r.avg_price ?? r.cheapest_supplier?.price) : r.price;
-                    const sub = isMat
-                      ? `${r.supplier_count || 0} supplier${r.supplier_count === 1 ? '' : 's'}${r.in_shop ? ' · in shop' : ''}`
-                      : (r.brand?.name || r.brand || '') + (mode === 'product' ? ' · product' : (r.material_name ? ` · inventory: ${r.material_name}` : ''));
+                    const sub = (r.brand?.name || r.brand || '')
+                      + (mode === 'product' ? ' · product' : (r.material_name ? ` · in inventory` : ''));
                     return (
                       <button key={r.id} type="button" disabled={busy}
-                        onClick={() => (mode === 'existing' ? onSelect(r.id) : isMat ? pickMaterial(r) : pickProduct(r))}
+                        onClick={() => (mode === 'existing' ? onSelect(r.id) : pickProduct(r))}
                         className="w-full text-left px-3 py-2.5 rounded-xl border border-[var(--card-border)] hover:border-taqon-orange/50 hover:bg-[var(--bg-tertiary)] transition-colors flex items-center justify-between gap-3 disabled:opacity-50">
                         <span className="min-w-0">
                           <span className="block text-sm text-[var(--text-primary)] truncate">{r.name}</span>
                           <span className="block text-[11px] text-[var(--text-muted)] truncate">{sub}</span>
                         </span>
-                        <span className="text-sm font-semibold text-taqon-orange flex-shrink-0">{price != null ? money(price) : '—'}{isMat && <span className="text-[10px] text-[var(--text-muted)] font-normal"> avg</span>}</span>
+                        <span className="text-sm font-semibold text-taqon-orange flex-shrink-0">{r.price != null ? money(r.price) : '—'}</span>
                       </button>
                     );
                   })}
                 </div>
               )}
               {mode === 'product' && <p className="text-[11px] text-[var(--text-muted)] mt-3">Picking a product creates a linked component, so its price/name stay in sync with the shop product.</p>}
-              {mode === 'material' && <p className="text-[11px] text-[var(--text-muted)] mt-3">Picking an inventory material creates a component priced from its supplier average, so it tracks supplier prices in inventory.</p>}
             </>
           ) : (
             <div className="space-y-3">
@@ -353,6 +332,20 @@ export function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }
     finally { setSaving(null); }
   };
 
+  // Import a component into the inventory (idempotent) so its suppliers/average
+  // are tracked there; from inventory it can later be linked to the shop.
+  const importToInventory = async (item) => {
+    const comp = item.component;
+    if (!comp?.slug) return;
+    setSaving(item.id);
+    try {
+      const { data } = await adminApi.importComponentToInventory(comp.slug);
+      toast.success(data.already ? 'Already in inventory' : `${comp.name} added to inventory`);
+      await reloadItems();
+    } catch (e) { toast.error(firstApiError(e?.response?.data, 'Failed to add to inventory')); }
+    finally { setSaving(null); }
+  };
+
   if (!slug) {
     return (
       <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
@@ -403,6 +396,11 @@ export function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }
                         <button type="button" onClick={() => handleQty(item.id, item.quantity + 1)} disabled={saving === item.id} className="w-6 h-6 rounded-md bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-xs hover:bg-[var(--card-border)] disabled:opacity-30">+</button>
                       </div>
                       <span className="text-xs font-semibold text-taqon-orange tabular-nums w-16 text-right shrink-0">{money(item.line_total)}</span>
+                      {!comp.product && !comp.material && (
+                        <button type="button" onClick={() => importToInventory(item)} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-500/10 shrink-0" title="Add to inventory (track suppliers)">
+                          {saving === item.id ? <CircleNotch size={12} className="animate-spin" /> : <Buildings size={13} />}
+                        </button>
+                      )}
                       <button type="button" onClick={() => setPicker({ category: cat.key, label: cat.label, swapItemId: item.id, kind: comp.product ? 'product' : 'component' })} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10 shrink-0" title="Swap / change"><Swap size={13} /></button>
                       <button type="button" onClick={() => handleRemove(item.id)} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 shrink-0" title="Remove">
                         {saving === item.id ? <CircleNotch size={12} className="animate-spin" /> : <Trash size={12} />}

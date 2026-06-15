@@ -65,6 +65,34 @@ class ComponentMaterialLinkTests(_Base):
         self.assertEqual(row['material_avg_price'], '150.00')
         self.assertEqual(row['material_name'], 'Tracked Inverter')
 
+    def test_import_component_to_inventory_idempotent_and_dedup(self):
+        from apps.inventory.models import Material
+        c = self.admin_client()
+        url = f'{BASE}{self.component.slug}/import-to-inventory/'
+        # First import creates a material and links it.
+        r1 = c.post(url, {}, format='json')
+        self.assertEqual(r1.status_code, 201, r1.content)
+        self.assertTrue(r1.json()['imported'])
+        self.component.refresh_from_db()
+        self.assertIsNotNone(self.component.material_id)
+        self.assertEqual(Material.objects.filter(name__iexact=self.component.name).count(), 1)
+        # Re-import returns the existing link, no duplicate.
+        r2 = c.post(url, {}, format='json')
+        self.assertEqual(r2.status_code, 200, r2.content)
+        self.assertTrue(r2.json()['already'])
+        self.assertEqual(Material.objects.filter(name__iexact=self.component.name).count(), 1)
+
+    def test_import_reuses_existing_material_by_name(self):
+        from apps.inventory.models import Material, MaterialCategory
+        cat, _ = MaterialCategory.objects.get_or_create(name='Electrical')
+        existing = Material.objects.create(name=self.component.name, category=cat)
+        r = self.admin_client().post(f'{BASE}{self.component.slug}/import-to-inventory/', {}, format='json')
+        self.assertEqual(r.status_code, 200, r.content)  # reused, not created
+        self.assertFalse(r.json()['imported'])
+        self.component.refresh_from_db()
+        self.assertEqual(self.component.material_id, existing.id)
+        self.assertEqual(Material.objects.filter(name__iexact=self.component.name).count(), 1)
+
     def test_exclude_product_filters_out_product_components(self):
         from apps.shop.models import Category, Product
         cat, _ = Category.objects.get_or_create(name='Inverters')

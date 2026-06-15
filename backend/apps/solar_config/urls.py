@@ -50,6 +50,7 @@ urlpatterns = [
     # Admin — Components
     path('admin/components/', views.AdminComponentListView.as_view(), name='admin-component-list'),
     path('admin/components/create/', views.AdminComponentCreateView.as_view(), name='admin-component-create'),
+    path('admin/components/<slug:slug>/import-to-inventory/', views.ImportComponentToInventoryView.as_view(), name='admin-component-import-inventory'),
     path('admin/components/<slug:slug>/', views.AdminComponentUpdateView.as_view(), name='admin-component-detail'),
     path('admin/components/<slug:slug>/delete/', views.AdminComponentDeleteView.as_view(), name='admin-component-delete'),
 

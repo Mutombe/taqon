@@ -1945,6 +1945,49 @@ class AdminComponentDeleteView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ImportComponentToInventoryView(APIView):
+    """Admin: import a component into the inventory so its supplier prices/average
+    are tracked there. Idempotent and de-duplicated — a component already linked,
+    or one whose name already exists as a material, is reused, never duplicated.
+    Once in inventory it can be linked to the shop via the inventory module."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request, slug):
+        from apps.inventory.models import Material, MaterialCategory
+
+        try:
+            component = SolarComponent.objects.select_related('material').get(slug=slug, is_deleted=False)
+        except SolarComponent.DoesNotExist:
+            return Response({'detail': 'Component not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        created = False
+        if component.material_id:
+            material = component.material  # already imported
+        else:
+            # Reuse an existing material with the same name before creating one.
+            material = Material.objects.filter(name__iexact=component.name, is_deleted=False).first()
+            if not material:
+                cat, _ = MaterialCategory.objects.get_or_create(
+                    name=component.get_category_display() or 'Components')
+                material = Material(name=component.name, category=cat, brand=component.brand or '')
+                material.created_by = request.user
+                material.save()
+                created = True
+            component.material = material
+            component.save(update_fields=['material'])
+
+        return Response(
+            {
+                'imported': created,
+                'already': not created,
+                'component': AdminSolarComponentSerializer(
+                    SolarComponent.objects.select_related('material', 'product').prefetch_related('material__supplier_prices').get(pk=component.pk)
+                ).data,
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
 # ── Admin Appliances ──
 
 class AdminApplianceListView(generics.ListAPIView):
