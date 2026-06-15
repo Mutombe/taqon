@@ -200,7 +200,7 @@ function ImageUploadArea({ images, onAddFiles, onDelete, onSetPrimary, onPickLib
                 img.is_primary ? 'border-taqon-orange' : 'border-transparent'
               }`}
             >
-              <img src={srcOf(img)} alt={img.alt_text || ''} className="w-full h-full object-cover" />
+              <Thumb src={srcOf(img)} className="w-full h-full" iconSize={26} />
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity">
                 {!img.is_primary && (
                   <button

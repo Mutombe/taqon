@@ -32,6 +32,14 @@ function ProductImagePlaceholder({ name }) {
   );
 }
 
+// Product image that falls back to the placeholder when there's no image OR the
+// image fails to load (e.g. a file that's missing from storage / returns 403).
+function ProductImage({ src, name, className }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) return <ProductImagePlaceholder name={name} />;
+  return <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} className={className} />;
+}
+
 // Star rating display
 function StarRating({ rating, count, size = 14 }) {
   return (
@@ -563,16 +571,11 @@ export default function Shop() {
                       >
                         {/* Image */}
                         <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-taqon-dark">
-                          {imageUrl ? (
-                            <img
-                              src={imageUrl}
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <ProductImagePlaceholder name={product.name} />
-                          )}
+                          <ProductImage
+                            src={imageUrl}
+                            name={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
 
                           {/* Badges */}
                           {product.is_on_sale && (

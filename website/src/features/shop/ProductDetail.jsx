@@ -21,6 +21,15 @@ function getImageUrl(img) {
   return img.image_url || img.image || null;
 }
 
+// Related-product thumbnail with a placeholder fallback when missing/broken.
+function RelatedImage({ src, name }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return <div className="w-full h-full flex items-center justify-center"><Bag size={32} className="text-taqon-orange/20" /></div>;
+  }
+  return <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />;
+}
+
 // Skeleton loader
 function ProductSkeleton() {
   return (
@@ -108,6 +117,8 @@ export default function ProductDetail() {
     }
   }, [location.pathname, location.search, location.hash, navigate]);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [failedImages, setFailedImages] = useState(() => new Set());
+  const onImgError = (url) => setFailedImages((s) => new Set(s).add(url));
   const [quantity, setQuantity] = useState(1);
   const [descExpanded, setDescExpanded] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
@@ -294,8 +305,10 @@ export default function ProductDetail() {
       ].filter(Boolean)
     : [];
 
-  // Deduplicate images
-  const uniqueImages = [...new Set(images)];
+  // Deduplicate images, then drop any that fail to load (missing file / 403)
+  // so the gallery falls back to its "No image available" placeholder.
+  const dedupedImages = [...new Set(images)];
+  const uniqueImages = dedupedImages.filter((u) => !failedImages.has(u));
 
   const specifications = product?.specifications
     ? typeof product.specifications === 'string'
@@ -389,9 +402,10 @@ export default function ProductDetail() {
                     {uniqueImages.length > 0 ? (
                       <AnimatePresence mode="wait">
                         <motion.img
-                          key={selectedImage}
-                          src={uniqueImages[selectedImage]}
+                          key={uniqueImages[Math.min(selectedImage, uniqueImages.length - 1)]}
+                          src={uniqueImages[Math.min(selectedImage, uniqueImages.length - 1)]}
                           alt={product.name}
+                          onError={() => onImgError(uniqueImages[Math.min(selectedImage, uniqueImages.length - 1)])}
                           className="w-full h-full object-cover"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -431,6 +445,7 @@ export default function ProductDetail() {
                           <img
                             src={img}
                             alt={`${product.name} ${idx + 1}`}
+                            onError={() => onImgError(img)}
                             className="w-full h-full object-cover"
                           />
                         </button>
@@ -748,18 +763,7 @@ export default function ProductDetail() {
                           className="group bg-white dark:bg-taqon-charcoal/50 border border-warm-200 dark:border-white/10 rounded-2xl overflow-hidden hover:border-taqon-orange/30 transition-all duration-300"
                         >
                           <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-white/5">
-                            {relImg ? (
-                              <img
-                                src={relImg}
-                                alt={related.name}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Bag size={32} className="text-taqon-orange/20" />
-                              </div>
-                            )}
+                            <RelatedImage src={relImg} name={related.name} />
                           </div>
                           <div className="p-4">
                             {related.brand && (
