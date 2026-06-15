@@ -33,7 +33,7 @@ class SolarComponentListSerializer(serializers.ModelSerializer):
             'id', 'name', 'slug', 'category', 'brand',
             'price', 'currency', 'wattage', 'voltage',
             'capacity_kwh', 'efficiency', 'warranty_years',
-            'image_url', 'is_featured', 'shop_visible',
+            'image_url', 'is_featured', 'shop_visible', 'product',
         ]
         read_only_fields = fields
 

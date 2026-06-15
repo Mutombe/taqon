@@ -141,8 +141,20 @@ const ITEM_CATEGORIES = [
 const money = (v) => `$${parseFloat(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 /* ─── Component picker modal: search existing, pull from a product, or create new ─── */
-function ComponentPickerModal({ category, categoryLabel, excludeIds = [], onSelect, onClose }) {
-  const [mode, setMode] = useState('existing'); // existing | product | new
+function ComponentPickerModal({ category, categoryLabel, kind, swapping = false, excludeIds = [], onSelect, onClose }) {
+  // kind: 'product' (item is a shop product) shows only product search + create;
+  // 'component' shows only existing components + create; otherwise (adding) all.
+  const ALL_TABS = {
+    existing: { key: 'existing', label: 'Components' },
+    product: { key: 'product', label: 'From a product' },
+    new: { key: 'new', label: 'Create new' },
+  };
+  const TABS = kind === 'product'
+    ? [ALL_TABS.product, ALL_TABS.new]
+    : kind === 'component'
+      ? [ALL_TABS.existing, ALL_TABS.new]
+      : [ALL_TABS.existing, ALL_TABS.product, ALL_TABS.new];
+  const [mode, setMode] = useState(TABS[0].key); // existing | product | new
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -193,12 +205,6 @@ function ComponentPickerModal({ category, categoryLabel, excludeIds = [], onSele
     finally { setBusy(false); }
   };
 
-  const TABS = [
-    { key: 'existing', label: 'Components' },
-    { key: 'product', label: 'From a product' },
-    { key: 'new', label: 'Create new' },
-  ];
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
@@ -206,7 +212,7 @@ function ComponentPickerModal({ category, categoryLabel, excludeIds = [], onSele
       <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
         className="w-full max-w-lg max-h-[85vh] flex flex-col bg-[var(--bg-secondary)] border border-[var(--card-border)] rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--card-border)]">
-          <h3 className="font-syne font-bold text-[var(--text-primary)]">Add {categoryLabel}</h3>
+          <h3 className="font-syne font-bold text-[var(--text-primary)]">{swapping ? 'Swap' : 'Add'} {categoryLabel}</h3>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)]"><X size={18} /></button>
         </div>
         <div className="flex gap-1 px-5 pt-3 border-b border-[var(--card-border)]">
@@ -299,7 +305,11 @@ export function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }
         toast.success('Component added');
       }
       await reloadItems();
-    } catch (err) { toast.error(firstApiError(err?.response?.data, 'Failed to update components')); }
+    } catch (err) {
+      toast.error(firstApiError(err?.response?.data, 'Failed to update components'));
+      // Resync so a failed swap never leaves the UI looking like the item vanished.
+      try { await reloadItems(); } catch { /* ignore */ }
+    }
     finally { setSaving(null); }
   };
 
@@ -355,7 +365,10 @@ export function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }
                   return (
                     <div key={item.id} className="flex items-center gap-2 px-3 py-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-[var(--text-primary)] truncate">{comp.name}{comp.brand ? ` · ${comp.brand}` : ''}</p>
+                        <p className="text-xs font-medium text-[var(--text-primary)] truncate flex items-center gap-1.5">
+                          <span className="truncate">{comp.name}{comp.brand ? ` · ${comp.brand}` : ''}</span>
+                          {comp.product && <span className="text-[8px] uppercase tracking-wide px-1 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 flex-shrink-0">product</span>}
+                        </p>
                         <p className="text-[10px] text-[var(--text-muted)]">{money(comp.price)}/ea</p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
@@ -364,7 +377,7 @@ export function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }
                         <button type="button" onClick={() => handleQty(item.id, item.quantity + 1)} disabled={saving === item.id} className="w-6 h-6 rounded-md bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-xs hover:bg-[var(--card-border)] disabled:opacity-30">+</button>
                       </div>
                       <span className="text-xs font-semibold text-taqon-orange tabular-nums w-16 text-right shrink-0">{money(item.line_total)}</span>
-                      <button type="button" onClick={() => setPicker({ category: cat.key, label: cat.label, swapItemId: item.id })} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10 shrink-0" title="Swap / change"><Swap size={13} /></button>
+                      <button type="button" onClick={() => setPicker({ category: cat.key, label: cat.label, swapItemId: item.id, kind: comp.product ? 'product' : 'component' })} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-taqon-orange hover:bg-taqon-orange/10 shrink-0" title="Swap / change"><Swap size={13} /></button>
                       <button type="button" onClick={() => handleRemove(item.id)} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 shrink-0" title="Remove">
                         {saving === item.id ? <CircleNotch size={12} className="animate-spin" /> : <Trash size={12} />}
                       </button>
@@ -377,11 +390,40 @@ export function PackageItemsEditor({ slug, items: initialItems, onItemsChanged }
         );
       })}
 
+      {/* Safety net: any item whose category isn't one of the groups above still
+          shows here, so nothing can silently disappear from the package. */}
+      {(() => {
+        const known = new Set(ITEM_CATEGORIES.map((c) => c.key));
+        const others = items.filter((i) => !known.has(i.component?.category));
+        if (!others.length) return null;
+        return (
+          <div className="rounded-2xl border border-amber-500/30 overflow-hidden">
+            <div className="px-3 py-2 bg-amber-500/10 text-xs font-semibold text-amber-600 dark:text-amber-400">Other items ({others.length})</div>
+            <div className="divide-y divide-[var(--card-border)]">
+              {others.map((item) => (
+                <div key={item.id} className="flex items-center gap-2 px-3 py-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-[var(--text-primary)] truncate">{item.component?.name}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">{item.component?.category || 'no category'} · {money(item.component?.price)}/ea</p>
+                  </div>
+                  <span className="text-xs font-semibold text-taqon-orange tabular-nums w-16 text-right shrink-0">{money(item.line_total)}</span>
+                  <button type="button" onClick={() => handleRemove(item.id)} disabled={saving === item.id} className="p-1 rounded-md text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 shrink-0" title="Remove">
+                    {saving === item.id ? <CircleNotch size={12} className="animate-spin" /> : <Trash size={12} />}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       <AnimatePresence>
         {picker && (
           <ComponentPickerModal
             category={picker.category}
             categoryLabel={picker.label}
+            kind={picker.kind}
+            swapping={!!picker.swapItemId}
             excludeIds={picker.swapItemId ? [] : usedIds}
             onSelect={handlePicked}
             onClose={() => setPicker(null)}
