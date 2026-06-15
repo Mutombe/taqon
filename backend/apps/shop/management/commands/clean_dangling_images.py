@@ -43,31 +43,47 @@ class Command(BaseCommand):
             region_name=getattr(settings, 'AWS_S3_REGION_NAME', None),
         )
         location = (getattr(settings, 'AWS_LOCATION', '') or '').strip('/')
+        media_url = getattr(settings, 'MEDIA_URL', '') or ''
 
-        def is_missing(name):
-            key = f'{location}/{name}' if location else name
+        def key_missing(key):
             try:
                 client.head_object(Bucket=bucket, Key=key)
                 return False  # present
             except botocore.exceptions.ClientError as e:
                 code = str(e.response.get('Error', {}).get('Code', ''))
-                status = e.response.get('ResponseMetadata', {}).get('HTTPStatusCode')
-                if code in ('404', 'NoSuchKey', 'NotFound') or status == 404:
+                http = e.response.get('ResponseMetadata', {}).get('HTTPStatusCode')
+                if code in ('404', 'NoSuchKey', 'NotFound') or http == 404:
                     return True  # genuinely missing
                 self.stderr.write(f'  ? inconclusive for {key}: {code} — keeping')
                 return False  # never delete on doubt
 
+        def img_missing(img):
+            # FileField image → key = <location>/<name>
+            if img.image:
+                name = img.image.name
+                return key_missing(f'{location}/{name}' if location else name)
+            # image_url text field that points at OUR bucket → check that key too
+            url = (img.image_url or '').strip()
+            if url and media_url and url.startswith(media_url):
+                rel = url[len(media_url):].lstrip('/')
+                return key_missing(f'{location}/{rel}' if location else rel)
+            # external URL or nothing checkable → never delete
+            return False
+
         dry = opts['dry_run']
         dangling = []
         checked = 0
-        for img in ProductImage.objects.exclude(image='').select_related('product'):
+        for img in ProductImage.objects.select_related('product'):
+            if not img.image and not img.image_url:
+                continue
             checked += 1
-            if is_missing(img.image.name):
+            if img_missing(img):
                 dangling.append(img)
 
         for img in dangling:
             label = img.product.name if img.product else '(no product)'
-            self.stdout.write(f"  {'would delete' if dry else 'deleting'}: {label} -> {img.image.name}")
+            ref = img.image.name if img.image else (img.image_url or '')
+            self.stdout.write(f"  {'would delete' if dry else 'deleting'}: {label} -> {ref}")
             if not dry:
                 img.delete()
 
