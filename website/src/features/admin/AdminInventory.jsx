@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Buildings, Cube, Plus, MagnifyingGlass, X, CircleNotch, Pencil, Trash,
@@ -30,7 +31,11 @@ function firstApiError(data, fallback) {
 
 /* ─────────────────────────── shared modal shell ─────────────────────────── */
 function Drawer({ title, onClose, children, zClass = 'z-50' }) {
-  return (
+  // Portal to <body> so a Drawer rendered INSIDE another modal's <form> (e.g. the
+  // just-in-time "add supplier" modal) isn't nested in that form — nested forms
+  // are invalid HTML and make the inner Save submit the OUTER form, closing
+  // everything without saving.
+  return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className={`fixed inset-0 ${zClass} bg-black/60 backdrop-blur-sm flex items-start justify-end`}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -42,7 +47,8 @@ function Drawer({ title, onClose, children, zClass = 'z-50' }) {
         </div>
         <div className="p-6 space-y-4">{children}</div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
 
