@@ -256,6 +256,27 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
+  // Inline "+ new category" so admins can add a product category without leaving.
+  const qc = useQueryClient();
+  const [extraCats, setExtraCats] = useState([]);
+  const [addingCat, setAddingCat] = useState(false);
+  const [newCat, setNewCat] = useState('');
+  const [catBusy, setCatBusy] = useState(false);
+  const allCats = [...categories, ...extraCats.filter((e) => !categories.some((c) => c.id === e.id))];
+  const createCat = async () => {
+    const name = newCat.trim();
+    if (!name) return;
+    setCatBusy(true);
+    try {
+      const { data } = await adminApi.createCategory({ name });
+      setExtraCats((x) => [...x, data]);
+      set('category', data.id);
+      setNewCat(''); setAddingCat(false);
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      toast.success('Category added');
+    } catch (e) { toast.error(e?.response?.data?.detail || 'Failed to add category'); }
+    finally { setCatBusy(false); }
+  };
   const [savedSlug, setSavedSlug] = useState(product?.slug || null);
   // When editing, the list row is a compact projection that omits most
   // editable fields (description, specifications, warranty, images, …).
@@ -526,16 +547,31 @@ function ProductModal({ product, categories, brands, onClose, onSaved }) {
                   <input className="auth-input w-full" value={form.sku} onChange={(e) => set('sku', e.target.value)} placeholder="Auto-generated if blank" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Category *</label>
-                  <select
-                    className={`auth-input w-full ${!form.category ? 'border-red-400/50' : ''}`}
-                    value={form.category}
-                    onChange={(e) => set('category', e.target.value)}
-                    required
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-[var(--text-secondary)]">Category *</label>
+                    {!addingCat && (
+                      <button type="button" onClick={() => setAddingCat(true)} className="text-xs text-taqon-orange hover:underline flex items-center gap-1"><Plus size={11} /> New</button>
+                    )}
+                  </div>
+                  {addingCat ? (
+                    <div className="flex gap-1.5">
+                      <input autoFocus className="auth-input flex-1" placeholder="New category name" value={newCat}
+                        onChange={(e) => setNewCat(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); createCat(); } if (e.key === 'Escape') { setAddingCat(false); setNewCat(''); } }} />
+                      <button type="button" onClick={createCat} disabled={catBusy} className="px-3 rounded-lg bg-taqon-orange text-white flex items-center disabled:opacity-50">{catBusy ? <CircleNotch size={15} className="animate-spin" /> : <CheckCircle size={15} />}</button>
+                      <button type="button" onClick={() => { setAddingCat(false); setNewCat(''); }} className="px-3 rounded-lg border border-[var(--card-border)] text-[var(--text-muted)] flex items-center"><X size={15} /></button>
+                    </div>
+                  ) : (
+                    <select
+                      className={`auth-input w-full ${!form.category ? 'border-red-400/50' : ''}`}
+                      value={form.category}
+                      onChange={(e) => set('category', e.target.value)}
+                      required
+                    >
+                      <option value="">Select category</option>
+                      {allCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Brand</label>

@@ -122,9 +122,13 @@ class AdminCategoryCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = [
-            'name', 'slug', 'description', 'image',
+            'id', 'name', 'slug', 'description', 'image',
             'parent', 'is_active', 'order',
         ]
+        read_only_fields = ['id']
+        # Slug auto-generates from the name in the model's save() — admins
+        # shouldn't have to supply it (lets inline "+ new category" send just a name).
+        extra_kwargs = {'slug': {'required': False, 'allow_blank': True}}
 
     def validate_slug(self, value):
         instance = self.instance

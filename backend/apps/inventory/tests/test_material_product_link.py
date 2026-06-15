@@ -141,6 +141,26 @@ class LinkAndPublishTests(_Base):
         mat = self._material()
         self.assertEqual(self.admin_client().post(link_url(mat.slug), {}, format='json').status_code, 400)
 
+    def test_linked_material_exposes_product_primary_image(self):
+        from apps.shop.models import ProductImage
+        mat = self._material()
+        mat.product = self.product
+        mat.save(update_fields=['product'])
+        ProductImage.objects.create(product=self.product, image_url='/media/x.jpg', is_primary=True)
+        resp = self.admin_client().get('/api/v1/inventory/materials/', {'search': mat.name})
+        body = resp.json()
+        rows = body.get('results', body)
+        row = next(r for r in rows if r['slug'] == mat.slug)
+        self.assertEqual(row['product_image'], '/media/x.jpg')
+
+    def test_unlinked_material_has_no_product_image(self):
+        mat = self._material()
+        resp = self.admin_client().get('/api/v1/inventory/materials/', {'search': mat.name})
+        body = resp.json()
+        rows = body.get('results', body)
+        row = next(r for r in rows if r['slug'] == mat.slug)
+        self.assertIsNone(row['product_image'])
+
     def test_unlink(self):
         mat = self._material()
         mat.product = self.product

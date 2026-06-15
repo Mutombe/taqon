@@ -619,17 +619,22 @@ function MaterialRow({ material, onAddPrice, onDuplicate, onEdit, onDelete, onSh
   return (
     <div className="border-b border-[var(--card-border)] last:border-0">
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 md:gap-4 px-5 py-3 items-center hover:bg-[var(--bg-tertiary)]/40">
-        <div className="min-w-0">
-          <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-1.5 text-left">
-            <CaretDown size={13} className={`text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
-            <span className="text-sm font-medium text-[var(--text-primary)] truncate">{material.name}{material.specification ? ` · ${material.specification}` : ''}</span>
-            {material.product && (
-              <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${material.in_shop ? 'bg-green-500/15 text-green-600 dark:text-green-400' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'}`} title={material.in_shop ? 'Live in the shop' : 'Linked to a product (inactive)'}>
-                <Storefront size={10} /> {material.in_shop ? 'In shop' : 'Linked'}
-              </span>
-            )}
-          </button>
-          <p className="text-xs text-[var(--text-muted)] ml-5">{material.category_name}{material.unit ? ` · per ${material.unit}` : ''}</p>
+        <div className="min-w-0 flex items-center gap-2.5">
+          {material.product_image && (
+            <img src={material.product_image} alt="" loading="lazy" className="w-9 h-9 rounded-lg object-cover border border-[var(--card-border)] flex-shrink-0" />
+          )}
+          <div className="min-w-0 flex-1">
+            <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-1.5 text-left w-full min-w-0">
+              <CaretDown size={13} className={`flex-shrink-0 text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
+              <span className="text-sm font-medium text-[var(--text-primary)] truncate min-w-0" title={material.name}>{material.name}{material.specification ? ` · ${material.specification}` : ''}</span>
+              {material.product && (
+                <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${material.in_shop ? 'bg-green-500/15 text-green-600 dark:text-green-400' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'}`} title={material.in_shop ? 'Live in the shop' : 'Linked to a product (inactive)'}>
+                  <Storefront size={10} /> {material.in_shop ? 'In shop' : 'Linked'}
+                </span>
+              )}
+            </button>
+            <p className="text-xs text-[var(--text-muted)] truncate ml-5" title={`${material.category_name}${material.unit ? ` · per ${material.unit}` : ''}`}>{material.category_name}{material.unit ? ` · per ${material.unit}` : ''}</p>
+          </div>
         </div>
         <div className="text-sm" title={(material.avg_basis || []).length ? `Average of the latest two suppliers:\n${material.avg_basis.map((b) => `${b.supplier}: ${money(b.price)}`).join('\n')}` : 'Average of the latest two suppliers'}>
           <span className="text-[var(--text-muted)] text-xs">Avg </span><span className="font-semibold text-[var(--text-primary)]">{money(material.avg_price)}</span>
@@ -901,9 +906,14 @@ function ShopLinkModal({ material, onClose, onChanged }) {
   if (linked) {
     return (
       <Drawer title="Shop link" onClose={onClose}>
-        <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 mb-4">
-          <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-1.5"><Storefront size={15} className="text-green-600 dark:text-green-400" /> {material.product_name}</p>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">{material.in_shop ? 'Live in the shop' : 'Linked — product is inactive'}{material.product_price != null ? ` · ${money(material.product_price)}` : ''}</p>
+        <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 mb-4 flex items-center gap-3">
+          {material.product_image && (
+            <img src={material.product_image} alt="" className="w-11 h-11 rounded-lg object-cover border border-green-500/20 flex-shrink-0" />
+          )}
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-1.5 truncate"><Storefront size={15} className="text-green-600 dark:text-green-400 flex-shrink-0" /> {material.product_name}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">{material.in_shop ? 'Live in the shop' : 'Linked — product is inactive'}{material.product_price != null ? ` · ${money(material.product_price)}` : ''}</p>
+          </div>
         </div>
         <div className="mb-2">
           <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Markup %</label>

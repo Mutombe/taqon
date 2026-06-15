@@ -97,7 +97,9 @@ export const adminApi = {
 
   // Categories & Brands (for product form dropdowns)
   getCategories: () => api.get('/shop/categories/'),
+  createCategory: (data) => api.post('/shop/admin/categories/', data),
   getBrands: () => api.get('/shop/brands/'),
+  createBrand: (data) => api.post('/shop/admin/brands/', data),
 
   // ── Supplier inventory & pricing (admin-only) ──
   getInventorySummary: () => api.get('/inventory/summary/'),

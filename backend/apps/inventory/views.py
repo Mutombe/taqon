@@ -223,6 +223,7 @@ class MaterialListCreateView(generics.ListCreateAPIView):
                     'supplier_prices',
                     queryset=SupplierPrice.objects.filter(is_deleted=False).select_related('supplier', 'source_quotation'),
                 ),
+                'product__images',
             )
         )
         category = self.request.query_params.get('category')
@@ -315,6 +316,7 @@ def _fetch_material(slug):
         .prefetch_related(
             Prefetch('supplier_prices',
                      queryset=SupplierPrice.objects.filter(is_deleted=False).select_related('supplier', 'source_quotation')),
+            'product__images',
         )
         .first()
     )

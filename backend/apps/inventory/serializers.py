@@ -71,6 +71,7 @@ class MaterialSerializer(serializers.ModelSerializer):
     product_slug = serializers.CharField(source='product.slug', read_only=True, default=None)
     product_price = serializers.DecimalField(source='product.price', max_digits=10, decimal_places=2, read_only=True, default=None)
     in_shop = serializers.SerializerMethodField()
+    product_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Material
@@ -79,12 +80,27 @@ class MaterialSerializer(serializers.ModelSerializer):
             'specification', 'brand', 'unit', 'notes', 'is_active',
             'prices', 'avg_price', 'avg_basis', 'min_price', 'max_price', 'supplier_count',
             'cheapest_supplier', 'created_at',
-            'product', 'product_name', 'product_slug', 'product_price', 'in_shop', 'markup_pct',
+            'product', 'product_name', 'product_slug', 'product_price', 'in_shop',
+            'product_image', 'markup_pct',
         ]
         read_only_fields = fields
 
     def get_in_shop(self, obj):
         return bool(obj.product_id and getattr(obj.product, 'is_active', False))
+
+    def get_product_image(self, obj):
+        """Primary photo of the linked shop product (so the inventory table can
+        preview it). Uses prefetched images to avoid per-row queries."""
+        if not obj.product_id:
+            return None
+        imgs = list(obj.product.images.all())
+        if not imgs:
+            return None
+        img = next((i for i in imgs if i.is_primary), imgs[0])
+        request = self.context.get('request')
+        if img.image:
+            return request.build_absolute_uri(img.image.url) if request else img.image.url
+        return img.image_url or None
 
     def _live_prices(self, obj):
         return [p for p in obj.supplier_prices.all() if not p.is_deleted]
