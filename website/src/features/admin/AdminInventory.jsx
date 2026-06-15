@@ -164,6 +164,7 @@ function CategoryCreateModal({ initialName = '', onClose, onSaved, zClass }) {
   const [saving, setSaving] = useState(false);
   const submit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!form.name.trim()) { toast.error('Name is required'); return; }
     setSaving(true);
     try {
@@ -225,6 +226,7 @@ function SupplierModal({ supplier, initialName = '', onClose, onSaved, zClass })
   const dup = allSuppliers.find((s) => s.name.toLowerCase() === form.name.trim().toLowerCase() && s.slug !== supplier?.slug);
   const submit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!form.name.trim()) { toast.error('Name is required'); return; }
     setSaving(true);
     try {
@@ -284,6 +286,7 @@ function MaterialModal({ material, categories, suppliers = [], onClose, onSaved 
   const searchMaterials = (s) => adminApi.getMaterials({ search: s, page_size: 8 }).then((r) => r.data.results || r.data || []);
   const submit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!form.name.trim()) { toast.error('Name is required'); return; }
     if (!form.category) { toast.error('Choose a category'); return; }
     const wantsPrice = isDuplicate && price !== '' && !Number.isNaN(parseFloat(price));
@@ -407,6 +410,7 @@ function QuickPriceModal({ material, suppliers, onClose, onSaved }) {
 
   const submit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     let supplierId = supplier;
     if (!supplierId) {
       const m = suppliers.find((s) => s.name.toLowerCase() === supplierText.trim().toLowerCase());
@@ -478,6 +482,7 @@ function LogPricesDrawer({ suppliers, categories, onClose, onSaved }) {
 
   const submit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     let supplierId = supplier;
     if (!supplierId) {
       const m = suppliers.find((s) => s.name.toLowerCase() === supplierText.trim().toLowerCase());
@@ -579,6 +584,7 @@ function QuotationModal({ suppliers, onClose, onSaved }) {
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const submit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!form.supplier) { toast.error('Choose a supplier'); return; }
     if (!form.title.trim()) { toast.error('Title is required'); return; }
     setSaving(true);
