@@ -66,6 +66,22 @@ if env('DO_SPACES_KEY', default='') or env('AWS_ACCESS_KEY_ID', default=''):
         }
         STATIC_URL = '/static/'
 
+else:
+    # No object storage configured. base.py would fall back to local
+    # FileSystemStorage — which on Render is EPHEMERAL: every uploaded photo is
+    # wiped on the next redeploy (this is exactly what lost product images
+    # before). Fail loudly instead of silently losing files. To run on a box
+    # with a genuinely persistent disk, set ALLOW_EPHEMERAL_MEDIA=true.
+    if not env.bool('ALLOW_EPHEMERAL_MEDIA', default=False):
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            'Production media storage is not configured — set DO_SPACES_KEY / '
+            'DO_SPACES_SECRET / DO_SPACES_BUCKET / DO_SPACES_REGION (or the AWS_* '
+            'equivalents). Refusing to start with ephemeral local storage, which '
+            'loses uploaded files on every redeploy. Set ALLOW_EPHEMERAL_MEDIA=true '
+            'only if this host has a persistent disk.'
+        )
+
 # Sentry
 SENTRY_DSN = env('SENTRY_DSN', default='')
 if SENTRY_DSN:
