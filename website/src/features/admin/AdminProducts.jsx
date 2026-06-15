@@ -12,6 +12,16 @@ import { SkeletonBox } from '../../components/Skeletons';
 import LibraryPicker from '../../components/LibraryPicker';
 import { useAdminProducts, useCategories, useBrands } from '../../hooks/useQueries';
 
+/* Image thumbnail that falls back to a placeholder icon when there's no image
+   OR when the image fails to load (broken/non-previewing URL). */
+function Thumb({ src, className = '', iconSize = 18 }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return <div className={`${className} flex items-center justify-center bg-[var(--bg-tertiary)]`}><ImageIcon size={iconSize} className="text-[var(--text-muted)]" /></div>;
+  }
+  return <img src={src} alt="" loading="lazy" onError={() => setFailed(true)} className={`${className} object-cover`} />;
+}
+
 const EMPTY_FORM = {
   name: '', sku: '', category: '', brand: '', price: '', compare_at_price: '',
   is_on_sale: false, description: '', short_description: '', stock_quantity: '',
@@ -944,12 +954,7 @@ export default function AdminProducts() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-lg bg-[var(--bg-tertiary)] flex-shrink-0 overflow-hidden">
-                            {thumb
-                              ? <img src={thumb} alt="" className="w-full h-full object-cover" />
-                              : <ImageIcon size={20} className="m-auto text-[var(--text-muted)] mt-3" />
-                            }
-                          </div>
+                          <Thumb src={thumb} className="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden" iconSize={20} />
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <p className="text-sm font-medium text-[var(--text-primary)] truncate max-w-40">{product.name}</p>

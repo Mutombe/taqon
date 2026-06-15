@@ -5,7 +5,7 @@ import {
   Buildings, Cube, Plus, MagnifyingGlass, X, CircleNotch, Pencil, Trash,
   CaretDown, ClockCounterClockwise, FileArrowUp, ClipboardText,
   CurrencyDollar, FilePdf, ArrowDown, ArrowUp, Tag, Check, Copy, Plus as PlusIcon,
-  Storefront, LinkSimple, ArrowSquareOut, LinkBreak, Star,
+  Storefront, LinkSimple, ArrowSquareOut, LinkBreak, Star, Image as ImageIcon,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,6 +13,16 @@ import { adminApi } from '../../api/admin';
 import { SkeletonBox } from '../../components/Skeletons';
 
 const money = (v, cur = 'USD') => (v == null || v === '' ? '—' : `${cur === 'USD' ? '$' : cur + ' '}${parseFloat(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+
+/* Thumbnail that falls back to a placeholder icon when there's no image OR the
+   image fails to load (broken/non-previewing URL). */
+function Thumb({ src, className = '', iconSize = 14 }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return <div className={`${className} flex items-center justify-center bg-[var(--bg-tertiary)]`}><ImageIcon size={iconSize} className="text-[var(--text-muted)]" /></div>;
+  }
+  return <img src={src} alt="" loading="lazy" onError={() => setFailed(true)} className={`${className} object-cover`} />;
+}
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
 const fmtDateTime = (d) => (d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—');
 
@@ -632,8 +642,8 @@ function MaterialRow({ material, onAddPrice, onDuplicate, onEdit, onDelete, onSh
     <div className="border-b border-[var(--card-border)] last:border-0">
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 md:gap-4 px-5 py-3 items-center hover:bg-[var(--bg-tertiary)]/40">
         <div className="min-w-0 flex items-center gap-2.5">
-          {material.product_image && (
-            <img src={material.product_image} alt="" loading="lazy" className="w-9 h-9 rounded-lg object-cover border border-[var(--card-border)] flex-shrink-0" />
+          {material.product && (
+            <Thumb src={material.product_image} className="w-9 h-9 rounded-lg border border-[var(--card-border)] flex-shrink-0 overflow-hidden" iconSize={15} />
           )}
           <div className="min-w-0 flex-1">
             <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-1.5 text-left w-full min-w-0">
@@ -919,9 +929,7 @@ function ShopLinkModal({ material, onClose, onChanged }) {
     return (
       <Drawer title="Shop link" onClose={onClose}>
         <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 mb-4 flex items-center gap-3">
-          {material.product_image && (
-            <img src={material.product_image} alt="" className="w-11 h-11 rounded-lg object-cover border border-green-500/20 flex-shrink-0" />
-          )}
+          <Thumb src={material.product_image} className="w-11 h-11 rounded-lg border border-green-500/20 flex-shrink-0 overflow-hidden" iconSize={18} />
           <div className="min-w-0">
             <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-1.5 truncate"><Storefront size={15} className="text-green-600 dark:text-green-400 flex-shrink-0" /> {material.product_name}</p>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">{material.in_shop ? 'Live in the shop' : 'Linked — product is inactive'}{material.product_price != null ? ` · ${money(material.product_price)}` : ''}</p>
