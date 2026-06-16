@@ -99,6 +99,8 @@ export const adminApi = {
   // Categories & Brands (for product form dropdowns)
   getCategories: () => api.get('/shop/categories/'),
   createCategory: (data) => api.post('/shop/admin/categories/', data),
+  getShopSettings: () => api.get('/shop/admin/settings/'),
+  updateShopSettings: (data) => api.patch('/shop/admin/settings/', data),
   getBrands: () => api.get('/shop/brands/'),
   createBrand: (data) => api.post('/shop/admin/brands/', data),
 

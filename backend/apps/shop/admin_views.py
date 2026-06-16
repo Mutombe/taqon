@@ -16,7 +16,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from apps.core.pagination import StandardPagination
 from apps.core.permissions import IsAdmin
 
-from .models import Product, ProductImage, Category, Brand, MediaAsset, GalleryHidden
+from .models import Product, ProductImage, Category, Brand, MediaAsset, GalleryHidden, ShopSetting
 from .serializers import (
     ProductListSerializer,
     ProductImageSerializer,
@@ -28,7 +28,23 @@ from .admin_serializers import (
     AdminProductCreateUpdateSerializer,
     AdminCategoryCreateUpdateSerializer,
     AdminBrandCreateUpdateSerializer,
+    ShopSettingSerializer,
 )
+
+
+class AdminShopSettingsView(APIView):
+    """Admin: read or update shop-wide settings (default product order)."""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        return Response(ShopSettingSerializer(ShopSetting.load()).data)
+
+    def patch(self, request):
+        obj = ShopSetting.load()
+        ser = ShopSettingSerializer(obj, data=request.data, partial=True)
+        ser.is_valid(raise_exception=True)
+        ser.save()
+        return Response(ser.data)
 
 logger = logging.getLogger(__name__)
 

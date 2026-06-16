@@ -63,6 +63,7 @@ urlpatterns = [
     path('admin/media/upload/', admin_views.AdminMediaUploadView.as_view(), name='admin-media-upload'),
     path('admin/media/<str:item_id>/delete/', admin_views.AdminMediaDeleteView.as_view(), name='admin-media-delete'),
     path('admin/gallery/hide/', admin_views.AdminGalleryHideView.as_view(), name='admin-gallery-hide'),
+    path('admin/settings/', admin_views.AdminShopSettingsView.as_view(), name='admin-shop-settings'),
 
     # Public gallery
     path('gallery/', views.GalleryView.as_view(), name='public-gallery'),

@@ -394,3 +394,51 @@ class GalleryHidden(TimeStampedModel):
 
     def __str__(self):
         return self.url
+
+
+# Ordering choices admins can pick for the shop's default product order, mapped
+# to the actual order_by used by the public product list.
+PRODUCT_ORDERING_CHOICES = [
+    ('featured', 'Featured first'),
+    ('newest', 'Newest first'),
+    ('oldest', 'Oldest first'),
+    ('price_asc', 'Price: low to high'),
+    ('price_desc', 'Price: high to low'),
+    ('name', 'Name: A to Z'),
+    ('rating', 'Top rated'),
+]
+PRODUCT_ORDERING_MAP = {
+    'featured': ['-is_featured', '-created_at'],
+    'newest': ['-created_at'],
+    'oldest': ['created_at'],
+    'price_asc': ['price'],
+    'price_desc': ['-price'],
+    'name': ['name'],
+    'rating': ['-average_rating', '-created_at'],
+}
+
+
+class ShopSetting(TimeStampedModel):
+    """Singleton holding shop-wide preferences an admin can tweak."""
+
+    default_product_ordering = models.CharField(
+        max_length=20, choices=PRODUCT_ORDERING_CHOICES, default='newest',
+        help_text='Default order products appear in the shop (when the visitor has not picked a sort).',
+    )
+
+    class Meta:
+        verbose_name = 'Shop setting'
+        verbose_name_plural = 'Shop settings'
+
+    def __str__(self):
+        return 'Shop settings'
+
+    @classmethod
+    def load(cls):
+        obj = cls.objects.first()
+        if obj is None:
+            obj = cls.objects.create()
+        return obj
+
+    def ordering_list(self):
+        return PRODUCT_ORDERING_MAP.get(self.default_product_ordering, ['-created_at'])

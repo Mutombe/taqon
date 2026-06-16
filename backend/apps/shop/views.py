@@ -156,6 +156,12 @@ class ProductListView(generics.ListAPIView):
     ordering = ['-created_at']
 
     def get_queryset(self):
+        # Default order = the admin-chosen shop setting (used when the visitor
+        # hasn't picked an explicit `?ordering=`). OrderingFilter reads
+        # self.ordering as the default, so we set it here before filtering.
+        if not self.request.query_params.get('ordering'):
+            from .models import ShopSetting
+            self.ordering = ShopSetting.load().ordering_list()
         return (
             Product.objects
             .filter(is_active=True)

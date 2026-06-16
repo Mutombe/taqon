@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, MagnifyingGlass, Pencil, Trash, X, UploadSimple,
   Package, CheckCircle, XCircle, Star, Tag, CircleNotch,
-  Funnel, CaretLeft, CaretRight, Image as ImageIcon, Copy, Images,
+  Funnel, CaretLeft, CaretRight, Image as ImageIcon, Copy, Images, SortAscending,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
 import { SkeletonBox } from '../../components/Skeletons';
 import LibraryPicker from '../../components/LibraryPicker';
@@ -846,6 +846,24 @@ export default function AdminProducts() {
 
   const allSelected = products.length > 0 && products.every((p) => selected.includes(p.id));
 
+  // Shop-wide default product order (admin setting).
+  const { data: shopSettings } = useQuery({
+    queryKey: ['shopSettings'],
+    queryFn: () => adminApi.getShopSettings().then((r) => r.data),
+    staleTime: 60_000,
+  });
+  const [savingOrder, setSavingOrder] = useState(false);
+  const changeDefaultOrder = async (value) => {
+    setSavingOrder(true);
+    try {
+      await adminApi.updateShopSettings({ default_product_ordering: value });
+      queryClient.invalidateQueries({ queryKey: ['shopSettings'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] }); // public shop refetches
+      toast.success('Default shop order updated');
+    } catch { toast.error('Failed to update order'); }
+    finally { setSavingOrder(false); }
+  };
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -861,6 +879,25 @@ export default function AdminProducts() {
           <Plus size={16} weight="bold" />
           Add Product
         </button>
+      </div>
+
+      {/* Shop display setting */}
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)]">
+        <SortAscending size={18} className="text-taqon-orange flex-shrink-0" />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-[var(--text-primary)]">Default product order in the shop</p>
+          <p className="text-xs text-[var(--text-muted)]">How products are sorted for visitors who haven't picked a sort.</p>
+        </div>
+        <select
+          className="auth-input text-sm ml-auto"
+          value={shopSettings?.default_product_ordering || 'newest'}
+          disabled={!shopSettings || savingOrder}
+          onChange={(e) => changeDefaultOrder(e.target.value)}
+        >
+          {(shopSettings?.ordering_options || []).map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Filters */}

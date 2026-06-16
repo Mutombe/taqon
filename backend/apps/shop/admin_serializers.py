@@ -2,12 +2,25 @@
 Admin-only serializers for writable Product, Category, and Brand CRUD.
 """
 from rest_framework import serializers
-from .models import Category, Brand, Product
+from .models import Category, Brand, Product, ShopSetting, PRODUCT_ORDERING_CHOICES
 from .serializers import (
     CategoryCompactSerializer,
     BrandCompactSerializer,
     ProductImageSerializer,
 )
+
+
+class ShopSettingSerializer(serializers.ModelSerializer):
+    """Shop-wide settings (default product order, …)."""
+    ordering_options = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ShopSetting
+        fields = ['default_product_ordering', 'ordering_options', 'updated_at']
+        read_only_fields = ['ordering_options', 'updated_at']
+
+    def get_ordering_options(self, obj):
+        return [{'value': k, 'label': v} for k, v in PRODUCT_ORDERING_CHOICES]
 
 
 class AdminProductDetailSerializer(serializers.ModelSerializer):
