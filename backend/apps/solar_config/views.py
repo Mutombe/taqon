@@ -840,13 +840,13 @@ class PackagesCatalogueView(APIView):
     # the work; the second is instant.
     _CACHE_TTL_SECONDS = 60 * 15
 
-    def _cached_pdf(self):
+    def _cached_pdf(self, key='packages_catalogue_pdf_v6'):
         from django.core.cache import cache
-        return cache.get('packages_catalogue_pdf_v6')
+        return cache.get(key)
 
-    def _set_cached_pdf(self, pdf_bytes):
+    def _set_cached_pdf(self, pdf_bytes, key='packages_catalogue_pdf_v6'):
         from django.core.cache import cache
-        cache.set('packages_catalogue_pdf_v6', pdf_bytes, self._CACHE_TTL_SECONDS)
+        cache.set(key, pdf_bytes, self._CACHE_TTL_SECONDS)
 
     def _build(self, request):
         from django.http import HttpResponse
@@ -855,12 +855,30 @@ class PackagesCatalogueView(APIView):
         from django.db.models import Prefetch
         import uuid
 
+        # Optional single-package brochure: ?slug=<package-slug> renders just
+        # that package (within its family) instead of the whole catalogue.
+        slug = (request.query_params.get('slug') or '').strip()
+        focus_pkg = None
+        if slug:
+            focus_pkg = (
+                SolarPackageTemplate.objects
+                .filter(slug=slug, is_active=True, is_deleted=False)
+                .select_related('family').first()
+            )
+        scoped = bool(focus_pkg and focus_pkg.family_id)
+        cache_key = f'package_brochure_v1_{slug}' if scoped else 'packages_catalogue_pdf_v6'
+        if scoped:
+            safe = ''.join(c if (c.isalnum() or c in ' -_') else '' for c in (focus_pkg.name or 'Package')).strip().replace(' ', '-') or 'Package'
+            base_filename = f'Taqon-{safe}'
+        else:
+            base_filename = 'Taqon-Electrico-Packages-Catalogue'
+
         # Serve cached bytes if we have them. Saves the 9-15s WeasyPrint
         # render on every subsequent request.
-        cached = self._cached_pdf()
+        cached = self._cached_pdf(cache_key)
         if cached:
             response = HttpResponse(cached, content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="Taqon-Electrico-Packages-Catalogue.pdf"'
+            response['Content-Disposition'] = f'attachment; filename="{base_filename}.pdf"'
             self._track(request, len(cached), True, cache_hit=True)
             return response
 
@@ -873,12 +891,16 @@ class PackagesCatalogueView(APIView):
             .order_by('price')
             .prefetch_related(Prefetch('items', queryset=PackageComponent.objects.select_related('component', 'component__material').prefetch_related('component__material__supplier_prices')))
         )
+        if scoped:
+            active_pkg_qs = active_pkg_qs.filter(slug=slug)  # only the chosen variant
         family_qs = (
             PackageFamily.objects
             .filter(is_active=True, is_deleted=False)
             .order_by('kva_rating')
             .prefetch_related(Prefetch('packages', queryset=active_pkg_qs, to_attr='active_pkgs'))
         )
+        if scoped:
+            family_qs = family_qs.filter(pk=focus_pkg.family_id)
 
         families = []
         try:
@@ -1022,11 +1044,11 @@ class PackagesCatalogueView(APIView):
         # Cache only successful PDFs so a transient render failure
         # doesn't get baked in for 15 minutes.
         if is_pdf:
-            self._set_cached_pdf(pdf_bytes)
+            self._set_cached_pdf(pdf_bytes, cache_key)
 
         response = HttpResponse(pdf_bytes, content_type=content_type)
         response['Content-Disposition'] = (
-            f'attachment; filename="Taqon-Electrico-Packages-Catalogue.{ext}"'
+            f'attachment; filename="{base_filename}.{ext}"'
         )
 
         self._track(

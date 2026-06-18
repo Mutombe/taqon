@@ -32,7 +32,6 @@ import { quotationsApi } from '../api/quotations';
 import useAuthStore from '../stores/authStore';
 import DepositModal from './DepositModal';
 import { getSavedLocation, saveLocation } from '../data/locationSession';
-import { openPackageBrochure } from '../lib/packageBrochure';
 import LocationPicker from './LocationPicker';
 
 // Icon map for the includes section
@@ -308,6 +307,40 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
   const [expanded, setExpanded] = useState(false);
   const [showFeatureDetails, setShowFeatureDetails] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [downloadingBrochure, setDownloadingBrochure] = useState(false);
+
+  // One-click brochure download — a real PDF straight to the device (no print
+  // dialog). Fetches a per-package catalogue and saves it.
+  const downloadBrochure = async () => {
+    const slug = pkg?._apiData?.slug || pkg?.slug;
+    if (!slug || downloadingBrochure) return;
+    setDownloadingBrochure(true);
+    const t = toast.loading('Preparing your brochure…');
+    try {
+      const res = await solarConfigApi.getPackagesCatalogue({ slug, source: 'package_detail' });
+      const ct = res.headers['content-type'] || 'application/pdf';
+      const ext = ct.includes('html') ? 'html' : 'pdf';
+      const blob = new Blob([res.data], { type: ct });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Taqon-${(pkg?._apiData?.name || pkg?.name || 'Package').replace(/[^a-z0-9]+/gi, '-')}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Brochure downloaded', { id: t });
+    } catch (err) {
+      toast.error(
+        err?.response?.status >= 500
+          ? 'Brochure is being built — try again in a moment.'
+          : 'Could not generate the brochure. Please try again.',
+        { id: t },
+      );
+    } finally {
+      setDownloadingBrochure(false);
+    }
+  };
 
   // Resolve gem identity from family slug or kVA
   const apiData = pkg._apiData;
@@ -469,17 +502,11 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
                   </button>
                 )}
                 <button
-                  onClick={() =>
-                    openPackageBrochure(pkg._apiData || pkg, {
-                      family: pkg._apiData?.family,
-                      includes: pkg.includes || [],
-                      appliances: pkg.appliances || [],
-                      surface: 'package_detail',
-                    })
-                  }
-                  className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium"
+                  onClick={downloadBrochure}
+                  disabled={downloadingBrochure}
+                  className="inline-flex items-center gap-2 px-6 py-3.5 border border-white/20 text-white rounded-xl hover:bg-white/5 transition-all font-medium disabled:opacity-70 disabled:cursor-wait"
                 >
-                  <FileText size={16} weight="duotone" /> Download Brochure
+                  <FileText size={16} weight="duotone" /> {downloadingBrochure ? 'Preparing…' : 'Download Brochure'}
                 </button>
                 <a
                   href="tel:+263772771036"
