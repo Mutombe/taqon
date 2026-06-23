@@ -12,7 +12,6 @@ import LocationPicker from '../components/LocationPicker';
 import { calculateDeliveryFee } from '../data/zimbabweAreas';
 import { saveLocation, getSavedLocation } from '../data/locationSession';
 import SEO from '../components/SEO';
-import TaqonMascot from '../components/TaqonMascot';
 import {
   TAQON_PHONE, TAQON_EMAIL, TAQON_ADDRESS, TAQON_WHATSAPP_URL,
 } from '../data/siteData';
@@ -250,7 +249,7 @@ export default function Inquiry() {
       <section className="relative bg-taqon-dark overflow-hidden">
         <div className="absolute inset-0 dark-mesh" />
         <div className="relative z-10 max-w-4xl mx-auto px-4 pt-36 pb-12 lg:pt-44 lg:pb-14">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-2xl">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.2em]">Free recommendation</span>
             <h1 className="mt-3 text-3xl lg:text-5xl font-bold font-syne text-white leading-tight">
               Tell us about your <span className="text-gradient">home or business</span>
@@ -261,15 +260,6 @@ export default function Inquiry() {
             </p>
           </motion.div>
         </div>
-        {/* Taqon, side profile, looking toward the form (desktop) */}
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="hidden xl:block absolute right-6 2xl:right-16 bottom-0 z-0 pointer-events-none"
-        >
-          <TaqonMascot variant="side" size={250} />
-        </motion.div>
       </section>
 
       {/* Form */}

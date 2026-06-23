@@ -55,7 +55,6 @@ const categoryIcons = {
 import { getGemFamily, TIER_GEMS } from '../data/gemFamilies';
 import { ZIMBABWE_AREAS, getDistanceByArea, getAreaCoords, findNearestArea, haversineKm, HQ_COORDS } from '../data/zimbabweAreas';
 import DistanceMap from '../components/DistanceMap';
-import TaqonMascot from '../components/TaqonMascot';
 
 const tierLabels = { budget: 'Budget', good_fit: 'Recommended', excellent: 'Excellent' };
 const tierBadgeColors = {
@@ -1608,37 +1607,6 @@ function CalculationLog({ selections, appliances, totals, distanceKm, recommenda
           transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
           className="overflow-hidden rounded-2xl"
         >
-          {/* Taqon, the advisor, working the numbers */}
-          <div className="flex items-center gap-3 mb-4 px-1">
-            <motion.img
-              src="/mascot/taqon-mascot-bust.webp"
-              width={64}
-              height={68}
-              alt="Taqon"
-              draggable={false}
-              className="w-14 h-14 sm:w-16 sm:h-16 object-contain select-none shrink-0"
-              style={{ filter: 'drop-shadow(0 6px 12px rgba(242,101,34,0.3))' }}
-              animate={{ y: [0, -4, 0] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <div className="min-w-0">
-              <p className="text-sm sm:text-base font-semibold text-white font-syne flex items-center gap-2">
-                Taqon is sizing your system
-                <span className="flex gap-0.5">
-                  {[0, 1, 2].map((d) => (
-                    <motion.span
-                      key={d}
-                      className="w-1 h-1 rounded-full bg-taqon-orange"
-                      animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{ duration: 1.2, repeat: Infinity, delay: d * 0.2 }}
-                    />
-                  ))}
-                </span>
-              </p>
-              <p className="text-xs text-white/40 font-mono">matching your load profile to the right package</p>
-            </div>
-          </div>
-
           <div className="bg-[#0D1117] border border-white/[0.06] rounded-xl overflow-hidden shadow-2xl shadow-black/20">
             {/* Terminal header */}
             <div className="flex items-center gap-2 px-4 py-3 bg-[#161B22] border-b border-white/[0.06]">
@@ -2122,7 +2090,7 @@ export default function SolarAdvisor() {
       <section className="relative bg-taqon-dark pt-36 pb-6 lg:pt-44 lg:pb-10 overflow-hidden">
         <div className="absolute inset-0 dark-mesh" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl lg:max-w-2xl">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-taqon-orange text-xs sm:text-sm font-semibold uppercase tracking-[0.15em]">
               Solar Advisor
             </span>
@@ -2132,17 +2100,6 @@ export default function SolarAdvisor() {
             <p className="mt-3 sm:mt-4 text-white/60 text-base sm:text-lg max-w-xl">
               Tell us what you want to power. We'll recommend the right solar package with transparent pricing.
             </p>
-          </motion.div>
-
-          {/* Mascot — Taqon greets you on the right (desktop). Bottom-anchored so
-              it peeks up out of the hero. */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.25, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="hidden lg:block absolute right-2 xl:right-6 bottom-0 pointer-events-none z-0"
-          >
-            <TaqonMascot variant="front" size={300} priority />
           </motion.div>
 
           {/* Step indicators */}
