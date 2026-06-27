@@ -39,14 +39,14 @@ class Command(BaseCommand):
                 continue
             if p.generate_og_image(force=opts['force']):
                 made += 1
-                self.stdout.write(self.style.SUCCESS(f'✓ {p.slug}'))
+                self.stdout.write(self.style.SUCCESS(f'[ok]   {p.slug}'))
             else:
                 failed += 1
-                self.stdout.write(self.style.WARNING(f'✗ no usable source image: {p.slug}'))
+                self.stdout.write(self.style.WARNING(f'[skip] no usable source image: {p.slug}'))
 
         self.stdout.write(
             self.style.MIGRATE_HEADING(
-                f'\nDone — generated {made}, skipped {skipped} (already had one), '
+                f'\nDone - generated {made}, skipped {skipped} (already had one), '
                 f'{failed} without a source image.'
             )
         )

@@ -42,7 +42,8 @@ const esc = (s = '') =>
  * the proxy is never used for that product.
  */
 function crawlerSafeImage(u) {
-  if (!u) return ROBOT;
+  // Empty or non-absolute (e.g. seed junk like "/1.jpg") → branded fallback.
+  if (!u || !/^https?:\/\//i.test(u)) return ROBOT;
   if (/^https?:\/\/[^?]*\.(jpe?g|png|gif)(\?|$)/i.test(u)) return u;
   const noScheme = u.replace(/^https?:\/\//, '');
   return `https://images.weserv.nl/?url=ssl:${encodeURIComponent(noScheme)}` +
