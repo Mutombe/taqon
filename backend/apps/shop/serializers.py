@@ -121,17 +121,25 @@ class ProductListSerializer(serializers.ModelSerializer):
     primary_image = ProductImageSerializer(read_only=True)
     sale_percentage = serializers.IntegerField(read_only=True)
     in_stock = serializers.BooleanField(read_only=True)
+    og_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'slug', 'sku',
             'price', 'compare_at_price', 'is_on_sale', 'sale_percentage',
-            'in_stock', 'category', 'brand', 'primary_image',
+            'in_stock', 'category', 'brand', 'primary_image', 'og_image_url',
             'average_rating', 'total_reviews', 'is_featured',
             'is_active', 'stock_quantity',
         ]
         read_only_fields = fields
+
+    def get_og_image_url(self, obj):
+        """Self-hosted JPEG for social link previews (None until generated)."""
+        try:
+            return obj.og_image.url if obj.og_image else None
+        except Exception:
+            return None
 
 
 # ── Product Detail (full) ───────────────────────────────────────────

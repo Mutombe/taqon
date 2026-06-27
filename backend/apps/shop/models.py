@@ -82,6 +82,12 @@ class Product(SoftDeleteModel):
     total_reviews = models.PositiveIntegerField(default=0)
     meta_title = models.CharField(max_length=200, blank=True)
     meta_description = models.CharField(max_length=500, blank=True)
+    og_image = models.ImageField(
+        upload_to='og/products/', blank=True, null=True,
+        help_text='Auto-generated 1200×1200 JPEG for social link previews. '
+                  'LinkedIn/WhatsApp/Facebook crawlers do not render WebP, so '
+                  'this self-hosted JPEG is served as the og:image.',
+    )
 
     class Meta:
         ordering = ['-created_at']
@@ -120,6 +126,63 @@ class Product(SoftDeleteModel):
         if not img:
             img = self.images.first()
         return img
+
+    def generate_og_image(self, force=False, save=True):
+        """Render the primary product image into a 1200×1200 white-background
+        JPEG used as the social-media og:image (crawlers don't render WebP).
+
+        Returns True if a derivative was written, False if there's no usable
+        source. Best-effort — never raises, so it's safe to call from signals.
+        """
+        from io import BytesIO
+        from PIL import Image
+        from django.core.files.base import ContentFile
+
+        if self.og_image and not force:
+            return False
+
+        img = self.primary_image
+        if not img:
+            return False
+
+        source = None
+        try:
+            if img.image and getattr(img.image, 'name', ''):
+                source = img.image.open('rb')
+            elif img.image_url:
+                import requests
+                resp = requests.get(img.image_url, timeout=20)
+                resp.raise_for_status()
+                source = BytesIO(resp.content)
+            else:
+                return False
+
+            im = Image.open(source)
+            # Flatten any transparency onto white, then normalise to RGB.
+            if im.mode in ('RGBA', 'LA', 'P'):
+                im = im.convert('RGBA')
+                bg = Image.new('RGBA', im.size, (255, 255, 255, 255))
+                bg.paste(im, (0, 0), im)
+                im = bg.convert('RGB')
+            else:
+                im = im.convert('RGB')
+
+            im.thumbnail((1200, 1200), Image.LANCZOS)
+            canvas = Image.new('RGB', (1200, 1200), (255, 255, 255))
+            canvas.paste(im, ((1200 - im.width) // 2, (1200 - im.height) // 2))
+            buf = BytesIO()
+            canvas.save(buf, 'JPEG', quality=85, optimize=True)
+        except Exception:
+            return False
+        finally:
+            try:
+                if source is not None and hasattr(source, 'close'):
+                    source.close()
+            except Exception:
+                pass
+
+        self.og_image.save(f'{self.slug}.jpg', ContentFile(buf.getvalue()), save=save)
+        return True
 
 
 class ProductImage(TimeStampedModel):
