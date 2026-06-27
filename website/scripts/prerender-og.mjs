@@ -31,6 +31,24 @@ const esc = (s = '') =>
   String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
     .replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+/**
+ * Return a link-preview-safe image URL. LinkedIn / WhatsApp / Facebook crawlers
+ * do NOT render WebP og:image, so any non-JPEG/PNG image is routed through the
+ * weserv image proxy which transcodes to a 1200×1200 white-bg JPEG on the fly.
+ * JPEG/PNG/GIF URLs (already crawler-safe) are returned untouched. This affects
+ * only the og:image seen by crawlers — on-page images keep their WebP.
+ *
+ * Once the backend supplies a self-hosted JPEG (og_image_url), prefer that and
+ * the proxy is never used for that product.
+ */
+function crawlerSafeImage(u) {
+  if (!u) return ROBOT;
+  if (/^https?:\/\/[^?]*\.(jpe?g|png|gif)(\?|$)/i.test(u)) return u;
+  const noScheme = u.replace(/^https?:\/\//, '');
+  return `https://images.weserv.nl/?url=ssl:${encodeURIComponent(noScheme)}` +
+    `&w=1200&h=1200&fit=contain&cbg=white&output=jpg&q=85`;
+}
+
 function setMeta(html, key, value) {
   const attr = key.startsWith('og:') ? 'property' : 'name';
   const re = new RegExp(`(<meta ${attr}="${key}" content=")[^"]*(")`);
@@ -196,7 +214,10 @@ async function main() {
 
     for (const p of products) {
       if (!p.slug) continue;
-      const img = p.primary_image?.image || p.primary_image?.image_url || ROBOT;
+      // Prefer a self-hosted JPEG derivative when the backend provides one;
+      // otherwise make the primary image crawler-safe (WebP → JPEG via proxy).
+      const rawImg = p.primary_image?.image || p.primary_image?.image_url || ROBOT;
+      const img = p.og_image_url || crawlerSafeImage(rawImg);
       const brand = p.brand?.name || p.brand || '';
       const cat = p.category?.name || p.category || 'Solar equipment';
       const url = `${SITE}/shop/${p.slug}/`;
