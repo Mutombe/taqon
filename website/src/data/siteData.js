@@ -436,34 +436,41 @@ export const faqs = [
   },
 ];
 
-// Video testimonials
+// Video stories — educational solar guides from our YouTube channel
+// (Smart Solar Choices Zimbabwe). Thumbnails use maxresdefault where available,
+// falling back to hqdefault for videos without a 1280×720 thumbnail.
 export const videoTestimonials = [
   {
     id: 1,
-    name: 'Solar Panel Care',
-    role: 'Taqon Electrico Tips',
-    quote: 'How to make your solar panels last longer — essential maintenance tips from our experts.',
-    thumbnail: '/40.jpeg',
-    videoUrl: 'https://www.youtube.com/embed/YC5FgZPe1o0',
+    name: '6 Things to Check Before Buying a Solar Lithium Battery',
+    role: 'Smart Solar Choices Zimbabwe',
+    thumbnail: 'https://img.youtube.com/vi/hFyo2JjGVjM/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/hFyo2JjGVjM',
     platform: 'youtube',
   },
   {
     id: 2,
-    name: 'Energy Saving Tips',
-    role: 'Taqon Electrico Tips',
-    quote: 'Home energy wasting habits — discover what\'s costing you money and how to stop it.',
-    thumbnail: '/51.jpeg',
-    videoUrl: 'https://www.youtube.com/embed/gkUOhNN_-1Y',
+    name: '5 Common Mistakes People Make When Buying a Solar System',
+    role: 'Smart Solar Choices Zimbabwe',
+    thumbnail: 'https://img.youtube.com/vi/XELh-kQG6dQ/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/XELh-kQG6dQ',
     platform: 'youtube',
   },
   {
     id: 3,
-    name: 'Taqon In Action',
-    role: 'Taqon Electrico',
-    quote: 'Watch our team in action — delivering quality solar installations across Zimbabwe.',
-    thumbnail: '/kadoma-24kva-1.jpg',
-    videoUrl: 'https://www.facebook.com/share/r/17dt3R1mMv/',
-    platform: 'facebook',
+    name: 'Top 5 Solar Inverters in Zimbabwe (2025 Buyers Guide)',
+    role: 'Smart Solar Choices Zimbabwe',
+    thumbnail: 'https://img.youtube.com/vi/cLcKy5p_JOQ/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/cLcKy5p_JOQ',
+    platform: 'youtube',
+  },
+  {
+    id: 4,
+    name: '10+1 Things to Look for When Choosing a Solar Inverter',
+    role: 'Smart Solar Choices Zimbabwe',
+    thumbnail: 'https://img.youtube.com/vi/3TE1Lu6PCoU/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/3TE1Lu6PCoU',
+    platform: 'youtube',
   },
 ];
 

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   Sun, Lightning, Drop, Lightbulb, Wrench, ArrowRight, ArrowUpRight,
-  CaretRight, Star, Play, Shield, Trophy, CheckCircle, Phone, ArrowSquareOut
+  CaretRight, Play, Shield, Trophy, CheckCircle, Phone, ArrowSquareOut
 } from '@phosphor-icons/react';
 import AnimatedSection, { StaggerContainer, StaggerItem } from '../components/AnimatedSection';
 import SEO from '../components/SEO';
@@ -12,7 +12,7 @@ import LiveCounter from '../components/LiveCounter';
 import GoogleReviews from '../components/GoogleReviews';
 import VideoTestimonial from '../components/VideoTestimonial';
 import { autoLink, confirmExternalNavigation } from '../components/ContentLink';
-import { services, stats, testimonials, companyInfo, videoTestimonials } from '../data/siteData';
+import { services, stats, companyInfo, videoTestimonials } from '../data/siteData';
 
 /* Vision: Hero section with dramatic dark background, animated solar panel imagery,
    floating geometric shapes in orange tones, and a powerful headline. Think premium 
@@ -522,67 +522,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== TESTIMONIALS ===== */}
-      <section className="py-20 lg:py-32 relative overflow-hidden">
-        {/* Blended background image */}
-        <div className="absolute inset-0">
-          <img src="/thuli-kirkman-10kva-1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
-          <div className="absolute inset-0 bg-taqon-dark/85" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4">
-          <AnimatedSection className="text-center mb-16">
-            <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">Testimonials</span>
-            <h2 className="mt-3 text-3xl lg:text-5xl font-bold font-syne text-white">
-              What Our <span className="text-gradient">Clients</span> Say
-            </h2>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {testimonials.map((t, i) => (
-              <AnimatedSection key={t.id} delay={i * 0.1}>
-                <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/15 hover:border-taqon-orange/30 hover:bg-white/15 transition-all duration-500 h-full">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(t.rating)].map((_, j) => (
-                      <Star key={j} size={16} className="fill-taqon-gold text-taqon-gold" />
-                    ))}
-                  </div>
-                  <p className="text-white/80 leading-relaxed italic">"{autoLink(t.text)}"</p>
-                  <div className="mt-6 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-taqon-orange/20 backdrop-blur-sm flex items-center justify-center">
-                      <span className="text-taqon-orange font-bold text-sm">{t.name[0]}</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-white">{t.name}</p>
-                      <p className="text-xs text-white/50">{t.role}</p>
-                    </div>
-                  </div>
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== VIDEO TESTIMONIALS ===== */}
-      <section className="py-16 lg:py-24 bg-white dark:bg-taqon-charcoal">
-        <div className="max-w-7xl mx-auto px-4">
-          <AnimatedSection className="text-center mb-12">
-            <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">Video Stories</span>
-            <h2 className="mt-3 text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
-              Hear From Our <span className="text-gradient">Clients</span>
-            </h2>
-          </AnimatedSection>
-          <div className="grid md:grid-cols-3 gap-6">
-            {videoTestimonials.map((v, i) => (
-              <AnimatedSection key={v.id} delay={i * 0.1}>
-                <VideoTestimonial {...v} />
-              </AnimatedSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ===== GOOGLE REVIEWS ===== */}
+      {/* (Moved into the old Testimonials slot — replaces the text testimonials.) */}
       <section className="py-16 lg:py-24 relative overflow-hidden">
         <div className="absolute inset-0">
           <img src="/thuli-willowvale-16kva-1.jpg" alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -590,6 +531,35 @@ export default function Home() {
         </div>
         <div className="relative max-w-7xl mx-auto px-4">
           <GoogleReviews />
+        </div>
+      </section>
+
+      {/* ===== VIDEO STORIES ===== */}
+      <section className="py-16 lg:py-24 bg-white dark:bg-taqon-charcoal">
+        <div className="max-w-7xl mx-auto px-4">
+          <AnimatedSection className="text-center mb-12">
+            <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">Video Stories</span>
+            <h2 className="mt-3 text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
+              Solar Insights & <span className="text-gradient">Guides</span>
+            </h2>
+          </AnimatedSection>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {videoTestimonials.map((v, i) => (
+              <AnimatedSection key={v.id} delay={i * 0.1}>
+                <VideoTestimonial {...v} />
+              </AnimatedSection>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <a
+              href="https://youtube.com/@smartsolarchoiceszim"
+              onClick={(e) => confirmExternalNavigation('https://youtube.com/@smartsolarchoiceszim', e)}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-taqon-orange hover:text-taqon-amber transition-colors cursor-pointer"
+            >
+              More Solar Guides on YouTube
+              <ArrowSquareOut size={14} />
+            </a>
+          </div>
         </div>
       </section>
 

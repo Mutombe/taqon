@@ -6,6 +6,10 @@ import { useInView } from '../hooks/useAnimations';
 import { reviews, averageRating, totalReviews } from '../data/reviewsData';
 import { autoLink, confirmExternalNavigation } from './ContentLink';
 
+// Taqon Electrico's Google Business listing / reviews (opens the Google
+// knowledge panel with the reviews tab focused).
+const GOOGLE_REVIEWS_URL = 'https://www.google.com/search?gs_ssp=eJzj4tVP1zc0zIhPSS80rDIzYLRSNagwtDQ2TDQ1MjY1MEq1NDVKsTKoMDexNEs0SzExSTY2NzM3NffiL0kszM9TSM1JTS4pykzOBwCtXRQ_&q=taqon+electrico&rlz=1C1CHBF_enZW1159ZW1159&oq=taqo&gs_lcrp=EgZjaHJvbWUqDAgCEC4YJxivARjHATIGCAAQRRg8MgYIARBFGDkyDAgCEC4YJxivARjHATIHCAMQLhiABDIGCAQQRRg8MgYIBRBFGDwyBggGEEUYPDIGCAcQRRg80gEIMjM4NGowajSoAgCwAgE&sourceid=chrome&source=chrome.ob&ie=UTF-8#lrd=0x1931a523502e952d:0x7496a6d44c376757,1,,,,';
+
 function StarRating({ rating }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -166,8 +170,8 @@ export default function GoogleReviews() {
         {/* View on Google Link */}
         <div className="mt-8 text-center">
           <a
-            href="https://www.google.com/maps/place/Taqon+Electrico/"
-            onClick={(e) => confirmExternalNavigation('https://www.google.com/maps/place/Taqon+Electrico/', e)}
+            href={GOOGLE_REVIEWS_URL}
+            onClick={(e) => confirmExternalNavigation(GOOGLE_REVIEWS_URL, e)}
             className="inline-flex items-center gap-2 text-sm font-semibold text-taqon-orange hover:text-taqon-amber transition-colors cursor-pointer"
           >
             View all reviews on Google

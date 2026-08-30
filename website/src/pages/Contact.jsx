@@ -45,7 +45,8 @@ export default function Contact() {
               Contact <span className="text-gradient">Us</span>
             </h1>
             <p className="mt-4 text-white/60 text-lg max-w-xl">
-              Ready to go solar? Get a free consultation and quote from our expert team.
+              Ready to get started? Tell us what you need, and our team will help you find the
+              right solution. Get expert advice and a tailored quotation.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <DownloadProfileButton variant="primary" label="Download Company Profile" />
