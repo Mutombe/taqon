@@ -12,7 +12,7 @@ The shape of the quote — per the user's explicit ask:
         $/kW, $/kWh, system kW, distance km
   - Totals stack: Materials / Labour & Transport / Total
   - Bank transfer details (FBC + Swift)
-  - Standard equipment warranties
+  - Warranty coverage (general, brand-agnostic)
   - Contact strip (address / phone+email / web+date)
 """
 from datetime import datetime
@@ -46,14 +46,22 @@ DEFAULT_BANK = [
 ]
 DEFAULT_CORRESPONDENT = 'Standard Chartered Bank, New York'
 
+# Brand-agnostic warranty coverage — the quote communicates general coverage
+# without committing Taqon to a specific manufacturer's terms (the exact
+# warranty for the selected equipment is confirmed in the final quotation).
+# Each entry is (equipment category, coverage).
 DEFAULT_WARRANTIES = [
-    ('Sunsynk', 'Inverters',                '5 Years'),
-    ('Dyness',  'Batteries',                '5 Years'),
-    ('Must',    'Inverters',                '1 Year'),
-    ('Growatt', 'Inverters',                '1 Year'),
-    ('Solar Panels', 'PV Modules',          '25 Years'),
-    ('Taqon',   'Installation Workmanship', '1-3 Years'),
+    ('Inverters',                  'Up to 10 Years'),
+    ('Lithium Batteries',          'Up to 10 Years'),
+    ('Solar PV Modules',           'Up to 25 Years'),
+    ('Installation & Workmanship', 'Up to 5 Years'),
 ]
+
+WARRANTY_NOTE = (
+    'Warranty periods vary by product, model and manufacturer. The applicable '
+    'warranty for equipment selected will be confirmed in your final quotation. '
+    'Manufacturer warranty terms and conditions apply.'
+)
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -376,28 +384,30 @@ def _bank_details(ref_number):
 
 
 def _warranties_table(warranties):
-    """A three-column table of brand · equipment · warranty term."""
+    """A two-column table of equipment category · general warranty coverage.
+
+    Deliberately brand-agnostic — see DEFAULT_WARRANTIES / WARRANTY_NOTE.
+    """
     from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_RIGHT
     hdr = ParagraphStyle('wh', fontName='Helvetica-Bold', fontSize=7,
                          leading=10, textColor=ORANGE)
-    brand = ParagraphStyle('wb', fontName='Helvetica-Bold', fontSize=9,
+    hdr_r = ParagraphStyle('whr', fontName='Helvetica-Bold', fontSize=7,
+                           leading=10, textColor=ORANGE, alignment=TA_RIGHT)
+    equip = ParagraphStyle('we', fontName='Helvetica-Bold', fontSize=9,
                            leading=12, textColor=INK)
-    equip = ParagraphStyle('we', fontName='Helvetica', fontSize=9,
-                           leading=12, textColor=CHARCOAL)
     yrs = ParagraphStyle('wy', fontName='Helvetica-Bold', fontSize=9,
-                         leading=12, textColor=ORANGE)
+                         leading=12, textColor=ORANGE, alignment=TA_RIGHT)
 
-    rows = [[Paragraph('BRAND', hdr),
-             Paragraph('EQUIPMENT', hdr),
-             Paragraph('WARRANTY', hdr)]]
+    rows = [[Paragraph('EQUIPMENT', hdr),
+             Paragraph('WARRANTY COVERAGE', hdr_r)]]
     for w in warranties:
         rows.append([
-            Paragraph(w[0], brand),
-            Paragraph(w[1], equip),
-            Paragraph(w[2], yrs),
+            Paragraph(w[0], equip),
+            Paragraph(w[1], yrs),
         ])
 
-    tbl = Table(rows, colWidths=[34 * mm, 96 * mm, 44 * mm], repeatRows=1)
+    tbl = Table(rows, colWidths=[124 * mm, 50 * mm], repeatRows=1)
     row_styles = [
         ('BACKGROUND', (0, 0), (-1, 0), INK),
         ('LEFTPADDING', (0, 0), (-1, -1), 10),
@@ -405,7 +415,7 @@ def _warranties_table(warranties):
         ('TOPPADDING', (0, 0), (-1, 0), 8),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
         ('LINEBELOW', (0, 0), (-1, -1), 0.4, HAIRLINE),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]
     for i in range(1, len(rows)):
         row_styles += [
@@ -505,8 +515,15 @@ def build_quotation_pdf(*,
     story.append(Spacer(1, 18))
 
     # ── Warranties ──
-    story.extend(section_header('02 / Warranties', 'Standard equipment warranties'))
+    from reportlab.lib.styles import ParagraphStyle
+    story.extend(section_header('02 / Warranties', 'Warranty Coverage'))
     story.append(_warranties_table(warranties or DEFAULT_WARRANTIES))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(
+        WARRANTY_NOTE,
+        ParagraphStyle('warr_note', fontName='Helvetica-Oblique', fontSize=7.5,
+                       leading=11, textColor=MUTED),
+    ))
     story.append(Spacer(1, 18))
 
     # ── Closing CTA ──

@@ -1063,6 +1063,13 @@ export default function Navbar() {
                   </button>
                 )}
                 <Link
+                  to="/contact"
+                  onClick={() => setMobileOpen(false)}
+                  className="block w-full text-center bg-white/10 text-white py-3.5 rounded-2xl font-semibold hover:bg-white/15 transition-all border border-white/15"
+                >
+                  Contact Us
+                </Link>
+                <Link
                   to="/solar-advisor"
                   className="block w-full text-center bg-taqon-orange text-white py-4 rounded-2xl font-semibold text-lg hover:bg-taqon-orange/90 transition-all"
                 >
