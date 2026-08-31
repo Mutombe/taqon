@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Lightning, ArrowLeft } from '@phosphor-icons/react';
 import SEO from '../components/SEO';
 import GemPackageCard from '../components/GemPackageCard';
+import VideoGuide from '../components/VideoGuide';
 import { useFamilyDetail } from '../hooks/useQueries';
 import { getGemFamily } from '../data/gemFamilies';
 
@@ -129,6 +130,16 @@ export default function FamilyDetail() {
       {/* Package variant cards */}
       <section className="py-12 lg:py-16 bg-taqon-cream dark:bg-taqon-dark">
         <div className="max-w-7xl mx-auto px-4">
+          {/* Family video guide — helps choose among the variants below */}
+          <div className="mb-8">
+            <VideoGuide
+              title={`${family.name} Package Guide`}
+              text={`Watch this quick guide to understand the ${family.name} options and choose the version that best suits your needs.`}
+              url={family.guide_youtube_url}
+              buttonLabel="Watch Guide"
+            />
+          </div>
+
           {packages.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-taqon-muted dark:text-white/40">No packages available for this family yet.</p>

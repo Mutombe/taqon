@@ -529,7 +529,8 @@ def build_quotation_pdf(*,
     # ── Closing CTA ──
     story.append(cta_band(
         'Next step',
-        'Pay 50% to commission, balance on installation.',
+        'Pay 50% deposit to commence work; the remaining 50% balance is due '
+        'immediately upon completion of installation.',
         'Final figure confirmed on completion of works. Valid 10 days.',
         right_label='Talk to engineering',
         right_value='+263 77 277 1036',

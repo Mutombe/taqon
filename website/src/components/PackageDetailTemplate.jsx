@@ -33,7 +33,6 @@ import useAuthStore from '../stores/authStore';
 import DepositModal from './DepositModal';
 import { getSavedLocation, saveLocation } from '../data/locationSession';
 import LocationPicker from './LocationPicker';
-import VideoGuide from './VideoGuide';
 
 // Icon map for the includes section
 const iconMap = {
@@ -309,22 +308,6 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
   const [showFeatureDetails, setShowFeatureDetails] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [downloadingBrochure, setDownloadingBrochure] = useState(false);
-
-  // This family's video selection guide (admin-managed; "coming soon" if unset).
-  const familySlug = pkg?._apiData?.family?.slug || pkg?._apiData?.family_slug || '';
-  const familyName = pkg?._apiData?.family?.name || pkg?._apiData?.family_name || pkg?.name || 'This';
-  const [familyGuide, setFamilyGuide] = useState('');
-  useEffect(() => {
-    let cancelled = false;
-    solarConfigApi.getPackageGuides()
-      .then((res) => {
-        if (cancelled) return;
-        const fam = (res.data?.families || []).find((f) => f.slug === familySlug);
-        setFamilyGuide(fam?.guide_youtube_url || '');
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [familySlug]);
 
   // One-click brochure download — a real PDF straight to the device (no print
   // dialog). Fetches a per-package catalogue and saves it.
@@ -719,18 +702,6 @@ export default function PackageDetailTemplate({ package: pkg, allPackages }) {
               </div>
             </motion.div>
           </div>
-        </div>
-      </section>
-
-      {/* ── Family video selection guide ── */}
-      <section className="py-8 bg-taqon-cream dark:bg-taqon-dark">
-        <div className="max-w-6xl mx-auto px-4">
-          <VideoGuide
-            title={`${familyName} Package Guide`}
-            text={`Watch this quick guide to understand the ${familyName} options and choose the version that best suits your needs.`}
-            url={familyGuide}
-            buttonLabel="Watch Guide"
-          />
         </div>
       </section>
 
