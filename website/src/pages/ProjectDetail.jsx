@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,19 +11,34 @@ import CommentSection from '../components/CommentSection';
 import { autoLink, confirmExternalNavigation } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { projectsData } from '../data/projectsData';
+import { projectsApi } from '../api/projects';
 
 export default function ProjectDetail() {
   const { slug } = useParams();
-  const project = projectsData.find((p) => p.slug === slug);
+  // Start from the built-in data (instant + SEO), then override with the
+  // admin-managed API version when it loads.
+  const fallback = projectsData.find((p) => p.slug === slug) || null;
+  const [project, setProject] = useState(fallback);
+  const [notFound, setNotFound] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const [currentIdx, setCurrentIdx] = useState(0);
 
-  if (!project) return <Navigate to="/projects" replace />;
+  useEffect(() => {
+    let cancelled = false;
+    projectsApi.detail(slug)
+      .then((res) => { if (!cancelled) setProject(res.data); })
+      .catch(() => { if (!cancelled && !fallback) setNotFound(true); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
 
-  // Adjacent projects for navigation
-  const idx = projectsData.indexOf(project);
+  if (notFound && !project) return <Navigate to="/projects" replace />;
+  if (!project) return null;
+
+  // Adjacent projects for navigation (based on the built-in ordering).
+  const idx = projectsData.findIndex((p) => p.slug === slug);
   const prev = idx > 0 ? projectsData[idx - 1] : null;
-  const next = idx < projectsData.length - 1 ? projectsData[idx + 1] : null;
+  const next = idx >= 0 && idx < projectsData.length - 1 ? projectsData[idx + 1] : null;
 
   const openLightbox = (i) => {
     setCurrentIdx(i);

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MapPin, Lightning, Heart } from '@phosphor-icons/react';
 import AnimatedSection, { AnimatedCounter } from '../components/AnimatedSection';
 import SEO from '../components/SEO';
 import { projectsData } from '../data/projectsData';
+import { projectsApi } from '../api/projects';
 import useSavesStore from '../stores/savesStore';
 
 const categories = ['all', 'residential', 'commercial'];
@@ -13,10 +14,26 @@ export default function Projects() {
   const [active, setActive] = useState('all');
   const { toggleProject, likedProjects } = useSavesStore();
 
+  // Projects are admin-managed; fall back to the built-in data until the API
+  // responds (or if it's empty), so the gallery is never blank.
+  const [apiProjects, setApiProjects] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    projectsApi.list()
+      .then((res) => {
+        if (cancelled) return;
+        const rows = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+        setApiProjects(rows);
+      })
+      .catch(() => { if (!cancelled) setApiProjects([]); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const source = (apiProjects && apiProjects.length > 0) ? apiProjects : projectsData;
   const filtered =
     active === 'all'
-      ? projectsData
-      : projectsData.filter((p) => p.category === active);
+      ? source
+      : source.filter((p) => p.category === active);
 
   return (
     <>
