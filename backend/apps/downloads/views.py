@@ -9,9 +9,10 @@ from django.utils import timezone
 from apps.core.pagination import StandardPagination
 from apps.core.permissions import IsAdmin
 
-from .models import Download, CompanyProfile
+from .models import Download, CompanyProfile, VideoStory
 from .serializers import (
     DownloadTrackSerializer, DownloadAdminSerializer, CompanyProfileSerializer,
+    VideoStorySerializer,
 )
 from .services import _client_ip
 
@@ -171,3 +172,26 @@ class AdminCompanyProfileView(APIView):
         data = CompanyProfileSerializer(profile, context={'request': request}).data
         data['available'] = True
         return Response(data, status=status.HTTP_200_OK)
+
+
+class VideoStoryListView(generics.ListAPIView):
+    """GET /api/v1/downloads/video-stories/ — public, active videos ordered."""
+    permission_classes = [AllowAny]
+    serializer_class = VideoStorySerializer
+
+    def get_queryset(self):
+        return VideoStory.objects.filter(is_active=True)
+
+
+class AdminVideoStoryListCreateView(generics.ListCreateAPIView):
+    """GET/POST /api/v1/downloads/admin/video-stories/ — manage the list."""
+    permission_classes = [IsAdmin]
+    serializer_class = VideoStorySerializer
+    queryset = VideoStory.objects.all()
+
+
+class AdminVideoStoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """GET/PATCH/DELETE /api/v1/downloads/admin/video-stories/<uuid:pk>/."""
+    permission_classes = [IsAdmin]
+    serializer_class = VideoStorySerializer
+    queryset = VideoStory.objects.all()

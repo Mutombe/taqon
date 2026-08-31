@@ -9,6 +9,9 @@ export const downloadsApi = {
   // Public — company profile availability (drives show/hide of the download button)
   companyProfileMeta: () => api.get(`${BASE}/company-profile/`),
 
+  // Public — homepage video stories (active, ordered)
+  videoStories: () => api.get(`${BASE}/video-stories/`),
+
   // Admin
   adminList: (params = {}) => api.get(`${BASE}/admin/`, { params }),
   adminStats: () => api.get(`${BASE}/admin/stats/`),
@@ -19,4 +22,10 @@ export const downloadsApi = {
     api.put(`${BASE}/admin/company-profile/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+
+  // Admin — video stories CRUD
+  adminVideoStories: () => api.get(`${BASE}/admin/video-stories/`),
+  createVideoStory: (payload) => api.post(`${BASE}/admin/video-stories/`, payload),
+  updateVideoStory: (id, payload) => api.patch(`${BASE}/admin/video-stories/${id}/`, payload),
+  deleteVideoStory: (id) => api.delete(`${BASE}/admin/video-stories/${id}/`),
 };

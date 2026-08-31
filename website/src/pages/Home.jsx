@@ -13,6 +13,7 @@ import GoogleReviews from '../components/GoogleReviews';
 import VideoTestimonial from '../components/VideoTestimonial';
 import { autoLink, confirmExternalNavigation } from '../components/ContentLink';
 import { services, stats, companyInfo, videoTestimonials } from '../data/siteData';
+import { downloadsApi } from '../api/downloads';
 
 /* Vision: Hero section with dramatic dark background, animated solar panel imagery,
    floating geometric shapes in orange tones, and a powerful headline. Think premium 
@@ -66,6 +67,33 @@ export default function Home() {
   });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 200]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  // Video Stories are admin-managed (Admin → Site Content). Fall back to the
+  // built-in list until the API responds / if it's empty, so the section is
+  // never blank.
+  const [videoStories, setVideoStories] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    downloadsApi.videoStories()
+      .then((res) => {
+        if (cancelled) return;
+        const rows = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+        setVideoStories(rows);
+      })
+      .catch(() => { if (!cancelled) setVideoStories([]); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const videos = (videoStories && videoStories.length > 0)
+    ? videoStories.map((v) => ({
+        id: v.id,
+        name: v.title,
+        role: v.subtitle,
+        thumbnail: v.thumbnail_url,
+        videoUrl: v.youtube_url,
+        platform: 'youtube',
+      }))
+    : videoTestimonials;
 
   return (
     <>
@@ -544,7 +572,7 @@ export default function Home() {
             </h2>
           </AnimatedSection>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {videoTestimonials.map((v, i) => (
+            {videos.map((v, i) => (
               <AnimatedSection key={v.id} delay={i * 0.1}>
                 <VideoTestimonial {...v} />
               </AnimatedSection>

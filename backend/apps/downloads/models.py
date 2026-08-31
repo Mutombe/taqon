@@ -127,3 +127,41 @@ class CompanyProfile(TimeStampedModel):
         if '.' in name:
             ext = '.' + name.rsplit('.', 1)[1].lower()
         return f'Taqon-Electrico-Company-Profile{ext or ".pdf"}'
+
+
+class VideoStory(TimeStampedModel):
+    """A homepage 'Video Stories – Solar Insights & Guides' entry the Taqon
+    team manages themselves — no developer needed.
+
+    Videos stay hosted on YouTube; the site embeds/plays them in a lightbox.
+    Admin edits the title, YouTube URL, ordering and active state.
+    """
+
+    title = models.CharField(max_length=200)
+    subtitle = models.CharField(
+        max_length=120, blank=True, default='Smart Solar Choices Zimbabwe',
+        help_text='Small label under the title (e.g. the channel name).',
+    )
+    youtube_url = models.CharField(
+        max_length=500,
+        help_text='Any YouTube link — watch, youtu.be, or embed URL.',
+    )
+    order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+        verbose_name = 'Video story'
+        verbose_name_plural = 'Video stories'
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def youtube_id(self):
+        import re
+        m = re.search(
+            r'(?:youtu\.be/|youtube\.com/(?:embed/|v/|watch\?v=|watch\?.+&v=|shorts/))([^&?#/]+)',
+            self.youtube_url or '',
+        )
+        return m.group(1) if m else ''

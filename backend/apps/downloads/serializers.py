@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Download, CompanyProfile
+from .models import Download, CompanyProfile, VideoStory
 
 
 class DownloadTrackSerializer(serializers.ModelSerializer):
@@ -69,3 +69,37 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
             return obj.file.url if obj.file else None
         except Exception:
             return None
+
+
+class VideoStorySerializer(serializers.ModelSerializer):
+    """Homepage video stories — admin-managed, public list is active-only."""
+    youtube_id = serializers.CharField(read_only=True)
+    thumbnail_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VideoStory
+        fields = [
+            'id', 'title', 'subtitle', 'youtube_url', 'youtube_id',
+            'thumbnail_url', 'order', 'is_active', 'created_at',
+        ]
+        read_only_fields = ['id', 'youtube_id', 'thumbnail_url', 'created_at']
+
+    def get_thumbnail_url(self, obj):
+        vid = obj.youtube_id
+        # hqdefault always exists for a valid video id (unlike maxresdefault).
+        return f'https://img.youtube.com/vi/{vid}/hqdefault.jpg' if vid else ''
+
+    def validate_youtube_url(self, value):
+        value = (value or '').strip()
+        if not value:
+            raise serializers.ValidationError('A YouTube link is required.')
+        return value
+
+    def validate(self, attrs):
+        # Ensure the URL actually yields a video id on create/update.
+        from .models import VideoStory as _VS
+        url = attrs.get('youtube_url', getattr(self.instance, 'youtube_url', ''))
+        if not _VS(youtube_url=url).youtube_id:
+            raise serializers.ValidationError(
+                {'youtube_url': 'Could not find a YouTube video id in that link.'})
+        return attrs
