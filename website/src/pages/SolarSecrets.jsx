@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpen, Clock, ArrowRight, Lightbulb, Calendar } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
+import VideoStoriesSection from '../components/VideoStoriesSection';
 import SEO from '../components/SEO';
 import { blogPosts } from '../data/blogData';
 
@@ -120,6 +121,9 @@ export default function SolarSecrets() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* Video Stories — Solar Insights & Guides */}
+      <VideoStoriesSection className="py-16 lg:py-24 bg-white dark:bg-taqon-charcoal" />
     </>
   );
 }

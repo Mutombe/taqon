@@ -55,6 +55,7 @@ const categoryIcons = {
 import { getGemFamily, TIER_GEMS } from '../data/gemFamilies';
 import { ZIMBABWE_AREAS, getDistanceByArea, getAreaCoords, findNearestArea, haversineKm, HQ_COORDS } from '../data/zimbabweAreas';
 import DistanceMap from '../components/DistanceMap';
+import VideoGuide from '../components/VideoGuide';
 
 const tierLabels = { budget: 'Budget', good_fit: 'Recommended', excellent: 'Excellent' };
 const tierBadgeColors = {
@@ -1729,6 +1730,14 @@ export default function SolarAdvisor() {
   const { user } = useAuthStore();
 
   const [step, setStepRaw] = useState(draft.current?.step || 1);
+  const [advisorGuide, setAdvisorGuide] = useState('');
+  useEffect(() => {
+    let cancelled = false;
+    solarConfigApi.getPackageGuides()
+      .then((res) => { if (!cancelled) setAdvisorGuide(res.data?.solar_advisor_youtube_url || ''); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   const [appliances, setAppliances] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
@@ -2144,6 +2153,17 @@ export default function SolarAdvisor() {
       {/* ─── Content ─── */}
       <section className="py-6 lg:py-10 bg-taqon-cream dark:bg-taqon-dark min-h-[60vh]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          {/* How-to guide — shown on the first step so newcomers can learn the flow */}
+          {step === 1 && (
+            <div className="mb-6">
+              <VideoGuide
+                title="How to Use the Solar Advisor"
+                text="New here? Watch this quick guide to get the most out of the advisor and find the right system for your needs."
+                url={advisorGuide}
+                buttonLabel="Watch Guide"
+              />
+            </div>
+          )}
           <AnimatePresence mode="wait">
 
             {/* ═══════════════════════════════════════════════

@@ -418,8 +418,9 @@ function GuideUrlInput({ value, onChange, placeholder = 'https://youtu.be/… (l
 
 function PackageGuidesCard() {
   const [overview, setOverview] = useState('');
+  const [solarAdvisor, setSolarAdvisor] = useState('');
   const [families, setFamilies] = useState([]);
-  const [initial, setInitial] = useState({ overview: '', families: {} });
+  const [initial, setInitial] = useState({ overview: '', solarAdvisor: '', families: {} });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -428,10 +429,12 @@ function PackageGuidesCard() {
     try {
       const res = await solarConfigApi.getAdminPackageGuides();
       const ov = res.data?.overview_youtube_url || '';
+      const sa = res.data?.solar_advisor_youtube_url || '';
       const fams = (res.data?.families || []).map((f) => ({ ...f, guide_youtube_url: f.guide_youtube_url || '' }));
       setOverview(ov);
+      setSolarAdvisor(sa);
       setFamilies(fams);
-      setInitial({ overview: ov, families: Object.fromEntries(fams.map((f) => [f.slug, f.guide_youtube_url])) });
+      setInitial({ overview: ov, solarAdvisor: sa, families: Object.fromEntries(fams.map((f) => [f.slug, f.guide_youtube_url])) });
     } catch {
       setFamilies([]);
     } finally {
@@ -442,6 +445,7 @@ function PackageGuidesCard() {
   useEffect(() => { load(); }, [load]);
 
   const dirty = overview !== initial.overview
+    || solarAdvisor !== initial.solarAdvisor
     || families.some((f) => (initial.families[f.slug] ?? '') !== f.guide_youtube_url);
 
   const setFam = (slug, val) => setFamilies((prev) => prev.map((f) => (f.slug === slug ? { ...f, guide_youtube_url: val } : f)));
@@ -452,6 +456,7 @@ function PackageGuidesCard() {
     try {
       await solarConfigApi.updatePackageGuides({
         overview_youtube_url: overview,
+        solar_advisor_youtube_url: solarAdvisor,
         families: families.map((f) => ({ slug: f.slug, guide_youtube_url: f.guide_youtube_url })),
       });
       toast.success('Package guides saved.');
@@ -490,6 +495,14 @@ function PackageGuidesCard() {
               Overview guide <span className="text-taqon-muted dark:text-white/40 font-normal">— main Packages page</span>
             </label>
             <GuideUrlInput value={overview} onChange={setOverview} />
+          </div>
+
+          {/* Solar Advisor */}
+          <div>
+            <label className="block text-xs font-semibold text-taqon-charcoal dark:text-white mb-1.5">
+              Solar Advisor guide <span className="text-taqon-muted dark:text-white/40 font-normal">— “How to use the Solar Advisor”</span>
+            </label>
+            <GuideUrlInput value={solarAdvisor} onChange={setSolarAdvisor} />
           </div>
 
           {/* Per family */}

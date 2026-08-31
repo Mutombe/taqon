@@ -2396,6 +2396,7 @@ class PackageGuidesView(APIView):
         ).order_by('sort_order', 'kva_rating')
         return Response({
             'overview_youtube_url': setting.overview_youtube_url,
+            'solar_advisor_youtube_url': setting.solar_advisor_youtube_url,
             'families': [
                 {'slug': f.slug, 'name': f.name, 'guide_youtube_url': f.guide_youtube_url}
                 for f in families
@@ -2414,9 +2415,12 @@ class AdminPackageGuidesView(APIView):
     def put(self, request):
         from .models import PackageGuideSetting
         data = request.data or {}
-        if 'overview_youtube_url' in data:
+        if 'overview_youtube_url' in data or 'solar_advisor_youtube_url' in data:
             setting = PackageGuideSetting.load()
-            setting.overview_youtube_url = (data.get('overview_youtube_url') or '').strip()
+            if 'overview_youtube_url' in data:
+                setting.overview_youtube_url = (data.get('overview_youtube_url') or '').strip()
+            if 'solar_advisor_youtube_url' in data:
+                setting.solar_advisor_youtube_url = (data.get('solar_advisor_youtube_url') or '').strip()
             setting.save()
         for row in (data.get('families') or []):
             slug = row.get('slug')

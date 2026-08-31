@@ -10,10 +10,9 @@ import SEO from '../components/SEO';
 import JsonLd, { localBusinessSchema, organizationSchema } from '../components/JsonLd';
 import LiveCounter from '../components/LiveCounter';
 import GoogleReviews from '../components/GoogleReviews';
-import VideoTestimonial from '../components/VideoTestimonial';
+import VideoStoriesSection from '../components/VideoStoriesSection';
 import { autoLink, confirmExternalNavigation } from '../components/ContentLink';
-import { services, stats, companyInfo, videoTestimonials } from '../data/siteData';
-import { downloadsApi } from '../api/downloads';
+import { services, stats, companyInfo } from '../data/siteData';
 
 /* Vision: Hero section with dramatic dark background, animated solar panel imagery,
    floating geometric shapes in orange tones, and a powerful headline. Think premium 
@@ -67,33 +66,6 @@ export default function Home() {
   });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 200]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  // Video Stories are admin-managed (Admin → Site Content). Fall back to the
-  // built-in list until the API responds / if it's empty, so the section is
-  // never blank.
-  const [videoStories, setVideoStories] = useState(null);
-  useEffect(() => {
-    let cancelled = false;
-    downloadsApi.videoStories()
-      .then((res) => {
-        if (cancelled) return;
-        const rows = Array.isArray(res.data) ? res.data : (res.data?.results || []);
-        setVideoStories(rows);
-      })
-      .catch(() => { if (!cancelled) setVideoStories([]); });
-    return () => { cancelled = true; };
-  }, []);
-
-  const videos = (videoStories && videoStories.length > 0)
-    ? videoStories.map((v) => ({
-        id: v.id,
-        name: v.title,
-        role: v.subtitle,
-        thumbnail: v.thumbnail_url,
-        videoUrl: v.youtube_url,
-        platform: 'youtube',
-      }))
-    : videoTestimonials;
 
   return (
     <>
@@ -563,33 +535,7 @@ export default function Home() {
       </section>
 
       {/* ===== VIDEO STORIES ===== */}
-      <section className="py-16 lg:py-24 bg-white dark:bg-taqon-charcoal">
-        <div className="max-w-7xl mx-auto px-4">
-          <AnimatedSection className="text-center mb-12">
-            <span className="text-taqon-orange text-sm font-semibold uppercase tracking-[0.15em]">Video Stories</span>
-            <h2 className="mt-3 text-3xl lg:text-4xl font-bold font-syne text-taqon-charcoal dark:text-white">
-              Solar Insights & <span className="text-gradient">Guides</span>
-            </h2>
-          </AnimatedSection>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {videos.map((v, i) => (
-              <AnimatedSection key={v.id} delay={i * 0.1}>
-                <VideoTestimonial {...v} />
-              </AnimatedSection>
-            ))}
-          </div>
-          <div className="mt-8 text-center">
-            <a
-              href="https://youtube.com/@smartsolarchoiceszim"
-              onClick={(e) => confirmExternalNavigation('https://youtube.com/@smartsolarchoiceszim', e)}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-taqon-orange hover:text-taqon-amber transition-colors cursor-pointer"
-            >
-              More Solar Guides on YouTube
-              <ArrowSquareOut size={14} />
-            </a>
-          </div>
-        </div>
-      </section>
+      <VideoStoriesSection />
 
       {/* ===== SOLAR PACKAGES CTA ===== */}
       <section className="py-20 lg:py-28 bg-taqon-cream dark:bg-taqon-dark relative overflow-hidden">

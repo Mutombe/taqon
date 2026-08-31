@@ -47,6 +47,10 @@ class PackageGuideSetting(models.Model):
     /packages page. Per-family guides live on PackageFamily.guide_youtube_url."""
 
     overview_youtube_url = models.CharField(max_length=500, blank=True)
+    solar_advisor_youtube_url = models.CharField(
+        max_length=500, blank=True,
+        help_text='“How to use the Solar Advisor” guide shown on the advisor page.',
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
