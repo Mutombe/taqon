@@ -75,17 +75,20 @@ export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quot
         className="group cursor-pointer"
         onClick={openModal}
       >
-        <div className="relative rounded-2xl overflow-hidden aspect-video bg-taqon-charcoal">
+        <div className="relative rounded-2xl overflow-hidden aspect-video bg-taqon-charcoal shadow-sm">
           <img
             src={thumbnail}
-            alt={`${name} video`}
+            alt={name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-taqon-dark/80 via-taqon-dark/20 to-transparent" />
+          {/* Even, subtle dim so the play button reads on any thumbnail — no
+              text overlay here, so it never collides with the play button or
+              the thumbnail's own baked-in title. */}
+          <div className="absolute inset-0 bg-taqon-dark/20 group-hover:bg-taqon-dark/5 transition-colors" />
 
           {/* Platform Logo — top-right corner */}
-          <div className="absolute top-3 right-3 z-10 opacity-90 group-hover:opacity-100 transition-opacity drop-shadow-lg">
+          <div className="absolute top-3 right-3 z-10 drop-shadow-lg">
             {isFacebook ? <FacebookLogo /> : <YouTubeLogo />}
           </div>
 
@@ -94,27 +97,27 @@ export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quot
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              className="w-16 h-16 rounded-full bg-taqon-orange flex items-center justify-center shadow-xl shadow-taqon-orange/30"
+              className="w-14 h-14 rounded-full bg-taqon-orange/95 flex items-center justify-center shadow-xl shadow-taqon-orange/30 ring-4 ring-white/15"
             >
-              <Play size={28} className="text-white ml-1" fill="white" />
+              <Play size={24} className="text-white ml-0.5" weight="fill" />
             </motion.div>
-          </div>
-
-          {/* Name & Role Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-5">
-            <p className="font-bold font-syne text-white text-lg">{name}</p>
-            <p className="text-white/60 text-sm">{role}</p>
           </div>
         </div>
 
-        {/* Quote */}
-        {quote && (
-          <div className="mt-4 px-1">
-            <p className="text-taqon-muted dark:text-white/50 text-sm leading-relaxed italic line-clamp-2">
+        {/* Title + source below the image */}
+        <div className="mt-3 px-0.5">
+          <p className="font-bold font-syne text-taqon-charcoal dark:text-white leading-snug line-clamp-2 group-hover:text-taqon-orange transition-colors">
+            {name}
+          </p>
+          {role && (
+            <p className="mt-1 text-xs text-taqon-muted dark:text-white/50">{role}</p>
+          )}
+          {quote && (
+            <p className="mt-2 text-sm text-taqon-muted dark:text-white/45 leading-relaxed italic line-clamp-2">
               "{quote}"
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </motion.div>
 
       {/* Video Modal (YouTube only) */}

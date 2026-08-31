@@ -9,19 +9,47 @@ import DownloadProfileButton from '../components/DownloadProfileButton';
 import SEO from '../components/SEO';
 import JsonLd, { localBusinessSchema } from '../components/JsonLd';
 import { companyInfo } from '../data/siteData';
+import { inquiriesApi } from '../api/inquiries';
+
+// Maps the "Service Needed" dropdown values to readable labels folded into
+// the message (the Inquiry model has no dedicated service field).
+const SERVICE_LABELS = {
+  'solar-installation': 'Solar Installation',
+  'electrical-maintenance': 'Electrical Maintenance',
+  'borehole-pump': 'Borehole Pump',
+  lighting: 'Lighting Solutions',
+  'solar-maintenance': 'Solar Maintenance',
+  equipment: 'Equipment Purchase',
+  other: 'Other',
+};
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', service: '', message: '' });
   const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (sending) return;
     setSending(true);
-    setTimeout(() => {
-      toast.success('Message sent successfully! We\'ll get back to you within 24 hours.');
+    try {
+      const serviceLabel = SERVICE_LABELS[form.service] || '';
+      const message = serviceLabel
+        ? `Service needed: ${serviceLabel}\n\n${form.message}`
+        : form.message;
+      await inquiriesApi.submit({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        message: message.trim(),
+        source: 'contact_form',
+      });
+      toast.success("Message sent! We'll get back to you within 24 hours.");
       setForm({ name: '', email: '', phone: '', service: '', message: '' });
+    } catch (err) {
+      toast.error('Could not send your message. Please try again, or reach us on WhatsApp.');
+    } finally {
       setSending(false);
-    }, 1500);
+    }
   };
 
   return (

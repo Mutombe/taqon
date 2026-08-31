@@ -24,6 +24,7 @@ class Inquiry(AuditableModel):
 
     SOURCE_CHOICES = [
         ('public_form', 'Public form'),
+        ('contact_form', 'Contact page form'),
         ('whatsapp_link', 'WhatsApp link'),
         ('email_link', 'Email link'),
         ('shop_request', 'Shop checkout request'),
