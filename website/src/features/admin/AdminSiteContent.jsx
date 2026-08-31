@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   FileText, UploadSimple, DownloadSimple, SpinnerGap, CheckCircle,
   Clock, User as UserIcon, FilePdf, YoutubeLogo, Plus, Trash, FloppyDisk,
-  Eye, EyeSlash, SolarPanel,
+  Eye, EyeSlash, SolarPanel, X,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import SEO from '../../components/SEO';
@@ -35,6 +35,7 @@ function CompanyProfileCard() {
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const inputRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -105,6 +106,21 @@ function CompanyProfileCard() {
     }
   };
 
+  const remove = async () => {
+    if (removing) return;
+    if (!window.confirm('Remove the company profile? The download buttons on Contact & About will be hidden until you upload a new one.')) return;
+    setRemoving(true);
+    try {
+      await downloadsApi.deleteCompanyProfile();
+      toast.success('Company profile removed.');
+      await load();
+    } catch {
+      toast.error('Could not remove the profile.');
+    } finally {
+      setRemoving(false);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-taqon-charcoal rounded-2xl border border-gray-100 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
       <div className="flex items-start gap-3">
@@ -143,14 +159,24 @@ function CompanyProfileCard() {
                 )}
               </div>
             </div>
-            <button
-              onClick={downloadCurrent}
-              disabled={downloading}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-white/15 text-sm font-semibold text-taqon-charcoal dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-all disabled:opacity-60 flex-shrink-0"
-            >
-              {downloading ? <SpinnerGap size={16} className="animate-spin" /> : <DownloadSimple size={16} />}
-              View current
-            </button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={downloadCurrent}
+                disabled={downloading}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-white/15 text-sm font-semibold text-taqon-charcoal dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-all disabled:opacity-60"
+              >
+                {downloading ? <SpinnerGap size={16} className="animate-spin" /> : <DownloadSimple size={16} />}
+                View current
+              </button>
+              <button
+                onClick={remove}
+                disabled={removing}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-200 dark:border-red-500/30 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all disabled:opacity-60"
+              >
+                {removing ? <SpinnerGap size={16} className="animate-spin" /> : <Trash size={16} />}
+                Remove
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-sm text-taqon-muted dark:text-white/50">
@@ -367,12 +393,24 @@ function VideoStoriesCard() {
 /* ── Package video guides (overview + per family) ─────────────────────── */
 function GuideUrlInput({ value, onChange, placeholder = 'https://youtu.be/… (leave blank for “coming soon”)' }) {
   return (
-    <input
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-taqon-charcoal dark:text-white outline-none focus:border-taqon-orange"
-    />
+    <div className="relative">
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-lg pl-3 pr-8 py-2 text-xs font-mono text-taqon-charcoal dark:text-white outline-none focus:border-taqon-orange"
+      />
+      {value ? (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          title="Clear (show “coming soon”)"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded flex items-center justify-center text-taqon-muted hover:text-red-500"
+        >
+          <X size={13} />
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -493,9 +531,6 @@ export default function AdminSiteContent() {
         transition={{ duration: 0.3 }}
       >
         <h1 className="text-2xl font-bold font-syne text-taqon-charcoal dark:text-white">Site Content</h1>
-        <p className="text-sm text-taqon-muted dark:text-white/50 mt-1">
-          Content the team maintains directly — no developer needed.
-        </p>
       </motion.div>
 
       <CompanyProfileCard />

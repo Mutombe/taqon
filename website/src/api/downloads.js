@@ -22,6 +22,7 @@ export const downloadsApi = {
     api.put(`${BASE}/admin/company-profile/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+  deleteCompanyProfile: () => api.delete(`${BASE}/admin/company-profile/`),
 
   // Admin — video stories CRUD
   adminVideoStories: () => api.get(`${BASE}/admin/video-stories/`),

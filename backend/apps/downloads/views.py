@@ -134,6 +134,18 @@ class AdminCompanyProfileView(APIView):
     def post(self, request):
         return self._save(request)
 
+    def delete(self, request):
+        """Remove the uploaded profile — the site's download buttons hide again."""
+        profile = CompanyProfile.current()
+        if profile:
+            if profile.file:
+                try:
+                    profile.file.delete(save=False)
+                except Exception:
+                    pass
+            profile.delete()
+        return Response({'available': False}, status=status.HTTP_200_OK)
+
     def _save(self, request):
         upload = request.FILES.get('file')
         if not upload:
