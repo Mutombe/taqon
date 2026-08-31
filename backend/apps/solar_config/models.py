@@ -23,6 +23,11 @@ class PackageFamily(SoftDeleteModel):
     suitable_for = models.JSONField(default=list, blank=True, help_text='e.g. ["residential", "small_business"]')
     is_active = models.BooleanField(default=True, db_index=True)
     sort_order = models.PositiveIntegerField(default=0)
+    guide_youtube_url = models.CharField(
+        max_length=500, blank=True,
+        help_text='YouTube link for this family’s video selection guide. '
+                  'Blank shows a "Video coming soon" state on the site.',
+    )
 
     class Meta:
         ordering = ['sort_order', 'kva_rating']
@@ -35,6 +40,28 @@ class PackageFamily(SoftDeleteModel):
         if not self.slug:
             self.slug = generate_unique_slug(PackageFamily, self.name)
         super().save(*args, **kwargs)
+
+
+class PackageGuideSetting(models.Model):
+    """Singleton — the overview 'Solar Package Guide' video on the main
+    /packages page. Per-family guides live on PackageFamily.guide_youtube_url."""
+
+    overview_youtube_url = models.CharField(max_length=500, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Package guide setting'
+        verbose_name_plural = 'Package guide setting'
+
+    def __str__(self):
+        return 'Package guide (overview)'
+
+    @classmethod
+    def load(cls):
+        obj = cls.objects.first()
+        if obj is None:
+            obj = cls.objects.create()
+        return obj
 
 
 class Appliance(SoftDeleteModel):

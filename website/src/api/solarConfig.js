@@ -16,6 +16,11 @@ export const solarConfigApi = {
   getFamilies: () => api.get(`${BASE}/families/`),
   getFamilyDetail: (slug) => api.get(`${BASE}/families/${slug}/`),
 
+  // Package video guides (public read + admin manage)
+  getPackageGuides: () => api.get(`${BASE}/package-guides/`),
+  getAdminPackageGuides: () => api.get(`${BASE}/admin/package-guides/`),
+  updatePackageGuides: (payload) => api.put(`${BASE}/admin/package-guides/`, payload),
+
   // Appliances (public)
   getAppliances: (params = {}) => api.get(`${BASE}/appliances/`, { params }),
   getApplianceCategories: () => api.get(`${BASE}/appliances/categories/`),

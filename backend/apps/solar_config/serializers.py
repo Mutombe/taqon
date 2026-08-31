@@ -223,7 +223,8 @@ class PackageFamilyListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'kva_rating', 'family_code',
             'short_description', 'image_url', 'suitable_for',
-            'sort_order', 'package_count', 'price_min', 'price_max',
+            'sort_order', 'guide_youtube_url',
+            'package_count', 'price_min', 'price_max',
         ]
         read_only_fields = fields
 
@@ -248,7 +249,7 @@ class PackageFamilySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'kva_rating', 'family_code',
             'description', 'short_description', 'image_url',
-            'suitable_for', 'sort_order', 'packages',
+            'suitable_for', 'sort_order', 'guide_youtube_url', 'packages',
         ]
         read_only_fields = fields
 

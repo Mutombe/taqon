@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import VideoGuide from '../components/VideoGuide';
 import { Check, Star, ArrowRight, Lightning, MagnifyingGlass, Heart, FileText, SpinnerGap } from '@phosphor-icons/react';
 import AnimatedSection from '../components/AnimatedSection';
 import GemFamilySection from '../components/GemFamilySection';
@@ -47,6 +48,15 @@ export default function Packages() {
   const { data: families, isLoading: loading } = useFamilies();
   const { togglePackage, likedPackages } = useSavesStore();
   const [downloadingCatalogue, setDownloadingCatalogue] = useState(false);
+  const [overviewGuide, setOverviewGuide] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    solarConfigApi.getPackageGuides()
+      .then((res) => { if (!cancelled) setOverviewGuide(res.data?.overview_youtube_url || ''); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const useApi = families && families.length > 0;
 
@@ -158,6 +168,20 @@ export default function Packages() {
                 Find Your Package <ArrowRight size={14} />
               </Link>
             </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* Package selection guide (overview) */}
+      <section className="pt-8 bg-taqon-cream dark:bg-taqon-dark">
+        <div className="max-w-7xl mx-auto px-4">
+          <AnimatedSection>
+            <VideoGuide
+              title="Solar Package Guide"
+              text="Not sure where to start? Watch this quick guide to understand our solar package range and find the right starting point for your needs."
+              url={overviewGuide}
+              buttonLabel="Watch Package Guide"
+            />
           </AnimatedSection>
         </div>
       </section>

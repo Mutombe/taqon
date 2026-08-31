@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   FileText, UploadSimple, DownloadSimple, SpinnerGap, CheckCircle,
   Clock, User as UserIcon, FilePdf, YoutubeLogo, Plus, Trash, FloppyDisk,
-  Eye, EyeSlash,
+  Eye, EyeSlash, SolarPanel,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import SEO from '../../components/SEO';
@@ -364,6 +364,125 @@ function VideoStoriesCard() {
   );
 }
 
+/* ── Package video guides (overview + per family) ─────────────────────── */
+function GuideUrlInput({ value, onChange, placeholder = 'https://youtu.be/… (leave blank for “coming soon”)' }) {
+  return (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-taqon-charcoal dark:text-white outline-none focus:border-taqon-orange"
+    />
+  );
+}
+
+function PackageGuidesCard() {
+  const [overview, setOverview] = useState('');
+  const [families, setFamilies] = useState([]);
+  const [initial, setInitial] = useState({ overview: '', families: {} });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await solarConfigApi.getAdminPackageGuides();
+      const ov = res.data?.overview_youtube_url || '';
+      const fams = (res.data?.families || []).map((f) => ({ ...f, guide_youtube_url: f.guide_youtube_url || '' }));
+      setOverview(ov);
+      setFamilies(fams);
+      setInitial({ overview: ov, families: Object.fromEntries(fams.map((f) => [f.slug, f.guide_youtube_url])) });
+    } catch {
+      setFamilies([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const dirty = overview !== initial.overview
+    || families.some((f) => (initial.families[f.slug] ?? '') !== f.guide_youtube_url);
+
+  const setFam = (slug, val) => setFamilies((prev) => prev.map((f) => (f.slug === slug ? { ...f, guide_youtube_url: val } : f)));
+
+  const save = async () => {
+    if (saving || !dirty) return;
+    setSaving(true);
+    try {
+      await solarConfigApi.updatePackageGuides({
+        overview_youtube_url: overview,
+        families: families.map((f) => ({ slug: f.slug, guide_youtube_url: f.guide_youtube_url })),
+      });
+      toast.success('Package guides saved.');
+      await load();
+    } catch {
+      toast.error('Could not save package guides.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-taqon-charcoal rounded-2xl border border-gray-100 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
+      <div className="flex items-start gap-3">
+        <div className="w-11 h-11 rounded-xl bg-taqon-orange/10 flex items-center justify-center flex-shrink-0">
+          <SolarPanel size={22} className="text-taqon-orange" weight="duotone" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold font-syne text-taqon-charcoal dark:text-white">Package Guides</h2>
+          <p className="text-sm text-taqon-muted dark:text-white/50 mt-0.5">
+            The video guides on the Packages page and each package detail page. Paste a YouTube link;
+            leave a field blank to show a clean “Video coming soon” instead.
+          </p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="mt-5 flex items-center gap-2 text-taqon-muted dark:text-white/50 text-sm">
+          <SpinnerGap size={16} className="animate-spin" /> Loading…
+        </div>
+      ) : (
+        <div className="mt-5 space-y-4">
+          {/* Overview */}
+          <div>
+            <label className="block text-xs font-semibold text-taqon-charcoal dark:text-white mb-1.5">
+              Overview guide <span className="text-taqon-muted dark:text-white/40 font-normal">— main Packages page</span>
+            </label>
+            <GuideUrlInput value={overview} onChange={setOverview} />
+          </div>
+
+          {/* Per family */}
+          {families.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-taqon-charcoal dark:text-white mb-2">Per-family guides</p>
+              <div className="space-y-2">
+                {families.map((f) => (
+                  <div key={f.slug} className="grid sm:grid-cols-[180px_1fr] gap-2 items-center">
+                    <span className="text-sm text-taqon-charcoal dark:text-white/80 truncate">{f.name}</span>
+                    <GuideUrlInput value={f.guide_youtube_url} onChange={(v) => setFam(f.slug, v)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={save}
+              disabled={!dirty || saving}
+              className="inline-flex items-center gap-2 bg-taqon-orange text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-taqon-orange/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {saving ? <SpinnerGap size={16} className="animate-spin" /> : <FloppyDisk size={16} weight="bold" />}
+              Save guides
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminSiteContent() {
   return (
     <div className="space-y-6">
@@ -381,6 +500,7 @@ export default function AdminSiteContent() {
 
       <CompanyProfileCard />
       <VideoStoriesCard />
+      <PackageGuidesCard />
     </div>
   );
 }

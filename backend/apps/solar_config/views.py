@@ -2380,3 +2380,50 @@ class AdminAdvisorSessionDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAdmin]
     serializer_class = RecommendationSessionSerializer
     queryset = RecommendationSession.objects.all()
+
+
+class PackageGuidesView(APIView):
+    """GET /api/v1/solar-config/package-guides/ — public: the overview guide
+    URL plus each active family's guide URL (drives the /packages page and
+    family detail 'Video Guide' CTAs)."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from .models import PackageGuideSetting
+        setting = PackageGuideSetting.load()
+        families = PackageFamily.objects.filter(
+            is_active=True, is_deleted=False,
+        ).order_by('sort_order', 'kva_rating')
+        return Response({
+            'overview_youtube_url': setting.overview_youtube_url,
+            'families': [
+                {'slug': f.slug, 'name': f.name, 'guide_youtube_url': f.guide_youtube_url}
+                for f in families
+            ],
+        })
+
+
+class AdminPackageGuidesView(APIView):
+    """GET/PUT /api/v1/solar-config/admin/package-guides/ — manage the overview
+    guide and per-family guide URLs from one place (admin Site Content)."""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        return PackageGuidesView().get(request)
+
+    def put(self, request):
+        from .models import PackageGuideSetting
+        data = request.data or {}
+        if 'overview_youtube_url' in data:
+            setting = PackageGuideSetting.load()
+            setting.overview_youtube_url = (data.get('overview_youtube_url') or '').strip()
+            setting.save()
+        for row in (data.get('families') or []):
+            slug = row.get('slug')
+            if not slug:
+                continue
+            fam = PackageFamily.objects.filter(slug=slug).first()
+            if fam:
+                fam.guide_youtube_url = (row.get('guide_youtube_url') or '').strip()
+                fam.save()
+        return self.get(request)

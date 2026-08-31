@@ -18,6 +18,8 @@ urlpatterns = [
 
     # Business / Company Profile (public)
     path('business-profile/', views.BusinessProfileView.as_view(), name='business-profile'),
+    path('package-guides/', views.PackageGuidesView.as_view(), name='package-guides'),
+    path('admin/package-guides/', views.AdminPackageGuidesView.as_view(), name='admin-package-guides'),
 
     # Universal Packages Catalogue PDF (public)
     path('packages-catalogue/', views.PackagesCatalogueView.as_view(), name='packages-catalogue'),
