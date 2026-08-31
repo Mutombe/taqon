@@ -77,7 +77,15 @@ export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quot
       >
         <div className="relative rounded-2xl overflow-hidden aspect-video bg-taqon-charcoal shadow-sm">
           <img
-            src={thumbnail}
+            src={videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : thumbnail}
+            onError={videoId ? (e) => {
+              // maxresdefault (16:9) is sharpest but 404s for some videos —
+              // fall back to mqdefault, which is also 16:9 (so no cropping).
+              if (!e.currentTarget.dataset.fb) {
+                e.currentTarget.dataset.fb = '1';
+                e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+              }
+            } : undefined}
             alt={name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"

@@ -53,7 +53,13 @@ export default function VideoGuide({
           {available ? (
             <>
               <img
-                src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                onError={(e) => {
+                  if (!e.currentTarget.dataset.fb) {
+                    e.currentTarget.dataset.fb = '1';
+                    e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                  }
+                }}
                 alt=""
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
