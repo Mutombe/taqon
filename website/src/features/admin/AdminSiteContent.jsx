@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import SEO from '../../components/SEO';
+import { SkeletonBox } from '../../components/Skeletons';
 import { downloadsApi } from '../../api/downloads';
 import { solarConfigApi } from '../../api/solarConfig';
 
@@ -139,8 +140,9 @@ function CompanyProfileCard() {
       {/* Current file */}
       <div className="mt-5 rounded-xl border border-gray-100 dark:border-white/10 bg-taqon-cream/60 dark:bg-white/[0.03] p-4">
         {loading ? (
-          <div className="flex items-center gap-2 text-taqon-muted dark:text-white/50 text-sm">
-            <SpinnerGap size={16} className="animate-spin" /> Loading…
+          <div className="flex items-center justify-between gap-3">
+            <SkeletonBox className="h-10 flex-1" />
+            <SkeletonBox className="h-9 w-28" />
           </div>
         ) : profile ? (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -379,7 +381,7 @@ function VideoStoriesCard() {
       {/* List */}
       <div className="mt-4 space-y-3">
         {loading ? (
-          <div className="flex items-center gap-2 text-taqon-muted dark:text-white/50 text-sm"><SpinnerGap size={16} className="animate-spin" /> Loading…</div>
+          [0, 1, 2].map((i) => <SkeletonBox key={i} className="h-24" />)
         ) : videos && videos.length ? (
           videos.map((v) => <VideoRow key={v.id} video={v} onChanged={load} />)
         ) : (
@@ -477,8 +479,8 @@ function PackageGuidesCard() {
       </div>
 
       {loading ? (
-        <div className="mt-5 flex items-center gap-2 text-taqon-muted dark:text-white/50 text-sm">
-          <SpinnerGap size={16} className="animate-spin" /> Loading…
+        <div className="mt-5 space-y-2">
+          {[0, 1, 2, 3, 4].map((i) => <SkeletonBox key={i} className="h-9" />)}
         </div>
       ) : (
         <div className="mt-5 space-y-4">

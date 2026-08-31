@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import SEO from '../../components/SEO';
+import { SkeletonBox } from '../../components/Skeletons';
 import { projectsApi } from '../../api/projects';
 
 const CATEGORIES = ['residential', 'commercial', 'industrial', 'institutional', 'agricultural', 'other'];
@@ -341,7 +342,9 @@ export default function AdminProjects() {
       </motion.div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-taqon-muted dark:text-white/50 text-sm"><SpinnerGap size={16} className="animate-spin" /> Loading…</div>
+        <div className="space-y-3">
+          {[0, 1, 2, 3].map((i) => <SkeletonBox key={i} className="h-24" />)}
+        </div>
       ) : projects && projects.length ? (
         <div className="space-y-3">
           {projects.map((proj) => (
