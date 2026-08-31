@@ -110,21 +110,12 @@ export default function VideoTestimonial({ thumbnail, videoUrl, name, role, quot
               <Play size={24} className="text-white ml-0.5" weight="fill" />
             </motion.div>
           </div>
-        </div>
 
-        {/* Title + source below the image */}
-        <div className="mt-3 px-0.5">
-          <p className="font-bold font-syne text-taqon-charcoal dark:text-white leading-snug line-clamp-2 group-hover:text-taqon-orange transition-colors">
-            {name}
-          </p>
-          {role && (
-            <p className="mt-1 text-xs text-taqon-muted dark:text-white/50">{role}</p>
-          )}
-          {quote && (
-            <p className="mt-2 text-sm text-taqon-muted dark:text-white/45 leading-relaxed italic line-clamp-2">
-              "{quote}"
-            </p>
-          )}
+          {/* Title strip — appears on hover only, so the card stays a clean
+              thumbnail tile (the YouTube thumbnails already carry the title). */}
+          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-taqon-dark/85 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <p className="text-white text-sm font-semibold font-syne leading-snug line-clamp-2">{name}</p>
+          </div>
         </div>
       </motion.div>
 
