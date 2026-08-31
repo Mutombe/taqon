@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DownloadSimple, FileText, SpinnerGap } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { solarConfigApi } from '../api/solarConfig';
+import { downloadsApi } from '../api/downloads';
 
 /**
  * Reusable button that downloads Taqon's company profile PDF.
@@ -21,6 +22,17 @@ export default function DownloadProfileButton({
   iconSize = 16,
 }) {
   const [loading, setLoading] = useState(false);
+  // null = still checking, true/false = whether a profile file has been uploaded.
+  const [available, setAvailable] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    downloadsApi
+      .companyProfileMeta()
+      .then((res) => { if (!cancelled) setAvailable(!!res.data?.available); })
+      .catch(() => { if (!cancelled) setAvailable(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const baseStyles = {
     primary:
@@ -50,11 +62,14 @@ export default function DownloadProfileButton({
       toast.success('Company profile downloaded');
       onComplete?.();
     } catch (err) {
-      toast.error('Could not generate profile. Please try again.');
+      toast.error('Company profile is not available right now. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Hide entirely until we know a profile file has been uploaded.
+  if (!available) return null;
 
   return (
     <button

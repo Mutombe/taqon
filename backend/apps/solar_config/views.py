@@ -694,112 +694,52 @@ class BusinessProfileView(APIView):
     )
 
     def get(self, request):
-        from django.http import HttpResponse
-        from django.template.loader import render_to_string
-        from django.utils import timezone
-        import base64
-        import os
-        import uuid
+        """Serve the admin-uploaded company profile file.
 
-        # Logo
-        logo_data_uri = ''
-        try:
-            logo_path = os.path.join(
-                os.path.dirname(__file__), '..', 'quotations', 'static',
-                'pdf_assets', 'taqon-electrico-logo.jpg',
+        The profile is no longer auto-generated — the Taqon team uploads and
+        maintains it via the admin Site Content page. Returns 404 when nothing
+        has been uploaded (the website hides the download button in that case).
+        """
+        from django.http import HttpResponse, Http404
+        from apps.downloads.models import CompanyProfile
+        from apps.downloads.services import record_download
+
+        profile = CompanyProfile.current()
+        if not profile or not profile.file:
+            record_download(
+                request,
+                kind='business_profile',
+                surface=request.GET.get('source', 'other'),
+                target_slug='company-profile',
+                target_label='Taqon Electrico Company Profile',
+                success=False,
+                failure_reason='no company profile uploaded',
             )
-            with open(logo_path, 'rb') as f:
-                logo_data_uri = 'data:image/jpeg;base64,' + base64.b64encode(f.read()).decode('ascii')
-        except Exception:
-            pass
-
-        # Live package families. Wrapped defensively so a transient DB
-        # hiccup still produces a valid profile (the template has an
-        # {% empty %} fallback for the families table).
-        families = []
-        try:
-            for f in PackageFamily.objects.filter(
-                is_active=True, is_deleted=False
-            ).prefetch_related('packages').order_by('kva_rating'):
-                cheapest = f.packages.filter(is_active=True, is_deleted=False).order_by('price').first()
-                families.append({
-                    'name': f.name,
-                    'kva': str(f.kva_rating).rstrip('0').rstrip('.') if f.kva_rating else '',
-                    'short_description': f.short_description or '',
-                    'suitable_for': ', '.join(f.suitable_for) if isinstance(f.suitable_for, list) else (f.suitable_for or ''),
-                    'system_size_kw': str(cheapest.system_size_kw) if cheapest and cheapest.system_size_kw else '',
-                    'battery_kwh': str(cheapest.battery_capacity_kwh) if cheapest and cheapest.battery_capacity_kwh else '',
-                })
-        except Exception as exc:
-            logger.warning('BusinessProfile: package family lookup failed (%s)', exc)
-
-        ref_number = f'PROFILE-{timezone.now().strftime("%Y%m%d")}-{uuid.uuid4().hex[:6].upper()}'
-
-        context = {
-            'logo_data_uri': logo_data_uri,
-            'generated_date': timezone.now().strftime('%d %B %Y'),
-            'ref_number': ref_number,
-            'company': {
-                'name': 'TAQON ELECTRICO',
-                'tagline': 'Customer is King!',
-                'address': '203 Sherwood Drive, Strathaven, Harare',
-                'phone': '+263 77 277 1036',
-                'email': 'info@taqon.co.zw',
-                'website': 'www.taqon.co.zw',
-                'founding_year': '2020',
-                'registration_no': 'Licensed Electrical Contractor · ZERA-Recommended',
-            },
-            'about_paragraph': self.ABOUT,
-            'mission_paragraph': self.MISSION,
-            'cta_paragraph': self.CTA_PARAGRAPH,
-            'services': self.SERVICES,
-            'families': families,
-            'projects': self.PROJECTS,
-            'brands': self.BRANDS,
-            'stats': self.STATS,
-            'testimonials': self.TESTIMONIALS,
-        }
+            raise Http404('Company profile is not available.')
 
         try:
-            from apps.documents.profile import build_profile_pdf
-            pdf_bytes = build_profile_pdf(
-                company=context['company'],
-                about_paragraph=context['about_paragraph'],
-                mission_paragraph=context['mission_paragraph'],
-                cta_paragraph=context['cta_paragraph'],
-                services=context['services'],
-                stats=context['stats'],
-                projects=context['projects'],
-                brands=context['brands'],
-                testimonials=context['testimonials'],
-                ref_number=ref_number,
-                generated_date=context['generated_date'],
-            )
-            is_pdf = pdf_bytes[:4] == b'%PDF'
-        except Exception:
-            logger.exception('ReportLab profile build failed — falling back to HTML pipeline')
-            html_string = render_to_string('pdfs/business_profile.html', context)
-            from apps.quotations.pdf import _render_pdf
-            pdf_bytes = _render_pdf(html_string)
-            is_pdf = pdf_bytes[:4] == b'%PDF'
-        content_type = 'application/pdf' if is_pdf else 'text/html'
-        ext = 'pdf' if is_pdf else 'html'
-        response = HttpResponse(pdf_bytes, content_type=content_type)
+            profile.file.open('rb')
+            data = profile.file.read()
+        finally:
+            try:
+                profile.file.close()
+            except Exception:
+                pass
+
+        content_type = profile.content_type or 'application/pdf'
+        response = HttpResponse(data, content_type=content_type)
         response['Content-Disposition'] = (
-            f'attachment; filename="Taqon-Electrico-Company-Profile.{ext}"'
+            f'attachment; filename="{profile.download_filename}"'
         )
 
-        from apps.downloads.services import record_download
         record_download(
             request,
             kind='business_profile',
             surface=request.GET.get('source', 'other'),
             target_slug='company-profile',
             target_label='Taqon Electrico Company Profile',
-            file_size_bytes=len(pdf_bytes),
-            success=is_pdf,
-            failure_reason='' if is_pdf else 'renderer fell back to HTML',
-            metadata={'ref_number': ref_number},
+            file_size_bytes=len(data),
+            success=True,
         )
         return response
 

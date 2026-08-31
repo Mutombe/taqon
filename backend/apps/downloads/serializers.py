@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Download
+from .models import Download, CompanyProfile
 
 
 class DownloadTrackSerializer(serializers.ModelSerializer):
@@ -47,3 +47,25 @@ class DownloadAdminSerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = fields
+
+
+class CompanyProfileSerializer(serializers.ModelSerializer):
+    """Read/meta for the admin-uploaded company profile document."""
+    file_url = serializers.SerializerMethodField()
+    uploaded_by_email = serializers.EmailField(
+        source='uploaded_by.email', read_only=True, default=None,
+    )
+
+    class Meta:
+        model = CompanyProfile
+        fields = [
+            'id', 'file_url', 'original_name', 'content_type',
+            'size_bytes', 'uploaded_by_email', 'created_at', 'updated_at',
+        ]
+        read_only_fields = fields
+
+    def get_file_url(self, obj):
+        try:
+            return obj.file.url if obj.file else None
+        except Exception:
+            return None

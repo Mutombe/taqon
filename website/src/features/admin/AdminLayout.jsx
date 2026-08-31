@@ -39,6 +39,7 @@ const NAV_SECTIONS = [
     items: [
       { to: '/admin/blog', label: 'Blog Posts', icon: Article, count: 'blog' },
       { to: '/admin/media', label: 'Media', icon: Image, count: 'media' },
+      { to: '/admin/site-content', label: 'Site Content', icon: FileText },
     ],
   },
   {
@@ -232,6 +233,7 @@ const PAGE_TITLES = {
   '/admin/blog': 'Blog Posts',
   '/admin/blog/new': 'New Blog Post',
   '/admin/media': 'Media Library',
+  '/admin/site-content': 'Site Content',
   '/admin/users': 'Users',
   '/admin/inquiries': 'Inquiries',
   '/admin/downloads': 'Downloads',

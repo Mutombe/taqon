@@ -1,15 +1,24 @@
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Count
 from django.utils import timezone
 
 from apps.core.pagination import StandardPagination
 from apps.core.permissions import IsAdmin
 
-from .models import Download
-from .serializers import DownloadTrackSerializer, DownloadAdminSerializer
+from .models import Download, CompanyProfile
+from .serializers import (
+    DownloadTrackSerializer, DownloadAdminSerializer, CompanyProfileSerializer,
+)
 from .services import _client_ip
+
+# Company profile upload guards.
+PROFILE_MAX_BYTES = 50 * 1024 * 1024  # 50 MB
+PROFILE_ALLOWED_TYPES = ('application/pdf',)
+PROFILE_ALLOWED_EXTS = ('.pdf',)
 
 
 class TrackDownloadView(generics.CreateAPIView):
@@ -88,3 +97,77 @@ class AdminDownloadStatsView(generics.GenericAPIView):
                 qs.values('surface').annotate(count=Count('id')).order_by('-count')
             ),
         })
+
+
+class CompanyProfileMetaView(APIView):
+    """GET /api/v1/downloads/company-profile/ — public availability meta so the
+    website knows whether to show the 'Download Company Profile' button."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        profile = CompanyProfile.current()
+        if not profile or not profile.file:
+            return Response({'available': False})
+        data = CompanyProfileSerializer(profile, context={'request': request}).data
+        data['available'] = True
+        return Response(data)
+
+
+class AdminCompanyProfileView(APIView):
+    """GET/PUT /api/v1/downloads/admin/company-profile/ — the Taqon team
+    uploads or replaces the company profile document here (singleton)."""
+    permission_classes = [IsAdmin]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        profile = CompanyProfile.current()
+        if not profile:
+            return Response({'available': False})
+        data = CompanyProfileSerializer(profile, context={'request': request}).data
+        data['available'] = bool(profile.file)
+        return Response(data)
+
+    def put(self, request):
+        return self._save(request)
+
+    def post(self, request):
+        return self._save(request)
+
+    def _save(self, request):
+        upload = request.FILES.get('file')
+        if not upload:
+            return Response({'detail': 'No file provided.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        name = (getattr(upload, 'name', '') or '')
+        ctype = (getattr(upload, 'content_type', '') or '')
+        ext = ('.' + name.rsplit('.', 1)[1].lower()) if '.' in name else ''
+        if ext not in PROFILE_ALLOWED_EXTS and ctype not in PROFILE_ALLOWED_TYPES:
+            return Response(
+                {'detail': 'Please upload a PDF file.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if getattr(upload, 'size', 0) and upload.size > PROFILE_MAX_BYTES:
+            return Response(
+                {'detail': 'File is too large (max 50 MB).'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Singleton: replace the existing row's file (deleting the old stored
+        # file to avoid orphans), else create the first row.
+        profile = CompanyProfile.current() or CompanyProfile()
+        if profile.pk and profile.file:
+            try:
+                profile.file.delete(save=False)
+            except Exception:
+                pass
+        profile.file = upload
+        profile.original_name = name[:255]
+        profile.content_type = ctype[:100]
+        profile.size_bytes = getattr(upload, 'size', None)
+        profile.uploaded_by = request.user if request.user.is_authenticated else None
+        profile.save()
+
+        data = CompanyProfileSerializer(profile, context={'request': request}).data
+        data['available'] = True
+        return Response(data, status=status.HTTP_200_OK)

@@ -86,3 +86,44 @@ class Download(TimeStampedModel):
 
     def __str__(self):
         return f'{self.get_kind_display()} · {self.target_label or self.target_slug or "(none)"} · {self.created_at:%Y-%m-%d %H:%M}'
+
+
+class CompanyProfile(TimeStampedModel):
+    """The company profile document the Taqon team uploads and maintains
+    themselves (singleton). The website's 'Download Company Profile' buttons
+    serve this uploaded file — replacing the previously auto-generated PDF.
+
+    When no file has been uploaded the download buttons are hidden.
+    """
+
+    file = models.FileField(upload_to='company_profile/')
+    original_name = models.CharField(max_length=255, blank=True)
+    content_type = models.CharField(max_length=100, blank=True)
+    size_bytes = models.PositiveIntegerField(null=True, blank=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='+',
+    )
+
+    class Meta:
+        verbose_name = 'Company profile'
+        verbose_name_plural = 'Company profile'
+
+    def __str__(self):
+        return self.original_name or (self.file.name if self.file else '(no file)')
+
+    @classmethod
+    def current(cls):
+        """Return the single, most recent uploaded profile, or None."""
+        return cls.objects.order_by('-created_at').first()
+
+    @property
+    def download_filename(self):
+        """A clean, branded filename for the attachment, keeping the real ext."""
+        ext = ''
+        name = self.original_name or (self.file.name if self.file else '')
+        if '.' in name:
+            ext = '.' + name.rsplit('.', 1)[1].lower()
+        return f'Taqon-Electrico-Company-Profile{ext or ".pdf"}'
