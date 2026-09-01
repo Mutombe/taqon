@@ -12,6 +12,7 @@ import { confirmExternalNavigation } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { useBlogPost } from '../hooks/useQueries';
 import { normalizeBlogPost } from '../api/blog';
+import { resolveBlogCta } from '../data/blogCta';
 
 const FALLBACK_IMG = '/chisipiti-10kva-2.jpg';
 
@@ -284,6 +285,35 @@ export default function BlogPost() {
                   [&_h2]:scroll-mt-24"
                 dangerouslySetInnerHTML={{ __html: processedContent }}
               />
+
+              {/* Author-selected call-to-action */}
+              {(() => {
+                const cta = resolveBlogCta(post);
+                if (!cta) return null;
+                const isHttp = cta.href && /^https?:\/\//i.test(cta.href);
+                const btnCls = 'group inline-flex items-center gap-2 bg-taqon-orange text-white px-7 py-3.5 rounded-full text-base font-semibold hover:bg-taqon-orange/90 transition-all shadow-lg shadow-taqon-orange/25 active:scale-95';
+                const arrow = <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />;
+                return (
+                  <div className="mt-12 rounded-2xl bg-taqon-cream dark:bg-white/[0.03] border border-taqon-orange/15 p-8 text-center">
+                    <p className="text-taqon-charcoal dark:text-white font-syne font-bold text-lg mb-4">
+                      Ready to take the next step?
+                    </p>
+                    {cta.to ? (
+                      <Link to={cta.to} className={btnCls}>{cta.label} {arrow}</Link>
+                    ) : (
+                      <a
+                        href={cta.href}
+                        className={btnCls}
+                        {...(isHttp
+                          ? { target: '_blank', rel: 'noopener noreferrer', onClick: (e) => confirmExternalNavigation(cta.href, e) }
+                          : {})}
+                      >
+                        {cta.label} {arrow}
+                      </a>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Tags */}
               <div className="mt-10 pt-8 border-t border-gray-200 dark:border-white/10">

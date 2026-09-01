@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CaretLeft, CircleNotch, UploadSimple, X, FloppyDisk, Globe,
-  Tag, Clock, Image as ImageIcon, Images,
+  Tag, Clock, Image as ImageIcon, Images, ArrowRight,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -11,6 +11,7 @@ import { adminApi } from '../../api/admin';
 import { SkeletonBox } from '../../components/Skeletons';
 import LibraryPicker from '../../components/LibraryPicker';
 import { useAdminBlogPost, useAdminBlogCategories } from '../../hooks/useQueries';
+import { BLOG_CTA_TYPES, resolveBlogCta } from '../../data/blogCta';
 
 function slugify(str) {
   return str
@@ -98,6 +99,9 @@ export default function AdminBlogEditor() {
     published_at: '',
     meta_title: '',
     meta_description: '',
+    cta_type: 'quote',
+    cta_label: '',
+    cta_url: '',
   });
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -126,6 +130,9 @@ export default function AdminBlogEditor() {
       published_at: postData.published_at ? postData.published_at.slice(0, 16) : '',
       meta_title: postData.meta_title || '',
       meta_description: postData.meta_description || '',
+      cta_type: postData.cta_type || 'quote',
+      cta_label: postData.cta_label || '',
+      cta_url: postData.cta_url || '',
     });
     if (postData.image_display) setImagePreview(postData.image_display);
     else if (postData.image_url) setImagePreview(postData.image_url);
@@ -179,6 +186,9 @@ export default function AdminBlogEditor() {
         published_at: isPublished && !form.published_at ? new Date().toISOString() : form.published_at || null,
         meta_title: form.meta_title,
         meta_description: form.meta_description,
+        cta_type: form.cta_type,
+        cta_label: form.cta_type === 'custom' ? form.cta_label : '',
+        cta_url: form.cta_type === 'custom' ? form.cta_url : '',
       };
       // Reused a library image (a URL) rather than uploading a new file.
       if (libraryUrl && !imageFile) payload.image_url = libraryUrl;
@@ -426,6 +436,50 @@ export default function AdminBlogEditor() {
                 <Images size={13} /> Library
               </button>
             </div>
+          </div>
+
+          {/* Article CTA button */}
+          <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 space-y-3">
+            <h3 className="font-semibold text-[var(--text-primary)] text-sm">CTA Button</h3>
+            <p className="text-xs text-[var(--text-muted)]">The button shown at the bottom of this article.</p>
+            <select
+              value={form.cta_type}
+              onChange={(e) => set('cta_type', e.target.value)}
+              className="auth-input w-full text-sm"
+            >
+              {BLOG_CTA_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+            {form.cta_type === 'custom' && (
+              <div className="space-y-2">
+                <input
+                  value={form.cta_label}
+                  onChange={(e) => set('cta_label', e.target.value)}
+                  placeholder="Button text (e.g. Book a Site Visit)"
+                  className="auth-input w-full text-sm"
+                />
+                <input
+                  value={form.cta_url}
+                  onChange={(e) => set('cta_url', e.target.value)}
+                  placeholder="Link — /contact or https://…"
+                  className="auth-input w-full text-sm"
+                />
+              </div>
+            )}
+            {form.cta_type !== 'none' && (() => {
+              const preview = resolveBlogCta(form);
+              return preview ? (
+                <div className="pt-1">
+                  <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)] mb-1.5">Preview</p>
+                  <span className="inline-flex items-center gap-2 bg-taqon-orange text-white px-4 py-2 rounded-xl text-sm font-semibold">
+                    {preview.label} <ArrowRight size={14} weight="bold" />
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--text-muted)]">Add the button text and link to preview.</p>
+              );
+            })()}
           </div>
 
           {/* Publish Settings */}

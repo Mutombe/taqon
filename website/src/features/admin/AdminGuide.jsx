@@ -102,6 +102,7 @@ export default function AdminGuide() {
       {/* Blog */}
       <Section icon={Article} title="Blog Posts (Solar Secrets)" where="Content → Blog Posts">
         <Do verb="Add" icon={Plus}>Click <b>New Post</b>, write the title and content, add a cover image, then <b>Publish</b> (or <b>Save Draft</b> to finish later).</Do>
+        <Do verb="CTA">In the editor sidebar, choose the <b>CTA Button</b> shown at the bottom of the article — WhatsApp Us, Contact Us, Get a Free Quote, etc., or <b>Custom</b> with your own label and link. A live preview updates as you pick.</Do>
         <Do verb="Edit" icon={PencilSimple}>Open a post from the list and edit it, then Publish/Save.</Do>
         <Do verb="Delete" icon={Trash}>Use the delete action on the post.</Do>
       </Section>

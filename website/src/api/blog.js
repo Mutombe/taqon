@@ -40,6 +40,10 @@ export function normalizeBlogPost(p) {
       return /read|min/i.test(rt) ? rt : `${rt} min read`;
     })(),
     views: p.views_count || 0,
+    // Author-selected call-to-action button (bottom of the article)
+    cta_type: p.cta_type || 'quote',
+    cta_label: p.cta_label || '',
+    cta_url: p.cta_url || '',
     // detail serializer returns related_posts as full objects
     relatedPosts: Array.isArray(p.related_posts)
       ? p.related_posts.map(normalizeBlogPost)
