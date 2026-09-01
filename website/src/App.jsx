@@ -131,6 +131,7 @@ const AdminInquiries = lazy(() => import('./features/admin/AdminInquiries'));
 const AdminDownloads = lazy(() => import('./features/admin/AdminDownloads'));
 const AdminSiteContent = lazy(() => import('./features/admin/AdminSiteContent'));
 const AdminProjects = lazy(() => import('./features/admin/AdminProjects'));
+const AdminGuide = lazy(() => import('./features/admin/AdminGuide'));
 
 // Customer Account Portal (lazy loaded)
 const AccountPortal = lazy(() => import('./features/account/AccountPortal'));
@@ -363,6 +364,7 @@ function AppContent() {
               <Route path="inquiries" element={<AdminInquiries />} />
               <Route path="inquiries/:id" element={<AdminInquiries />} />
               <Route path="downloads" element={<AdminDownloads />} />
+              <Route path="guide" element={<AdminGuide />} />
             </Route>
           </Routes>
         </Suspense>

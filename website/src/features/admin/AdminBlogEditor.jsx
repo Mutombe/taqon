@@ -229,7 +229,7 @@ export default function AdminBlogEditor() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-6xl mx-auto space-y-4">
         <SkeletonBox className="h-8 w-48 rounded-lg" />
         <SkeletonBox className="h-12 w-full rounded-xl" />
         <SkeletonBox className="h-64 w-full rounded-xl" />
@@ -239,7 +239,7 @@ export default function AdminBlogEditor() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">

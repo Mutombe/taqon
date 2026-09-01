@@ -5,7 +5,7 @@ import {
   SquaresFour, ChartBar, Package, ShoppingCart, SolarPanel,
   Article, Image, Users, List, X, CaretRight, SignOut,
   Bell, MoonStars, Sun, FileText, Wallet, Lightning, ToggleRight, ChatCircle, DownloadSimple,
-  Cube, Buildings,
+  Cube, Buildings, Question,
 } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '../../stores/authStore';
@@ -55,6 +55,7 @@ const NAV_SECTIONS = [
     items: [
       { to: '/admin/downloads', label: 'Downloads', icon: DownloadSimple, count: 'downloads' },
       { to: '/admin/feature-flags', label: 'Feature Flags', icon: ToggleRight, count: 'feature_flags' },
+      { to: '/admin/guide', label: 'How-To Guide', icon: Question },
     ],
   },
 ];
@@ -240,6 +241,7 @@ const PAGE_TITLES = {
   '/admin/inquiries': 'Inquiries',
   '/admin/downloads': 'Downloads',
   '/admin/feature-flags': 'Feature Flags',
+  '/admin/guide': 'How-To Guide',
 };
 
 export default function AdminLayout() {
