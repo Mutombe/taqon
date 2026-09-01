@@ -529,7 +529,7 @@ def build_quotation_pdf(*,
     # ── Closing CTA ──
     story.append(cta_band(
         'Next step',
-        'Pay 50% deposit to commence work; the remaining 50% balance is due '
+        'Pay 50% deposit to commence work, and the remaining 50% balance due '
         'immediately upon completion of installation.',
         'Final figure confirmed on completion of works. Valid 10 days.',
         right_label='Talk to engineering',
