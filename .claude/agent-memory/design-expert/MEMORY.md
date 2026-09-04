@@ -1,0 +1,2 @@
+- [Gem Design System](gem_design_system.md) — Solar packages use gem-stone identity system (Citrine, Sapphire, Ruby, etc.) with unique accent colors, shimmer animations, and glow effects
+- [Solar Advisor SPA Layout](solar_advisor_spa_layout.md) — Desktop split-panel SPA layout (inputs left, sticky preview right); mobile keeps step wizard

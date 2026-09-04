@@ -1,0 +1,58 @@
+
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem; min-height: 560px; display: flex; align-items: center; justify-content: center;">
+<div style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 2rem; max-width: 480px; width: 100%;">
+
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem;">
+    <div>
+      <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-tertiary); margin: 0 0 4px;">Step 2 of 3</p>
+      <h2 style="font-size: 18px; font-weight: 500; margin: 0; color: var(--color-text-primary);">Secure your installation</h2>
+    </div>
+    <span style="font-size: 20px; cursor: pointer; color: var(--color-text-tertiary); line-height: 1;">&#x2715;</span>
+  </div>
+
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+    <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 8px;">Selected package</p>
+    <p style="font-size: 15px; font-weight: 500; margin: 0 0 12px; color: var(--color-text-primary);">5kW Hybrid Solar System</p>
+    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+      <span style="color: var(--color-text-secondary);">Estimated total</span>
+      <span style="color: var(--color-text-primary);">$8,500.00</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 13px; padding-top: 8px; border-top: 0.5px solid var(--color-border-tertiary);">
+      <span style="color: var(--color-text-secondary);">Deposit required (20%)</span>
+      <span style="font-weight: 500; color: var(--color-text-primary);">$1,700.00</span>
+    </div>
+  </div>
+
+  <p style="font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 10px;">What happens next</p>
+  <div style="margin-bottom: 1.25rem;">
+    <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
+      <div style="width: 20px; height: 20px; border-radius: 50%; background: var(--color-background-success); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; color: var(--color-text-success); font-weight: 500; margin-top: 1px;">1</div>
+      <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">We schedule a <strong style="color: var(--color-text-primary); font-weight: 500;">site assessment</strong> within 5 business days to verify roof orientation, shading, and structural requirements.</p>
+    </div>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
+      <div style="width: 20px; height: 20px; border-radius: 50%; background: var(--color-background-info); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; color: var(--color-text-info); font-weight: 500; margin-top: 1px;">2</div>
+      <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">We confirm your <strong style="color: var(--color-text-primary); font-weight: 500;">final system design and price</strong> within 3 days of the assessment.</p>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: flex-start;">
+      <div style="width: 20px; height: 20px; border-radius: 50%; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; color: var(--color-text-secondary); font-weight: 500; margin-top: 1px;">3</div>
+      <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">Your deposit is <strong style="color: var(--color-text-primary); font-weight: 500;">fully credited</strong> toward your final invoice once installation is confirmed.</p>
+    </div>
+  </div>
+
+  <div style="background: var(--color-background-warning); border-left: 2px solid var(--color-border-warning); border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; padding: 10px 12px; margin-bottom: 1.25rem;">
+    <p style="font-size: 12px; color: var(--color-text-warning); margin: 0; line-height: 1.6; font-weight: 500;">Note on cancellation after site visit</p>
+    <p style="font-size: 12px; color: var(--color-text-warning); margin: 4px 0 0; line-height: 1.6;">If you choose not to proceed after the site assessment, or if the installation is found to be not feasible, a <strong>transport &amp; travel fee</strong> will be deducted from your deposit before any refund is issued. The remainder is returned to you within 7 business days.</p>
+  </div>
+
+  <label style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 1.5rem; cursor: pointer;">
+    <input type="checkbox" id="tc-check2" style="margin-top: 3px; flex-shrink: 0;" />
+    <span style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.5;">I have read and agree to the <a href="#" style="color: var(--color-text-info); text-decoration: underline;">Quotation Terms &amp; Conditions</a>, including the transport cost deduction policy on cancellation after site assessment.</span>
+  </label>
+
+  <div style="display: flex; gap: 10px;">
+    <button style="flex: 1; padding: 10px; font-size: 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-secondary); cursor: pointer;">Cancel</button>
+    <button onclick="if(document.getElementById('tc-check2').checked){this.textContent='Processing...';setTimeout(()=>this.textContent='Deposit paid \u2713',1200)}else{alert('Please accept the terms to continue.')}" style="flex: 2; padding: 10px; font-size: 14px; font-weight: 500; border: none; border-radius: var(--border-radius-md); background: var(--color-text-primary); color: var(--color-background-primary); cursor: pointer;">Pay $1,700 deposit</button>
+  </div>
+
+</div>
+</div>

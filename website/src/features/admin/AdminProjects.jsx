@@ -36,44 +36,69 @@ const inputCls = 'w-full bg-taqon-cream dark:bg-taqon-dark border border-gray-20
 const labelCls = 'block text-xs font-semibold text-taqon-charcoal dark:text-white mb-1.5';
 
 /* ── Editor modal ─────────────────────────────────────────────────────── */
+function blankProject() {
+  return {
+    title: '', category: 'residential', location: '', kva: '', date_label: '',
+    description: '', full_description: [], specs: {}, benefits: [],
+    is_published: false, is_featured: false, sort_order: 0,
+    cta_type: 'quote', cta_label: '', cta_url: '', video_url: '',
+    images: [], hero: '',
+  };
+}
+
 function ProjectEditor({ slug, onClose, onSaved }) {
-  const [p, setP] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const isNew = slug === 'new';
+  const [p, setP] = useState(() => (isNew ? blankProject() : null));
+  // Free-text mirrors of the JSON fields (controlled — no reset on re-render).
+  const [fdText, setFdText] = useState('');
+  const [specsText, setSpecsText] = useState('');
+  const [benefitsText, setBenefitsText] = useState('');
+  const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [busyImg, setBusyImg] = useState(false);
   const heroRef = useRef(null);
   const galleryRef = useRef(null);
-  const [busyImg, setBusyImg] = useState(false);
+
+  const syncText = (proj) => {
+    setFdText(fromParagraphs(proj.full_description));
+    setSpecsText(fromSpecs(proj.specs));
+    setBenefitsText(fromLines(proj.benefits));
+  };
 
   const load = useCallback(async () => {
+    if (isNew) return;
     setLoading(true);
     try {
       const res = await projectsApi.adminDetail(slug);
       setP(res.data);
+      syncText(res.data);
     } catch {
       setP(null);
     } finally {
       setLoading(false);
     }
-  }, [slug]);
+  }, [slug, isNew]);
 
   useEffect(() => { load(); }, [load]);
 
   const set = (k, v) => setP((prev) => ({ ...prev, [k]: v }));
+  const hasSlug = !!p?.slug; // exists on the server → images can be attached
 
   const save = async () => {
     if (saving || !p) return;
+    if (!(p.title || '').trim()) { toast.error('Title is required.'); return; }
     setSaving(true);
     try {
-      const res = await projectsApi.update(slug, {
+      const payload = {
         title: p.title,
         category: p.category,
         location: p.location,
         kva: p.kva,
         date_label: p.date_label,
         description: p.description,
-        full_description: p.full_description,
-        specs: p.specs,
-        benefits: p.benefits,
+        full_description: toParagraphs(fdText),
+        specs: toSpecs(specsText),
+        benefits: toLines(benefitsText),
         is_published: p.is_published,
         is_featured: p.is_featured,
         sort_order: Number(p.sort_order) || 0,
@@ -81,9 +106,13 @@ function ProjectEditor({ slug, onClose, onSaved }) {
         cta_label: p.cta_type === 'custom' ? (p.cta_label || '') : '',
         cta_url: p.cta_type === 'custom' ? (p.cta_url || '') : '',
         video_url: p.video_url || '',
-      });
+      };
+      const res = hasSlug
+        ? await projectsApi.update(p.slug, payload)
+        : await projectsApi.create(payload);
       setP(res.data);
-      toast.success('Project saved.');
+      syncText(res.data);
+      toast.success(hasSlug ? 'Project saved.' : 'Project created — you can now add images.');
       onSaved?.();
     } catch (e) {
       const d = e?.response?.data || {};
@@ -98,13 +127,14 @@ function ProjectEditor({ slug, onClose, onSaved }) {
   };
 
   const uploadHero = async (file) => {
-    if (!file) return;
+    if (!file || !p?.slug) return;
     setBusyImg(true);
     try {
       const fd = new FormData();
       fd.append('image', file);
-      const res = await projectsApi.uploadHero(slug, fd);
-      setP(res.data);
+      const res = await projectsApi.uploadHero(p.slug, fd);
+      // Merge ONLY the hero — keep any unsaved field edits.
+      setP((prev) => ({ ...prev, hero: res.data.hero, hero_image_url: res.data.hero_image_url }));
       toast.success('Hero image updated.');
       onSaved?.();
     } catch (e) {
@@ -116,13 +146,14 @@ function ProjectEditor({ slug, onClose, onSaved }) {
   };
 
   const addImage = async (file) => {
-    if (!file) return;
+    if (!file || !p?.slug) return;
     setBusyImg(true);
     try {
       const fd = new FormData();
       fd.append('image', file);
-      await projectsApi.addImage(slug, fd);
-      await load();
+      const res = await projectsApi.addImage(p.slug, fd);
+      // Append the new image — never reload (that wiped unsaved edits).
+      setP((prev) => ({ ...prev, images: [...(prev.images || []), res.data] }));
       toast.success('Image added.');
     } catch (e) {
       toast.error(e?.response?.data?.detail || 'Image upload failed.');
@@ -143,7 +174,7 @@ function ProjectEditor({ slug, onClose, onSaved }) {
     if (!window.confirm('Remove this image?')) return;
     try {
       await projectsApi.deleteImage(img.id);
-      await load();
+      setP((prev) => ({ ...prev, images: (prev.images || []).filter((i) => i.id !== img.id) }));
     } catch { toast.error('Could not remove image.'); }
   };
 
@@ -156,7 +187,7 @@ function ProjectEditor({ slug, onClose, onSaved }) {
         className="relative z-10 w-full max-w-3xl my-8 bg-white dark:bg-taqon-charcoal rounded-2xl border border-gray-100 dark:border-white/10 shadow-2xl"
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 sticky top-0 bg-white dark:bg-taqon-charcoal rounded-t-2xl z-10">
-          <h2 className="font-bold font-syne text-taqon-charcoal dark:text-white">Edit Project</h2>
+          <h2 className="font-bold font-syne text-taqon-charcoal dark:text-white">{hasSlug ? 'Edit Project' : 'New Project'}</h2>
           <button onClick={onClose} className="w-9 h-9 rounded-lg flex items-center justify-center text-taqon-muted hover:bg-gray-100 dark:hover:bg-white/5">
             <X size={18} />
           </button>
@@ -200,16 +231,16 @@ function ProjectEditor({ slug, onClose, onSaved }) {
             </div>
             <div>
               <label className={labelCls}>Full description <span className="text-taqon-muted dark:text-white/40 font-normal">— one paragraph per blank line</span></label>
-              <textarea rows={5} className={inputCls} defaultValue={fromParagraphs(p.full_description)} onBlur={(e) => set('full_description', toParagraphs(e.target.value))} />
+              <textarea rows={5} className={inputCls} value={fdText} onChange={(e) => setFdText(e.target.value)} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Specs <span className="text-taqon-muted dark:text-white/40 font-normal">— key: value per line</span></label>
-                <textarea rows={4} className={`${inputCls} font-mono text-xs`} defaultValue={fromSpecs(p.specs)} onBlur={(e) => set('specs', toSpecs(e.target.value))} />
+                <textarea rows={4} className={`${inputCls} font-mono text-xs`} value={specsText} onChange={(e) => setSpecsText(e.target.value)} />
               </div>
               <div>
                 <label className={labelCls}>Benefits <span className="text-taqon-muted dark:text-white/40 font-normal">— one per line</span></label>
-                <textarea rows={4} className={inputCls} defaultValue={fromLines(p.benefits)} onBlur={(e) => set('benefits', toLines(e.target.value))} />
+                <textarea rows={4} className={inputCls} value={benefitsText} onChange={(e) => setBenefitsText(e.target.value)} />
               </div>
             </div>
 
@@ -257,7 +288,14 @@ function ProjectEditor({ slug, onClose, onSaved }) {
               })()}
             </div>
 
+            {!hasSlug && (
+              <div className="rounded-xl border border-dashed border-taqon-orange/30 bg-taqon-orange/[0.04] p-4 text-sm text-taqon-charcoal/80 dark:text-white/70">
+                💡 Fill in the details and click <b>Create project</b> — then you can upload the hero and gallery images.
+              </div>
+            )}
+
             {/* Hero */}
+            {hasSlug && (
             <div>
               <label className={labelCls}>Hero image</label>
               <div className="flex items-center gap-3">
@@ -267,8 +305,10 @@ function ProjectEditor({ slug, onClose, onSaved }) {
                 <input ref={heroRef} type="file" accept="image/*" onChange={(e) => uploadHero(e.target.files?.[0])} className="text-xs text-taqon-muted dark:text-white/60 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-taqon-orange/10 file:text-taqon-orange hover:file:bg-taqon-orange/20 file:cursor-pointer" />
               </div>
             </div>
+            )}
 
             {/* Gallery */}
+            {hasSlug && (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className={labelCls + ' mb-0'}>Gallery images</label>
@@ -297,11 +337,12 @@ function ProjectEditor({ slug, onClose, onSaved }) {
                 )}
               </div>
             </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-white/10">
               <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-semibold text-taqon-charcoal dark:text-white hover:bg-gray-100 dark:hover:bg-white/5">Close</button>
               <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 bg-taqon-orange text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-taqon-orange/90 disabled:opacity-50">
-                {saving ? <SpinnerGap size={16} className="animate-spin" /> : <FloppyDisk size={16} weight="bold" />} Save
+                {saving ? <SpinnerGap size={16} className="animate-spin" /> : <FloppyDisk size={16} weight="bold" />} {hasSlug ? 'Save' : 'Create project'}
               </button>
             </div>
           </div>
@@ -316,7 +357,6 @@ function ProjectEditor({ slug, onClose, onSaved }) {
 export default function AdminProjects() {
   const [projects, setProjects] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
   const [editSlug, setEditSlug] = useState(null);
 
   const load = useCallback(async () => {
@@ -334,19 +374,8 @@ export default function AdminProjects() {
 
   useEffect(() => { load(); }, [load]);
 
-  const createNew = async () => {
-    if (creating) return;
-    setCreating(true);
-    try {
-      const res = await projectsApi.create({ title: 'Untitled Project', category: 'residential', is_published: false });
-      await load();
-      setEditSlug(res.data.slug);
-    } catch {
-      toast.error('Could not create project.');
-    } finally {
-      setCreating(false);
-    }
-  };
+  // Opens the editor instantly in "new" mode — no network call, no placeholder row.
+  const createNew = () => setEditSlug('new');
 
   const quickToggle = async (proj, field) => {
     try {
@@ -376,8 +405,8 @@ export default function AdminProjects() {
           <h1 className="text-2xl font-bold font-syne text-taqon-charcoal dark:text-white">Projects</h1>
           <p className="text-sm text-taqon-muted dark:text-white/50 mt-1">Manage the public Projects gallery — add, edit, publish, feature and reorder.</p>
         </div>
-        <button onClick={createNew} disabled={creating} className="inline-flex items-center gap-2 bg-taqon-orange text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-taqon-orange/90 disabled:opacity-50 flex-shrink-0">
-          {creating ? <SpinnerGap size={16} className="animate-spin" /> : <Plus size={16} weight="bold" />} New Project
+        <button onClick={createNew} className="inline-flex items-center gap-2 bg-taqon-orange text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-taqon-orange/90 flex-shrink-0">
+          <Plus size={16} weight="bold" /> New Project
         </button>
       </motion.div>
 
