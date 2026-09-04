@@ -71,7 +71,7 @@ class BlogPostDetailSerializer(serializers.ModelSerializer):
             'category', 'tags', 'image_display', 'author',
             'read_time', 'is_published', 'published_at',
             'meta_title', 'meta_description', 'views_count',
-            'cta_type', 'cta_label', 'cta_url',
+            'cta_type', 'cta_label', 'cta_url', 'video_url',
             'related_posts', 'created_at', 'updated_at',
         ]
         read_only_fields = fields
@@ -108,7 +108,7 @@ class BlogPostCreateUpdateSerializer(serializers.ModelSerializer):
             'category', 'tags', 'image', 'image_url',
             'read_time', 'is_published', 'published_at',
             'meta_title', 'meta_description',
-            'cta_type', 'cta_label', 'cta_url',
+            'cta_type', 'cta_label', 'cta_url', 'video_url',
         ]
         # Slug auto-generates from the title (model), and category falls back
         # to an existing one — so the editor never gets blocked on either.

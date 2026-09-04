@@ -80,6 +80,7 @@ function ProjectEditor({ slug, onClose, onSaved }) {
         cta_type: p.cta_type || 'quote',
         cta_label: p.cta_type === 'custom' ? (p.cta_label || '') : '',
         cta_url: p.cta_type === 'custom' ? (p.cta_url || '') : '',
+        video_url: p.video_url || '',
       });
       setP(res.data);
       toast.success('Project saved.');
@@ -224,6 +225,12 @@ function ProjectEditor({ slug, onClose, onSaved }) {
                 Order
                 <input type="number" value={p.sort_order ?? 0} onChange={(e) => set('sort_order', e.target.value)} className="w-16 bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 text-xs text-taqon-charcoal dark:text-white outline-none" />
               </label>
+            </div>
+
+            {/* Video */}
+            <div>
+              <label className={labelCls}>Video <span className="text-taqon-muted dark:text-white/40 font-normal">— optional YouTube link, embedded on the project page</span></label>
+              <input value={p.video_url || ''} onChange={(e) => set('video_url', e.target.value)} placeholder="https://youtu.be/…" className={`${inputCls} font-mono`} />
             </div>
 
             {/* CTA button */}

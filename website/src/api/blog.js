@@ -44,6 +44,7 @@ export function normalizeBlogPost(p) {
     cta_type: p.cta_type || 'quote',
     cta_label: p.cta_label || '',
     cta_url: p.cta_url || '',
+    video_url: p.video_url || '',
     // detail serializer returns related_posts as full objects
     relatedPosts: Array.isArray(p.related_posts)
       ? p.related_posts.map(normalizeBlogPost)

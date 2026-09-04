@@ -13,6 +13,7 @@ import SEO from '../components/SEO';
 import { useBlogPost } from '../hooks/useQueries';
 import { normalizeBlogPost } from '../api/blog';
 import { resolveBlogCta } from '../data/blogCta';
+import VideoEmbed from '../components/VideoEmbed';
 
 const FALLBACK_IMG = '/chisipiti-10kva-2.jpg';
 
@@ -270,6 +271,11 @@ export default function BlogPost() {
           <div className="grid lg:grid-cols-[1fr_280px] gap-8 lg:gap-12">
             {/* Article Content */}
             <AnimatedSection>
+              {post.video_url && (
+                <div className="mb-8">
+                  <VideoEmbed url={post.video_url} title={post.title} />
+                </div>
+              )}
               <article
                 className="prose prose-lg max-w-none
                   prose-headings:font-syne prose-headings:font-bold prose-headings:text-taqon-charcoal dark:prose-headings:text-white

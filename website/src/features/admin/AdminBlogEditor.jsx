@@ -102,6 +102,7 @@ export default function AdminBlogEditor() {
     cta_type: 'quote',
     cta_label: '',
     cta_url: '',
+    video_url: '',
   });
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -133,6 +134,7 @@ export default function AdminBlogEditor() {
       cta_type: postData.cta_type || 'quote',
       cta_label: postData.cta_label || '',
       cta_url: postData.cta_url || '',
+      video_url: postData.video_url || '',
     });
     if (postData.image_display) setImagePreview(postData.image_display);
     else if (postData.image_url) setImagePreview(postData.image_url);
@@ -189,6 +191,7 @@ export default function AdminBlogEditor() {
         cta_type: form.cta_type,
         cta_label: form.cta_type === 'custom' ? form.cta_label : '',
         cta_url: form.cta_type === 'custom' ? form.cta_url : '',
+        video_url: form.video_url || '',
       };
       // Reused a library image (a URL) rather than uploading a new file.
       if (libraryUrl && !imageFile) payload.image_url = libraryUrl;
@@ -436,6 +439,18 @@ export default function AdminBlogEditor() {
                 <Images size={13} /> Library
               </button>
             </div>
+          </div>
+
+          {/* Video */}
+          <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 space-y-2">
+            <h3 className="font-semibold text-[var(--text-primary)] text-sm">Video</h3>
+            <p className="text-xs text-[var(--text-muted)]">Optional YouTube link — embeds a player near the top of the article.</p>
+            <input
+              value={form.video_url}
+              onChange={(e) => set('video_url', e.target.value)}
+              placeholder="https://youtu.be/…"
+              className="auth-input w-full text-sm font-mono"
+            />
           </div>
 
           {/* Article CTA button */}

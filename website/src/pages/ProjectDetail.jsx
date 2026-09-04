@@ -13,6 +13,7 @@ import SEO from '../components/SEO';
 import { projectsData } from '../data/projectsData';
 import { projectsApi } from '../api/projects';
 import { resolveBlogCta } from '../data/blogCta';
+import VideoEmbed from '../components/VideoEmbed';
 
 export default function ProjectDetail() {
   const { slug } = useParams();
@@ -163,6 +164,11 @@ export default function ProjectDetail() {
           <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
             {/* Main content — 3 cols */}
             <div className="lg:col-span-3">
+              {project.video_url && (
+                <AnimatedSection variant="fadeUp" className="mb-8">
+                  <VideoEmbed url={project.video_url} title={project.title} />
+                </AnimatedSection>
+              )}
               <AnimatedSection variant="fadeUp">
                 <h2 className="text-2xl lg:text-3xl font-bold font-syne text-[var(--text-primary)] mb-6">
                   Project Overview

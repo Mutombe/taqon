@@ -57,6 +57,9 @@ class Project(SoftDeleteModel):
     cta_type = models.CharField(max_length=20, choices=CTA_CHOICES, default='quote')
     cta_label = models.CharField(max_length=80, blank=True)
     cta_url = models.CharField(max_length=500, blank=True)
+    # Optional YouTube video shown on the project page. Nullable so adding the
+    # column can't break inserts during a deploy window.
+    video_url = models.CharField(max_length=500, blank=True, null=True, help_text='YouTube link to feature on the project page.')
 
     class Meta:
         ordering = ['sort_order', '-created_at']

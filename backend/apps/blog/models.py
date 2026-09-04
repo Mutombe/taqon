@@ -68,6 +68,9 @@ class BlogPost(SoftDeleteModel):
     cta_type = models.CharField(max_length=20, choices=CTA_CHOICES, default='quote')
     cta_label = models.CharField(max_length=80, blank=True, help_text='Custom button text (cta_type = custom).')
     cta_url = models.CharField(max_length=500, blank=True, help_text='Custom button link (cta_type = custom).')
+    # Optional YouTube video embedded in the article. Nullable so adding the
+    # column can't break inserts during a deploy window.
+    video_url = models.CharField(max_length=500, blank=True, null=True, help_text='YouTube link to embed in the article.')
 
     class Meta:
         ordering = ['-published_at', '-created_at']

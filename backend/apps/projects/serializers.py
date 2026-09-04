@@ -40,7 +40,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             'slug', 'title', 'category', 'location', 'kva', 'date',
             'heroImage', 'description', 'fullDescription', 'specs',
             'benefits', 'images', 'is_featured',
-            'cta_type', 'cta_label', 'cta_url',
+            'cta_type', 'cta_label', 'cta_url', 'video_url',
         ]
 
 
@@ -66,7 +66,7 @@ class ProjectAdminSerializer(serializers.ModelSerializer):
             'date_label', 'hero_image_url', 'hero', 'description',
             'full_description', 'specs', 'benefits',
             'is_published', 'is_featured', 'sort_order',
-            'cta_type', 'cta_label', 'cta_url', 'images', 'created_at',
+            'cta_type', 'cta_label', 'cta_url', 'video_url', 'images', 'created_at',
         ]
         read_only_fields = ['id', 'slug', 'hero', 'images', 'created_at']
 
