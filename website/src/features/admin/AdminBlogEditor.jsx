@@ -225,13 +225,13 @@ export default function AdminBlogEditor() {
         navigate(`/admin/blog/${data.slug}/edit`, { replace: true });
       }
     } catch (err) {
-      const detail = err?.response?.data;
-      if (typeof detail === 'object') {
-        const firstError = Object.values(detail).flat()[0];
-        toast.error(typeof firstError === 'string' ? firstError : 'Failed to save post');
-      } else {
-        toast.error('Failed to save post');
-      }
+      const data = err?.response?.data || {};
+      // The API wraps field errors under `details`; fall back to the raw body.
+      const fields = data.details && typeof data.details === 'object' ? data.details : data;
+      const firstKey = Object.keys(fields).find((k) => !['error', 'code', 'status_code'].includes(k));
+      const raw = firstKey ? fields[firstKey] : (data.error || data.detail);
+      const text = Array.isArray(raw) ? raw[0] : raw;
+      toast.error(firstKey ? `${firstKey}: ${text}` : (text || 'Failed to save post'));
     } finally {
       setSaving(false);
     }

@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import {
   Plus, Trash, FloppyDisk, SpinnerGap, UploadSimple, Star, Eye, EyeSlash,
-  Image as ImageIcon, X, PencilSimple, MapPin,
+  Image as ImageIcon, X, PencilSimple, MapPin, ArrowRight,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import SEO from '../../components/SEO';
 import { SkeletonBox } from '../../components/Skeletons';
 import { projectsApi } from '../../api/projects';
+import { BLOG_CTA_TYPES, resolveBlogCta } from '../../data/blogCta';
 
 const CATEGORIES = ['residential', 'commercial', 'industrial', 'institutional', 'agricultural', 'other'];
 
@@ -76,12 +77,20 @@ function ProjectEditor({ slug, onClose, onSaved }) {
         is_published: p.is_published,
         is_featured: p.is_featured,
         sort_order: Number(p.sort_order) || 0,
+        cta_type: p.cta_type || 'quote',
+        cta_label: p.cta_type === 'custom' ? (p.cta_label || '') : '',
+        cta_url: p.cta_type === 'custom' ? (p.cta_url || '') : '',
       });
       setP(res.data);
       toast.success('Project saved.');
       onSaved?.();
     } catch (e) {
-      toast.error(e?.response?.data?.title || 'Could not save the project.');
+      const d = e?.response?.data || {};
+      const fields = d.details && typeof d.details === 'object' ? d.details : d;
+      const k = Object.keys(fields).find((key) => !['error', 'code', 'status_code'].includes(key));
+      const raw = k ? fields[k] : (d.error || d.detail);
+      const text = Array.isArray(raw) ? raw[0] : raw;
+      toast.error(k ? `${k}: ${text}` : (text || 'Could not save the project.'));
     } finally {
       setSaving(false);
     }
@@ -215,6 +224,30 @@ function ProjectEditor({ slug, onClose, onSaved }) {
                 Order
                 <input type="number" value={p.sort_order ?? 0} onChange={(e) => set('sort_order', e.target.value)} className="w-16 bg-taqon-cream dark:bg-taqon-dark border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 text-xs text-taqon-charcoal dark:text-white outline-none" />
               </label>
+            </div>
+
+            {/* CTA button */}
+            <div>
+              <label className={labelCls}>CTA button <span className="text-taqon-muted dark:text-white/40 font-normal">— shown at the bottom of the project page</span></label>
+              <select value={p.cta_type || 'quote'} onChange={(e) => set('cta_type', e.target.value)} className={inputCls}>
+                {BLOG_CTA_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+              {p.cta_type === 'custom' && (
+                <div className="grid sm:grid-cols-2 gap-2 mt-2">
+                  <input value={p.cta_label || ''} onChange={(e) => set('cta_label', e.target.value)} placeholder="Button text" className={inputCls} />
+                  <input value={p.cta_url || ''} onChange={(e) => set('cta_url', e.target.value)} placeholder="Link — /contact or https://…" className={inputCls} />
+                </div>
+              )}
+              {p.cta_type !== 'none' && (() => {
+                const preview = resolveBlogCta(p);
+                return preview ? (
+                  <div className="mt-2">
+                    <span className="inline-flex items-center gap-2 bg-taqon-orange text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                      {preview.label} <ArrowRight size={14} weight="bold" />
+                    </span>
+                  </div>
+                ) : null;
+              })()}
             </div>
 
             {/* Hero */}

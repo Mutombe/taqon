@@ -110,6 +110,32 @@ class BlogPostCreateUpdateSerializer(serializers.ModelSerializer):
             'meta_title', 'meta_description',
             'cta_type', 'cta_label', 'cta_url',
         ]
+        # Slug auto-generates from the title (model), and category falls back
+        # to an existing one — so the editor never gets blocked on either.
+        extra_kwargs = {
+            'slug': {'required': False, 'allow_blank': True},
+            'category': {'required': False, 'allow_null': True},
+        }
+
+    def _clean(self, validated):
+        # Let the model generate the slug when blank (and never blank an
+        # existing slug on update).
+        if not (validated.get('slug') or '').strip():
+            validated.pop('slug', None)
+        return validated
+
+    def create(self, validated_data):
+        validated_data = self._clean(validated_data)
+        if not validated_data.get('category'):
+            from .models import BlogCategory
+            validated_data['category'] = (
+                BlogCategory.objects.filter(is_active=True).first()
+                or BlogCategory.objects.first()
+            )
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        return super().update(instance, self._clean(validated_data))
 
     def validate_tags(self, value):
         if not isinstance(value, list):

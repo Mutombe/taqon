@@ -96,6 +96,7 @@ export default function AdminGuide() {
         <Do verb="Edit" icon={PencilSimple}>Click the <b>pencil</b> on a project to reopen the editor; click <b>Save</b> when done.</Do>
         <Do verb="Publish" icon={Eye}>Use the <b>eye</b> icon to publish/unpublish, and the <b>star</b> to feature a project. New projects start unpublished (“Draft”).</Do>
         <Do verb="Order">Set the <b>Order</b> in the editor to arrange them (lower shows first).</Do>
+        <Do verb="CTA">In the editor, choose the <b>CTA button</b> shown at the bottom of the project page — WhatsApp Us, Contact Us, Get a Free Quote, etc., or a <b>Custom</b> label + link.</Do>
         <Do verb="Delete" icon={Trash}>Click the <b>trash</b> icon on a project.</Do>
       </Section>
 

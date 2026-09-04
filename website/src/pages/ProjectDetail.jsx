@@ -12,6 +12,7 @@ import { autoLink, confirmExternalNavigation } from '../components/ContentLink';
 import SEO from '../components/SEO';
 import { projectsData } from '../data/projectsData';
 import { projectsApi } from '../api/projects';
+import { resolveBlogCta } from '../data/blogCta';
 
 export default function ProjectDetail() {
   const { slug } = useParams();
@@ -246,12 +247,24 @@ export default function ProjectDetail() {
                   </div>
 
                   <div className="mt-8 pt-6 border-t border-[var(--card-border)] space-y-3">
-                    <Link
-                      to="/solar-advisor"
-                      className="flex items-center justify-center gap-2 w-full bg-taqon-orange text-white px-6 py-3.5 rounded-xl font-semibold hover:bg-taqon-orange/90 transition-all shadow-lg shadow-taqon-orange/25"
-                    >
-                      Get a Similar System <ArrowRight size={16} weight="bold" />
-                    </Link>
+                    {(() => {
+                      // Author-selected CTA (set per project in the admin editor).
+                      const cta = resolveBlogCta(project);
+                      if (!cta) return null;
+                      const isHttp = cta.href && /^https?:\/\//i.test(cta.href);
+                      const cls = 'flex items-center justify-center gap-2 w-full bg-taqon-orange text-white px-6 py-3.5 rounded-xl font-semibold hover:bg-taqon-orange/90 transition-all shadow-lg shadow-taqon-orange/25';
+                      return cta.to ? (
+                        <Link to={cta.to} className={cls}>{cta.label} <ArrowRight size={16} weight="bold" /></Link>
+                      ) : (
+                        <a
+                          href={cta.href}
+                          className={cls}
+                          {...(isHttp ? { target: '_blank', rel: 'noopener noreferrer', onClick: (e) => confirmExternalNavigation(cta.href, e) } : {})}
+                        >
+                          {cta.label} <ArrowRight size={16} weight="bold" />
+                        </a>
+                      );
+                    })()}
                     <a
                       href="https://wa.me/263772771036"
                       onClick={(e) => confirmExternalNavigation('https://wa.me/263772771036', e)}

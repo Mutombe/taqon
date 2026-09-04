@@ -41,6 +41,23 @@ class Project(SoftDeleteModel):
     is_featured = models.BooleanField(default=False, db_index=True)
     sort_order = models.PositiveIntegerField(default=0)
 
+    # Call-to-action button at the bottom of the project page. Preset types
+    # resolve to a label + link on the frontend; 'custom' uses cta_label/cta_url.
+    CTA_CHOICES = [
+        ('quote', 'Get a Free Quote'),
+        ('contact', 'Contact Us'),
+        ('whatsapp', 'WhatsApp Us'),
+        ('call', 'Call Us'),
+        ('packages', 'View Packages'),
+        ('shop', 'Shop Equipment'),
+        ('advisor', 'Try the Solar Advisor'),
+        ('custom', 'Custom (set label + link)'),
+        ('none', 'No button'),
+    ]
+    cta_type = models.CharField(max_length=20, choices=CTA_CHOICES, default='quote')
+    cta_label = models.CharField(max_length=80, blank=True)
+    cta_url = models.CharField(max_length=500, blank=True)
+
     class Meta:
         ordering = ['sort_order', '-created_at']
         verbose_name = 'Project'
