@@ -24,7 +24,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'slug', 'title', 'category', 'location', 'kva', 'date',
-            'heroImage', 'description', 'images', 'is_featured',
+            'heroImage', 'description', 'specs', 'images', 'is_featured',
         ]
 
 

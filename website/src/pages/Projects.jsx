@@ -193,17 +193,21 @@ export default function Projects() {
                         {project.description}
                       </p>
 
-                      {/* Specs preview */}
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="text-xs px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--card-border)]">
-                          {project.specs.inverter.split(' ').slice(0, 2).join(' ')}
-                        </span>
-                        {project.specs.panels !== 'No panels — grid-charged backup system' && (
-                          <span className="text-xs px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--card-border)]">
-                            {project.specs.panels.split(' ').slice(0, 2).join(' ')} panels
-                          </span>
-                        )}
-                      </div>
+                      {/* Specs preview — specs may be empty for CMS-created projects */}
+                      {(project.specs?.inverter || project.specs?.panels) && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {project.specs?.inverter && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--card-border)]">
+                              {project.specs.inverter.split(' ').slice(0, 2).join(' ')}
+                            </span>
+                          )}
+                          {project.specs?.panels && project.specs.panels !== 'No panels — grid-charged backup system' && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--card-border)]">
+                              {project.specs.panels.split(' ').slice(0, 2).join(' ')} panels
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       <span className="inline-flex items-center gap-1 mt-4 text-sm font-medium text-taqon-orange opacity-0 group-hover:opacity-100 transition-opacity">
                         View project <ArrowRight size={14} />
