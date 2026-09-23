@@ -567,6 +567,22 @@ class InstantQuoteView(APIView):
                 'distance_km': float(distance_km),
                 'system_size_kw': system_size_kw,
                 'grand_total': str(price.get('total', '')),
+                # Full quote contents so the admin Downloads detail shows what
+                # was actually quoted — not just the grand total.
+                'package_name': context['package_name'],
+                'inverter_kva': str(context['inverter_kva'] or ''),
+                'battery_kwh': str(context['battery_kwh'] or ''),
+                'panel_count': str(context['panel_count'] or ''),
+                'usd_per_kw': context['usd_per_kw'],
+                'usd_per_kwh': context['usd_per_kwh'],
+                'material_total': context['material_total'],
+                'labour_total': context['labour_total'],
+                'transport_total': context['transport_total'],
+                'customer_phone': customer_phone,
+                'customer_address': customer_address,
+                # Grouped line items: [{label, items:[{name, brand, specs,
+                # qty, unit_price, total}]}] — the itemised breakdown.
+                'line_items': item_groups,
             },
         )
         return response

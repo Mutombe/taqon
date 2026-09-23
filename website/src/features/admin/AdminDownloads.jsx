@@ -332,20 +332,79 @@ function DetailDrawer({ item, onClose }) {
             </Section>
           )}
 
-          {Object.keys(item.metadata || {}).length > 0 && (
-            <Section title="Metadata">
-              <table className="w-full text-xs">
-                <tbody>
-                  {Object.entries(item.metadata).map(([k, v]) => (
-                    <tr key={k} className="border-b border-gray-100 dark:border-white/5 last:border-0">
-                      <td className="py-1.5 pr-3 text-taqon-muted dark:text-white/45 align-top w-1/3">{k}</td>
-                      <td className="py-1.5 text-taqon-charcoal dark:text-white/85 break-all">{String(v)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Section>
-          )}
+          {(() => {
+            const md = item.metadata || {};
+            const lineItems = Array.isArray(md.line_items) ? md.line_items : null;
+            // Everything except the itemised list (and any other nested value)
+            // renders in the flat table; line_items gets its own section below.
+            const scalars = Object.entries(md).filter(
+              ([k, v]) => k !== 'line_items' && v !== null && typeof v !== 'object'
+            );
+            return (
+              <>
+                {scalars.length > 0 && (
+                  <Section title="Metadata">
+                    <table className="w-full text-xs">
+                      <tbody>
+                        {scalars.map(([k, v]) => (
+                          <tr key={k} className="border-b border-gray-100 dark:border-white/5 last:border-0">
+                            <td className="py-1.5 pr-3 text-taqon-muted dark:text-white/45 align-top w-1/3">{k}</td>
+                            <td className="py-1.5 text-taqon-charcoal dark:text-white/85 break-all">{String(v)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Section>
+                )}
+
+                {lineItems && lineItems.length > 0 && (
+                  <Section title="Quote contents">
+                    <div className="space-y-3">
+                      {lineItems.map((group, gi) => (
+                        <div key={gi}>
+                          {group.label && (
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-taqon-charcoal/70 dark:text-white/50 mb-1.5">
+                              {group.label}
+                            </p>
+                          )}
+                          <div className="rounded-lg border border-gray-100 dark:border-white/10 overflow-hidden">
+                            {(group.items || []).map((li, li_i) => (
+                              <div
+                                key={li_i}
+                                className={`px-3 py-2 flex items-start gap-2 ${
+                                  li_i > 0 ? 'border-t border-gray-100 dark:border-white/5' : ''
+                                }`}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm text-taqon-charcoal dark:text-white/90 leading-snug">
+                                    {li.name}
+                                    {li.brand ? <span className="text-taqon-muted dark:text-white/45"> · {li.brand}</span> : null}
+                                  </p>
+                                  {li.specs && (
+                                    <p className="text-[11px] text-taqon-muted dark:text-white/45 mt-0.5">{li.specs}</p>
+                                  )}
+                                </div>
+                                {(li.qty ?? null) !== null && (
+                                  <span className="text-xs text-taqon-muted dark:text-white/55 tabular-nums flex-shrink-0 mt-0.5">
+                                    ×{li.qty}
+                                  </span>
+                                )}
+                                {li.total && (
+                                  <span className="text-xs font-semibold text-taqon-charcoal dark:text-white/85 tabular-nums flex-shrink-0 mt-0.5 min-w-[70px] text-right">
+                                    {li.total}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+                )}
+              </>
+            );
+          })()}
 
           <Section title="Outcome">
             {item.file_size_bytes && <Row label="File size">{Math.round(item.file_size_bytes / 1024)} KB</Row>}
